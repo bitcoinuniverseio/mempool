@@ -45,9 +45,12 @@ import {
 import {
   ChainBlockSummary,
   ExplorerChain,
+  ExplorerNetwork,
   MiningPoolsView,
   MiningSummaryView,
 } from '@app/universe/universe.types';
+import { chainNetwork } from '@app/universe/chain-network';
+import { StateService } from '@app/services/state.service';
 
 interface PoolRowReading {
   readonly poolId: string;
@@ -101,6 +104,8 @@ const EVIDENCE_LABELS: Record<string, string> = {
 export class ChainMiningComponent implements OnInit {
   readonly chain: Exclude<ExplorerChain, 'bitcoin'>;
   readonly profile: ChainProfile;
+  /** The configured network of this chain, named in the not-offered notice. */
+  readonly networkLabel: string;
   readonly windows = POOL_WINDOWS;
   readonly window$ = new BehaviorSubject<string>('1w');
   vm$: Observable<MiningViewModel>;
@@ -109,13 +114,15 @@ export class ChainMiningComponent implements OnInit {
     private readonly router: Router,
     private readonly api: UniverseApiService,
     private readonly data: ChainDashboardService,
-    private readonly seo: SeoService
+    private readonly seo: SeoService,
+    private readonly state: StateService
   ) {
     this.chain =
       router.url.split(/[?#]/, 1)[0].split('/').filter(Boolean)[0] === 'dogecoin'
         ? 'dogecoin'
         : 'zcash';
     this.profile = chainProfile(this.chain);
+    this.networkLabel = chainNetwork(this.chain, (this.state.network || 'mainnet') as ExplorerNetwork, this.state.env);
   }
 
   ngOnInit(): void {

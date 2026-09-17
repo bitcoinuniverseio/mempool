@@ -21,9 +21,18 @@ import {
   ExplorerChain,
 } from '@app/universe/universe.types';
 
+/**
+ * 'dashboard-unavailable' is the source failing to answer; 'network-not-offered'
+ * is the overlay's typed refusal (`<chain>-network-unavailable`) because the
+ * dashboard, mining and fee statistics are offered for mainnet only and the
+ * frontend is bound to another network of the chain. The two must never be
+ * rendered as the same thing: the second is not an outage.
+ */
+export type ChainDashboardError = 'dashboard-unavailable' | 'network-not-offered';
+
 export interface ChainDashboardState {
   readonly view: ChainDashboardView | null;
-  readonly error: string | null;
+  readonly error: ChainDashboardError | null;
   /** True when the view is the retained last-good one after a failed refresh. */
   readonly stale?: boolean;
 }
@@ -32,6 +41,13 @@ export interface ChainPendingState {
   readonly payload: ChainExplorerPayload | null;
   readonly error: string | null;
   readonly stale?: boolean;
+}
+
+/** The overlay's typed refusal for a scope the statistics are not offered on. */
+export function isNetworkNotOffered(failure: unknown): boolean {
+  const body = (failure as { error?: unknown } | null)?.error;
+  const message = typeof body === 'string' ? body : (body as { message?: unknown } | null)?.message;
+  return typeof message === 'string' && /-network-unavailable$/.test(message);
 }
 
 /** How often the page re-reads when no live event arrives first. */
@@ -63,10 +79,10 @@ export class ChainDashboardService {
       stream = this.refreshing$(chain, () =>
         this.api.getChainDashboard$(chain).pipe(
           map((view): ChainDashboardState => ({ view, error: null, stale: false })),
-          catchError(() =>
+          catchError((failure: unknown) =>
             of<ChainDashboardState>({
               view: null,
-              error: 'dashboard-unavailable',
+              error: isNetworkNotOffered(failure) ? 'network-not-offered' : 'dashboard-unavailable',
               stale: true,
             })
           )
