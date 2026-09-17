@@ -1,8 +1,9 @@
-<div class="container-xl protocol-directory">
+<div class="container-xl protocol-directory" *ngIf="vm$ | async as vm">
   <h1 i18n="universe.protocols.title">Protocols</h1>
-  <p class="chain-note" i18n="universe.protocols.chain-note">Showing Bitcoin mainnet protocols. Protocols on other chains appear on their own network views.</p>
+  <!-- The network named here is the one the registry request was addressed to. -->
+  <p class="chain-note" i18n="universe.protocols.chain-note">Showing {{ networkLabel(vm.network) }} protocols. Protocols on other chains appear on their own network views.</p>
 
-  <ng-container *ngIf="vm$ | async as vm; else loadingSkeleton">
+  <ng-container *ngIf="!vm.loading; else loadingSkeleton">
     <div *ngIf="vm.error" class="registry-unavailable" role="alert">
       <h2 i18n="universe.protocols.unavailable">Protocol registry unavailable</h2>
       <p i18n="universe.protocols.unavailable-detail">The protocol registry could not be loaded, so nothing below can be listed.</p>
@@ -48,7 +49,7 @@
         </ul>
       </section>
 
-      <p *ngIf="!vm.groups?.length" class="no-protocols" i18n="universe.protocols.none">The registry contains no Bitcoin mainnet protocols.</p>
+      <p *ngIf="!vm.groups?.length" class="no-protocols" i18n="universe.protocols.none">The registry contains no {{ networkLabel(vm.network) }} protocols.</p>
 
       <p *ngIf="vm.sourcesByAuthority === null" class="chain-note" role="status">
         <ng-container i18n="universe.protocols.sources-unavailable">Authority status could not be read, so nothing below can be called readable right now. The registry still describes what each protocol implements.</ng-container>
