@@ -40,18 +40,17 @@ describe('deployment runs interrupted by their own restart', () => {
       { job: { jobId: 'job-1', operation: 'restart', state: 'succeeded', releaseAfter: 'abc1234', evidence: ['verify_live ok'], startedAt: 't0', finishedAt: 't1', error: null }, timedOut: false });
     const outcome = await resumeDeploymentRuns();
     expect(outcome).toEqual({ resumed: 1, skipped: 0 });
-    expect(transitions).toHaveLength(1);
-    expect(transitions[0]).toMatchObject({ runId: 'run-1', state: 'SUCCEEDED' });
-    expect(transitions[0].patch.verification.verified).toBe(true);
-    expect(transitions[0].patch.result.resumedAfterRestart).toBe(true);
+    expect(transitions.map(t => t.state)).toEqual(['VERIFYING', 'SUCCEEDED']);
+    expect(transitions[1].patch.verification.verified).toBe(true);
+    expect(transitions[1].patch.result.resumedAfterRestart).toBe(true);
   });
 
   it('a rollback whose serving release differs from the journal target needs review', async () => {
     seed('run-2', 'explorer.release.rollback', 'job-2', { releaseBefore: 'abc1234', requestedRelease: 'def5678' },
       { job: { jobId: 'job-2', operation: 'rollback', state: 'succeeded', releaseAfter: 'abc1234', evidence: [], startedAt: 't0', finishedAt: 't1', error: null }, timedOut: false });
     await resumeDeploymentRuns();
-    expect(transitions[0]).toMatchObject({ runId: 'run-2', state: 'NEEDS_REVIEW' });
-    expect(transitions[0].patch.verification.verified).toBe(false);
+    expect(transitions[1]).toMatchObject({ runId: 'run-2', state: 'NEEDS_REVIEW' });
+    expect(transitions[1].patch.verification.verified).toBe(false);
   });
 
   it('a failed adapter job fails the run and a still-running job is left for review, never marked done', async () => {
@@ -60,7 +59,7 @@ describe('deployment runs interrupted by their own restart', () => {
     seed('run-4', 'explorer.service.restart', 'job-4', { releaseBefore: 'abc1234' },
       { job: { jobId: 'job-4', operation: 'restart', state: 'running', releaseAfter: null, evidence: [], startedAt: 't0', finishedAt: null, error: null }, timedOut: true });
     await resumeDeploymentRuns();
-    const byRun = Object.fromEntries(transitions.map(t => [t.runId, t]));
+    const byRun = Object.fromEntries(transitions.filter(t => t.state !== 'VERIFYING').map(t => [t.runId, t]));
     expect(byRun['run-3'].state).toBe('FAILED');
     expect(byRun['run-4'].state).toBe('NEEDS_REVIEW');
     expect(byRun['run-4'].patch.verification.verified).toBe(false);

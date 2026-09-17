@@ -44,6 +44,9 @@ export async function resumeDeploymentRuns(): Promise<{ resumed: number; skipped
         `Release before: ${document.result?.releaseBefore ?? 'unknown'}; after: ${job.releaseAfter ?? 'unknown'}; expected: ${expectedRelease ?? 'unknown'}.`,
         ...job.evidence.map((line: string) => 'Adapter: ' + line),
       ];
+      // The executor path goes RUNNING -> VERIFYING -> terminal; the contract
+      // allows no direct jump from RUNNING to SUCCEEDED.
+      await runStore.transition(row.run_id, 'VERIFYING', { progressPercent: 90 });
       if (timedOut) {
         await runStore.transition(row.run_id, 'NEEDS_REVIEW', { progressPercent: 100, result, verification: { verified: false, evidence: [...evidence, 'The adapter job had not reached a terminal state when the replacement process looked it up.'] }, logs: [{ at: adminTimestamp(), level: 'warn', message: `Adapter job ${jobId} still ${job.state} after the restart.` }] });
       } else if (job.state === 'failed') {
