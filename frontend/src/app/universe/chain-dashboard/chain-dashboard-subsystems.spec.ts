@@ -6,7 +6,8 @@ import { ChainDashboardView, ChainSubsystemHealth } from '../universe.types';
 describe('chain dashboard subsystem readings', () => {
   const component = () => {
     const router = { url: '/dogecoin/dashboard' };
-    const instance = new ChainDashboardComponent(router as never, {} as never, {} as never);
+    const state = { network: '', env: {} };
+    const instance = new ChainDashboardComponent(router as never, {} as never, {} as never, state as never);
     return instance as unknown as {
       viewModel(
         capability: null,

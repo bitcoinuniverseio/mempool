@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Subject, of, throwError } from 'rxjs';
 import { ChainHealthService, ChainHealthState } from './chain-health.service';
-import { ChainDashboardService, ChainDashboardState } from './chain-dashboard/chain-dashboard.service';
+import { ChainDashboardService, ChainDashboardState, isNetworkNotOffered } from './chain-dashboard/chain-dashboard.service';
 import { ChainCapabilityEnvelope, ChainDashboardView } from './universe.types';
 
 const capability = (chain: 'dogecoin' | 'zcash', sha: string): ChainCapabilityEnvelope =>
@@ -91,6 +91,25 @@ describe('health retention across failed refreshes', () => {
     vi.advanceTimersByTime(15_200);
     expect(seen.at(-1)).toMatchObject({ error: null, stale: false });
     expect(seen.at(-1)?.view?.observedAt).toBe('2026-09-16T09:01:00.000Z');
+    subscription.unsubscribe();
+  });
+
+  it('tells the typed not-offered refusal of the overlay apart from a source outage', () => {
+    // The overlay answers 503 {"message":"dogecoin-network-unavailable"} when
+    // the statistics are offered for mainnet only and the frontend is bound to
+    // another network; that is not an outage and must not read as one.
+    const refusal = { status: 503, error: { message: 'dogecoin-network-unavailable', statusCode: 503 } };
+    expect(isNetworkNotOffered(refusal)).toBe(true);
+    expect(isNetworkNotOffered({ status: 503, error: { message: 'dogecoin-mempool-unavailable' } })).toBe(false);
+    expect(isNetworkNotOffered(new Error('boom'))).toBe(false);
+    const api = { getChainDashboard$: () => throwError(() => refusal), getChainMempool$: () => of({}) };
+    const live = { stream$: () => new Subject<unknown>() };
+    const health = { capability$: () => of(null) };
+    const service = new ChainDashboardService(api as never, live as never, health as never);
+    const seen: ChainDashboardState[] = [];
+    const subscription = service.dashboard$('dogecoin').subscribe(s => seen.push(s));
+    vi.advanceTimersByTime(200);
+    expect(seen.at(-1)).toMatchObject({ view: null, error: 'network-not-offered' });
     subscription.unsubscribe();
   });
 });
