@@ -193,7 +193,7 @@ describe('private relay endpoint configuration', () => {
   it('rejects endpoints on another network, clearnet submit hosts, bad proxies and duplicates by id', () => {
     const parsed = parsePrivateRelayEndpoints(JSON.stringify([
       { id: 'mainnet-tor', transport: 'tor', proxy: 'socks5h://127.0.0.1:9050', submitUrl: 'http://abc.onion/api/tx', network: 'mainnet' },
-      { id: 'clearnet', transport: 'tor', proxy: 'socks5h://127.0.0.1:9050', submitUrl: 'https://mempool.space/api/tx', network: NETWORK },
+      { id: 'clearnet', transport: 'tor', proxy: 'socks5h://127.0.0.1:9050', submitUrl: 'https://example.com/api/tx', network: NETWORK }, // a clearnet submit host (not .onion) must be refused
       { id: 'http-proxy', transport: 'tor', proxy: 'http://127.0.0.1:8118', submitUrl: 'http://abc.onion/api/tx', network: NETWORK },
       { id: 'ok', transport: 'i2p', proxy: 'socks5h://127.0.0.1:4447', submitUrl: 'http://abc.b32.i2p/api/tx', network: NETWORK },
       { id: 'ok', transport: 'i2p', proxy: 'socks5h://127.0.0.1:4447', submitUrl: 'http://def.b32.i2p/api/tx', network: NETWORK },
