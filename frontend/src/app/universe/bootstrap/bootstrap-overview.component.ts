@@ -77,11 +77,17 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         {{ error }}
       </div>
 
-      <div
-        *ngIf="overview?.snapshot_catalogue_status === 'unavailable'"
-        class="alert alert-warning"
-      >
-        {{ overview?.snapshot_catalogue_reason }}
+      <div *ngIf="!loading && overview" class="row g-3 mb-4">
+        <div class="col-12 col-md-3" *ngFor="let f of subfeatures(overview)">
+          <div class="card p-3 bg-body-tertiary border h-100">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <span class="text-muted small">{{ f.label }}</span>
+              <span class="badge" [ngClass]="f.status === 'available' ? 'bg-success' : 'bg-warning text-dark'">{{ f.status }}</span>
+            </div>
+            <div class="small text-muted mt-2" *ngIf="f.reason">{{ f.reason }}</div>
+            <div class="small text-muted mt-2" *ngIf="!f.reason && f.status === 'unavailable'">No reason was reported.</div>
+          </div>
+        </div>
       </div>
       <div *ngIf="!loading && overview" class="row g-4">
         <div class="col-12 col-md-3">
@@ -94,7 +100,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   : overview.total_snapshots
               }}
             </div>
-            <div class="small text-muted mt-1">Pinned in Bitcoin Core</div>
+            <div class="small text-muted mt-1">In the trusted catalogue</div>
           </div>
         </div>
         <div class="col-12 col-md-3">
@@ -128,7 +134,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div class="col-12 col-lg-8">
           <div class="card p-4 bg-body-tertiary border h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h2 class="h5 m-0">Pinned AssumeUTXO Snapshots</h2>
+              <h2 class="h5 m-0">Snapshots verified over their bytes</h2>
               <a
                 [routerLink]="'/node/bootstrap/snapshots' | relativeUrl"
                 class="small text-decoration-none"
@@ -166,7 +172,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                       </a>
                     </td>
                     <td class="font-monospace small">
-                      {{ s.coins_count | number }}
+                      {{ s.coins_count === null ? 'not pinned' : (s.coins_count | number) }}
                     </td>
                     <td class="small">
                       {{ (s.file_size_bytes / 1073741824).toFixed(2) }} GB
@@ -186,6 +192,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                         {{ s.status }}
                       </span>
                     </td>
+                  </tr>
+                  <tr *ngIf="overview.featured_snapshots.length === 0">
+                    <td colspan="5" class="text-muted small">No catalogue snapshot has a verification run that reached valid on this network.</td>
                   </tr>
                 </tbody>
               </table>
@@ -232,6 +241,14 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   ],
 })
 export class BootstrapOverviewComponent implements OnInit, OnDestroy {
+  subfeatures(overview: BootstrapOverview): { label: string; status: string; reason: string | null }[] {
+    return [
+      { label: 'Snapshot catalogue', status: overview.snapshot_catalogue_status ?? 'unavailable', reason: overview.snapshot_catalogue_reason ?? null },
+      { label: 'Verification store', status: overview.verification_store_status ?? 'unavailable', reason: overview.verification_store_reason ?? null },
+      { label: 'Planning', status: overview.planning_status ?? 'unavailable', reason: overview.planning_status === 'available' ? null : 'Planning needs the catalogue and the verification store.' },
+      { label: 'Operator jobs', status: overview.operator_status ?? 'unavailable', reason: overview.operator_reason ?? null },
+    ];
+  }
   loading = true;
   error: string | null = null;
   overview: BootstrapOverview | null = null;
