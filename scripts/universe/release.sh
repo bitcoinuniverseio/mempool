@@ -441,10 +441,12 @@ PY
 # left. A service that has to be reachable from another host is added to
 # PUBLIC_LISTENERS deliberately, with a reason, rather than discovered in
 # production.
-# Signet P2P is intentionally public, like mainnet P2P. The adapter is
+# Signet P2P and the CKB testnet node P2P (8115, the universe-ckb-testnet
+# container; its RPC 8114 stays on loopback) are intentionally public, like
+# mainnet P2P. The adapter is
 # permitted only while its IPv4 INPUT firewall drop rule is present. Gateway
 # ingress is permitted only on the declared NetBird address, never wildcard.
-PUBLIC_LISTENERS="22 8333 38333 50001"
+PUBLIC_LISTENERS="22 8333 38333 50001 8115"
 NETBIRD_GATEWAY_INGRESS="100.124.130.242:8099"
 
 gate_private_listeners() {
