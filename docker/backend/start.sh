@@ -27,9 +27,11 @@ __MEMPOOL_EXTERNAL_MAX_RETRY__=${MEMPOOL_EXTERNAL_MAX_RETRY:=1}
 __MEMPOOL_EXTERNAL_RETRY_INTERVAL__=${MEMPOOL_EXTERNAL_RETRY_INTERVAL:=0}
 __MEMPOOL_USER_AGENT__=${MEMPOOL_USER_AGENT:=mempool}
 __MEMPOOL_STDOUT_LOG_MIN_PRIORITY__=${MEMPOOL_STDOUT_LOG_MIN_PRIORITY:=info}
-__MEMPOOL_AUTOMATIC_POOLS_UPDATE__=${MEMPOOL_AUTOMATIC_POOLS_UPDATE:=true}
-__MEMPOOL_POOLS_JSON_URL__=${MEMPOOL_POOLS_JSON_URL:=https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json}
-__MEMPOOL_POOLS_JSON_TREE_URL__=${MEMPOOL_POOLS_JSON_TREE_URL:=https://api.github.com/repos/mempool/mining-pools/git/trees/master}
+# The mining pool table ships with the backend (POOLS_JSON_FILE). Fetching a
+# newer table at runtime is opt-in and needs an explicit source.
+__MEMPOOL_AUTOMATIC_POOLS_UPDATE__=${MEMPOOL_AUTOMATIC_POOLS_UPDATE:=false}
+__MEMPOOL_POOLS_JSON_URL__=${MEMPOOL_POOLS_JSON_URL:=""}
+__MEMPOOL_POOLS_JSON_TREE_URL__=${MEMPOOL_POOLS_JSON_TREE_URL:=""}
 __MEMPOOL_POOLS_JSON_FILE__=${MEMPOOL_POOLS_JSON_FILE:=tasks/pools/pools-v2.json}
 __MEMPOOL_POOLS_UPDATE_DELAY__=${MEMPOOL_POOLS_UPDATE_DELAY:=604800}
 __MEMPOOL_AUDIT__=${MEMPOOL_AUDIT:=false}
@@ -109,8 +111,11 @@ __SOCKS5PROXY_USERNAME__=${SOCKS5PROXY_USERNAME:=""}
 __SOCKS5PROXY_PASSWORD__=${SOCKS5PROXY_PASSWORD:=""}
 
 # EXTERNAL_DATA_SERVER
-__EXTERNAL_DATA_SERVER_MEMPOOL_API__=${EXTERNAL_DATA_SERVER_MEMPOOL_API:=https://mempool.space/api/v1}
-__EXTERNAL_DATA_SERVER_MEMPOOL_ONION__=${EXTERNAL_DATA_SERVER_MEMPOOL_ONION:=http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api/v1}
+# Unset by default: the about-page and acceleration routes that read these
+# stay unmounted until an operator names a Bitcoin Universe endpoint. The
+# Liquid asset catalogue is the one documented external metadata source.
+__EXTERNAL_DATA_SERVER_MEMPOOL_API__=${EXTERNAL_DATA_SERVER_MEMPOOL_API:=""}
+__EXTERNAL_DATA_SERVER_MEMPOOL_ONION__=${EXTERNAL_DATA_SERVER_MEMPOOL_ONION:=""}
 __EXTERNAL_DATA_SERVER_LIQUID_API__=${EXTERNAL_DATA_SERVER_LIQUID_API:=https://liquid.network/api/v1}
 __EXTERNAL_DATA_SERVER_LIQUID_ONION__=${EXTERNAL_DATA_SERVER_LIQUID_ONION:=http://liquidmom47f6s3m53ebfxn47p76a6tlnxib3wp6deux7wuzotdr6cyd.onion/api/v1}
 
@@ -148,7 +153,9 @@ __REPLICATION_STATISTICS_START_TIME__=${REPLICATION_STATISTICS_START_TIME:=14819
 __REPLICATION_SERVERS__=${REPLICATION_SERVERS:=[]}
 
 # MEMPOOL_SERVICES
-__MEMPOOL_SERVICES_API__=${MEMPOOL_SERVICES_API:="https://mempool.space/api/v1/services"}
+# Unset by default: accounts, accelerations and the other services routes
+# report "unconfigured" until an operator names a Bitcoin Universe endpoint.
+__MEMPOOL_SERVICES_API__=${MEMPOOL_SERVICES_API:=""}
 __MEMPOOL_SERVICES_ACCELERATIONS__=${MEMPOOL_SERVICES_ACCELERATIONS:=false}
 
 # STRATUM
@@ -161,9 +168,68 @@ __REDIS_UNIX_SOCKET_PATH__=${REDIS_UNIX_SOCKET_PATH:=""}
 __REDIS_BATCH_QUERY_BASE_SIZE__=${REDIS_BATCH_QUERY_BASE_SIZE:=5000}
 
 # FIAT_PRICE
-__FIAT_PRICE_ENABLED__=${FIAT_PRICE_ENABLED:=true}
+# Off by default: the price task calls public exchange APIs from the backend.
+# Turn it on only for a deployment whose price source is its own.
+__FIAT_PRICE_ENABLED__=${FIAT_PRICE_ENABLED:=false}
 __FIAT_PRICE_PAID__=${FIAT_PRICE_PAID:=false}
 __FIAT_PRICE_API_KEY__=${FIAT_PRICE_API_KEY:=""}
+
+# Runtime data comes from Bitcoin Universe infrastructure only. An endpoint is
+# empty, a same-origin /path, or an http(s) URL without credentials whose host
+# is loopback, a single-label container name, or under bitcoinuniverse.io.
+# Onion fields may name a .onion host, never the upstream explorer's. Liquid
+# fields may name the Liquid asset catalogue (metadata only). Anything else
+# stops the container before configuration is rendered, and the value is not
+# echoed: only the field name and, when it is not a credential problem, the
+# host.
+universe_endpoint_check() {
+  name="$1"
+  value="$2"
+  extra="$3"
+  [ -z "${value}" ] && return 0
+  case "${value}" in
+    /*) return 0 ;;
+    http://*|https://*) ;;
+    *)
+      echo "start.sh: ${name} must be empty, a /path, or an http(s) URL; refusing to start" >&2
+      return 1 ;;
+  esac
+  case "${value}" in
+    *[\"\'\\\!\|\ \	]*)
+      echo "start.sh: ${name} contains a character no endpoint URL uses (quote, backslash, space, ! or |); refusing to start" >&2
+      return 1 ;;
+  esac
+  hostport=${value#*://}
+  hostport=${hostport%%/*}
+  case "${hostport}" in
+    *@*)
+      echo "start.sh: ${name} must not carry credentials in the URL; refusing to start" >&2
+      return 1 ;;
+  esac
+  host=$(printf '%s' "${hostport%%:*}" | tr 'A-Z' 'a-z' | sed 's/\.*$//')
+  case "${host}" in
+    ""|*[!a-z0-9.-]*)
+      echo "start.sh: ${name} has a malformed host; refusing to start" >&2
+      return 1 ;;
+    localhost|127.*|bitcoinuniverse.io|*.bitcoinuniverse.io) return 0 ;;
+    mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion) ;; # origin-gate:deny
+    liquidmom47f6s3m53ebfxn47p76a6tlnxib3wp6deux7wuzotdr6cyd.onion) [ "${extra}" = "liquid" ] && return 0 ;;
+    *.onion) case "${extra}" in onion|liquid) return 0 ;; esac ;;
+    liquid.network|*.liquid.network) [ "${extra}" = "liquid" ] && return 0 ;;
+    *.*) ;;
+    *) return 0 ;;
+  esac
+  echo "start.sh: ${name} points outside Bitcoin Universe infrastructure (host: ${host}); refusing to start" >&2
+  return 1
+}
+
+universe_endpoint_check EXTERNAL_DATA_SERVER_MEMPOOL_API "${__EXTERNAL_DATA_SERVER_MEMPOOL_API__}" || exit 78
+universe_endpoint_check EXTERNAL_DATA_SERVER_MEMPOOL_ONION "${__EXTERNAL_DATA_SERVER_MEMPOOL_ONION__}" onion || exit 78
+universe_endpoint_check EXTERNAL_DATA_SERVER_LIQUID_API "${__EXTERNAL_DATA_SERVER_LIQUID_API__}" liquid || exit 78
+universe_endpoint_check EXTERNAL_DATA_SERVER_LIQUID_ONION "${__EXTERNAL_DATA_SERVER_LIQUID_ONION__}" liquid || exit 78
+universe_endpoint_check MEMPOOL_SERVICES_API "${__MEMPOOL_SERVICES_API__}" || exit 78
+universe_endpoint_check MEMPOOL_POOLS_JSON_URL "${__MEMPOOL_POOLS_JSON_URL__}" || exit 78
+universe_endpoint_check MEMPOOL_POOLS_JSON_TREE_URL "${__MEMPOOL_POOLS_JSON_TREE_URL__}" || exit 78
 
 mkdir -p "${__MEMPOOL_CACHE_DIR__}"
 

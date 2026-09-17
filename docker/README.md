@@ -7,9 +7,43 @@ If you are looking to use these Docker images to deploy your own instance of Mem
 See a video guide of this installation method by k3tan [on BitcoinTV.com](https://bitcointv.com/w/8fpAx6rf5CQ16mMhospwjg).
 
 Jump to a section in this doc:
+- [Owned endpoint prerequisites](#owned-endpoint-prerequisites)
 - [Configure with Bitcoin Core Only](#configure-with-bitcoin-core-only)
 - [Configure with Bitcoin Core + Electrum Server](#configure-with-bitcoin-core--electrum-server)
 - [Further Configuration](#further-configuration)
+
+## Owned endpoint prerequisites
+
+The images never contact a third-party blockchain service on their own. Every
+endpoint default is empty or same-origin, so an unconfigured feature fails
+visibly with the name of the prerequisite instead of quietly reading from
+somewhere else. The start scripts (`backend/start.sh`, `frontend/entrypoint.sh`)
+accept an endpoint only when it is empty, a `/path` on the same origin, or an
+`http(s)` URL without credentials whose host is loopback, a single-label
+container name, or under `bitcoinuniverse.io`; anything else stops the
+container with exit code 78, naming the field and the host but never the value.
+
+| Feature | Backend variable | Frontend variable | Default and unconfigured behaviour |
+| --- | --- | --- | --- |
+| About page (contributors, donations, translators) | `EXTERNAL_DATA_SERVER_MEMPOOL_API` | | empty; the routes are not mounted |
+| Accounts, accelerations, invoices, faucet, Lightning metadata, proofs | `MEMPOOL_SERVICES_API` | `SERVICES_API` | empty; capabilities report the dependency as not configured and the frontend stays on its own origin |
+| The same over Tor | `EXTERNAL_DATA_SERVER_MEMPOOL_ONION` | `ONION_SERVICES_API` | empty; both must name this deployment's own `.onion` host, and the page hostname alone never switches providers |
+| Services proxied through nginx | | `PROXIED_SERVICES=true` with `PROXIED_SERVICES_HOST` | off; `true` without a host refuses to start |
+| Fiat prices | `FIAT_PRICE_ENABLED` | | `false`; `/api/v1/prices` answers `-1` until an owned price source is configured |
+| Mining pool table refresh | `MEMPOOL_AUTOMATIC_POOLS_UPDATE` with `MEMPOOL_POOLS_JSON_URL` and `MEMPOOL_POOLS_JSON_TREE_URL` | | `false` and empty; the bundled `pools-v2.json` is used |
+| Cross-network links | | `MEMPOOL_WEBSITE_URL` | `https://explorer.bitcoinuniverse.io` |
+
+The one permitted external runtime category is **Liquid asset catalogue
+metadata**, read from `EXTERNAL_DATA_SERVER_LIQUID_API` and
+`EXTERNAL_DATA_SERVER_LIQUID_ONION` (defaults: `liquid.network` and its onion).
+It covers asset names, tickers, precision, icons and issuer details only.
+Balances, ownership, transfers and history come from the owned Elements node and
+indexer; those two fields accept no other host than the catalogue or an owned
+one.
+
+`scripts/universe/docker-runtime-defaults.test.mjs` runs both start scripts
+against the shipped templates and proves the rendered configuration for a
+minimal environment, for explicit owned endpoints, and for rejected input.
 
 ## Configure with Bitcoin Core Only
 
@@ -107,8 +141,8 @@ Below we list all settings from `mempool-config.json` and the corresponding over
     "STDOUT_LOG_MIN_PRIORITY": "info",
     "INDEXING_BLOCKS_AMOUNT": false,
     "AUTOMATIC_POOLS_UPDATE": false,
-    "POOLS_JSON_URL": "https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json",
-    "POOLS_JSON_TREE_URL": "https://api.github.com/repos/mempool/mining-pools/git/trees/master",
+    "POOLS_JSON_URL": "",
+    "POOLS_JSON_TREE_URL": "",
     "POOLS_UPDATE_DELAY": 604800,
     "CPFP_INDEXING": false,
     "MAX_BLOCKS_BULK_QUERY": 0,

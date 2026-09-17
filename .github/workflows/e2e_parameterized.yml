@@ -6,7 +6,7 @@ on:
       mempool_hostname:
         description: 'Mempool Hostname'
         required: true
-        default: 'mempool.space'
+        default: 'explorer.bitcoinuniverse.io'
         type: string 
       liquid_hostname:
         description: 'Liquid Hostname'

@@ -1,18 +1,50 @@
-name: Docker build on tag
+name: Container images
 env:
   DOCKER_CLI_EXPERIMENTAL: enabled
-  TAG_FMT: "^refs/tags/(((.?[0-9]+){3,4}))$"
   DOCKER_BUILDKIT: 1  # Enable BuildKit for better performance
   COMPOSE_DOCKER_CLI_BUILD: 0
 
+# Two routes, never mixed:
+# - A pull request to develop or main that touches the container templates or
+#   the runtime configuration they render gets a build-only gate: the images
+#   are built and started locally on the runner and nothing is pushed.
+# - Publication to the registry happens only from an explicit dispatch that
+#   says so. There is no tag trigger and no label shortcut: nobody publishes
+#   an image by pushing a ref or adding a label to a pull request.
 on:
-  push:
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+
-      - v[0-9]+.[0-9]+.[0-9]+-*
   pull_request:
-    branches: [master]
-    types: [opened, synchronize, reopened, labeled]
+    branches: [develop, main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'docker/**'
+      - 'production/mempool-config.*.json'
+      - 'production/mempool-frontend-config.*.json'
+      - 'backend/mempool-config.sample.json'
+      - 'frontend/mempool-frontend-config.sample.json'
+      - 'nginx.conf'
+      - 'nginx-mempool.conf'
+      - 'rust/gbt/rust-toolchain'
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/docker.yml'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag to publish (for example universe-2026.09.17)'
+        required: true
+        type: string
+      publish:
+        description: 'Push the built images to the registry'
+        required: true
+        type: boolean
+        default: false
+      latest:
+        description: 'Also move the latest tag to this build (publish must be true)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,7 +53,7 @@ jobs:
   test-images:
     env:
       COMPOSE_PROJECT_NAME: mempool-images-${{ github.run_id }}-${{ github.run_attempt }}
-    # Always run on tag pushes and all pull requests
+    # Build-only: runs for every pull request in scope and every dispatch.
     runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 30
     name: Test built Docker images
@@ -38,10 +70,15 @@ jobs:
           fi
           echo "SHORT_SHA=${SHA:0:8}" >> $GITHUB_ENV
 
-      - name: Set TAG from pushed tag or package.json
+      - name: Set TAG from the dispatch input or package.json
+        env:
+          DISPATCH_TAG: ${{ github.event.inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            TAG="${GITHUB_REF/refs\/tags\//}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "$DISPATCH_TAG" in
+              ''|*[!A-Za-z0-9._-]*) echo "Error: tag must be a plain image tag"; exit 1 ;;
+            esac
+            TAG="$DISPATCH_TAG"
           else
             FRONTEND_VERSION=$(jq -r '.version' frontend/package.json)
             BACKEND_VERSION=$(jq -r '.version' backend/package.json)
@@ -226,11 +263,12 @@ jobs:
 
   build:
     needs: [test-images]
-    # Run on tag pushes OR on PRs with "docker-push" label (after test-images passes)
+    # Publication: only an explicit dispatch that asked for it, and only after
+    # the build-only gate passed on the same commit.
     if: |
       needs.test-images.result == 'success' &&
-      (github.event_name == 'push' ||
-       (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'docker-push')))
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.publish == 'true'
     strategy:
       matrix:
         service:
@@ -242,26 +280,24 @@ jobs:
     outputs:
       image-digest-frontend: ${{ matrix.service == 'frontend' && steps.docker-build.outputs.digest || '' }}
       image-digest-backend: ${{ matrix.service == 'backend' && steps.docker-build.outputs.digest || '' }}
-      tag: ${{ matrix.service == 'frontend' && (steps.set-tag-push.outputs.tag || steps.set-tag-pr.outputs.tag) || '' }}
+      tag: ${{ matrix.service == 'frontend' && steps.set-tag.outputs.tag || '' }}
     steps:
       # Shared runner capacity is provisioned outside jobs. Never replace host
       # swap, hide Docker data, or restart the shared daemon during a build.
-      # Only for tag pushes: use the Git tag as TAG
-      - name: Set TAG from pushed tag
-        if: github.event_name == 'push'
-        id: set-tag-push
+      - name: Set TAG from the dispatch input
+        id: set-tag
+        env:
+          DISPATCH_TAG: ${{ github.event.inputs.tag }}
         run: |
-          TAG="${GITHUB_REF/refs\/tags\//}"
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          case "$DISPATCH_TAG" in
+            ''|*[!A-Za-z0-9._-]*) echo "Error: tag must be a plain image tag"; exit 1 ;;
+          esac
+          echo "TAG=${DISPATCH_TAG}" >> $GITHUB_ENV
+          echo "tag=${DISPATCH_TAG}" >> $GITHUB_OUTPUT
 
       - name: Add SHORT_SHA env property with commit short sha
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            SHA="${{ github.event.pull_request.head.sha }}"
-          else
-            SHA="${GITHUB_SHA}"
-          fi
+          SHA="${GITHUB_SHA}"
           echo "SHORT_SHA=${SHA:0:8}" >> $GITHUB_ENV
 
 
@@ -273,20 +309,6 @@ jobs:
 
       - name: Checkout project
         uses: actions/checkout@v4
-
-      # For PRs: use package.json version + short sha as TAG
-      - name: Set TAG from service package.json for pull requests
-        if: github.event_name == 'pull_request'
-        id: set-tag-pr
-        run: |
-          if [ "${{ matrix.service }}" = "frontend" ]; then
-            VERSION=$(jq -r '.version' frontend/package.json)
-          else
-            VERSION=$(jq -r '.version' backend/package.json)
-          fi
-          TAG="v${VERSION}-${SHORT_SHA}"
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
       - name: Show set environment variables
         run: |
@@ -338,8 +360,8 @@ jobs:
 
   tag-latest:
     needs: [build]
-    # Only for successful tag pushes (not PRs with docker-push label) and only for "plain" versions (no '-')
-    if: ${{ needs.build.result == 'success' && github.event_name == 'push' && !contains(github.ref_name, '-') }}
+    # Only when the same dispatch asked for it.
+    if: ${{ needs.build.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true' && github.event.inputs.latest == 'true' }}
     runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 30
     name: Tag release build as latest
@@ -350,7 +372,13 @@ jobs:
           - backend
     steps:
       - name: Set env variables
-        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+        env:
+          DISPATCH_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          case "$DISPATCH_TAG" in
+            ''|*[!A-Za-z0-9._-]*) echo "Error: tag must be a plain image tag"; exit 1 ;;
+          esac
+          echo "TAG=${DISPATCH_TAG}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
