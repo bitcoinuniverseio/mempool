@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 109;
+  private static currentVersion = 110;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1466,6 +1466,35 @@ class DatabaseMigration {
         INDEX intelligence_knowledge_audit_label (label_id, created_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
       await this.updateToSchemaVersion(109);
+    }
+    if (databaseSchemaVersion < 110) {
+      // Private relay submissions: every raw transaction handed to an owned
+      // Tor or I2P endpoint, with the lease the worker holds while relaying,
+      // the attempt count and the hash of the owner token that authorizes
+      // readback and abort. The raw hex stays here because a retry needs it;
+      // the token itself is never stored.
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_private_relay_submissions (
+        submission_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        txid CHAR(64) NOT NULL,
+        raw_tx MEDIUMTEXT NOT NULL,
+        method VARCHAR(32) NOT NULL,
+        state VARCHAR(16) NOT NULL,
+        relay_endpoint_id VARCHAR(64) NULL,
+        attempts INT UNSIGNED NOT NULL DEFAULT 0,
+        lease_until DATETIME(3) NULL,
+        lease_owner VARCHAR(64) NULL,
+        owner_token_hash CHAR(64) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        relayed_at DATETIME(3) NULL,
+        confirmed_block_height INT UNSIGNED NULL,
+        last_error VARCHAR(512) NULL,
+        PRIMARY KEY (submission_id),
+        UNIQUE INDEX intelligence_private_relay_txid (network, txid),
+        INDEX intelligence_private_relay_claim (network, state, lease_until)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(110);
     }
 
     if (databaseSchemaVersion < 106 && config.MEMPOOL.NETWORK === 'liquid') {
