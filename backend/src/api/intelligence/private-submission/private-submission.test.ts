@@ -1,4 +1,5 @@
 import privateSubmissionService, { SubmissionEvidenceError } from './private-submission.service';
+import { setPrivateRelayRuntime } from './private-relay.runtime';
 
 /**
  * These assertions replace a suite that asserted the constants the service used
@@ -10,16 +11,22 @@ import privateSubmissionService, { SubmissionEvidenceError } from './private-sub
 describe('PrivateSubmissionService', () => {
   const unavailable = (code: string) => expect.objectContaining({ code });
 
-  it('reports the missing relay rather than queueing a broadcast nothing sends', () => {
-    expect(() => privateSubmissionService.submitPrivate({ raw_tx: '0200000001', method: 'privatebroadcast_tor' }))
-      .toThrow(unavailable('unavailable-relay'));
-    expect(() => privateSubmissionService.getPrivateSubmission('tok-priv-1')).toThrow(unavailable('unavailable-relay'));
-    expect(() => privateSubmissionService.abortPrivateSubmission('tok-priv-1')).toThrow(unavailable('unavailable-relay'));
-  });
-
-  it('reports the missing capability and overview source rather than a constant', () => {
-    expect(() => privateSubmissionService.getOverview()).toThrow(unavailable('unavailable-source'));
-    expect(() => privateSubmissionService.getCapabilities()).toThrow(unavailable('unavailable-source'));
+  // The private relay itself (queueing, worker, abort, overview and capabilities)
+  // is covered in private-relay.test.ts with fakes for the durable store and
+  // the transport. Here: without a database the whole feature reports the
+  // missing store rather than queueing a broadcast nothing sends.
+  it('reports the missing durable store rather than queueing a broadcast nothing sends', async () => {
+    setPrivateRelayRuntime({ network: 'signet', endpoints: { endpoints: [], issues: [], unconfigured: true }, store: null, worker: null, coreVersion: () => '?' });
+    try {
+      await expect(privateSubmissionService.submitPrivate({ raw_tx: '02'.repeat(80), method: 'privatebroadcast_tor' }))
+        .rejects.toMatchObject({ code: 'durable-store-unavailable' });
+      await expect(privateSubmissionService.getPrivateSubmission('tok-priv-1', 'ab'.repeat(32))).rejects.toMatchObject({ code: 'durable-store-unavailable' });
+      await expect(privateSubmissionService.abortPrivateSubmission('tok-priv-1', 'ab'.repeat(32))).rejects.toMatchObject({ code: 'durable-store-unavailable' });
+      await expect(privateSubmissionService.getOverview()).rejects.toMatchObject({ code: 'durable-store-unavailable' });
+      await expect(privateSubmissionService.getCapabilities()).rejects.toMatchObject({ code: 'durable-store-unavailable' });
+    } finally {
+      setPrivateRelayRuntime(null);
+    }
   });
 
   it('reports the missing diagnosis source rather than a fixed feerate verdict', () => {

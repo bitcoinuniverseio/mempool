@@ -2,6 +2,7 @@ import express from 'express';
 import { AddressInfo } from 'net';
 import { Transaction } from 'bitcoinjs-lib';
 import routes from './private-submission.routes';
+import { setPrivateRelayRuntime } from './private-relay.runtime';
 import {
   diagnosisInput,
   submissionInput,
@@ -44,6 +45,9 @@ describe('Private submission bounded inputs and real HTTP boundary', () => {
     (token) => expect(() => tokenInput(token)).toThrow()
   );
   it('serves all12 actual HTTP operations as unavailable authorities and malformed diagnosis as400', async () => {
+    // No database in this process: the private relay routes report the
+    // missing durable store, which is the unavailable authority for them.
+    setPrivateRelayRuntime({ network: 'signet', endpoints: { endpoints: [], issues: [], unconfigured: true }, store: null, worker: null, coreVersion: () => '?' });
     const app = express();
     app.use(express.json());
     routes.initRoutes(app);
@@ -98,6 +102,7 @@ describe('Private submission bounded inputs and real HTTP boundary', () => {
       expect(bad.status).toBe(400);
       expect(((await bad.json()) as any).stage).toBe('invalid-input');
     } finally {
+      setPrivateRelayRuntime(null);
       await new Promise<void>((r) => server.close(() => r()));
     }
   });

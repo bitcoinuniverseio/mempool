@@ -52,10 +52,67 @@ export interface PrivateBroadcastRecord {
   method: SubmissionMethod;
   network: string;
   queued_at_utc: string;
-  status: 'queued' | 'acknowledged' | 'aborted' | 'broadcast_completed' | 'failed';
+  status:
+    | 'queued'
+    | 'acknowledged'
+    | 'aborted'
+    | 'broadcast_completed'
+    | 'failed'
+    | 'relaying'
+    | 'submitted'
+    | 'confirmed'
+    | 'rejected'
+    | 'cancelled'
+    | 'abort-too-late';
   retry_count: number;
   can_abort: boolean;
   last_error?: string;
+  /** Present exactly once, on the response that created the record. */
+  owner_token?: string;
+  /** True when this submission matched an existing record for the same txid. */
+  duplicate?: boolean;
+  relay_endpoint_id?: string;
+  relayed_at_utc?: string;
+  confirmed_block_height?: number;
+  updated_at_utc?: string;
+}
+
+/**
+ * Owner authentication for private submission readback and abort. The token is
+ * returned once by POST /submission/private and is presented either in this
+ * header or, for the abort POST, as the owner_token body field.
+ */
+export const PRIVATE_SUBMISSION_OWNER_TOKEN_HEADER = 'x-submission-owner-token';
+
+export interface PrivateRelayEndpointFact {
+  id: string;
+  transport: 'tor' | 'i2p';
+  submit_host: string;
+  proxy_reachable: boolean | null;
+}
+
+export interface PrivateRelayOverview {
+  network: string;
+  relay: {
+    configured: boolean;
+    reason: string | null;
+    endpoints: PrivateRelayEndpointFact[];
+    rejected_endpoints: { id: string; reason: string }[];
+  };
+  queue: {
+    queued: number;
+    relaying: number;
+    submitted: number;
+    confirmed: number;
+    rejected: number;
+    cancelled: number;
+  };
+  worker: {
+    running: boolean;
+    last_tick_at: string | null;
+    last_error: string | null;
+    last_relay: { endpoint_id: string; transport: 'tor' | 'i2p'; outcome: string; at: string } | null;
+  };
 }
 
 export interface AcceleratorProvider {

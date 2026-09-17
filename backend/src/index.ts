@@ -93,6 +93,7 @@ import { boundedHistoryFlush } from './api/intelligence/time-machine/history-shu
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
 import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
+import { startPrivateRelayWorker } from './api/intelligence/private-submission/private-relay.runtime';
 import rbfCache from './api/rbf-cache';
 import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
 import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
@@ -479,6 +480,9 @@ class Server {
       developerIdentity.startOutboxWorker();
       // Cold schedule: one getblocktemplate every two minutes plus one after each block.
       templateCollectorService.startPolling();
+      // Leased relay worker: reclaims expired leases on start, so a restart
+      // mid-relay resumes instead of stranding the row.
+      startPrivateRelayWorker();
       globalNetworkService.startSnapshots(10 * 60_000, () => blocks.getCurrentBlockHeight());
     }
     websocketHandler.setupConnectionHandling();
