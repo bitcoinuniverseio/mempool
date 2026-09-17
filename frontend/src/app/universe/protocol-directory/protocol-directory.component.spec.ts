@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { NEVER, firstValueFrom, of, throwError } from 'rxjs';
+import { BehaviorSubject, NEVER, Observable, Subject, filter, firstValueFrom, of, throwError } from 'rxjs';
 import { ProtocolDirectoryComponent, type DirectoryViewModel } from '@app/universe/protocol-directory/protocol-directory.component';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { SeoService } from '@app/services/seo.service';
@@ -45,18 +45,38 @@ function source(overrides: Partial<SourceEntry> = {}): SourceEntry {
 
 const seo = { setTitle: () => undefined } as unknown as SeoService;
 
+/** An api stub on one network: the registry, the snapshot, and the network they were read from. */
+function apiOn(
+  network: string,
+  getProtocols$: () => Observable<ProtocolsResponse>,
+  getSources$: () => Observable<SourcesResponse>,
+): UniverseApiService {
+  return {
+    network,
+    selectedNetwork$: () => of(network),
+    getProtocols$,
+    getSources$,
+  } as unknown as UniverseApiService;
+}
+
 function component(
   protocols: ProtocolsResponse,
   sources: SourcesResponse | Error = { generatedAt: 'now', sources: [] },
+  network = 'mainnet',
 ): ProtocolDirectoryComponent {
-  const api = {
-    getProtocols$: () => of(protocols),
-    getSources$: () =>
-      sources instanceof Error ? throwError(() => sources) : of(sources),
-  } as unknown as UniverseApiService;
+  const api = apiOn(
+    network,
+    () => of(protocols),
+    () => (sources instanceof Error ? throwError(() => sources) : of(sources)),
+  );
   const subject = new ProtocolDirectoryComponent(api, seo);
   subject.ngOnInit();
   return subject;
+}
+
+/** The first model that is no longer loading: the page, or the error state. */
+function settled(subject: ProtocolDirectoryComponent): Promise<DirectoryViewModel> {
+  return firstValueFrom(subject.vm$.pipe(filter((vm) => !vm.loading)));
 }
 
 function registry(protocols: ExplorerProtocolDefinition[]): ProtocolsResponse {
@@ -181,7 +201,7 @@ describe('ProtocolDirectoryComponent view model', () => {
         protocol({ id: 'stamps', family: 'STAMPS' }),
       ]),
     );
-    const vm = await firstValueFrom(subject.vm$);
+    const vm = await settled(subject);
     expect(vm.groups.map((group) => group.label)).toEqual([
       'ORDINALS',
       'RUNES',
@@ -198,7 +218,7 @@ describe('ProtocolDirectoryComponent view model', () => {
         protocol({ id: 'zerdinals', chain: 'zcash' }),
       ]),
     );
-    const vm = await firstValueFrom(subject.vm$);
+    const vm = await settled(subject);
     expect(vm.totalCount).toBe(1);
     expect(vm.otherChainCount).toBe(2);
   });
@@ -219,17 +239,31 @@ describe('ProtocolDirectoryComponent view model', () => {
         ],
       },
     );
-    const vm = await firstValueFrom(subject.vm$);
+    const vm = await settled(subject);
     expect(vm.liveCount).toBe(1);
     expect(vm.totalCount).toBe(3);
   });
 
   it('renders the registry even when the live source snapshot fails', async () => {
-    const subject = component(registry([protocol()]), new Error('sources down'));
-    const vm = await firstValueFrom(subject.vm$);
+    const readable = protocol({ releaseStatus: 'VERIFIED READ ONLY' });
+    const subject = component(registry([readable]), new Error('sources down'));
+    const vm = await settled(subject);
     expect(vm.error).toBe(false);
     expect(vm.groups).toHaveLength(1);
     expect(vm.sourcesByAuthority).toBeNull();
+    // The registry is intact; what the authority can answer is unknown, not
+    // "not served here" and not readable.
+    expect(subject.availability(readable, vm.sourcesByAuthority)).toBe('unknown');
+    expect(vm.liveCount).toBe(0);
+  });
+
+  it('announces loading before every attempt, with the network the request is addressed to', async () => {
+    const subject = component(registry([protocol()]), undefined, 'signet');
+    const seen: DirectoryViewModel[] = [];
+    subject.vm$.subscribe((vm) => seen.push(vm));
+    expect(seen[0]).toEqual({ loading: true, error: false, network: 'signet' });
+    expect(seen.at(-1)?.loading).toBe(false);
+    expect(seen.at(-1)?.network).toBe('signet');
   });
 
   it('reaches the error state when the registry never answers, rather than waiting', async () => {
@@ -237,10 +271,7 @@ describe('ProtocolDirectoryComponent view model', () => {
     // the page sat on its skeleton with nothing left to clear it.
     vi.useFakeTimers();
     try {
-      const api = {
-        getProtocols$: () => NEVER,
-        getSources$: () => NEVER,
-      } as unknown as UniverseApiService;
+      const api = apiOn('mainnet', () => NEVER, () => NEVER);
       const subject = new ProtocolDirectoryComponent(api, seo);
       subject.ngOnInit();
       const seen: DirectoryViewModel[] = [];
@@ -254,14 +285,140 @@ describe('ProtocolDirectoryComponent view model', () => {
   });
 
   it('reports an error when the registry itself fails', async () => {
+    const api = apiOn(
+      'mainnet',
+      () => throwError(() => new Error('registry down')),
+      () => of({ generatedAt: 'now', sources: [] }),
+    );
+    const subject = new ProtocolDirectoryComponent(api, seo);
+    subject.ngOnInit();
+    const vm = await settled(subject);
+    expect(vm.error).toBe(true);
+  });
+});
+
+describe('ProtocolDirectoryComponent retry', () => {
+  const sources: SourcesResponse = { generatedAt: 'now', sources: [source()] };
+
+  /**
+   * The audit reproduced this with the bare operators: the registry failure
+   * reached a catchError downstream of the retry stream, which completed the
+   * whole subscription, and the Retry button then emitted to nothing. One
+   * failed read left the page in its error state for good.
+   */
+  it('reads the registry again when Retry is clicked after a failure', async () => {
+    const getProtocols$ = vi.fn()
+      .mockReturnValueOnce(throwError(() => new Error('controlled registry outage')))
+      .mockReturnValueOnce(of(registry([protocol({ releaseStatus: 'VERIFIED READ ONLY' })])));
+    const subject = new ProtocolDirectoryComponent(apiOn('mainnet', getProtocols$, () => of(sources)), seo);
+    subject.ngOnInit();
+    const seen: DirectoryViewModel[] = [];
+    let completed = false;
+    subject.vm$.subscribe({ next: (vm) => seen.push(vm), complete: () => { completed = true; } });
+    expect(seen.at(-1)?.error).toBe(true);
+    expect(completed).toBe(false);
+
+    subject.onRetry();
+
+    expect(getProtocols$).toHaveBeenCalledTimes(2);
+    const ready = seen.at(-1);
+    expect(ready?.loading).toBe(false);
+    expect(ready?.error).toBe(false);
+    expect(ready?.totalCount).toBe(1);
+    expect(ready?.liveCount).toBe(1);
+    // Each attempt announced itself before it resolved.
+    expect(seen.filter((vm) => vm.loading)).toHaveLength(2);
+  });
+
+  it('cancels the attempt in flight when Retry is clicked again', () => {
+    const requests: Subject<ProtocolsResponse>[] = [];
+    const getProtocols$ = (): Observable<ProtocolsResponse> => {
+      const request = new Subject<ProtocolsResponse>();
+      requests.push(request);
+      return request;
+    };
+    const subject = new ProtocolDirectoryComponent(apiOn('mainnet', getProtocols$, () => of(sources)), seo);
+    subject.ngOnInit();
+    const seen: DirectoryViewModel[] = [];
+    subject.vm$.subscribe((vm) => seen.push(vm));
+    subject.onRetry();
+    subject.onRetry();
+    expect(requests).toHaveLength(3);
+    expect(requests[0].observed).toBe(false);
+    expect(requests[1].observed).toBe(false);
+    expect(requests[2].observed).toBe(true);
+
+    // A late answer from a cancelled attempt paints nothing.
+    requests[0].next(registry([protocol({ id: 'stale-answer' })]));
+    expect(seen.at(-1)?.loading).toBe(true);
+
+    requests[2].next(registry([protocol({ id: 'current-answer' })]));
+    expect(seen.at(-1)?.groups?.[0].protocols[0].id).toBe('current-answer');
+  });
+
+  it('recovers with Retry after the request budget expired', async () => {
+    vi.useFakeTimers();
+    try {
+      const getProtocols$ = vi.fn()
+        .mockReturnValueOnce(NEVER)
+        .mockReturnValueOnce(of(registry([protocol()])));
+      const subject = new ProtocolDirectoryComponent(apiOn('mainnet', getProtocols$, () => of(sources)), seo);
+      subject.ngOnInit();
+      const seen: DirectoryViewModel[] = [];
+      subject.vm$.subscribe((vm) => seen.push(vm));
+      await vi.advanceTimersByTimeAsync(25_000);
+      expect(seen.at(-1)?.error).toBe(true);
+
+      subject.onRetry();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(getProtocols$).toHaveBeenCalledTimes(2);
+      expect(seen.at(-1)).toMatchObject({ loading: false, error: false, totalCount: 1 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('never keeps an error model as registry data once a network switch answers', () => {
+    const network = new BehaviorSubject<string>('mainnet');
     const api = {
-      getProtocols$: () => throwError(() => new Error('registry down')),
-      getSources$: () => of({ generatedAt: 'now', sources: [] }),
+      network: 'mainnet',
+      selectedNetwork$: () => network,
+      getProtocols$: () => network.value === 'mainnet'
+        ? throwError(() => new Error('mainnet registry outage'))
+        : of(registry([protocol({ networks: ['signet'] })])),
+      getSources$: () => of(sources),
     } as unknown as UniverseApiService;
     const subject = new ProtocolDirectoryComponent(api, seo);
     subject.ngOnInit();
-    const vm = await firstValueFrom(subject.vm$);
-    expect(vm.error).toBe(true);
+    const seen: DirectoryViewModel[] = [];
+    subject.vm$.subscribe((vm) => seen.push(vm));
+    expect(seen.at(-1)).toEqual({ loading: false, error: true, network: 'mainnet' });
+    network.next('signet');
+    expect(seen.at(-1)).toMatchObject({ loading: false, error: false, network: 'signet', totalCount: 1 });
+  });
+});
+
+describe('ProtocolDirectoryComponent network copy', () => {
+  const subject = component(registry([]));
+
+  it.each([
+    ['mainnet', 'Bitcoin mainnet'],
+    ['signet', 'Bitcoin Signet'],
+    ['testnet', 'Bitcoin Testnet'],
+    ['testnet4', 'Bitcoin Testnet4'],
+    ['regtest', 'Bitcoin Regtest'],
+  ] as const)('names %s as %s, the network the registry was read from', async (network, label) => {
+    const vm = await settled(component(registry([]), undefined, network));
+    expect(vm.network).toBe(network);
+    expect(subject.networkLabel(vm.network)).toBe(label);
+  });
+
+  it('carries the network into the error state too, so the copy above it stays true', async () => {
+    const api = apiOn('signet', () => throwError(() => new Error('down')), () => of({ generatedAt: 'now', sources: [] }));
+    const failed = new ProtocolDirectoryComponent(api, seo);
+    failed.ngOnInit();
+    const vm = await settled(failed);
+    expect(vm).toEqual({ loading: false, error: true, network: 'signet' });
   });
 });
 
