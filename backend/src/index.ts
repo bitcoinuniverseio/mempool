@@ -91,6 +91,7 @@ import { timeMachineService } from './api/intelligence/time-machine/time-machine
 import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
 import { boundedHistoryFlush } from './api/intelligence/time-machine/history-shutdown';
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
+import { orderingEvidenceService } from './api/intelligence/private-submission/ordering-evidence.service';
 import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
 import rbfCache from './api/rbf-cache';
@@ -461,6 +462,8 @@ class Server {
       else timeMachineService.markObservationFailure();
     });
     blockObservationHub.subscribe('templates', (block, transactions) => { templateCollectorService.observeBlock(block, transactions); });
+    // Ordering evidence compares the mined order with the templates recorded for the height, so it reads after the template collector.
+    blockObservationHub.subscribe('ordering-evidence', (block, transactions) => { orderingEvidenceService.observeBlock(block, transactions); });
     // The hub contains each observer's failure; the matcher's own rejection is reported there.
     blockObservationHub.subscribe('watchlist-matcher', (block, transactions) => watchlistMatcher.observeBlock(block, transactions).then(() => undefined));
     blocks.setNewAsyncBlockCallback((block, _txIds, transactions) => blockObservationHub.dispatch(block, transactions).then(() => undefined));
