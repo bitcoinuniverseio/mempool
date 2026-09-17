@@ -1,7 +1,7 @@
 jest.mock('../api/websocket-handler', () => ({}));
 jest.mock('../api/fee-api', () => ({}));
 jest.mock('../api/mempool-blocks', () => ({}));
-jest.mock('../api/mempool', () => ({ getMempool: () => ({}) }));
+jest.mock('../api/mempool', () => ({ getMempool: () => ({}), getFirstSeenForTransactions: jest.fn(() => []) }));
 jest.mock('../api/rbf-cache', () => ({}));
 jest.mock('../api/bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: { $getBlockHash: jest.fn(), $getTxIdsForBlock: jest.fn(), $getScriptHash: jest.fn() }, bitcoinCoreApi: {} }));
 jest.mock('../api/common', () => ({ Common: { indexingEnabled: () => true } }));
@@ -47,6 +47,13 @@ test('height zero is a valid Core result and lookup',async()=>{
  (client.getBlockCount as jest.Mock).mockResolvedValue(0);(api.$getBlockHash as jest.Mock).mockResolvedValue(id);
  const count=await fetch(origin+'internal/bitcoin-core/get-block-count');expect(count.status).toBe(200);expect(await count.text()).toBe('0');
  expect((await fetch(origin+'block-height/0')).status).toBe(200);expect(api.$getBlockHash).toHaveBeenCalledWith(0);
+});
+test('transaction-times without a txId list is a client error, not a server failure',async()=>{
+ for(const query of ['','?txId=abc','?txId[]=']) {
+  const response=await fetch(origin+'transaction-times'+query,{headers:{accept:'application/json'}});
+  if(query==='?txId[]=') { expect(response.status).toBe(200); continue; }
+  expect(response.status).toBe(400);expect(await response.json()).toEqual({error:'invalid txId format'});
+ }
 });
 test('scripthashes require exactly32bytes',async()=>{
  expect((await fetch(origin+'scripthash/ab')).status).toBe(400);expect(api.$getScriptHash).not.toHaveBeenCalled();
