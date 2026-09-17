@@ -5,6 +5,81 @@ import { catchError } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
 import { OwnerKeyService } from './owner-key.service';
 
+// Query Studio and developer usage contracts mirror
+// backend/src/api/intelligence/query-studio/query-studio.service.ts.
+
+export interface QueryExecutionResult {
+  query_id: string;
+  sql: string;
+  executed_sql: string;
+  columns: string[];
+  /** Big numbers arrive as exact decimal strings; nothing is rounded client side. */
+  rows: Array<Record<string, unknown>>;
+  row_count: number;
+  execution_time_ms: number;
+  truncated: boolean;
+  /** Opaque; hand it back unchanged to read the next page of the same statement. */
+  next_cursor: string | null;
+  source: { engine: string; table: string; network: string; deadline_ms: number; max_rows: number; result_bytes_limit: number };
+  precision: string;
+}
+
+export interface TableColumnSchema {
+  name: string;
+  type: string;
+  nullable: boolean;
+  is_primary_key: boolean;
+}
+
+export interface TableSchemaInfo {
+  table_name: string;
+  description: string;
+  columns: TableColumnSchema[];
+  indexes: string[];
+}
+
+export interface QuerySchemaResult {
+  network: string;
+  source: string;
+  observed_at: string;
+  tables: TableSchemaInfo[];
+  /** Allowlisted tables the replica does not currently carry. */
+  missing_tables: string[];
+  grammar: string;
+  count?: number;
+}
+
+/**
+ * The typed failure bodies of the query routes: 400 rejected-by-grammar with
+ * the offending position, 503 unavailable-query-engine (reason unconfigured
+ * or invalid-dsn), 504 unavailable-query-engine with reason deadline.
+ */
+export interface QueryFailureBody {
+  stage?: 'rejected-by-grammar' | 'unavailable-query-engine' | string;
+  reason?: string | null;
+  error?: string;
+  position?: number | null;
+}
+
+export interface DeveloperUsageResult {
+  owner_id: string;
+  network: string;
+  state: 'observed' | 'no-observations';
+  usage: {
+    requests_total: number;
+    responses_2xx: number;
+    responses_4xx: number;
+    responses_5xx: number;
+    rate_limited: number;
+    latency_ms: { p50: number; p95: number; max: number; samples: number };
+    keys: Array<{ key_id: string; requests: number; first_observed_at: string; last_observed_at: string }>;
+    first_observed_at: string;
+    last_observed_at: string;
+  } | null;
+  quota: { keys: Array<{ key_id: string; name: string; rate_limit_per_minute: number; last_used_at: string | null; revoked: boolean }>; source: string };
+  coverage: { observer_id: string; persistence: string; observed_since: string; observed_at: string; scope: string };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -174,8 +249,8 @@ export class IntelligenceApiService {
     return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/keys/${encodeURIComponent(keyId)}`, this.ownerHeaders);
   }
 
-  getDeveloperUsage$(): Observable<any> {
-    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/usage`, this.ownerHeaders);
+  getDeveloperUsage$(): Observable<DeveloperUsageResult> {
+    return this.httpClient.get<DeveloperUsageResult>(`${this.apiBaseUrl}/api/v1/intelligence/developer/usage`, this.ownerHeaders);
   }
 
   getWebhooks$(): Observable<any> {
@@ -190,10 +265,16 @@ export class IntelligenceApiService {
     return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/developer/webhooks/${encodeURIComponent(webhookId)}/attempts`, this.ownerHeaders);
   }
 
-  executeDevQuery$(sql: string, maxRows = 100): Observable<any> {
-    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/query/execute`, {
+  /**
+   * One page of a bounded SELECT. The answer carries rows (big numbers as
+   * exact strings), `truncated`, and an opaque `next_cursor` that this method
+   * hands back to fetch the next page of the same statement.
+   */
+  executeDevQuery$(sql: string, maxRows = 100, cursor?: string): Observable<QueryExecutionResult> {
+    return this.httpClient.post<QueryExecutionResult>(`${this.apiBaseUrl}/api/v1/intelligence/query/execute`, {
       sql,
       max_rows: maxRows,
+      ...(cursor ? { cursor } : {}),
     });
   }
 
@@ -204,8 +285,8 @@ export class IntelligenceApiService {
     return this.httpClient.post<any>(this.apiBaseUrl + '/api/v1/intelligence/query/saved', { title, sql }, this.ownerHeaders);
   }
 
-  getQuerySchema$(): Observable<any> {
-    return this.httpClient.get<any>(`${this.apiBaseUrl}/api/v1/intelligence/query/schema`);
+  getQuerySchema$(): Observable<QuerySchemaResult> {
+    return this.httpClient.get<QuerySchemaResult>(`${this.apiBaseUrl}/api/v1/intelligence/query/schema`);
   }
 
   // Product 10: Watchlists (owner-scoped)

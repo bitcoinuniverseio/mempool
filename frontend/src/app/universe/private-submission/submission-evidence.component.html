@@ -11,38 +11,124 @@
     revenue.
   </p>
   <p *ngIf="vm.loading" role="status">Loading source evidence…</p>
-  <p *ngIf="vm.error" role="alert" class="alert alert-warning">
+  <div *ngIf="vm.error" role="alert" class="alert alert-warning">
+    <strong *ngIf="errorKind(vm) === 'not-observed'">Not observed by this backend.</strong>
+    <strong *ngIf="errorKind(vm) === 'unavailable'">Owned source unavailable.</strong>
     {{ vm.error }}
-  </p>
+    <div class="small text-muted" *ngIf="vm.stage">Reason code: <code>{{ vm.stage }}</code></div>
+  </div>
   <section *ngIf="vm.data as data">
-    <h2>Reported source fields</h2>
-    <ng-container *ngIf="view !== 'ordering'"
-      ><dl *ngFor="let f of data | keyvalue">
+    <ng-container *ngIf="view === 'overview'">
+      <h2>Private relay</h2>
+      <p>
+        <span class="badge" [ngClass]="data.relay.configured ? 'bg-success' : 'bg-warning text-dark'">{{ data.relay.configured ? 'configured' : 'not configured' }}</span>
+        <span *ngIf="data.relay.reason"> {{ data.relay.reason }}</span>
+      </p>
+      <table class="table table-sm" *ngIf="data.relay.endpoints?.length">
+        <thead><tr><th>Endpoint</th><th>Transport</th><th>Submit host</th><th>Proxy reachable</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let e of data.relay.endpoints">
+            <td class="font-monospace">{{ e.id }}</td>
+            <td>{{ e.transport }}</td>
+            <td class="font-monospace">{{ e.submit_host }}</td>
+            <td>{{ e.proxy_reachable === null ? 'not probed yet' : e.proxy_reachable ? 'yes' : 'no' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="data.relay.rejected_endpoints?.length" class="small">
+        Rejected endpoint configuration:
+        <span *ngFor="let r of data.relay.rejected_endpoints">{{ r.id }}: {{ r.reason }}; </span>
+      </p>
+      <h2>Queue</h2>
+      <dl class="row">
+        <ng-container *ngFor="let f of data.queue | keyvalue">
+          <dt class="col-sm-3">{{ f.key }}</dt>
+          <dd class="col-sm-9 font-monospace">{{ display(f.value) }}</dd>
+        </ng-container>
+      </dl>
+      <h2>Relay worker</h2>
+      <dl class="row">
+        <dt class="col-sm-3">running</dt><dd class="col-sm-9">{{ data.worker.running ? 'yes' : 'no' }}</dd>
+        <dt class="col-sm-3">last tick</dt><dd class="col-sm-9 font-monospace">{{ data.worker.last_tick_at ?? 'never' }}</dd>
+        <dt class="col-sm-3">last error</dt><dd class="col-sm-9">{{ data.worker.last_error ?? 'none' }}</dd>
+        <dt class="col-sm-3">last relay</dt>
+        <dd class="col-sm-9 font-monospace">
+          <span *ngIf="data.worker.last_relay">{{ data.worker.last_relay.at }} {{ data.worker.last_relay.endpoint_id }} ({{ data.worker.last_relay.transport }}): {{ data.worker.last_relay.outcome }}</span>
+          <span *ngIf="!data.worker.last_relay">none</span>
+        </dd>
+      </dl>
+    </ng-container>
+    <ng-container *ngIf="view === 'tx' || view === 'provider'">
+      <h2>Reported source fields</h2>
+      <p *ngIf="view === 'tx'">
+        <strong>{{ display(data.evidence_state) }}</strong>: {{ orderingLabel(data.evidence_state) }}
+        <span *ngIf="data.template_coverage === 'no-template-observed'"> No collected template covers this block.</span>
+        <span *ngIf="data.sensor_observer_id"> Observer: {{ data.sensor_observer_id }}.</span>
+      </p>
+      <dl *ngFor="let f of data | keyvalue">
         <dt>{{ f.key }}</dt>
         <dd>
           <pre>{{ display(f.value) }}</pre>
         </dd>
-      </dl></ng-container
-    ><ng-container *ngIf="view === 'ordering'"
-      ><article *ngFor="let row of data" class="card p-3 mb-3">
-        <a
-          [routerLink]="['/intelligence/ordering/tx' | relativeUrl, row.txid]"
-          >{{ row.txid }}</a
-        >
+      </dl>
+    </ng-container>
+    <ng-container *ngIf="view === 'block'">
+      <h2>Block {{ data.height }} as this observer recorded it</h2>
+      <p>
+        Mined {{ data.mined_timestamp_utc }} on {{ data.network }}. Template coverage: <strong>{{ data.template_coverage }}</strong><span *ngIf="data.templates_compared?.length"> ({{ data.templates_compared.join(', ') }})</span>. Observer: {{ data.sensor?.observer_id ?? 'unknown' }} ({{ data.sensor?.observers ?? 1 }} observer).
+        <span *ngIf="data.truncated"> The transaction list is truncated.</span>
+      </p>
+      <p *ngIf="data.transactions.length === 0">No transaction of this block was recorded.</p>
+      <article *ngFor="let row of data.transactions" class="card p-3 mb-3">
+        <a [routerLink]="['/intelligence/ordering/tx' | relativeUrl, row.txid]">{{ row.txid }}</a>
         <p>
-          Evidence: {{ display(row.evidence_state) }} · Confidence:
-          {{ display(row.confidence_rating) }}
+          Position {{ display(row.block_position) }} · <strong>{{ display(row.evidence_state) }}</strong>: {{ orderingLabel(row.evidence_state) }} · Confidence: {{ display(row.confidence_rating) }}
         </p>
-        <p>
-          Observed block position: {{ display(row.block_position) }} · Fee:
-          {{ display(row.fee_sats_vb) }} sat/vB
-        </p>
-        <pre>{{ row | json }}</pre>
       </article>
-      <p *ngIf="data.length === 0">
-        The source returned no findings.
-      </p></ng-container
-    >
+      <p class="small">{{ data.scope }}</p>
+    </ng-container>
+    <ng-container *ngIf="view === 'ordering'">
+      <p *ngIf="data.state === 'no-blocks-observed'" role="status">
+        <strong>No blocks observed.</strong> This backend has not recorded a block yet, so there is no ordering evidence. Nothing is shown in its place.
+      </p>
+      <ng-container *ngIf="data.state === 'observed'">
+        <p>
+          {{ data.retention.retained_blocks }} of the last {{ data.retention.blocks }} blocks retained on {{ data.network }}.
+        </p>
+        <table class="table table-sm" *ngIf="data.coverage?.length">
+          <thead><tr><th>Block</th><th>Height</th><th>Template coverage</th><th>Transactions</th><th>Findings</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let c of data.coverage">
+              <td class="font-monospace"><a [routerLink]="['/intelligence/ordering/block' | relativeUrl, c.block_hash]">{{ c.block_hash.slice(0, 16) }}…</a></td>
+              <td>{{ c.height }}</td>
+              <td>{{ c.template_coverage }}</td>
+              <td>{{ c.transactions }}</td>
+              <td>{{ c.findings }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <article *ngFor="let row of data.findings" class="card p-3 mb-3">
+          <a
+            [routerLink]="['/intelligence/ordering/tx' | relativeUrl, row.txid]"
+            >{{ row.txid }}</a
+          >
+          <p>
+            Evidence: <strong>{{ display(row.evidence_state) }}</strong> ({{ orderingLabel(row.evidence_state) }}) · Confidence:
+            {{ display(row.confidence_rating) }}
+          </p>
+          <p>
+            Observed block position: {{ display(row.block_position) }} · Fee:
+            {{ display(row.fee_sats_vb) }} sat/vB
+            <span *ngIf="row.template_coverage"> · Template coverage: {{ row.template_coverage }}</span>
+          </p>
+          <pre>{{ row | json }}</pre>
+        </article>
+        <p *ngIf="data.findings.length === 0">
+          The retained blocks produced no ordering finding.
+        </p>
+      </ng-container>
+      <p class="small">{{ data.scope }}</p>
+    </ng-container>
     <p *ngIf="view === 'provider'">
       Provider declarations and timestamps are not independent payment, reach or
       current health proof.
@@ -50,6 +136,7 @@
   </section>
   <section *ngIf="view === 'overview'">
     <h2>Transaction diagnosis</h2>
+    <p class="small">The transaction's own entry in the owned mempool: package feerate, ancestors and descendants, replacement signals and the node's policy limits. A transaction this mempool does not hold has no facts to report.</p>
     <form (ngSubmit)="diagnose()">
       <label for="submission-diagnosis">Transaction ID or raw hex</label
       ><textarea
@@ -64,12 +151,15 @@
         {{ diagnosing ? "Reading transaction evidence…" : "Request diagnosis" }}
       </button>
     </form>
-    <p *ngIf="diagnosisError" role="alert" class="alert alert-warning">
+    <div *ngIf="diagnosisError" role="alert" class="alert alert-warning">
+      <strong *ngIf="diagnosisStage === 'transaction-not-in-mempool'">Not in the owned mempool.</strong>
+      <strong *ngIf="diagnosisStatus !== null && diagnosisStatus >= 500">Owned mempool unavailable.</strong>
       {{ diagnosisError }}
-    </p>
+      <div class="small text-muted" *ngIf="diagnosisStage">Reason code: <code>{{ diagnosisStage }}</code></div>
+    </div>
     <dl *ngFor="let f of diagnosis | keyvalue">
       <dt>{{ f.key }}</dt>
-      <dd>{{ display(f.value) }}</dd>
+      <dd><pre>{{ display(f.value) }}</pre></dd>
     </dl>
   </section>
 </div>
