@@ -1,13 +1,17 @@
 import { Application, Request, Response } from 'express';
-import { QueryStudioEvidenceError, queryStudioService, usageMetricsUnavailable } from './query-studio.service';
-import { developerIdentity, IdentityError } from '../identity/developer-identity';
-import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth';
+import { QueryPolicyError, QueryStudioEvidenceError, queryStudioService } from './query-studio.service';
+import { AuthenticatedOwner, developerIdentity, IdentityError } from '../identity/developer-identity';
+import { bearerFromRequest, ownerOf, recordOwnerUsage, requireOwner, sendIdentityError } from '../identity/owner-auth';
 import { handleError } from '../../../utils/api';
 
 /** An absent source is a 503 that names the source, never a 500 and never an invented row. */
 function fail(req: Request, res: Response, e: unknown, status: number, fallback: string): void {
   if (e instanceof QueryStudioEvidenceError) {
-    res.status(e.status).json({ stage: e.code, error: e.message });
+    res.status(e.status).json({ stage: e.code, reason: e.reason, error: e.message });
+    return;
+  }
+  if (e instanceof QueryPolicyError) {
+    res.status(400).json({ stage: 'rejected-by-grammar', error: e.message, position: e.position });
     return;
   }
   if (e instanceof IdentityError) {
@@ -15,6 +19,22 @@ function fail(req: Request, res: Response, e: unknown, status: number, fallback:
     return;
   }
   handleError(req, res, status, e instanceof Error ? e.message : fallback);
+}
+
+/**
+ * Execution and history accept, but do not require, an API key: with one the
+ * execution is recorded in that owner's history and usage; without one nothing
+ * is retained. A presented key that does not authenticate is a 401, never an
+ * anonymous fallback.
+ * @asyncUnsafe Callers turn a rejection into an exact HTTP answer.
+ */
+async function optionalOwner(req: Request, res: Response): Promise<AuthenticatedOwner | null> {
+  const secret = bearerFromRequest(req);
+  if (!secret) { return null; }
+  const owner = await developerIdentity.authenticateKey(secret);
+  if (!owner) { throw new IdentityError('unauthenticated', 'The presented API key is not valid.', 401); }
+  recordOwnerUsage(res, owner);
+  return owner;
 }
 
 /**
@@ -87,7 +107,7 @@ class QueryStudioRoutes {
 
   private async $getUsage(req: Request, res: Response): Promise<void> {
     try {
-      throw new QueryStudioEvidenceError('unavailable-usage-metrics', usageMetricsUnavailable);
+      res.json(await queryStudioService.getUsage(ownerOf(res)));
     } catch (e) {
       fail(req, res, e, 500, 'Failed to fetch usage metrics');
     }
@@ -133,7 +153,8 @@ class QueryStudioRoutes {
         res.status(400).json({ error: 'sql parameter required.' });
         return;
       }
-      const result = queryStudioService.executeQuery(sql, maxRows);
+      const owner = await optionalOwner(req, res);
+      const result = await queryStudioService.executeQuery(sql, maxRows, req.body?.cursor, owner);
       res.json(result);
     } catch (e) {
       fail(req, res, e, 400, 'Query execution error');
@@ -142,8 +163,8 @@ class QueryStudioRoutes {
 
   private async $getSchema(req: Request, res: Response): Promise<void> {
     try {
-      const schema = queryStudioService.getSchema();
-      res.json({ tables: schema, count: schema.length });
+      const schema = await queryStudioService.getSchema();
+      res.json({ ...schema, count: schema.tables.length });
     } catch (e) {
       fail(req, res, e, 500, 'Failed to fetch schema');
     }
@@ -151,10 +172,11 @@ class QueryStudioRoutes {
 
   private async $getHistory(req: Request, res: Response): Promise<void> {
     try {
-      const history = queryStudioService.getHistory();
-      res.json({ history, count: history.length });
+      const owner = await optionalOwner(req, res);
+      const history = queryStudioService.getHistory(owner);
+      res.json({ history, count: history.length, scope: owner ? 'owner' : 'unauthenticated: history is kept per API-key owner only' });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch query history');
+      fail(req, res, e, 500, 'Failed to fetch query history');
     }
   }
 
