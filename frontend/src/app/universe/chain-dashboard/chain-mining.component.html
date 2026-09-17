@@ -93,8 +93,11 @@
           than counted as zero.
         </ng-container>
       </p>
-      <p class="notice empty" *ngIf="!vm.subsidy && !vm.meanReward" i18n="universe.mining.reward-unavailable">
+      <p class="notice empty" *ngIf="!vm.subsidy && !vm.meanReward && vm.viewError !== 'network-not-offered'" i18n="universe.mining.reward-unavailable">
         Reward readings appear once the block collector has stored enough history.
+      </p>
+      <p class="notice empty" *ngIf="!vm.subsidy && !vm.meanReward && vm.viewError === 'network-not-offered'" i18n="universe.mining.reward-not-offered">
+        Not offered on {{ profile.name }} {{ networkLabel }}.
       </p>
     </section>
 
@@ -141,8 +144,11 @@
         <p class="secondary dataset-version" i18n="universe.mining.dataset-version">Attribution dataset {{ pools.attributionDatasetVersion }}</p>
       </ng-container>
       <ng-template #poolsUnavailable>
-        <p class="notice empty" *ngIf="vm.poolsError" i18n="universe.mining.pools-error">
+        <p class="notice empty" *ngIf="vm.poolsError && vm.viewError !== 'network-not-offered'" i18n="universe.mining.pools-error">
           Pool shares cannot be computed right now.
+        </p>
+        <p class="notice empty" *ngIf="vm.poolsError && vm.viewError === 'network-not-offered'" i18n="universe.mining.pools-not-offered">
+          Not offered on {{ profile.name }} {{ networkLabel }}.
         </p>
         <p class="notice empty" *ngIf="!vm.poolsError" i18n="universe.mining.pools-empty">
           Pool shares appear once the block collector has stored blocks in this window.
@@ -190,8 +196,11 @@
         </table>
       </div>
       <ng-template #blocksUnavailable>
-        <p class="notice empty" i18n="universe.mining.blocks-unavailable">
+        <p class="notice empty" *ngIf="vm.viewError !== 'network-not-offered'" i18n="universe.mining.blocks-unavailable">
           No recent blocks are stored yet. They appear as the collector catches up.
+        </p>
+        <p class="notice empty" *ngIf="vm.viewError === 'network-not-offered'" i18n="universe.mining.blocks-not-offered">
+          Not offered on {{ profile.name }} {{ networkLabel }}; the Mempool and block pages of this network read from its own node.
         </p>
       </ng-template>
     </section>
