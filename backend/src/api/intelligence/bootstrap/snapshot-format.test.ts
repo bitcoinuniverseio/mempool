@@ -8,6 +8,7 @@ import {
   NETWORK_MAGIC,
   SnapshotFormatError,
   SnapshotStreamDecoder,
+  varintBytes,
 } from './snapshot-format';
 
 /** Exact dumptxoutset bytes of an offline Bitcoin Core 28.0 regtest node; see __fixtures__/README.md. */
@@ -116,6 +117,30 @@ describe('snapshot-format', () => {
     expect(out.hash_serialized_3).toBeNull();
     expect(out.hash_reason).toBe('coins-not-in-cursor-order');
     expect(out.coins_read).toBe(2);
+    // Core splits a transaction with many unspent outputs across consecutive
+    // groups of the same txid; ascending outputs across the split keep the
+    // cursor order, a repeated or lower output index does not.
+    const continued = Buffer.concat([header, txid(1), Buffer.from([1, 0]), coin, txid(1), Buffer.from([1, 1]), coin]);
+    const continuedOut = decodeSnapshot(continued, 'regtest');
+    expect(continuedOut.hash_serialized_3).toHaveLength(64);
+    expect(continuedOut.hash_serialized_3).toBe(decodeSnapshot(Buffer.concat([header, txid(1), Buffer.from([2, 0]), coin, Buffer.from([1]), coin]), 'regtest').hash_serialized_3);
+    const repeated = Buffer.concat([header, txid(1), Buffer.from([1, 1]), coin, txid(1), Buffer.from([1, 0]), coin]);
+    expect(decodeSnapshot(repeated, 'regtest').hash_reason).toBe('coins-not-in-cursor-order');
+    // The cursor orders outputs by their VARINT key bytes, not numerically:
+    // VARINT(23229) sorts before VARINT(256) (three bytes starting 0x80 beat
+    // two bytes starting 0x81), which is what Core writes and hashes.
+    expect(Buffer.compare(varintBytes(23229), varintBytes(256))).toBeLessThan(0);
+    const varintOrder = Buffer.concat([header, txid(1), Buffer.from([2]), Buffer.concat([Buffer.from([0xfd, 0xbd, 0x5a]), coin]), Buffer.concat([Buffer.from([0xfd, 0x00, 0x01]), coin])]);
+    const varintOut = decodeSnapshot(varintOrder, 'regtest');
+    expect(varintOut.hash_reason).toBeNull();
+    expect(varintOut.hash_serialized_3).toHaveLength(64);
+    // Core hashes a transaction's coins in ascending output index whatever
+    // the cursor yielded (coinstats.cpp collects them in a std::map first).
+    // The Core 28.0 regtest fixture above and the Signet snapshot at height
+    // 322488 (76,453,800 coins, output 23229 before 256) both reproduce
+    // Core's own hash_serialized_3 with this ordering.
+    const numericOrder = Buffer.concat([header, txid(1), Buffer.from([2]), Buffer.concat([Buffer.from([0xfd, 0x00, 0x01]), coin]), Buffer.concat([Buffer.from([0xfd, 0xbd, 0x5a]), coin])]);
+    expect(decodeSnapshot(numericOrder, 'regtest').hash_reason).toBe('coins-not-in-cursor-order');
   });
 
   it('decompresses amounts and public keys as compressor.cpp and CPubKey do', () => {

@@ -15,13 +15,20 @@ import { createHash, Hash } from 'crypto';
  * Layout (Core 26.x/27.x, no magic): 32 byte base block hash | u64 LE coins
  * count | per coin: 32 byte txid, u32 LE vout, the same coin encoding.
  *
- * The commitment is SHA256d over, for every coin in cursor order, the
+ * The commitment is SHA256d over, for every transaction in cursor order and
+ * every one of its coins in ascending output index (kernel/coinstats.cpp
+ * collects a transaction's coins into a std::map<uint32_t, Coin> before
+ * ApplyHash, so the hash order within a transaction is numeric even though
+ * the cursor yields VARINT key order), the
  * outpoint (txid, u32 LE vout), u32 LE ((height << 1) | coinbase) and the
  * standard CTxOut (i64 LE amount, CompactSize script length, script), which is
  * kernel/coinstats.cpp TxOutSer. Core hashes its coins database in key order
- * (txid bytes, then vout); the file is written from that same cursor, so the
- * streamed hash equals Core's only when the file is in that order. An
- * out-of-order file is reported instead of being hashed as if it were sorted.
+ * (txid bytes, then the VARINT encoding of vout, compared bytewise, which is
+ * not numeric order across VARINT lengths: on Signet at height 322488 output
+ * 23229 of one transaction precedes output 256); the file is written from
+ * that same cursor, so the streamed hash equals Core's only when the file is
+ * in that order. An out-of-order file is reported instead of being hashed as
+ * if it were sorted.
  */
 
 export const NETWORK_MAGIC: Record<string, string> = {
@@ -147,6 +154,29 @@ class Cursor {
   }
 }
 
+/** serialize.h VARINT (MSB base-128, the +1 continuation trick), the key
+ *  encoding of a vout in the coins database, so bytewise comparison of two
+ *  encodings is the cursor order Core writes and hashes in. */
+export function varintBytes(n: number): Buffer {
+  const out: number[] = [];
+  let value = BigInt(n);
+  let first = true;
+  for (;;) {
+    out.unshift(Number(value & 0x7fn) | (first ? 0 : 0x80));
+    if (value <= 0x7fn) {
+      break;
+    }
+    value = (value >> 7n) - 1n;
+    first = false;
+  }
+  return Buffer.from(out);
+}
+
+/** Whether output index `next` follows `previous` in the coins database cursor. */
+function voutFollows(previous: number, next: number): boolean {
+  return previous < 0 || Buffer.compare(varintBytes(previous), varintBytes(next)) < 0;
+}
+
 /** compressor.cpp DecompressAmount. */
 export function decompressAmount(x: bigint): bigint {
   if (x === 0n) {
@@ -265,6 +295,8 @@ export class SnapshotStreamDecoder {
   private pending: Buffer = Buffer.alloc(0);
   private header?: SnapshotHeader;
   private hash: Hash | null = createHash('sha256');
+  /** Coins of the transaction being read, hashed in numeric output order once it ends. */
+  private group: { txid: Buffer; coins: { vout: number; record: Buffer }[] } | null = null;
   private hashReason: string | null = null;
   private coinsRead = 0;
   private bytesRead = 0;
@@ -305,6 +337,7 @@ export class SnapshotStreamDecoder {
         `The snapshot ended after ${this.coinsRead} of ${this.header.coins_count} coins with ${this.pending.length} undecoded bytes.`
       );
     }
+    this.flushGroup();
     const digest = this.hash ? createHash('sha256').update(this.hash.digest()).digest() : null;
     return {
       header: this.header,
@@ -384,7 +417,12 @@ export class SnapshotStreamDecoder {
         throw new SnapshotFormatError('malformed-coin', 'Per-transaction coin count is zero or exceeds the coins left.');
       }
       coinsLeft = Number(count);
-      lastVout = -1;
+      // Core splits a transaction with many unspent outputs across several
+      // consecutive groups of the same txid (measured on Signet at height
+      // 322488: one txid continued after output 23229). The cursor order
+      // still holds as long as the outputs keep ascending across the groups,
+      // so the last output index carries over when the txid repeats.
+      lastVout = this.lastTxid && this.lastTxid.equals(txid) ? this.lastVout : -1;
       newTx = true;
     }
     const vout = c.compactSize();
@@ -393,12 +431,12 @@ export class SnapshotStreamDecoder {
     }
     const coin = readCoin(c);
     if (newTx) {
-      if (this.lastTxid && Buffer.compare(this.lastTxid, txid) >= 0) {
+      if (this.lastTxid && Buffer.compare(this.lastTxid, txid) > 0) {
         this.disableHash('coins-not-in-cursor-order');
       }
       this.lastTxid = txid;
     }
-    if (Number(vout) <= lastVout) {
+    if (!voutFollows(lastVout, Number(vout))) {
       this.disableHash('coins-not-in-cursor-order');
     }
     this.lastVout = Number(vout);
@@ -414,7 +452,7 @@ export class SnapshotStreamDecoder {
     const coin = readCoin(c);
     if (this.lastTxid) {
       const order = Buffer.compare(this.lastTxid, txid);
-      if (order > 0 || (order === 0 && vout <= this.lastVout)) {
+      if (order > 0 || (order === 0 && !voutFollows(this.lastVout, vout))) {
         this.disableHash('coins-not-in-cursor-order');
       }
     }
@@ -434,16 +472,37 @@ export class SnapshotStreamDecoder {
       fixed.writeUInt32LE(vout, 0);
       fixed.writeUInt32LE(((coin.height << 1) + (coin.coinbase ? 1 : 0)) >>> 0, 4);
       fixed.writeBigInt64LE(coin.amount, 8);
-      this.hash.update(txid).update(fixed).update(compactSizeBytes(coin.script.length)).update(coin.script);
+      const record = Buffer.concat([fixed, compactSizeBytes(coin.script.length), coin.script]);
+      if (!this.group || !this.group.txid.equals(txid)) {
+        this.flushGroup();
+        this.group = { txid, coins: [] };
+      }
+      this.group.coins.push({ vout, record });
     }
     if (this.coinsRead === this.header!.coins_count) {
       this.done = true;
     }
   }
 
+  /** Hashes the finished transaction's coins the way Core's ApplyHash does: ascending output index. */
+  private flushGroup(): void {
+    if (!this.group) {
+      return;
+    }
+    if (this.hash) {
+      const { txid, coins } = this.group;
+      coins.sort((a, b) => a.vout - b.vout);
+      for (const { record } of coins) {
+        this.hash.update(txid).update(record);
+      }
+    }
+    this.group = null;
+  }
+
   private disableHash(reason: string): void {
     this.hash = null;
     this.hashReason = reason;
+    this.group = null;
   }
 }
 
