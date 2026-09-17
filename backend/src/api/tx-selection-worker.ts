@@ -32,7 +32,7 @@ if (parentPort) {
 * Build projected mempool blocks using an approximation of the transaction selection algorithm from Bitcoin Core
 * (see BlockAssembler in https://github.com/bitcoin/bitcoin/blob/master/src/node/miner.cpp)
 */
-function makeBlockTemplates(mempool: Map<number, CompactThreadTransaction>)
+export function makeBlockTemplates(mempool: Map<number, CompactThreadTransaction>)
   : { blocks: number[][], rates: Map<number, number>, clusters: Map<number, number[]> } {
   const start = Date.now();
   const auditPool: Map<number, AuditTransaction> = new Map();
@@ -85,7 +85,7 @@ function makeBlockTemplates(mempool: Map<number, CompactThreadTransaction>)
   // (i.e. the package rooted in the transaction with the best ancestor score)
   const blocks: number[][] = [];
   let blockWeight = 4000;
-  const blockSigops = 0;
+  let blockSigops = 0;
   let transactions: AuditTransaction[] = [];
   const modified: PairingHeap<AuditTransaction> = new PairingHeap((a, b): boolean => {
     if (a.score === b.score) {
@@ -152,6 +152,10 @@ function makeBlockTemplates(mempool: Map<number, CompactThreadTransaction>)
           mempoolTx.cpfpChecked = true;
           transactions.push(ancestor);
           blockWeight += ancestor.weight;
+          // Each ancestor is counted once, here, as it is placed. The package
+          // check above used ancestorSigops, which updateDescendants trims as
+          // ancestors get placed, so nothing is counted twice.
+          blockSigops += ancestor.sigops;
           used.push(ancestor);
         }
 
@@ -184,6 +188,7 @@ function makeBlockTemplates(mempool: Map<number, CompactThreadTransaction>)
       // reset for the next block
       transactions = [];
       blockWeight = 4000;
+      blockSigops = 0;
 
       // 'overflow' packages didn't fit in this block, but are valid candidates for the next
       for (const overflowTx of overflow.reverse()) {
