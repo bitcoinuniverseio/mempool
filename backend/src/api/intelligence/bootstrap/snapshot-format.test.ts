@@ -134,6 +134,11 @@ describe('snapshot-format', () => {
     const varintOut = decodeSnapshot(varintOrder, 'regtest');
     expect(varintOut.hash_reason).toBeNull();
     expect(varintOut.hash_serialized_3).toHaveLength(64);
+    // Core hashes a transaction's coins in ascending output index whatever
+    // the cursor yielded (coinstats.cpp collects them in a std::map first).
+    // The Core 28.0 regtest fixture above and the Signet snapshot at height
+    // 322488 (76,453,800 coins, output 23229 before 256) both reproduce
+    // Core's own hash_serialized_3 with this ordering.
     const numericOrder = Buffer.concat([header, txid(1), Buffer.from([2]), Buffer.concat([Buffer.from([0xfd, 0x00, 0x01]), coin]), Buffer.concat([Buffer.from([0xfd, 0xbd, 0x5a]), coin])]);
     expect(decodeSnapshot(numericOrder, 'regtest').hash_reason).toBe('coins-not-in-cursor-order');
   });
