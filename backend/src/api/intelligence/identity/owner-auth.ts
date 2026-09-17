@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { AuthenticatedOwner, developerIdentity, IdentityError } from './developer-identity';
+import { ownerUsageLedger } from './owner-usage-ledger';
 
 /**
  * Owner authentication for the intelligence surfaces.
@@ -42,11 +43,18 @@ export function requireOwner(scope?: string) {
         return;
       }
       res.locals.owner = owner;
+      recordOwnerUsage(res, owner);
       next();
     } catch (error) {
       res.status(503).json({ error: 'Owner authentication is unavailable: ' + (error instanceof Error ? error.message : String(error)), code: 'auth_unavailable' });
     }
   };
+}
+
+/** Counts the authenticated request in the owned usage ledger once its response has finished. */
+export function recordOwnerUsage(res: Response, owner: AuthenticatedOwner, startedAt = Date.now()): void {
+  if (typeof res.once !== 'function') { return; }
+  res.once('finish', () => { ownerUsageLedger.record(owner.owner_id, owner.key_id, res.statusCode, Date.now() - startedAt); });
 }
 
 /** Maps an IdentityError to its status and a plain body; anything else is a 500. */
