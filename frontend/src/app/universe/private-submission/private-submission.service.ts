@@ -9,7 +9,12 @@ import {
   SubmissionMethod,
   PrivateBroadcastRecord,
   AcceleratorProvider,
+  PRIVATE_SUBMISSION_OWNER_TOKEN_HEADER,
 } from './private-submission.models';
+
+function ownerHeaders(ownerToken?: string): Record<string, string> {
+  return ownerToken ? { [PRIVATE_SUBMISSION_OWNER_TOKEN_HEADER]: ownerToken } : {};
+}
 export * from './private-submission.models';
 export type PrivateBroadcastStatus = PrivateBroadcastRecord['status'];
 /**
@@ -90,20 +95,29 @@ export class PrivateSubmissionApiService {
     );
   }
 
+  /**
+   * Readback and abort are owner-authenticated: the backend returns the owner
+   * token once, on creation, and requires it back in a header. The token is
+   * never placed in the URL.
+   */
   public getPrivateSubmission$(
-    token: string
+    token: string,
+    ownerToken?: string
   ): Observable<PrivateBroadcastRecord> {
     return this.http.get<PrivateBroadcastRecord>(
-      `${this.baseUrl}/submission/private/${encodeURIComponent(token)}`
+      `${this.baseUrl}/submission/private/${encodeURIComponent(token)}`,
+      { headers: ownerHeaders(ownerToken) }
     );
   }
 
   public abortPrivate$(
-    token: string
+    token: string,
+    ownerToken?: string
   ): Observable<{ success: boolean; status: string }> {
     return this.http.post<{ success: boolean; status: string }>(
       `${this.baseUrl}/submission/private/${encodeURIComponent(token)}/abort`,
-      {}
+      {},
+      { headers: ownerHeaders(ownerToken) }
     );
   }
 

@@ -5,7 +5,15 @@ import {
   AcceleratorProvider,
   AcceleratorReceipt,
   TransactionOrderingEvidence,
+  PrivateRelayOverview,
 } from './private-submission.models';
+import {
+  abortPrivateRelaySubmission,
+  privateRelayCapabilities,
+  privateRelayOverview,
+  readPrivateRelaySubmission,
+  submitPrivateRelay,
+} from './private-relay.submissions';
 
 /**
  * Raised when a read has no source behind it. The routes map the code to a
@@ -20,9 +28,6 @@ export class SubmissionEvidenceError extends Error {
     super(message);
   }
 }
-
-const relayUnavailable =
-  'Private broadcast is unavailable. Queueing, relaying and abort all require the owned Tor and I2P submission relay, which is not configured on this deployment (PRE-01).';
 
 const registryUnavailable =
   'The accelerator provider registry is unavailable. Provider identities, health and receipt trust cannot be determined until the owned signed provider directory is configured (PRE-04).';
@@ -55,12 +60,14 @@ const diagnosisUnavailable =
  * deployment does not have.
  */
 export class PrivateSubmissionService {
-  public getOverview(): never {
-    throw new SubmissionEvidenceError('unavailable-source', relayUnavailable);
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async getOverview(): Promise<PrivateRelayOverview> {
+    return privateRelayOverview();
   }
 
-  public getCapabilities(): SubmissionCapabilities {
-    throw new SubmissionEvidenceError('unavailable-source', relayUnavailable);
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async getCapabilities(): Promise<SubmissionCapabilities> {
+    return privateRelayCapabilities();
   }
 
   public diagnoseTransaction(_rawTxOrTxid: string): SubmissionDiagnosisResult {
@@ -70,24 +77,31 @@ export class PrivateSubmissionService {
     );
   }
 
-  public submitPrivate(_submission: {
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async submitPrivate(submission: {
     raw_tx: string;
     method: string;
-  }): PrivateBroadcastRecord {
-    throw new SubmissionEvidenceError('unavailable-relay', relayUnavailable);
+  }): Promise<PrivateBroadcastRecord> {
+    return submitPrivateRelay(submission);
   }
 
-  public getPrivateSubmission(
-    _token: string
-  ): PrivateBroadcastRecord | undefined {
-    throw new SubmissionEvidenceError('unavailable-relay', relayUnavailable);
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async getPrivateSubmission(
+    submissionId: string,
+    ownerToken?: string
+  ): Promise<PrivateBroadcastRecord> {
+    return readPrivateRelaySubmission(submissionId, ownerToken);
   }
 
-  public abortPrivateSubmission(_token: string): {
+  /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
+  public async abortPrivateSubmission(
+    submissionId: string,
+    ownerToken?: string
+  ): Promise<{
     success: boolean;
     status: string;
-  } {
-    throw new SubmissionEvidenceError('unavailable-relay', relayUnavailable);
+  }> {
+    return abortPrivateRelaySubmission(submissionId, ownerToken);
   }
 
   public listAcceleratorProviders(): { providers: AcceleratorProvider[] } {
