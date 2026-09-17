@@ -1,7 +1,8 @@
 import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of, switchMap, timeout } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, combineLatest, map, of, startWith, switchMap, timeout } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
+  ExplorerNetwork,
   ExplorerProtocolDefinition,
   ProtocolCoverage,
   ProtocolsResponse,
@@ -9,17 +10,16 @@ import {
   SourcesResponse,
 } from '@app/universe/universe.types';
 import { SeoService } from '@app/services/seo.service';
+import {
+  ProtocolAvailability,
+  availabilityLabel,
+  hasReadOperations,
+  normalizeReleaseStatus,
+  protocolAvailability,
+  sourceForProtocol,
+} from '@app/universe/protocol-availability';
 
-/** What a protocol can answer for right now, as opposed to what it implements. */
-export type ProtocolAvailability =
-  | 'available'
-  | 'catching-up'
-  | 'degraded'
-  | 'unreachable'
-  | 'unconfigured'
-  | 'not-implemented'
-  | 'disabled'
-  | 'unknown';
+export type { ProtocolAvailability } from '@app/universe/protocol-availability';
 
 interface FamilyGroup {
   family: string;
@@ -30,6 +30,8 @@ interface FamilyGroup {
 export interface DirectoryViewModel {
   loading: boolean;
   error: boolean;
+  /** The network the registry request was addressed to; what the copy names. */
+  network: ExplorerNetwork;
   registryVersion?: string;
   groups?: FamilyGroup[];
   otherChainCount?: number;
@@ -67,19 +69,35 @@ export class ProtocolDirectoryComponent implements OnInit {
     this.seoService.setTitle('Universe Protocols');
     // The registry is the page; the live source snapshot only annotates it, so
     // a failing snapshot must not blank out the directory.
+    //
+    // Every attempt, including the one a Retry click starts, is its own inner
+    // stream: it announces loading, resolves to a page or to the error state,
+    // and is cancelled by the next attempt. The error is caught inside the
+    // attempt, so the retry stream outlives a failed registry read. Catching
+    // it outside completed the whole subscription on the first failure, and
+    // the Retry button then emitted to nothing.
     this.vm$ = this.retry$.pipe(
-      switchMap(() => combineLatest([
-        // A request that hangs is the failure this page had left: the registry
-        // never arrived, nothing errored, and the skeleton stayed on screen
-        // with nothing subscribed to clear it. The budget turns that into the
-        // error state below, which says so and offers a retry.
-        this.universeApiService.getProtocols$().pipe(timeout({ first: REQUEST_TIMEOUT_MS })),
-        this.universeApiService.getSources$().pipe(
-          timeout({ first: REQUEST_TIMEOUT_MS }),
-          catchError(() => of(null)),
-        ),
-      ])),
-    ).pipe(
+      switchMap(() => this.universeApiService.selectedNetwork$().pipe(
+        switchMap((network) => this.attempt(network)),
+        // The network stream itself refuses a network the overlay does not serve.
+        catchError(() => of(this.errorModel(this.fallbackNetwork()))),
+      )),
+    );
+  }
+
+  /** One read of the registry and the authority snapshot for one network. */
+  private attempt(network: ExplorerNetwork): Observable<DirectoryViewModel> {
+    return combineLatest([
+      // A request that hangs is the failure this page had left: the registry
+      // never arrived, nothing errored, and the skeleton stayed on screen
+      // with nothing subscribed to clear it. The budget turns that into the
+      // error state below, which says so and offers a retry.
+      this.universeApiService.getProtocols$().pipe(timeout({ first: REQUEST_TIMEOUT_MS })),
+      this.universeApiService.getSources$().pipe(
+        timeout({ first: REQUEST_TIMEOUT_MS }),
+        catchError(() => of(null)),
+      ),
+    ]).pipe(
       map(([response, sources]: [ProtocolsResponse, SourcesResponse | null]): DirectoryViewModel => {
         const bitcoinProtocols = (response.protocols || []).filter(p => p.chain === 'bitcoin');
         const otherChainCount = (response.protocols || []).length - bitcoinProtocols.length;
@@ -87,6 +105,7 @@ export class ProtocolDirectoryComponent implements OnInit {
         return {
           loading: false,
           error: false,
+          network,
           registryVersion: response.registryVersion,
           groups: this.groupByFamily(bitcoinProtocols),
           otherChainCount,
@@ -95,8 +114,33 @@ export class ProtocolDirectoryComponent implements OnInit {
           sourcesByAuthority,
         };
       }),
-      catchError(() => of({ loading: false, error: true })),
+      catchError(() => of(this.errorModel(network))),
+      startWith<DirectoryViewModel>({ loading: true, error: false, network }),
     );
+  }
+
+  private errorModel(network: ExplorerNetwork): DirectoryViewModel {
+    return { loading: false, error: true, network };
+  }
+
+  /** The label network when the overlay refused the selected one. */
+  private fallbackNetwork(): ExplorerNetwork {
+    try {
+      return this.universeApiService.network;
+    } catch {
+      return 'mainnet';
+    }
+  }
+
+  /** The Bitcoin network the registry was read from, as the copy names it. */
+  networkLabel(network: ExplorerNetwork): string {
+    switch (network) {
+      case 'signet': return $localize`:@@universe.protocols.network-signet:Bitcoin Signet`;
+      case 'testnet': return $localize`:@@universe.protocols.network-testnet:Bitcoin Testnet`;
+      case 'testnet4': return $localize`:@@universe.protocols.network-testnet4:Bitcoin Testnet4`;
+      case 'regtest': return $localize`:@@universe.protocols.network-regtest:Bitcoin Regtest`;
+      default: return $localize`:@@universe.protocols.network-mainnet:Bitcoin mainnet`;
+    }
   }
 
   private indexSources(sources: SourcesResponse | null): Map<string, SourceEntry> | null {
@@ -139,7 +183,7 @@ export class ProtocolDirectoryComponent implements OnInit {
   }
 
   private normalizeStatus(protocol: ExplorerProtocolDefinition): string {
-    return (protocol.releaseStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+    return normalizeReleaseStatus(protocol);
   }
 
   /**
@@ -150,46 +194,18 @@ export class ProtocolDirectoryComponent implements OnInit {
    * were rendered as two chips of equal weight, so a protocol whose authority
    * was unreachable still led with "Live, read only" and read as working.
    * Availability decides the primary label, and the registry capability is
-   * carried underneath it.
+   * carried underneath it. The rule itself is shared with the detail page.
    */
   availability(
     protocol: ExplorerProtocolDefinition,
     sources: Map<string, SourceEntry> | null,
   ): ProtocolAvailability {
-    const status = this.normalizeStatus(protocol);
-    if (status === 'intentionally disabled') return 'disabled';
-    // A blocked release says acceptance has not been established. It says
-    // nothing about whether a reader exists: Mezcal was labelled "Not
-    // implemented" while its authority served a real activity page. Only a
-    // protocol that declares no read operation at all is not implemented.
-    if (status === 'blocked' && !this.hasReadOperations(protocol)) return 'not-implemented';
-    if (status !== 'blocked' && status !== 'verified read only' && status !== 'production verified') {
-      return 'unknown';
-    }
-    // The registry says this protocol has a reader, so the authority decides.
-    if (!sources) return 'unknown';
-    const source = this.sourceFor(protocol, sources);
-    if (!source) return 'unconfigured';
-    switch (source.status) {
-      case 'ready': return source.checkpoint ? 'available' : 'degraded';
-      case 'stale': return 'catching-up';
-      case 'unreachable': return 'unreachable';
-      case 'unconfigured': return 'unconfigured';
-      default: return 'degraded';
-    }
+    return protocolAvailability(protocol, sources);
   }
 
-  /**
-   * Whether the registry declares a reader beyond the registry entry itself.
-   * Every protocol has a registry row; only a data read makes it implemented.
-   */
+  /** Whether the registry declares a reader beyond the registry entry itself. */
   hasReadOperations(protocol: ExplorerProtocolDefinition): boolean {
-    const declared = new Set<string>([
-      ...(protocol.implementedReadOperations ?? []),
-      ...((protocol.readOperationDescriptors ?? []).map((operation) => operation.id)),
-    ]);
-    declared.delete('registry');
-    return declared.size > 0;
+    return hasReadOperations(protocol);
   }
 
   /** True only when the authority behind this protocol can answer right now. */
@@ -201,16 +217,7 @@ export class ProtocolDirectoryComponent implements OnInit {
   }
 
   availabilityLabel(availability: ProtocolAvailability): string {
-    switch (availability) {
-      case 'available': return $localize`:@@universe.protocols.availability-available:Readable now`;
-      case 'catching-up': return $localize`:@@universe.protocols.availability-catching-up:Catching up`;
-      case 'degraded': return $localize`:@@universe.protocols.availability-degraded:Unavailable`;
-      case 'unreachable': return $localize`:@@universe.protocols.availability-unreachable:Unavailable`;
-      case 'unconfigured': return $localize`:@@universe.protocols.availability-unconfigured:Not served here`;
-      case 'not-implemented': return $localize`:@@universe.protocols.availability-not-implemented:Not yet available`;
-      case 'disabled': return $localize`:@@universe.protocols.availability-disabled:Disabled`;
-      default: return $localize`:@@universe.protocols.availability-unknown:Status unknown`;
-    }
+    return availabilityLabel(availability);
   }
 
   availabilityClass(availability: ProtocolAvailability): string {
@@ -271,10 +278,7 @@ export class ProtocolDirectoryComponent implements OnInit {
     protocol: ExplorerProtocolDefinition,
     sources: Map<string, SourceEntry> | null,
   ): SourceEntry | null {
-    if (!sources || !protocol.indexerAuthority) {
-      return null;
-    }
-    return sources.get(protocol.indexerAuthority) ?? null;
+    return sourceForProtocol(protocol, sources);
   }
 
   /**
@@ -305,7 +309,7 @@ export class ProtocolDirectoryComponent implements OnInit {
     return Number.isFinite(at) ? Math.floor(at / 1000) : null;
   }
 
-  /** Re-reads the registry and the authority snapshot. */
+  /** Re-reads the registry and the authority snapshot, cancelling any attempt in flight. */
   onRetry(): void {
     this.retry$.next(this.retry$.value + 1);
   }

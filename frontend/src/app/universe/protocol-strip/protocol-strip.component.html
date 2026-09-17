@@ -4,28 +4,34 @@
     <a class="strip-link" [routerLink]="['/pulse' | relativeUrl]" i18n="universe.strip.open">Open live feed</a>
   </div>
 
-  <p class="strip-note" *ngIf="vm.authorityAnswering; else authorityDown">
-    <ng-container *ngIf="vm.checked; else warming" i18n="universe.strip.note">
+  <!--
+    The note states what the counts below are evidence of. Before the first
+    resolved transaction there is no sample, so nothing is claimed; after the
+    authority stops answering the last sample is shown with its time.
+  -->
+  <ng-container [ngSwitch]="vm.observation">
+    <p class="strip-note" *ngSwitchCase="'observed'" i18n="universe.strip.note">
       Seen in the last {{ vm.checked }} mempool transactions checked.
-    </ng-container>
-    <ng-template #warming>
-      <ng-container i18n="universe.strip.warming">
-        Reading arriving transactions against {{ vm.supportedCount }} supported protocols.
-      </ng-container>
-    </ng-template>
-  </p>
-
-  <ng-template #authorityDown>
-    <p class="strip-note warning" i18n="universe.strip.authority-down">
+    </p>
+    <p class="strip-note" *ngSwitchCase="'unknown'" i18n="universe.strip.warming">
+      Waiting for arriving transactions to be checked against {{ vm.supportedCount }} supported protocols. No activity has been observed yet.
+    </p>
+    <p class="strip-note warning" *ngSwitchCase="'unavailable'" i18n="universe.strip.authority-down">
       The asset authority is not answering, so protocol activity is not shown.
     </p>
-  </ng-template>
+    <p class="strip-note warning" *ngSwitchCase="'stale'" i18n="universe.strip.stale">
+      The asset authority stopped answering. Counts are from the last sample at {{ vm.lastSampleAt | date: 'mediumTime' }} and are not current.
+    </p>
+  </ng-container>
 
   <ul class="strip-list">
     <li *ngFor="let entry of vm.entries; trackBy: trackByEntry">
       <a [routerLink]="['/protocols' | relativeUrl, entry.protocolId]">
         <span class="strip-name">{{ entry.displayName }}</span>
-        <span class="strip-count" [class.zero]="!entry.count">{{ entry.count }}</span>
+        <span class="strip-count" *ngIf="entry.count !== null; else noSample" [class.zero]="!entry.count">{{ entry.count }}</span>
+        <ng-template #noSample>
+          <span class="strip-count unknown" i18n="universe.strip.count-unknown">no sample</span>
+        </ng-template>
       </a>
     </li>
   </ul>

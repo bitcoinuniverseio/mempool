@@ -3,21 +3,24 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
-import { PulseState, UniversePulseService } from '@app/universe/universe-pulse.service';
+import { PulseObservation, PulseState, UniversePulseService } from '@app/universe/universe-pulse.service';
 import { ExplorerProtocolDefinition, ProtocolsResponse } from '@app/universe/universe.types';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 interface StripEntry {
   readonly protocolId: string;
   readonly displayName: string;
-  readonly count: number;
+  /** Exact count within the sample, or null when there is no sample to count in. */
+  readonly count: number | null;
 }
 
 interface StripViewModel {
   readonly entries: readonly StripEntry[];
   readonly checked: number;
   readonly supportedCount: number;
-  readonly authorityAnswering: boolean;
+  readonly observation: PulseObservation;
+  /** When the sample was last extended; shown when the tally is stale. */
+  readonly lastSampleAt: number | null;
 }
 
 /**
@@ -58,7 +61,8 @@ export class ProtocolStripComponent implements OnInit, OnDestroy {
         return {
           supportedCount: supported.length,
           checked: pulse.checked,
-          authorityAnswering: pulse.authorityAnswering,
+          observation: pulse.observation,
+          lastSampleAt: pulse.lastSampleAt,
           entries: stripEntries(supported, pulse),
         };
       }),
@@ -82,16 +86,22 @@ function isSupported(protocol: ExplorerProtocolDefinition): boolean {
   );
 }
 
-/** Supported protocols, busiest first, each with its exact live count. */
+/**
+ * Supported protocols, busiest first, each with its exact count within the
+ * sample. Before the authority has resolved anything there is no sample, so
+ * every count is null rather than a zero nobody measured; a stale sample
+ * keeps its counts, and the note beside it says how old they are.
+ */
 export function stripEntries(
   supported: readonly ExplorerProtocolDefinition[],
   pulse: PulseState,
 ): StripEntry[] {
+  const sampled = pulse.observation === 'observed' || pulse.observation === 'stale';
   return supported
     .map((protocol) => ({
       protocolId: protocol.id,
       displayName: protocol.shortName || protocol.displayName || protocol.id,
-      count: pulse.protocolCounts.get(protocol.id) ?? 0,
+      count: sampled ? pulse.protocolCounts.get(protocol.id) ?? 0 : null,
     }))
-    .sort((a, b) => b.count - a.count || a.displayName.localeCompare(b.displayName));
+    .sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || a.displayName.localeCompare(b.displayName));
 }

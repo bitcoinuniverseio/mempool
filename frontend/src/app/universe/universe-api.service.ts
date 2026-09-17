@@ -149,7 +149,11 @@ export class UniverseApiService {
     const prefix = network && network !== 'mainnet' && network !== this.stateService.env?.ROOT_NETWORK ? '/' + network : '';
     return this.apiBaseUrl + prefix;
   }
-  private selectedNetwork$(): Observable<ExplorerNetwork> {
+  /**
+   * The Bitcoin network every overlay request below is addressed to. Public so
+   * a page can label what it shows from the same source its request used.
+   */
+  selectedNetwork$(): Observable<ExplorerNetwork> {
     return defer(() => (this.stateService.networkChanged$ ?? of(this.stateService.network)).pipe(
       startWith(this.stateService.network),
       map(() => this.network),
@@ -791,7 +795,9 @@ export class UniverseApiService {
     const path = txid
       ? '/api/v1/network/propagation/' + encodeURIComponent(txid)
       : '/api/v1/network/propagation';
-    return this.httpClient.get<PropagationObservation>(this.apiBaseUrl + path);
+    // Same partition as the nodes and templates reads beside it: a Signet
+    // reader was sent to the root backend for propagation alone.
+    return this.httpClient.get<PropagationObservation>(this.backendBase + path);
   }
 
   getBlockTemplateComparison$(): Observable<BlockTemplateComparison> {

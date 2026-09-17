@@ -282,4 +282,76 @@ describe('UniverseApiService backend route network prefix', () => {
     service.getTaprootAssets$().subscribe();
     expect(urls).toEqual(['/api/v1/taproot-assets/assets']);
   });
+
+  /**
+   * FE-D04: the propagation read alone was built on the root base, so a
+   * Signet reader's observatory asked the root backend for propagation while
+   * its nodes and templates came from Signet. All three reads now resolve to
+   * the same partition, with the txid still encoded.
+   */
+  it.each(['signet', 'testnet4'])('sends every observatory read, propagation included, to the %s backend', network => {
+    const { service, urls } = buildOn(network);
+    service.getObserverNodes$().subscribe();
+    service.getPropagationObservation$().subscribe();
+    service.getPropagationObservation$('ab/cd?e').subscribe();
+    service.getBlockTemplateComparison$().subscribe();
+    expect(urls).toEqual([
+      '/' + network + '/api/v1/network/nodes',
+      '/' + network + '/api/v1/network/propagation',
+      '/' + network + '/api/v1/network/propagation/ab%2Fcd%3Fe',
+      '/' + network + '/api/v1/network/templates',
+    ]);
+  });
+
+  it.each(['', 'mainnet'])('keeps the observatory on the root backend for the root network %j', network => {
+    const { service, urls } = buildOn(network);
+    service.getObserverNodes$().subscribe();
+    service.getPropagationObservation$().subscribe();
+    service.getPropagationObservation$('a'.repeat(64)).subscribe();
+    service.getBlockTemplateComparison$().subscribe();
+    expect(urls).toEqual([
+      '/api/v1/network/nodes',
+      '/api/v1/network/propagation',
+      '/api/v1/network/propagation/' + 'a'.repeat(64),
+      '/api/v1/network/templates',
+    ]);
+  });
+
+  it('treats the configured ROOT_NETWORK as the root partition for the observatory', () => {
+    const urls: string[] = [];
+    const httpClient = { get: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient;
+    const stateService = { isBrowser: true, network: 'signet', env: { ROOT_NETWORK: 'signet' } } as unknown as StateService;
+    const service = new UniverseApiService(httpClient, stateService, ownerKeyStub as never);
+    service.getPropagationObservation$().subscribe();
+    service.getObserverNodes$().subscribe();
+    expect(urls).toEqual(['/api/v1/network/propagation', '/api/v1/network/nodes']);
+  });
+
+  it('addresses the observatory through the gateway during server-side rendering', () => {
+    const urls: string[] = [];
+    const httpClient = { get: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient;
+    const stateService = {
+      isBrowser: false,
+      network: 'signet',
+      env: { NGINX_PROTOCOL: 'https', NGINX_HOSTNAME: 'explorer.internal', NGINX_PORT: '443', ROOT_NETWORK: 'mainnet' },
+    } as unknown as StateService;
+    const service = new UniverseApiService(httpClient, stateService, ownerKeyStub as never);
+    service.getPropagationObservation$('a'.repeat(64)).subscribe();
+    service.getObserverNodes$().subscribe();
+    expect(urls).toEqual([
+      'https://explorer.internal:443/signet/api/v1/network/propagation/' + 'a'.repeat(64),
+      'https://explorer.internal:443/signet/api/v1/network/nodes',
+    ]);
+  });
+
+  it('does not fall back to the root backend when the Signet propagation read fails', () => {
+    const urls: string[] = [];
+    const httpClient = { get: (url: string) => { urls.push(url); return throwError(() => ({ status: 503 })); } } as unknown as HttpClient;
+    const stateService = { isBrowser: true, network: 'signet', env: { ROOT_NETWORK: 'mainnet' } } as unknown as StateService;
+    const service = new UniverseApiService(httpClient, stateService, ownerKeyStub as never);
+    let failure: unknown;
+    service.getPropagationObservation$().subscribe({ error: error => failure = error });
+    expect(failure).toEqual({ status: 503 });
+    expect(urls).toEqual(['/signet/api/v1/network/propagation']);
+  });
 });

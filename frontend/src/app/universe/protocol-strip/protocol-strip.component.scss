@@ -80,6 +80,12 @@
   font-weight: 700;
   color: var(--universe-protocol-runes);
 
+  // No sample yet: not a measurement, so it is quieter still and says so.
+  &.unknown {
+    color: var(--u-text-muted);
+    font-variant-numeric: normal;
+  }
+
   // A zero is a real measurement, not a failure, so it stays legible but quiet.
   &.zero {
     color: var(--u-text-muted);
