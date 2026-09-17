@@ -15,7 +15,11 @@ import { createHash, Hash } from 'crypto';
  * Layout (Core 26.x/27.x, no magic): 32 byte base block hash | u64 LE coins
  * count | per coin: 32 byte txid, u32 LE vout, the same coin encoding.
  *
- * The commitment is SHA256d over, for every coin in cursor order, the
+ * The commitment is SHA256d over, for every transaction in cursor order and
+ * every one of its coins in ascending output index (kernel/coinstats.cpp
+ * collects a transaction's coins into a std::map<uint32_t, Coin> before
+ * ApplyHash, so the hash order within a transaction is numeric even though
+ * the cursor yields VARINT key order), the
  * outpoint (txid, u32 LE vout), u32 LE ((height << 1) | coinbase) and the
  * standard CTxOut (i64 LE amount, CompactSize script length, script), which is
  * kernel/coinstats.cpp TxOutSer. Core hashes its coins database in key order
@@ -291,6 +295,8 @@ export class SnapshotStreamDecoder {
   private pending: Buffer = Buffer.alloc(0);
   private header?: SnapshotHeader;
   private hash: Hash | null = createHash('sha256');
+  /** Coins of the transaction being read, hashed in numeric output order once it ends. */
+  private group: { txid: Buffer; coins: { vout: number; record: Buffer }[] } | null = null;
   private hashReason: string | null = null;
   private coinsRead = 0;
   private bytesRead = 0;
@@ -331,6 +337,7 @@ export class SnapshotStreamDecoder {
         `The snapshot ended after ${this.coinsRead} of ${this.header.coins_count} coins with ${this.pending.length} undecoded bytes.`
       );
     }
+    this.flushGroup();
     const digest = this.hash ? createHash('sha256').update(this.hash.digest()).digest() : null;
     return {
       header: this.header,
@@ -465,16 +472,37 @@ export class SnapshotStreamDecoder {
       fixed.writeUInt32LE(vout, 0);
       fixed.writeUInt32LE(((coin.height << 1) + (coin.coinbase ? 1 : 0)) >>> 0, 4);
       fixed.writeBigInt64LE(coin.amount, 8);
-      this.hash.update(txid).update(fixed).update(compactSizeBytes(coin.script.length)).update(coin.script);
+      const record = Buffer.concat([fixed, compactSizeBytes(coin.script.length), coin.script]);
+      if (!this.group || !this.group.txid.equals(txid)) {
+        this.flushGroup();
+        this.group = { txid, coins: [] };
+      }
+      this.group.coins.push({ vout, record });
     }
     if (this.coinsRead === this.header!.coins_count) {
       this.done = true;
     }
   }
 
+  /** Hashes the finished transaction's coins the way Core's ApplyHash does: ascending output index. */
+  private flushGroup(): void {
+    if (!this.group) {
+      return;
+    }
+    if (this.hash) {
+      const { txid, coins } = this.group;
+      coins.sort((a, b) => a.vout - b.vout);
+      for (const { record } of coins) {
+        this.hash.update(txid).update(record);
+      }
+    }
+    this.group = null;
+  }
+
   private disableHash(reason: string): void {
     this.hash = null;
     this.hashReason = reason;
+    this.group = null;
   }
 }
 
