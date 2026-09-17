@@ -7,48 +7,59 @@
     </nav>
     <h1>Cross-Node Mempool, Relay, Policy & Block-Template Observatory</h1>
     <p class="summary">
-      Observer fleet topology, first-seen timelines, multi-node acceptance matrix, local vs pool block-template comparisons.
+      What this deployment's own observer recorded: its owned node's relay policy, the mempool lifecycle it retained for a transaction, and the block templates it collected. One observer; nothing it cannot measure is estimated.
     </p>
   </header>
 
   <ng-container *ngIf="vm$ | async as vm">
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
-      <p>Reading cross-node observer metrics...</p>
+      <p>Reading the owned observer...</p>
+    </div>
+
+    <div *ngIf="vm.kind === 'unavailable'" class="panel">
+      <h2>Observer Unavailable</h2>
+      <p>The owned node observation behind these reads could not be obtained. No fleet, timeline or template is shown in its place.</p>
+      <p role="alert">{{ vm.message }}</p>
+      <p class="mono" *ngIf="vm.stage">Reason code: {{ vm.stage }}</p>
+      <button type="button" class="btn-secondary" (click)="retry()">Retry</button>
     </div>
 
     <div *ngIf="vm.kind === 'error'" class="panel">
       <h2>Network Observatory Error</h2>
       <p>Could not fetch node propagation or block-template data.</p>
       <p role="alert">{{ vm.message }}</p>
+      <p class="mono" *ngIf="vm.stage">Reason code: {{ vm.stage }}</p>
+      <button type="button" class="btn-secondary" (click)="retry()">Retry</button>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.propagation && vm.templates">
       <div class="metrics-grid">
         <div class="metric-card">
-          <span class="metric-label">Observer Nodes</span>
-          <span class="metric-value">{{ vm.nodes?.length }} Online</span>
-          <span class="metric-sub">Global vantage fleet</span>
+          <span class="metric-label">Observers</span>
+          <span class="metric-value">{{ vm.propagation.observer.observers }}</span>
+          <span class="metric-sub">Single observer: {{ vm.propagation.observer.observerId }}</span>
         </div>
         <div class="metric-card">
-          <span class="metric-label">Median Latency</span>
-          <span class="metric-value">{{ vm.propagation.medianLatencyMs }} ms</span>
-          <span class="metric-sub">P95: {{ vm.propagation.p95LatencyMs }} ms</span>
+          <span class="metric-label">Inter-node Latency</span>
+          <span class="metric-value">{{ measured(vm.propagation.medianLatencyMs, 'ms') }}</span>
+          <span class="metric-sub">Median and P95 need more than one observer</span>
         </div>
         <div class="metric-card">
-          <span class="metric-label">Propagation Spread</span>
-          <span class="metric-value">{{ vm.propagation.spreadDeltaMs }} ms</span>
-          <span class="metric-sub">Global delta</span>
+          <span class="metric-label">Observation Window</span>
+          <span class="metric-value">{{ vm.propagation.window.collection }}</span>
+          <span class="metric-sub">{{ vm.propagation.window.retainedTransactions }} retained, {{ vm.propagation.window.retentionMs / 1000 }} s retention, age {{ vm.propagation.window.ageMs }} ms</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Template Spread</span>
-          <span class="metric-value">{{ vm.templates.feeRateSpreadSatVb }} sat/vB</span>
-          <span class="metric-sub">{{ vm.templates.candidateTemplates.length }} Candidates</span>
+          <span class="metric-value">{{ measured(vm.templates.feeRateSpreadSatVb, 'sat/vB') }}</span>
+          <span class="metric-sub">{{ vm.templates.candidateTemplates.length }} candidate template(s) retained</span>
         </div>
       </div>
 
       <!-- Fleet Matrix -->
       <section class="panel">
-        <h2>Universe Observer Fleet & Relay Policies</h2>
+        <h2>Owned Observer & Relay Policy</h2>
+        <p *ngIf="vm.nodes?.length === 1">One observer. Regions, clock offsets and multi-node propagation are not measured by a single local observer and are shown as unknown.</p>
         <table class="data-table fleet-table" *ngIf="vm.nodes?.length">
           <thead>
             <tr>
@@ -57,21 +68,24 @@
               <th>Client Software</th>
               <th>Full-RBF</th>
               <th>Min Relay Fee</th>
-              <th>Clock Drift</th>
+              <th>Clock Offset</th>
               <th>Mempool Size</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let n of vm.nodes">
-              <td data-label="Node Name"><strong>{{ n.name }}</strong></td>
-              <td data-label="Region">{{ n.region }}</td>
+              <td data-label="Node Name"><strong>{{ n.name }}</strong><span class="mono"> ({{ n.network }})</span></td>
+              <td data-label="Region">{{ n.region === 'unknown' ? 'unknown (not measured)' : n.region }}</td>
               <td class="mono" data-label="Client Software">{{ n.clientVersion }}</td>
-              <td data-label="Full-RBF"><span class="badge" [ngClass]="n.fullRbf ? 'badge-success' : 'badge-warning'">{{ n.fullRbf ? 'Active' : 'Opt-in' }}</span></td>
-              <td data-label="Min Relay Fee">{{ n.minRelayFeeRate }} sat/vB</td>
-              <td data-label="Clock Drift">{{ n.clockOffsetMs }} ms</td>
-              <td data-label="Mempool Size">{{ n.mempoolTxCount }} txs</td>
-              <td data-label="Status"><span class="badge badge-success">{{ n.status }}</span></td>
+              <td data-label="Full-RBF">
+                <span *ngIf="n.fullRbf === null">unknown</span>
+                <span *ngIf="n.fullRbf !== null" class="badge" [ngClass]="n.fullRbf ? 'badge-success' : 'badge-warning'">{{ n.fullRbf ? 'Active' : 'Opt-in' }}</span>
+              </td>
+              <td data-label="Min Relay Fee">{{ measured(n.minRelayFeeRate, 'sat/vB') }}</td>
+              <td data-label="Clock Offset">{{ measured(n.clockOffsetMs, 'ms') }}</td>
+              <td data-label="Mempool Size">{{ n.mempoolTxCount === null ? 'not measured' : n.mempoolTxCount + ' txs' }}</td>
+              <td data-label="Status"><span class="badge" [ngClass]="n.status === 'online' ? 'badge-success' : 'badge-warning'">{{ n.status }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -79,29 +93,37 @@
 
       <!-- First-Seen Propagation Timeline -->
       <section class="panel">
-        <h2>Sample Transaction Propagation Timeline (<span class="mono">{{ vm.propagation.txid.slice(0, 16) }}...</span>)</h2>
-        <table class="data-table propagation-table">
-          <thead>
-            <tr>
-              <th>Observer Node</th>
-              <th>Arrival Delta (ms)</th>
-              <th>Accepted</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let o of vm.propagation.nodeObservations">
-              <td><strong>{{ o.nodeName }}</strong></td>
-              <td>+{{ o.deltaFromFirstMs }} ms</td>
-              <td><span class="badge badge-success">Accepted</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <h2 *ngIf="vm.propagation.state === 'observed' && vm.propagation.txid">Observed Mempool Lifecycle (<span class="mono">{{ vm.propagation.txid.slice(0, 16) }}...</span>)</h2>
+        <h2 *ngIf="vm.propagation.state !== 'observed'">Observed Mempool Lifecycle</h2>
+        <p *ngIf="vm.propagation.state === 'no-observations'">This observer has not completed a mempool poll yet, so no transaction lifecycle has been recorded. Nothing is shown in its place.</p>
+        <p *ngIf="vm.propagation.state === 'not-observed'">This observer has no retained detection for that transaction. Unknown transactions are not sampled.</p>
+        <ng-container *ngIf="vm.propagation.state === 'observed'">
+          <p>Detection time is this observer's local poll time, not peer arrival time. Observed by {{ vm.propagation.observer.observerId }} ({{ vm.propagation.observer.method }}); last poll {{ vm.propagation.window.lastPollUtc ?? 'none' }}<span *ngIf="vm.propagation.expiresAtUtc">, retained until {{ vm.propagation.expiresAtUtc }}</span>.</p>
+          <table class="data-table propagation-table">
+            <thead>
+              <tr>
+                <th>Observer</th>
+                <th>Delta from first detection (ms)</th>
+                <th>Presence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let o of vm.propagation.nodeObservations">
+                <td><strong>{{ o.nodeName }}</strong><span class="mono" *ngIf="!o.completePoll"> (partial poll)</span></td>
+                <td>+{{ o.deltaFromFirstMs }} ms</td>
+                <td><span class="badge" [ngClass]="o.presence === 'present' ? 'badge-success' : 'badge-warning'">{{ o.presence === 'present' ? 'In mempool' : 'Left mempool' }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-container>
       </section>
 
       <!-- Block Template Observatory -->
       <section class="panel">
-        <h2>Candidate Block Templates (Height #{{ vm.templates.blockHeight }})</h2>
-        <table class="data-table candidate-template-table">
+        <h2 *ngIf="vm.templates.state === 'observed'">Candidate Block Templates (Height #{{ vm.templates.blockHeight }})</h2>
+        <h2 *ngIf="vm.templates.state !== 'observed'">Candidate Block Templates</h2>
+        <p *ngIf="vm.templates.state === 'no-templates-observed'">No block template has been observed by this backend's own collector yet. Per-pool templates are not collected here.</p>
+        <table class="data-table candidate-template-table" *ngIf="vm.templates.state === 'observed'">
           <thead>
             <tr>
               <th>Template Source</th>
@@ -113,15 +135,35 @@
           </thead>
           <tbody>
             <tr *ngFor="let t of vm.templates.candidateTemplates">
-              <td data-label="Template source"><strong>{{ t.poolName }}</strong></td>
+              <td data-label="Template source"><strong>{{ t.poolName }}</strong><span class="mono"> ({{ t.sourceType }})</span></td>
               <td data-label="Transactions">{{ t.txCount }}</td>
               <td data-label="Weight">{{ t.totalWeight }} WU</td>
               <td class="mono" data-label="Fees">{{ t.totalFeesSats }}</td>
-              <td data-label="Fee rate">{{ t.expectedMedianFeeRate }} sat/vB</td>
+              <td data-label="Fee rate">{{ measured(t.expectedMedianFeeRate, 'sat/vB') }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="data-table" *ngIf="vm.templates.sources?.length">
+          <thead>
+            <tr>
+              <th>Collector Source</th>
+              <th>Status</th>
+              <th>Last Template</th>
+              <th>Last Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of vm.templates.sources">
+              <td><strong>{{ s.name }}</strong></td>
+              <td><span class="badge" [ngClass]="s.status === 'active' ? 'badge-success' : 'badge-warning'">{{ s.status }}</span></td>
+              <td class="mono">{{ s.lastTemplateAt ?? 'none' }}</td>
+              <td>{{ s.lastError ?? '' }}</td>
             </tr>
           </tbody>
         </table>
       </section>
+
+      <p class="summary">{{ vm.propagation.scope }}</p>
     </ng-container>
   </ng-container>
 </div>

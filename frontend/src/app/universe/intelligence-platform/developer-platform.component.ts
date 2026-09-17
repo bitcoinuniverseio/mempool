@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, Observable } from 'rxjs';
-import { IntelligenceApiService } from './intelligence-api.service';
+import { DeveloperUsageResult, IntelligenceApiService } from './intelligence-api.service';
 import { OwnerKeyService } from './owner-key.service';
 
 /** Scopes a key can be minted with; keys:manage is what lets a key mint others. */
@@ -13,8 +13,9 @@ export const KEY_SCOPES = ['read', 'watchlists', 'webhooks', 'queries', 'cases',
  *
  * The owner is whoever holds the key stored in this browser. Creating an
  * owner returns its first key once; every later call is signed with it.
- * Usage metrics are shown only when the backend has them, which it does
- * not on this deployment, and that is what the panel says.
+ * Usage is what this backend instance's in-memory ledger observed for the
+ * owner's keys since it started: observed with counts, quota and latency,
+ * or no-observations. A failed read is reported as unavailable, never as zero.
  */
 @Component({
   selector: 'app-developer-platform',
@@ -75,10 +76,24 @@ export const KEY_SCOPES = ['read', 'watchlists', 'webhooks', 'queries', 'cases',
         <!-- Usage -->
         <section class="alert mb-4" [ngClass]="usage ? 'alert-secondary' : 'alert-warning'">
           <ng-container *ngIf="usage; else noUsage">
-            Requests this month: {{ usage.monthly_requests | number }}.
+            <ng-container *ngIf="usage.state === 'observed' && usage.usage; else noObservations">
+              <strong>Usage observed</strong> for {{ usage.owner_id }} on {{ usage.network }} between {{ usage.usage.first_observed_at }} and {{ usage.usage.last_observed_at }}:
+              {{ usage.usage.requests_total | number }} requests
+              ({{ usage.usage.responses_2xx | number }} 2xx, {{ usage.usage.responses_4xx | number }} 4xx, {{ usage.usage.responses_5xx | number }} 5xx, {{ usage.usage.rate_limited | number }} rate limited);
+              latency p50 {{ usage.usage.latency_ms.p50 }} ms, p95 {{ usage.usage.latency_ms.p95 }} ms, max {{ usage.usage.latency_ms.max }} ms over {{ usage.usage.latency_ms.samples | number }} samples.
+              <div class="small mt-1" *ngFor="let k of usage.usage.keys">Key {{ k.key_id }}: {{ k.requests | number }} requests, {{ k.first_observed_at }} to {{ k.last_observed_at }}.</div>
+            </ng-container>
+            <ng-template #noObservations>
+              <strong>No usage observed</strong> for {{ usage.owner_id }} on {{ usage.network }} by this backend instance since {{ usage.coverage?.observed_since }}.
+            </ng-template>
+            <div class="small mt-1" *ngIf="usage.quota?.keys?.length">
+              Quota ({{ usage.quota.source }}):
+              <span *ngFor="let q of usage.quota.keys; let last = last">{{ q.name }} {{ q.rate_limit_per_minute }}/min<span *ngIf="q.revoked"> (revoked)</span><span *ngIf="q.last_used_at">, last used {{ q.last_used_at }}</span><span *ngIf="!last">; </span></span>
+            </div>
+            <div class="small text-muted mt-1">Observed at {{ usage.coverage?.observed_at }} by {{ usage.coverage?.observer_id }} ({{ usage.coverage?.persistence }}). {{ usage.coverage?.scope }}</div>
           </ng-container>
           <ng-template #noUsage>
-            <strong>Usage metrics unavailable.</strong> The API gateway metrics store is not connected on this deployment.
+            <strong>Usage metrics unavailable.</strong> {{ usageError || 'The usage ledger did not answer.' }}
           </ng-template>
         </section>
 
@@ -204,7 +219,8 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
   keys: any[] = [];
   webhooks: any[] = [];
   attempts: Record<string, any[]> = {};
-  usage: any = null;
+  usage: DeveloperUsageResult | null = null;
+  usageError: string | null = null;
   loading = false;
   busy = false;
   loadError: string | null = null;
@@ -277,10 +293,17 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
       next: (res) => { if(!Array.isArray(res?.webhooks)){this.webhookError="Invalid webhook response.";this.webhooks=[];}else this.webhooks=res.webhooks;this.loadingWebhooks=false; this.cdr.markForCheck(); },
       error: () => { this.webhookError="Webhook registry unavailable; no empty result established.";this.loadingWebhooks=false;this.webhooks = []; this.cdr.markForCheck(); },
     });
-    // Usage is shown only when the backend measures it; a 503 says it does not.
+    // Usage is what the ledger observed, or no-observations; a failed read is unavailable, never zero.
+    this.usageError = null;
     this.read(this.api.getDeveloperUsage$(), {
-      next: (res) => { this.usage = res && typeof res.monthly_requests === 'number' ? res : null; this.cdr.markForCheck(); },
-      error: () => { this.usage = null; this.cdr.markForCheck(); },
+      next: (res) => {
+        const observed = res?.state === 'observed' && !!res.usage;
+        const absent = res?.state === 'no-observations';
+        this.usage = observed || absent ? res : null;
+        this.usageError = this.usage ? null : 'The usage response did not carry an observation state.';
+        this.cdr.markForCheck();
+      },
+      error: (err) => { this.usage = null; this.usageError = this.failure(err, 'The usage ledger did not answer.'); this.cdr.markForCheck(); },
     });
   }
 
