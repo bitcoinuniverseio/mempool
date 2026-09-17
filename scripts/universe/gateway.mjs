@@ -489,8 +489,14 @@ export function websocketUpstreamFor(pathname) {
  * between a deploy nobody notices and one that shows up as an outage. These
  * delays bridge a restart and give up well inside the page's own budget, so a
  * genuinely dead upstream is still reported promptly rather than hidden.
+ *
+ * The window covers a backend that reconnects to its database, runs its
+ * migrations and reloads the mempool before it listens again (measured at
+ * 8 to 10 s on the validation stack); the earlier 5 s window answered 502
+ * twice per restart there. Eleven seconds stays inside the 12 s bound the
+ * gateway tests hold a dead upstream to.
  */
-const RESTART_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2000];
+const RESTART_RETRY_DELAYS_MS = [250, 500, 1000, 1500, 2000, 2500, 3000];
 
 /** True for a failure that a moment's wait could plausibly resolve. */
 function upstreamIsRestarting(error) {
