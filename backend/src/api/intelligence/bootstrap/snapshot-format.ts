@@ -19,9 +19,12 @@ import { createHash, Hash } from 'crypto';
  * outpoint (txid, u32 LE vout), u32 LE ((height << 1) | coinbase) and the
  * standard CTxOut (i64 LE amount, CompactSize script length, script), which is
  * kernel/coinstats.cpp TxOutSer. Core hashes its coins database in key order
- * (txid bytes, then vout); the file is written from that same cursor, so the
- * streamed hash equals Core's only when the file is in that order. An
- * out-of-order file is reported instead of being hashed as if it were sorted.
+ * (txid bytes, then the VARINT encoding of vout, compared bytewise, which is
+ * not numeric order across VARINT lengths: on Signet at height 322488 output
+ * 23229 of one transaction precedes output 256); the file is written from
+ * that same cursor, so the streamed hash equals Core's only when the file is
+ * in that order. An out-of-order file is reported instead of being hashed as
+ * if it were sorted.
  */
 
 export const NETWORK_MAGIC: Record<string, string> = {
@@ -145,6 +148,29 @@ class Cursor {
     }
     throw new SnapshotFormatError('malformed-varint', 'VARINT is longer than 10 bytes.');
   }
+}
+
+/** serialize.h VARINT (MSB base-128, the +1 continuation trick), the key
+ *  encoding of a vout in the coins database, so bytewise comparison of two
+ *  encodings is the cursor order Core writes and hashes in. */
+export function varintBytes(n: number): Buffer {
+  const out: number[] = [];
+  let value = BigInt(n);
+  let first = true;
+  for (;;) {
+    out.unshift(Number(value & 0x7fn) | (first ? 0 : 0x80));
+    if (value <= 0x7fn) {
+      break;
+    }
+    value = (value >> 7n) - 1n;
+    first = false;
+  }
+  return Buffer.from(out);
+}
+
+/** Whether output index `next` follows `previous` in the coins database cursor. */
+function voutFollows(previous: number, next: number): boolean {
+  return previous < 0 || Buffer.compare(varintBytes(previous), varintBytes(next)) < 0;
 }
 
 /** compressor.cpp DecompressAmount. */
@@ -384,7 +410,12 @@ export class SnapshotStreamDecoder {
         throw new SnapshotFormatError('malformed-coin', 'Per-transaction coin count is zero or exceeds the coins left.');
       }
       coinsLeft = Number(count);
-      lastVout = -1;
+      // Core splits a transaction with many unspent outputs across several
+      // consecutive groups of the same txid (measured on Signet at height
+      // 322488: one txid continued after output 23229). The cursor order
+      // still holds as long as the outputs keep ascending across the groups,
+      // so the last output index carries over when the txid repeats.
+      lastVout = this.lastTxid && this.lastTxid.equals(txid) ? this.lastVout : -1;
       newTx = true;
     }
     const vout = c.compactSize();
@@ -393,12 +424,12 @@ export class SnapshotStreamDecoder {
     }
     const coin = readCoin(c);
     if (newTx) {
-      if (this.lastTxid && Buffer.compare(this.lastTxid, txid) >= 0) {
+      if (this.lastTxid && Buffer.compare(this.lastTxid, txid) > 0) {
         this.disableHash('coins-not-in-cursor-order');
       }
       this.lastTxid = txid;
     }
-    if (Number(vout) <= lastVout) {
+    if (!voutFollows(lastVout, Number(vout))) {
       this.disableHash('coins-not-in-cursor-order');
     }
     this.lastVout = Number(vout);
@@ -414,7 +445,7 @@ export class SnapshotStreamDecoder {
     const coin = readCoin(c);
     if (this.lastTxid) {
       const order = Buffer.compare(this.lastTxid, txid);
-      if (order > 0 || (order === 0 && vout <= this.lastVout)) {
+      if (order > 0 || (order === 0 && !voutFollows(this.lastVout, vout))) {
         this.disableHash('coins-not-in-cursor-order');
       }
     }
