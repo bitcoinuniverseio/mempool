@@ -50,24 +50,131 @@ export interface NodeBootstrapSnapshotManifest {
   manifest_hash: string;
 }
 
-export interface NodeBootstrapSnapshot {
-  snapshot_id: string;
-  name: string;
-  network: string;
-  base_height: number;
-  base_block_hash: string;
-  coins_count: number;
-  txoutset_hash: string;
-  size_gb: number;
-  download_url: string;
-  manifest: NodeBootstrapSnapshotManifest;
-  is_verified: boolean;
-  verification_status: 'verified' | 'unverified' | 'hash_mismatch';
+/**
+ * Trusted catalogue file named by UNIVERSE_BOOTSTRAP_SNAPSHOT_CATALOGUE.
+ *
+ * pinnedCommitments are typed in by the operator from Bitcoin Core's
+ * src/kernel/chainparams.cpp (m_assumeutxo_data: height, blockhash and
+ * hash_serialized for the exact release the node runs). They are the
+ * independent authority: a snapshot whose bytes hash to a commitment that is
+ * not pinned for the node's exact version cannot be loaded by that node,
+ * however well signed its manifest is. Catalogue metadata is never proof of
+ * the bytes; only a verification run over the bytes is.
+ */
+export interface BootstrapCatalogueProducer {
+  id: string;
+  algorithm: 'ed25519';
+  /** 32 byte raw ed25519 public key, hex. */
+  publicKey: string;
 }
 
+export interface BootstrapPinnedCommitment {
+  network: string;
+  /** Exact Core release, for example 28.0.0 or 29.0.0. */
+  coreVersion: string;
+  height: number;
+  blockHash: string;
+  /** Core hash_serialized_3, display byte order. */
+  utxoCommitment: string;
+  coinCount: number | null;
+}
+
+export interface BootstrapCatalogueSnapshot {
+  id: string;
+  network: string;
+  coreVersion: string;
+  height: number;
+  blockHash: string;
+  sizeBytes: number;
+  sha256: string;
+  /** Allowlisted https URL or local path; never taken from a request. */
+  source: string;
+  manifest: {
+    producerId: string;
+    /** ed25519 signature, hex, over deterministicSnapshotJson(snapshot). */
+    signature: string;
+  };
+}
+
+export interface BootstrapCatalogue {
+  producers: BootstrapCatalogueProducer[];
+  pinnedCommitments: BootstrapPinnedCommitment[];
+  snapshots: BootstrapCatalogueSnapshot[];
+}
+
+export type NodeBootstrapVerificationState =
+  | 'pending'
+  | 'verifying'
+  | 'valid'
+  | 'invalid'
+  | 'unavailable';
+export type NodeBootstrapCheckStatus =
+  | 'pending'
+  | 'valid'
+  | 'invalid'
+  | 'not-evaluated';
+
+export interface NodeBootstrapCheck {
+  status: NodeBootstrapCheckStatus;
+  expected?: string | number | null;
+  observed?: string | number | null;
+  reason?: string;
+}
+
+export interface NodeBootstrapCheckpoint {
+  at: string;
+  stage: string;
+  detail?: string;
+}
+
+/**
+ * One verification run over the actual snapshot bytes. Every check is
+ * independent: sha256 of the bytes against the signed manifest, the ed25519
+ * manifest signature against the producer key, network magic, base block hash
+ * and height against the catalogue and the owned Core node, and the streamed
+ * hash_serialized_3 against the operator-pinned Core commitment. Caller
+ * supplied checksums are compared and reported in caller_inputs; they never
+ * decide the state.
+ */
 export interface NodeBootstrapVerification {
   verification_id: string;
   snapshot_id: string;
+  network: string;
+  state: NodeBootstrapVerificationState;
+  valid: boolean;
+  status: string;
+  requested_at: string;
+  started_at?: string;
+  finished_at?: string;
+  checks: {
+    file_size: NodeBootstrapCheck;
+    sha256: NodeBootstrapCheck;
+    manifest_signature: NodeBootstrapCheck;
+    network_magic: NodeBootstrapCheck;
+    base_block_hash: NodeBootstrapCheck;
+    base_height: NodeBootstrapCheck;
+    coins_count: NodeBootstrapCheck;
+    utxo_commitment: NodeBootstrapCheck;
+  };
+  evidence: {
+    source_kind: 'file' | 'https' | null;
+    source_ref: string | null;
+    bytes_read: number;
+    header_format: 'versioned' | 'legacy' | null;
+    snapshot_version: number | null;
+    core_node_id: string | null;
+    core_block_hash_at_height: string | null;
+    pinned_commitment_source: string | null;
+  };
+  checkpoints: NodeBootstrapCheckpoint[];
+  caller_inputs: {
+    sha256: string | null;
+    utxo_hash: string | null;
+    height: number | null;
+    matched: boolean | null;
+  };
+  reason?: string;
+  // Fields kept from the earlier response shape.
   file_size_valid: boolean;
   sha256_valid: boolean;
   manifest_hash_valid: boolean;
@@ -76,6 +183,42 @@ export interface NodeBootstrapVerification {
   overall_verified: boolean;
   details: string;
   verified_at: string;
+}
+
+export type NodeBootstrapSnapshotStatus =
+  | 'pinned_core'
+  | 'unverified'
+  | 'pending'
+  | 'verifying'
+  | 'invalid'
+  | 'unavailable';
+
+/** A catalogue entry joined with its pinned commitment and latest verification. */
+export interface NodeBootstrapSnapshot {
+  snapshot_id: string;
+  network: string;
+  height: number;
+  block_hash: string;
+  coins_count: number | null;
+  base_utxo_hash: string | null;
+  sha256_checksum: string;
+  file_size_bytes: number;
+  release_version: string;
+  /** pinned_core only after a verification run over the bytes reached valid. */
+  status: NodeBootstrapSnapshotStatus;
+  download_url?: string;
+  producer_id: string;
+  pinned_commitment: boolean;
+  latest_verification_id: string | null;
+  latest_verification_state: NodeBootstrapVerificationState | null;
+  // Fields kept from the earlier response shape.
+  name: string;
+  base_height: number;
+  base_block_hash: string;
+  txoutset_hash: string | null;
+  size_gb: number;
+  is_verified: boolean;
+  verification_status: 'verified' | 'unverified' | 'hash_mismatch';
 }
 
 export interface NodeBootstrapChainstateObservation {
@@ -100,39 +243,117 @@ export interface NodeBootstrapChainstateObservation {
   observed_at: string;
 }
 
+export type NodeBootstrapPlanRejection =
+  | 'unsupported-network'
+  | 'unsupported-version'
+  | 'node-capability-missing'
+  | 'capacity-not-measured'
+  | 'stale-measurement'
+  | 'insufficient-capacity'
+  | 'no-compatible-snapshot'
+  | 'snapshot-not-verified'
+  | 'chainstate-not-eligible';
+
+/**
+ * A feasibility statement. Nothing in it has been executed; every number is
+ * either measured (and says where it was measured) or a stated assumption.
+ */
 export interface NodeBootstrapPlan {
   plan_id: string;
-  node_version: string;
   network: string;
-  traditional_ibd: {
-    estimated_download_gb: number;
-    estimated_disk_gb: number;
-    estimated_duration_hours_range: [number, number];
-    requires_background_validation: false;
+  node_id: string;
+  node_version: string;
+  target_height: number;
+  measurement_status: 'measured';
+  measured: {
+    node_observed_at: string;
+    current_phase: NodeBootstrapChainstatePhase;
+    tip_height: number;
+    headers: number;
+    blocks_on_disk_bytes: number;
+    capacity: {
+      method: 'statfs' | 'configured';
+      measured_at: string;
+      free_bytes: number;
+      total_bytes: number | null;
+    };
+    supports_loadtxoutset: boolean;
   };
-  assumeutxo: {
-    snapshot_download_gb: number;
-    temporary_disk_extra_gb: number;
-    time_to_tip_minutes_range: [number, number];
-    background_validation_duration_hours_range: [number, number];
-    requires_background_validation: true;
+  selected_snapshot: {
+    snapshot_id: string;
+    height: number;
+    block_hash: string;
+    core_version: string;
+    size_bytes: number;
+    sha256: string;
+    utxo_commitment: string;
+    verification_id: string;
+    verified_at: string;
   };
-  selected_snapshot_id?: string;
-  index_compatibility_warning?: string;
+  requirements: {
+    snapshot_file_bytes: number;
+    chainstate_estimate_bytes: number;
+    headroom_bytes: number;
+    required_bytes: number;
+    free_bytes: number;
+    feasible: true;
+  };
+  assumptions: string[];
+  caller_declared: {
+    available_disk_gb: number | null;
+    bandwidth_mbps: number | null;
+    matches_measurement: boolean | null;
+  };
+  estimates: {
+    snapshot_download_hours: number | null;
+    ibd_download_hours: number | null;
+    basis: string;
+  };
+  expected_transitions: NodeBootstrapChainstatePhase[];
+  actions_not_executed: string[];
   rollback_instructions: string[];
   created_at: string;
 }
 
+export type NodeBootstrapJobState =
+  | 'queued'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'needs-review';
+
+/**
+ * A durable operator job. Queued means accepted, nothing more; only Core's own
+ * RPC result and the chainstate observation that follows count as completion
+ * evidence.
+ */
 export interface NodeBootstrapJob {
   job_id: string;
-  job_type: 'generate_snapshot' | 'verify_snapshot' | 'load_snapshot';
+  job_type: 'generate_snapshot' | 'load_snapshot';
+  network: string;
   node_id: string;
   snapshot_id?: string;
+  idempotency_key: string;
+  state: NodeBootstrapJobState;
+  status: NodeBootstrapJobState;
   progress_pct: number;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   message: string;
-  started_at: string;
+  requested_by: string;
+  created_at: string;
+  updated_at: string;
+  started_at?: string;
   finished_at?: string;
+  attempts: number;
+  lease: { owner: string; expires_at: string } | null;
+  rpc: {
+    method: 'dumptxoutset' | 'loadtxoutset';
+    started_at?: string;
+    finished_at?: string;
+  } | null;
+  preconditions: Record<string, string | number | boolean | null>;
+  evidence: Record<string, string | number | boolean | null>;
+  checkpoints: NodeBootstrapCheckpoint[];
+  reason?: string;
 }
 
 export interface BootstrapOverviewResponse {

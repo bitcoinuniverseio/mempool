@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 111;
+  private static currentVersion = 112;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1510,6 +1510,40 @@ class DatabaseMigration {
         INDEX intelligence_private_relay_claim (network, state, lease_until)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
       await this.updateToSchemaVersion(111);
+    }
+    if (databaseSchemaVersion < 112) {
+      // Bootstrap (AssumeUTXO) verification runs and operator jobs. Each row
+      // carries the backend's own network; the JSON document is the record.
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS universe_bootstrap_verifications (
+        verification_id CHAR(36) NOT NULL,
+        snapshot_id VARCHAR(128) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        state VARCHAR(16) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        document JSON NOT NULL,
+        PRIMARY KEY (verification_id),
+        INDEX universe_bootstrap_verifications_snapshot (snapshot_id, network, created_at),
+        INDEX universe_bootstrap_verifications_state (network, state, updated_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS universe_bootstrap_jobs (
+        job_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        node_id VARCHAR(64) NOT NULL,
+        job_type VARCHAR(32) NOT NULL,
+        idempotency_key VARCHAR(128) NOT NULL,
+        state VARCHAR(16) NOT NULL,
+        lease_owner VARCHAR(128) NULL,
+        lease_expires_at DATETIME(3) NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        document JSON NOT NULL,
+        PRIMARY KEY (job_id),
+        UNIQUE INDEX universe_bootstrap_jobs_idempotency (network, idempotency_key),
+        INDEX universe_bootstrap_jobs_claim (network, state, lease_expires_at, created_at),
+        INDEX universe_bootstrap_jobs_node (network, node_id, state)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(112);
     }
 
     if (databaseSchemaVersion < 106 && config.MEMPOOL.NETWORK === 'liquid') {
