@@ -100,6 +100,7 @@ export interface Env {
   PACKAGE_JSON_VERSION_MEMPOOL_SPACE?: string;
   STRATUM_ENABLED: boolean;
   SERVICES_API?: string;
+  ONION_SERVICES_API?: string;
   customize?: Customization;
   PROD_DOMAINS: string[];
 }
@@ -151,6 +152,8 @@ const defaultEnv: Env = {
   // The hosted services API is an upstream product. It is unset here, so the
   // account and acceleration calls that use it never leave this origin.
   'SERVICES_API': '',
+  // The onion services endpoint a Tor-served deployment names for itself.
+  'ONION_SERVICES_API': '',
   'PROD_DOMAINS': [],
 };
 
@@ -273,8 +276,11 @@ export class StateService {
       this.env.MINING_DASHBOARD = false;
     }
 
-    if (document.location.hostname.endsWith('.onion')) {
-      this.env.SERVICES_API = 'http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api/v1/services';
+    // Onion transport is explicit configuration: a deployment served over Tor
+    // names its own onion services endpoint. The page hostname alone never
+    // switches providers.
+    if (document.location.hostname.endsWith('.onion') && this.env.ONION_SERVICES_API) {
+      this.env.SERVICES_API = this.env.ONION_SERVICES_API;
     }
 
     if (this.isBrowser) {
