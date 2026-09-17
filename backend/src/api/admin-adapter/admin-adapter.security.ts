@@ -77,39 +77,89 @@ export function isPrivateRemoteAddress(address: string): boolean {
   return /^f[cd][0-9a-f]{2}:/.test(value) || value.startsWith('fe80:');
 }
 
+/** How long a claimed nonce has to stay claimed: the whole freshness window. */
+export const ADMIN_NONCE_RETENTION_MS = ADMIN_SERVICE_NONCE_TTL_SECONDS * 1000;
+
 /**
- * Remembers nonces for exactly as long as a timestamp can stay fresh, so a
- * replay inside the window is refused and memory stays bounded.
+ * The answer of a replay store. `unavailable` is the fail-closed answer: the
+ * request is refused because nobody can say whether the nonce was seen.
  */
-export class AdminAdapterNonceStore {
+export type AdminReplayClaim = 'claimed' | 'replayed' | 'unavailable';
+
+/**
+ * A shared, atomic claim on a nonce. Every worker that verifies admin requests
+ * must consult the same store, otherwise a signed request replays cleanly
+ * against the next process.
+ */
+export interface AdminReplayStore {
+  readonly kind: string;
+  claim(scope: string, nonce: string, nowMs: number): Promise<AdminReplayClaim>;
+}
+
+/**
+ * Remembers nonces in this process for exactly as long as a timestamp can
+ * stay fresh. Unexpired nonces are never evicted: a store that forgot a live
+ * nonce to make room would reopen the replay it exists to close, so when the
+ * bound is reached new nonces are refused instead.
+ *
+ * Single-process only. Production selects a shared store; this one is for
+ * unit tests and for an explicit single-process opt-in.
+ */
+export class AdminAdapterNonceStore implements AdminReplayStore {
+  readonly kind = 'memory';
   private seen = new Map<string, number>();
 
   constructor(private maxEntries = 20_000) {}
 
-  accept(nonce: string, nowMs: number): boolean {
+  /** Synchronous acceptance for the pure verifier. Nonces are keyed by scope. */
+  accept(nonce: string, nowMs: number, scope = ''): boolean {
     this.evict(nowMs);
-    if (this.seen.has(nonce)) {
+    const key = `${scope}\n${nonce}`;
+    if (this.seen.has(key)) {
       return false;
     }
-    this.seen.set(nonce, nowMs);
-    if (this.seen.size > this.maxEntries) {
-      const oldest = this.seen.keys().next();
-      if (!oldest.done) {
-        this.seen.delete(oldest.value);
-      }
+    if (this.seen.size >= this.maxEntries) {
+      return false;
     }
+    this.seen.set(key, nowMs);
     return true;
   }
 
+  claim(scope: string, nonce: string, nowMs: number): Promise<AdminReplayClaim> {
+    return Promise.resolve(this.accept(nonce, nowMs, scope) ? 'claimed' : 'replayed');
+  }
+
+  /** Only expired entries are removed, never a live one. */
   private evict(nowMs: number): void {
-    const horizon = nowMs - ADMIN_SERVICE_NONCE_TTL_SECONDS * 1000;
-    for (const [nonce, at] of this.seen) {
+    const horizon = nowMs - ADMIN_NONCE_RETENTION_MS;
+    for (const [key, at] of this.seen) {
       if (at >= horizon) {
         break;
       }
-      this.seen.delete(nonce);
+      this.seen.delete(key);
     }
   }
+}
+
+/** The fail-closed store: every claim is unavailable, with the reason logged once. */
+export class UnavailableAdminReplayStore implements AdminReplayStore {
+  readonly kind = 'unavailable';
+  private logged = false;
+
+  constructor(private reason: string) {}
+
+  claim(): Promise<AdminReplayClaim> {
+    if (!this.logged) {
+      this.logged = true;
+      logger.err(`[admin-adapter] Admin requests are refused: ${this.reason}`);
+    }
+    return Promise.resolve('unavailable');
+  }
+}
+
+/** The key/version pair a nonce is claimed under, so keys cannot collide. */
+export function adminNonceScope(keyId: string, contractVersion: string): string {
+  return `${keyId}@${contractVersion}`;
 }
 
 function header(request: Request, name: string): string {
@@ -130,15 +180,12 @@ export type AdminAdapterVerdict =
   | { ok: true; authorization: { keyId: string; elevated: boolean } }
   | { ok: false; status: number; code: string; message: string; reason: string };
 
-const nonces = new AdminAdapterNonceStore();
+/** A verified signature whose nonce has not been claimed yet. */
+export type AdminAdapterSignatureVerdict =
+  | { ok: true; authorization: { keyId: string; elevated: boolean }; nonce: string; scope: string }
+  | { ok: false; status: number; code: string; message: string; reason: string };
 
-/**
- * The whole verification, expressed as a pure-ish function so it can be tested
- * without an HTTP server. `rawBody` is the exact bytes received, because
- * re-serialising a parsed object would change whitespace and key order and
- * break every signature.
- */
-export function verifyAdminAdapterRequest(input: {
+export interface AdminAdapterRequestInput {
   method: string;
   originalUrl: string;
   headers: Record<string, string | string[] | undefined>;
@@ -146,9 +193,64 @@ export function verifyAdminAdapterRequest(input: {
   remoteAddress: string;
   keys?: AdminAdapterKey[];
   nowMs?: number;
-  nonceStore?: AdminAdapterNonceStore;
+}
+
+/**
+ * The whole verification, expressed as a pure-ish function so it can be tested
+ * without an HTTP server. `rawBody` is the exact bytes received, because
+ * re-serialising a parsed object would change whitespace and key order and
+ * break every signature.
+ *
+ * This variant claims the nonce in the given single-process store and exists
+ * for unit tests and the isolated harness. The guard uses
+ * `verifyAdminAdapterRequestWithStore` against the shared store.
+ */
+export function verifyAdminAdapterRequest(input: AdminAdapterRequestInput & {
+  nonceStore: AdminAdapterNonceStore;
 }): AdminAdapterVerdict {
-  const rejected = (reason: string): AdminAdapterVerdict => ({
+  const verdict = checkAdminAdapterSignature(input);
+  if (!verdict.ok) {
+    return verdict;
+  }
+  if (!input.nonceStore.accept(verdict.nonce, input.nowMs ?? Date.now(), verdict.scope)) {
+    return unauthorized('A signed service request replayed a nonce.');
+  }
+  return { ok: true, authorization: verdict.authorization };
+}
+
+/**
+ * The verification the guard runs: every signature check, then one atomic
+ * claim in the shared replay store. An unavailable store refuses the request
+ * with its own code so the operator can tell it apart from a bad signature.
+ *
+ * @asyncUnsafe The guard catches a rejection and refuses the request.
+ */
+export async function verifyAdminAdapterRequestWithStore(
+  input: AdminAdapterRequestInput,
+  store: AdminReplayStore,
+): Promise<AdminAdapterVerdict> {
+  const verdict = checkAdminAdapterSignature(input);
+  if (!verdict.ok) {
+    return verdict;
+  }
+  const claim = await store.claim(verdict.scope, verdict.nonce, input.nowMs ?? Date.now());
+  if (claim === 'replayed') {
+    return unauthorized('A signed service request replayed a nonce.');
+  }
+  if (claim !== 'claimed') {
+    return {
+      ok: false,
+      status: 503,
+      code: 'REPLAY_STORE_UNAVAILABLE',
+      message: 'The Explorer admin adapter cannot verify request freshness right now.',
+      reason: `A signed service request was refused because the ${store.kind} replay store is unavailable.`,
+    };
+  }
+  return { ok: true, authorization: verdict.authorization };
+}
+
+function unauthorized(reason: string): { ok: false; status: number; code: string; message: string; reason: string } {
+  return {
     ok: false,
     status: 401,
     code: 'UNAUTHORIZED',
@@ -156,7 +258,12 @@ export function verifyAdminAdapterRequest(input: {
     // failed. The operator still gets the reason in the log.
     message: 'Admin adapter request verification failed.',
     reason,
-  });
+  };
+}
+
+/** Every check except the nonce claim. */
+export function checkAdminAdapterSignature(input: AdminAdapterRequestInput): AdminAdapterSignatureVerdict {
+  const rejected = unauthorized;
 
   if (!isPrivateRemoteAddress(input.remoteAddress)) {
     return {
@@ -242,11 +349,6 @@ export function verifyAdminAdapterRequest(input: {
     return rejected('A signed service request signature did not verify.');
   }
 
-  const store = input.nonceStore ?? nonces;
-  if (!store.accept(nonce, input.nowMs ?? Date.now())) {
-    return rejected('A signed service request replayed a nonce.');
-  }
-
   // This declaration is covered by the existing signed body digest. An
   // unsigned forwarding header cannot upgrade a request's authority.
   let elevated = false;
@@ -258,7 +360,7 @@ export function verifyAdminAdapterRequest(input: {
       return rejected('A signed admin request did not contain valid JSON.');
     }
   }
-  return { ok: true, authorization: { keyId, elevated } };
+  return { ok: true, authorization: { keyId, elevated }, nonce, scope: adminNonceScope(keyId, contractVersion) };
 }
 
 /** Mount before any general body parser so signatures retain the exact bytes. */
@@ -291,22 +393,41 @@ export function adminAdapterResponseHeaders(response: Response): void {
   response.removeHeader('Access-Control-Allow-Headers');
 }
 
-export function adminAdapterGuard() {
+/**
+ * The guard. The replay store is injected so the choice of store is made once,
+ * at mount time, and logged; without one every request fails closed.
+ */
+export function adminAdapterGuard(
+  store: AdminReplayStore = new UnavailableAdminReplayStore('no replay store was provided to the admin guard'),
+) {
   return (request: Request, response: Response, next: NextFunction): void => {
     adminAdapterResponseHeaders(response);
-    const verdict = verifyAdminAdapterRequest({
+    const refuse = (verdict: { status: number; code: string; message: string; reason: string }): void => {
+      logger.warn(`[admin-adapter] ${verdict.reason}`);
+      response.status(verdict.status).json({ code: verdict.code, message: verdict.message });
+    };
+    verifyAdminAdapterRequestWithStore({
       method: request.method,
       originalUrl: request.originalUrl,
       headers: request.headers as Record<string, string | string[] | undefined>,
       rawBody: (request as Request & { rawBody?: Buffer }).rawBody ?? Buffer.alloc(0),
       remoteAddress: request.socket.remoteAddress ?? '',
-    });
-    if (verdict.ok) {
-      response.locals.adminAdapterAuthorization = verdict.authorization;
-      next();
-      return;
-    }
-    logger.warn(`[admin-adapter] ${verdict.reason}`);
-    response.status(verdict.status).json({ code: verdict.code, message: verdict.message });
+    }, store)
+      .then((verdict) => {
+        if (verdict.ok) {
+          response.locals.adminAdapterAuthorization = verdict.authorization;
+          next();
+          return;
+        }
+        refuse(verdict);
+      })
+      .catch((e) => {
+        refuse({
+          status: 503,
+          code: 'REPLAY_STORE_UNAVAILABLE',
+          message: 'The Explorer admin adapter cannot verify request freshness right now.',
+          reason: 'The replay store threw while claiming a nonce: ' + (e instanceof Error ? e.message : String(e)),
+        });
+      });
   };
 }

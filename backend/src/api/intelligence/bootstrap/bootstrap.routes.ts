@@ -1,4 +1,9 @@
 import { Application, Request, Response } from 'express';
+import {
+  adminAdapterGuard,
+  adminAdapterJsonParser,
+} from '../../admin-adapter/admin-adapter.security';
+import { createAdminReplayStore } from '../../admin-adapter/admin-adapter.replay';
 import bootstrapService, { BootstrapEvidenceError } from './bootstrap.service';
 
 function fail(res: Response, err: unknown): Response {
@@ -7,8 +12,22 @@ function fail(res: Response, err: unknown): Response {
   return res.status(500).json({ error: 'Internal error' });
 }
 
+/**
+ * Operator routes reuse the control plane's own trust: a private-path origin
+ * and a signed request verified by the admin adapter guard, mounted here so
+ * it runs before any handler. The signature covers the exact request bytes;
+ * the adapter parser captures them, so this prefix is mounted before the
+ * general JSON parser in index.ts (see the /internal/admin/v1 line).
+ */
+export const OPERATOR_PREFIX = '/api/v1/intelligence/bootstrap/operator';
+
 class BootstrapRoutes {
   public initRoutes(app: Application): void {
+    // The same shared replay store as the admin adapter: a nonce accepted
+    // here is claimed for every backend worker, and no store means fail closed.
+    app.use(OPERATOR_PREFIX, adminAdapterJsonParser(), adminAdapterGuard(createAdminReplayStore()));
+    bootstrapService.startWorker();
+
     app.get(
       '/api/v1/intelligence/bootstrap/overview',
       async (req: Request, res: Response) => {
@@ -70,7 +89,7 @@ class BootstrapRoutes {
       '/api/v1/intelligence/bootstrap/snapshots',
       async (req: Request, res: Response) => {
         try {
-          const snapshots = bootstrapService.listSnapshots();
+          const snapshots = await bootstrapService.listSnapshots();
           res.json(snapshots);
         } catch (err: any) {
           fail(res, err);
@@ -82,7 +101,7 @@ class BootstrapRoutes {
       '/api/v1/intelligence/bootstrap/snapshots/:snapshotId',
       async (req: Request, res: Response) => {
         try {
-          const snapshot = bootstrapService.getSnapshot(req.params.snapshotId);
+          const snapshot = await bootstrapService.getSnapshot(req.params.snapshotId);
           if (!snapshot) {
             return res.status(404).json({ error: 'Snapshot not found' });
           }
@@ -97,11 +116,11 @@ class BootstrapRoutes {
       '/api/v1/intelligence/bootstrap/snapshots/:snapshotId/manifest',
       async (req: Request, res: Response) => {
         try {
-          const snapshot = bootstrapService.getSnapshot(req.params.snapshotId);
-          if (!snapshot || !snapshot.manifest) {
+          const manifest = bootstrapService.getSnapshotManifest(req.params.snapshotId);
+          if (!manifest) {
             return res.status(404).json({ error: 'Manifest not found' });
           }
-          res.json(snapshot.manifest);
+          res.json(manifest);
         } catch (err: any) {
           fail(res, err);
         }
@@ -112,8 +131,8 @@ class BootstrapRoutes {
       '/api/v1/intelligence/bootstrap/verifications',
       async (req: Request, res: Response) => {
         try {
-          const verification = bootstrapService.verifySnapshot(req.body);
-          res.json(verification);
+          const verification = await bootstrapService.verifySnapshot(req.body);
+          res.status(verification.state === 'pending' || verification.state === 'verifying' ? 202 : 200).json(verification);
         } catch (err: any) {
           fail(res, err);
         }
@@ -124,7 +143,7 @@ class BootstrapRoutes {
       '/api/v1/intelligence/bootstrap/verifications/:verificationId',
       async (req: Request, res: Response) => {
         try {
-          const verification = bootstrapService.getVerification(
+          const verification = await bootstrapService.getVerification(
             req.params.verificationId
           );
           if (!verification) {
@@ -143,7 +162,7 @@ class BootstrapRoutes {
       '/api/v1/intelligence/bootstrap/plans',
       async (req: Request, res: Response) => {
         try {
-          const plan = bootstrapService.createBootstrapPlan(req.body);
+          const plan = await bootstrapService.createBootstrapPlan(req.body);
           res.json(plan);
         } catch (err: any) {
           fail(res, err);
@@ -152,14 +171,18 @@ class BootstrapRoutes {
     );
 
     app.post(
-      '/api/v1/intelligence/bootstrap/operator/snapshots',
+      `${OPERATOR_PREFIX}/snapshots`,
       async (req: Request, res: Response) => {
         try {
-          const job = bootstrapService.createOperatorJob({
-            job_type: 'generate_snapshot',
-            node_id: req.body.node_id,
-          });
-          res.json(job);
+          const job = await bootstrapService.createOperatorJob(
+            {
+              job_type: 'generate_snapshot',
+              node_id: req.body?.node_id,
+              idempotency_key: req.body?.idempotency_key,
+            },
+            res.locals.adminAdapterAuthorization
+          );
+          res.status(202).json(job);
         } catch (err: any) {
           fail(res, err);
         }
@@ -167,15 +190,20 @@ class BootstrapRoutes {
     );
 
     app.post(
-      '/api/v1/intelligence/bootstrap/operator/loads',
+      `${OPERATOR_PREFIX}/loads`,
       async (req: Request, res: Response) => {
         try {
-          const job = bootstrapService.createOperatorJob({
-            job_type: 'load_snapshot',
-            node_id: req.body.node_id,
-            snapshot_id: req.body.snapshot_id,
-          });
-          res.json(job);
+          const job = await bootstrapService.createOperatorJob(
+            {
+              job_type: 'load_snapshot',
+              node_id: req.body?.node_id,
+              snapshot_id: req.body?.snapshot_id,
+              idempotency_key: req.body?.idempotency_key,
+              confirm: req.body?.confirm,
+            },
+            res.locals.adminAdapterAuthorization
+          );
+          res.status(202).json(job);
         } catch (err: any) {
           fail(res, err);
         }
@@ -186,11 +214,17 @@ class BootstrapRoutes {
       '/api/v1/intelligence/bootstrap/jobs/:jobId',
       async (req: Request, res: Response) => {
         try {
-          const job = bootstrapService.getJob(req.params.jobId);
+          const job = await bootstrapService.getJob(req.params.jobId);
           if (!job) {
             return res.status(404).json({ error: 'Job not found' });
           }
-          res.json(job);
+          // The job id is unguessable, but the readback is public: the operator
+          // key id and the host path of the written snapshot stay private.
+          const { requested_by: _requestedBy, ...publicJob } = job as any;
+          const result = (publicJob as any).result && typeof (publicJob as any).result === 'object'
+            ? { ...(publicJob as any).result, output_path: undefined }
+            : (publicJob as any).result;
+          res.json({ ...publicJob, result });
         } catch (err: any) {
           fail(res, err);
         }

@@ -375,14 +375,14 @@
       <section class="panel docs-section" id="api">
         <h2 i18n="universe.docs.api-title">API</h2>
         <p i18n="universe.docs.api-lede">
-          Every reading on these pages comes from the HTTP API below, under <span class="identifier">/api/v1/{{ chain }}/</span>. All endpoints are GET, answer JSON, and take a <span class="identifier">network</span> query parameter that currently must be <span class="identifier">mainnet</span>. Numeric quantities cross the API as exact decimal strings, so amounts survive beyond JavaScript number range. All hashes and heights in the examples below are samples, not live data.
+          Every reading on these pages comes from the HTTP API below, under <span class="identifier">/api/v1/{{ chain }}/</span>. All endpoints are GET, answer JSON, and take a <span class="identifier">network</span> query parameter; this deployment reads <span class="identifier">{{ network }}</span>. Numeric quantities cross the API as exact decimal strings, so amounts survive beyond JavaScript number range. All hashes and heights in the examples below are samples, not live data.
         </p>
 
         <h3 i18n="universe.docs.api-status-title">Status</h3>
         <p i18n="universe.docs.api-status-def">
           The capability envelope: readiness, tip, sync, pending-set state, per-protocol coverage, and which reads the chain offers.
         </p>
-        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/status?network=mainnet
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/status?network={{ network }}
 
 {{ '{' }} "schemaVersion": "universe-chain-capability-v1",
   "chain": "{{ chain }}", "ready": true,
@@ -393,7 +393,7 @@
         <p i18n="universe.docs.api-dashboard-def">
           The one-call aggregate the dashboard page uses: recent blocks, candidate buckets, fees, pending summary, mining, and subsystem health. Each member degrades to null on its own; the aggregate never fails whole because one subsystem cannot answer.
         </p>
-        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/dashboard?network=mainnet
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/dashboard?network={{ network }}
 
 {{ '{' }} "schemaVersion": "universe-chain-dashboard-v1",
   "recentBlocks": {{ '{' }} ... {{ '}' }}, "buckets": {{ '{' }} ... {{ '}' }}, "fees": {{ '{' }} ... {{ '}' }},
@@ -404,7 +404,7 @@
         <p i18n="universe.docs.api-blocks-def">
           Recent confirmed blocks, newest first, with a coverage statement so "few blocks exist" and "few blocks were collected" stay distinguishable. <span class="identifier">limit</span> runs from 1 to 50.
         </p>
-        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/blocks/recent?network=mainnet&amp;limit=15
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/blocks/recent?network={{ network }}&amp;limit=15
 
 {{ '{' }} "schemaVersion": "universe-recent-blocks-v1",
   "blocks": [ {{ '{' }} "heightAtomic": "6350000", "hash": "000...abc",
@@ -418,13 +418,13 @@
         <p *ngIf="chain === 'zcash'" i18n="universe.docs.api-fees-def-zcash">
           The ZIP-317 rule rather than rate numbers: marginal fee, grace actions, the typical conventional fee, and the share of the pending set paying it.
         </p>
-        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/fees?network=mainnet
+        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/fees?network={{ network }}
 
 {{ '{' }} "schemaVersion": "universe-fee-recommendations-v1",
   "kind": "fee-per-kilobyte", "unit": "koinu/kB",
   "levels": [ {{ '{' }} "id": "high", "amountDecimal": "1000000", "basis": "node-estimate" {{ '}' }}, ... ],
   "minRelayFeeAtomicPerKb": "1000000" {{ '}' }}</code></pre>
-        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/fees?network=mainnet
+        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/fees?network={{ network }}
 
 {{ '{' }} "schemaVersion": "universe-fee-recommendations-v1",
   "kind": "zip-317", "unit": "zatoshi",
@@ -435,8 +435,8 @@
         <p i18n="universe.docs.api-mining-def">
           The mining summary carries difficulty, network rate and its unit, target and observed interval, and reward figures over the collected window. The pools endpoint takes a <span class="identifier">window</span> of 24h, 3d, 1w, or 1m.
         </p>
-        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/mining?network=mainnet
-GET /api/v1/{{ chain }}/mining/pools?network=mainnet&amp;window=1w
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/mining?network={{ network }}
+GET /api/v1/{{ chain }}/mining/pools?network={{ network }}&amp;window=1w
 
 {{ '{' }} "schemaVersion": "universe-mining-pools-v1", "windowId": "1w",
   "pools": [ {{ '{' }} "poolId": "unknown", "name": "Unknown",
@@ -447,7 +447,7 @@ GET /api/v1/{{ chain }}/mining/pools?network=mainnet&amp;window=1w
         <p i18n="universe.docs.api-charts-def">
           One series per call. <span class="identifier">range</span> is one of 24h, 3d, 1w, 1m, 3m, 6m, 1y, all. The coverage block says whether stored history spans the whole range and where the oldest stored sample sits.
         </p>
-        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/charts/block-fees?network=mainnet&amp;range=1w
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/charts/block-fees?network={{ network }}&amp;range=1w
 
 {{ '{' }} "schemaVersion": "universe-chart-series-v1", "seriesId": "block-fees",
   "rangeId": "1w", "aggregation": "sum", "bucketSecondsAtomic": "3600",
@@ -462,26 +462,26 @@ GET /api/v1/{{ chain }}/mining/pools?network=mainnet&amp;window=1w
         <p *ngIf="chain === 'zcash'" i18n="universe.docs.api-mempool-def-zcash">
           The pending snapshot lists what our node holds; <span class="identifier">limit</span> runs from 1 to 200. The candidate buckets endpoint groups the same set into ZIP-317 eligibility tiers.
         </p>
-        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/mempool?network=mainnet&amp;limit=100
-GET /api/v1/{{ chain }}/candidate-buckets?network=mainnet
+        <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/{{ chain }}/mempool?network={{ network }}&amp;limit=100
+GET /api/v1/{{ chain }}/candidate-buckets?network={{ network }}
 
 {{ '{' }} "schemaVersion": "universe-candidate-buckets-v1",
   "semantics": "{{ chain === 'zcash' ? 'zip317-eligibility-tiers' : 'ordered-by-fee-policy' }}",
   "buckets": [ ... ], "disclosures": [ ... ] {{ '}' }}</code></pre>
 
         <h3 i18n="universe.docs.api-lookups-title">Transaction, block, address, outpoint</h3>
-        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/tx/:txid?network=mainnet
-GET /api/v1/dogecoin/block/:heightOrHash?network=mainnet&amp;page=1&amp;limit=50
-GET /api/v1/dogecoin/address/:address?network=mainnet&amp;page=1&amp;limit=50
-GET /api/v1/dogecoin/outpoint/:txid/:vout?network=mainnet
+        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/tx/:txid?network={{ network }}
+GET /api/v1/dogecoin/block/:heightOrHash?network={{ network }}&amp;page=1&amp;limit=50
+GET /api/v1/dogecoin/address/:address?network={{ network }}&amp;page=1&amp;limit=50
+GET /api/v1/dogecoin/outpoint/:txid/:vout?network={{ network }}
 
-GET /api/v1/dogecoin/block/6350000?network=mainnet&amp;page=2&amp;limit=50</code></pre>
-        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/tx/:txid?network=mainnet
-GET /api/v1/zcash/block/:heightOrHash?network=mainnet&amp;limit=100&amp;offset=0
-GET /api/v1/zcash/address/:address?network=mainnet&amp;limit=100&amp;offset=0
-GET /api/v1/zcash/outpoint/:txid/:vout?network=mainnet
+GET /api/v1/dogecoin/block/6350000?network={{ network }}&amp;page=2&amp;limit=50</code></pre>
+        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/tx/:txid?network={{ network }}
+GET /api/v1/zcash/block/:heightOrHash?network={{ network }}&amp;limit=100&amp;offset=0
+GET /api/v1/zcash/address/:address?network={{ network }}&amp;limit=100&amp;offset=0
+GET /api/v1/zcash/outpoint/:txid/:vout?network={{ network }}
 
-GET /api/v1/zcash/block/3050000?network=mainnet&amp;limit=100&amp;offset=100</code></pre>
+GET /api/v1/zcash/block/3050000?network={{ network }}&amp;limit=100&amp;offset=100</code></pre>
         <p *ngIf="chain === 'dogecoin'" i18n="universe.docs.api-lookups-note-doge">
           Block and address lists page with page and limit; page starts at 1.
         </p>
@@ -496,27 +496,27 @@ GET /api/v1/zcash/block/3050000?network=mainnet&amp;limit=100&amp;offset=100</co
         <p *ngIf="chain === 'zcash'" i18n="universe.docs.api-protocols-def-zcash">
           The protocols index, then one list and one detail route per protocol. ZRC-20 routes accept an optional <span class="identifier">ruleset</span> of zord or zecscriptions.
         </p>
-        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/protocols?network=mainnet
-GET /api/v1/dogecoin/protocols/drc20?network=mainnet&amp;limit=100&amp;cursor=0
-GET /api/v1/dogecoin/protocols/drc20/:ticker/holders?network=mainnet&amp;limit=100&amp;cursor=0
-GET /api/v1/dogecoin/protocols/doge-tap?network=mainnet&amp;limit=100&amp;offset=0</code></pre>
-        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/protocols?network=mainnet
-GET /api/v1/zcash/protocols/zrc20?network=mainnet&amp;limit=100
-GET /api/v1/zcash/protocols/zrc20/:tick?network=mainnet&amp;ruleset=zord</code></pre>
+        <pre *ngIf="chain === 'dogecoin'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/dogecoin/protocols?network={{ network }}
+GET /api/v1/dogecoin/protocols/drc20?network={{ network }}&amp;limit=100&amp;cursor=0
+GET /api/v1/dogecoin/protocols/drc20/:ticker/holders?network={{ network }}&amp;limit=100&amp;cursor=0
+GET /api/v1/dogecoin/protocols/doge-tap?network={{ network }}&amp;limit=100&amp;offset=0</code></pre>
+        <pre *ngIf="chain === 'zcash'" tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/protocols?network={{ network }}
+GET /api/v1/zcash/protocols/zrc20?network={{ network }}&amp;limit=100
+GET /api/v1/zcash/protocols/zrc20/:tick?network={{ network }}&amp;ruleset=zord</code></pre>
 
         <ng-container *ngIf="chain === 'zcash'">
           <h3 i18n="universe.docs.api-search-title">Search</h3>
           <p i18n="universe.docs.api-search-def">
             Resolves a query (a height, hash, transaction id, transparent address, or protocol asset) to the pages that can answer it. The query must be 1 to 256 printable characters.
           </p>
-          <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/search?q=3050000&amp;network=mainnet</code></pre>
+          <pre tabindex="0" role="region" aria-label="Code sample, scrolls sideways" i18n-aria-label="universe.docs.code-region"><code>GET /api/v1/zcash/search?q=3050000&amp;network={{ network }}</code></pre>
         </ng-container>
 
         <h3 i18n="universe.docs.api-errors-title">Errors</h3>
         <ul class="docs-list">
           <li i18n="universe.docs.api-error-400">400: the reference is invalid; the body says which rule it broke, for example "txid must be 64 lowercase hex characters".</li>
           <li i18n="universe.docs.api-error-404">404: the reference is valid but the object does not exist on this chain.</li>
-          <li i18n="universe.docs.api-error-503">503: the source that would answer is unavailable; the body names the source. Any network other than mainnet also answers 503, because only mainnet is served today.</li>
+          <li i18n="universe.docs.api-error-503">503: the source that would answer is unavailable; the body names the source. A network this deployment does not serve also answers 503 with a {{ chain }}-network-unavailable body; nothing falls back to another network.</li>
         </ul>
 
         <h3 i18n="universe.docs.api-reorg-title">Reorganisations</h3>

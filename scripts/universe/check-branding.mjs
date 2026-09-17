@@ -74,6 +74,8 @@ const ALLOWED = [
   { prefix: 'SUPPORT.md', reason: 'fork attribution required by the licence' },
   { prefix: 'docs.manifest.json', reason: 'the upstream block attributes the upstream project to the documentation portal' },
   { prefix: 'scripts/universe/check-origins.mjs', reason: 'the origin gate lists the hosts it bans' },
+  { prefix: 'scripts/universe/check-origins.test.mjs', reason: 'the origin gate tests name the hosts it must reject' },
+  { prefix: 'scripts/universe/docker-runtime-defaults.test.mjs', reason: 'the rendered-config gate proves the hosts the start scripts refuse' },
   { prefix: 'frontend/cypress/', reason: 'inherited upstream end-to-end suite and recorded fixtures, not shipped' },
   { prefix: '.github/workflows/', reason: 'inherited upstream CI definitions; Universe CI is separate' },
 ];

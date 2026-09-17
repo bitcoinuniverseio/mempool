@@ -20,9 +20,9 @@ A protocol never silently disappears from this table: `PROTOCOL-ROSTER.lock`
 records every id that has been published, and the gate fails when one of them
 stops appearing.
 
-Pinned from bitcoinuniverseio/backend-apis at commit 04ff6efd3ea2dd841742ecf48932f0b10a8b5dd0,
+Pinned from bitcoinuniverseio/backend-apis at commit 7ec4602e7a5dcd6495268ae64698280657cc9c73,
 manifest schema universe-explorer-protocol-manifest-v1, registry version 1.1.0,
-recorded 2026-09-05T22:45:43.323Z.
+recorded 2026-09-17T05:45:55.810Z.
 
 39 protocol identities are retained. 7 carry historical readable declarations; these are not current runtime or E2E passes. Operation descriptors identify implemented public reads and their owned authority routes; configuration and acceptance are separate. The registry is not the complete application operation inventory.
 
@@ -62,7 +62,7 @@ recorded 2026-09-05T22:45:43.323Z.
 | anima | OTHER | bitcoin | index-anima | BLOCKED | unknown | registry, status, transitions, transition, items, item, item-history |
 | doginals | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown | registry, chain-list, chain-detail |
 | drc20 | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown | registry, chain-list, chain-detail, holders |
-| tap_doge | OTHER | dogecoin | index-doge-tap | BLOCKED | unknown | registry, activity |
+| tap_doge | OTHER | dogecoin | index-doge-tap | BLOCKED | unknown | registry, activity, chain-list, chain-detail, holders, events |
 | dunes | OTHER | dogecoin | ord-dogecoin | BLOCKED | unknown | registry, chain-list, chain-detail |
 | zerdinals | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete | registry, chain-list, chain-detail |
 | zrunes | OTHER | zcash | index-zcash-metaprotocols | VERIFIED READ ONLY | complete | registry, chain-list, chain-detail |

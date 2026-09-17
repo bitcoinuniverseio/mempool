@@ -11,6 +11,7 @@ import {
 import {
   PrivateBroadcastRecord,
   PrivateBroadcastStatus,
+  PRIVATE_BROADCAST_STATUSES,
   PrivateSubmissionApiService,
   SubmissionCapabilities,
   SubmissionMethod,
@@ -97,6 +98,42 @@ export function statusPresentation(status: PrivateBroadcastStatus): {
       };
     case 'failed':
       return { heading: 'Broadcast failed', badge: 'FAILED', tone: 'danger' };
+    case 'relaying':
+      return {
+        heading: 'Relaying through the owned private endpoint',
+        badge: 'RELAYING',
+        tone: 'warning',
+      };
+    case 'submitted':
+      return {
+        heading: 'Accepted by the owned node; awaiting confirmation',
+        badge: 'SUBMITTED',
+        tone: 'warning',
+      };
+    case 'confirmed':
+      return {
+        heading: 'Confirmed on the owned node',
+        badge: 'CONFIRMED',
+        tone: 'success',
+      };
+    case 'rejected':
+      return {
+        heading: 'Rejected by the owned node',
+        badge: 'REJECTED',
+        tone: 'danger',
+      };
+    case 'cancelled':
+      return {
+        heading: 'Cancelled before relay',
+        badge: 'CANCELLED',
+        tone: 'secondary',
+      };
+    case 'abort-too-late':
+      return {
+        heading: 'Relay had already started; nothing was undone',
+        badge: 'ABORT TOO LATE',
+        tone: 'warning',
+      };
     default:
       return {
         heading: 'Unknown state',
@@ -311,6 +348,7 @@ export class PrivateSubmissionBroadcastComponent implements OnInit, OnDestroy {
     method: SubmissionMethod;
     network: string;
     token?: string;
+    ownerToken?: string;
   };
   constructor(private api: PrivateSubmissionApiService) {}
   ngOnInit(): void {
@@ -361,7 +399,14 @@ export class PrivateSubmissionBroadcastComponent implements OnInit, OnDestroy {
     return statusPresentation(this.broadcastReceipt?.status ?? 'failed');
   }
   isTerminal(s: PrivateBroadcastStatus): boolean {
-    return ['broadcast_completed', 'aborted', 'failed'].includes(s);
+    return [
+      'broadcast_completed',
+      'aborted',
+      'failed',
+      'confirmed',
+      'rejected',
+      'cancelled',
+    ].includes(s);
   }
   submitPrivate(): void {
     if (!this.canSubmit || !this.method) return;
@@ -398,7 +443,9 @@ export class PrivateSubmissionBroadcastComponent implements OnInit, OnDestroy {
     this.request?.unsubscribe();
     this.refreshing = true;
     this.loadError = null;
-    this.request = this.api.getPrivateSubmission$(token).subscribe({
+    this.request = this.api
+      .getPrivateSubmission$(token, this.expected.ownerToken)
+      .subscribe({
       next: (r) => {
         this.broadcastReceipt = this.acceptRecord(r);
         this.refreshing = false;
@@ -417,11 +464,18 @@ export class PrivateSubmissionBroadcastComponent implements OnInit, OnDestroy {
     this.request?.unsubscribe();
     this.refreshing = false;
     this.aborting = true;
-    this.request = this.api.abortPrivate$(token).subscribe({
+    this.request = this.api
+      .abortPrivate$(token, this.expected?.ownerToken)
+      .subscribe({
       next: (r) => {
         this.aborting = false;
-        if (r?.success !== true || r.status !== 'aborted') {
-          this.loadError = 'The relay did not confirm an abort.';
+        if (r?.success !== true || !['aborted', 'cancelled'].includes(r.status)) {
+          // abort-too-late is a truthful answer: the relay already started and
+          // nothing was reversed. Refresh status shows the record's real state.
+          this.loadError =
+            r?.status === 'abort-too-late'
+              ? 'The relay had already started; the abort changed nothing.'
+              : 'The relay did not confirm an abort.';
           return;
         }
         this.refreshStatus();
@@ -449,13 +503,7 @@ export class PrivateSubmissionBroadcastComponent implements OnInit, OnDestroy {
       r.network !== e.network ||
       this.api.network !== e.network ||
       (e.token !== undefined && r.submission_token !== e.token) ||
-      ![
-        'queued',
-        'acknowledged',
-        'aborted',
-        'broadcast_completed',
-        'failed',
-      ].includes(r.status) ||
+      !PRIVATE_BROADCAST_STATUSES.includes(r.status) ||
       typeof r.can_abort !== 'boolean' ||
       !Number.isSafeInteger(r.retry_count) ||
       r.retry_count < 0 ||
@@ -466,6 +514,10 @@ export class PrivateSubmissionBroadcastComponent implements OnInit, OnDestroy {
       return null;
     }
     e.token = r.submission_token;
+    if (typeof r.owner_token === 'string' && /^[0-9a-f]{64}$/i.test(r.owner_token)) {
+      // Kept in memory only for this page's readback and abort; never rendered.
+      e.ownerToken = r.owner_token;
+    }
     return r;
   }
   ngOnDestroy(): void {

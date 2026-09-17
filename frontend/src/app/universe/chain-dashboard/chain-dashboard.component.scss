@@ -134,27 +134,22 @@
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: var(--u-space-2) var(--u-space-4);
 
+  // Label, chip and the closed "Why" sit on one line; an opened "Why" takes
+  // the full row width beneath them so the list never squeezes the chip.
   li {
-    display: flex;
-    flex-direction: column;
-    gap: var(--u-space-1);
-    min-width: 0;
-  }
-
-  .subsystem-row {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: var(--u-space-2);
+    min-width: 0;
   }
 
   .subsystem-label {
     font-size: var(--u-text-sm);
   }
 
-  .subsystem-age {
-    color: var(--u-text-secondary);
-    font-size: var(--u-text-xs);
+  .reasons[open] {
+    flex-basis: 100%;
   }
 }
 
@@ -165,12 +160,20 @@
   font-size: var(--u-text-sm);
   color: var(--u-text-secondary);
 
+  &[open] {
+    flex-basis: 100%;
+  }
+
   summary {
     cursor: pointer;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     min-height: 44px;
-    line-height: 44px;
-    color: var(--u-text-primary);
+    min-width: 44px;
+    padding: 0 var(--u-space-1);
+    color: var(--u-brand);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
 
     &:focus-visible {
       outline: 2px solid var(--u-focus-ring);

@@ -16,6 +16,7 @@
         The explorer could not reach its own registry. Everything else on the site
         still works.
       </p>
+      <button type="button" class="load-more" (click)="retryRegistry()" i18n="universe.detail.registry-retry">Retry</button>
     </div>
 
     <ng-container *ngSwitchCase="'ready'">
@@ -27,7 +28,12 @@
           </nav>
           <h1>
             {{ vm.protocol.displayName }}
-            <span class="universe-chip" [ngClass]="'state-' + statusTone(vm.protocol)">{{ statusLabel(vm.protocol) }}</span>
+            <!--
+              Availability first: what the authority can answer for right now.
+              The release status follows as a qualifier, never as the headline.
+            -->
+            <span class="universe-chip" [ngClass]="'state-' + availabilityTone(vm.availability)">{{ availabilityLabel(vm.availability) }}</span>
+            <span class="universe-chip">{{ statusLabel(vm.protocol) }}</span>
           </h1>
           <p class="summary">{{ vm.copy.summary }}</p>
         </div>

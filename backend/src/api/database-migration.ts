@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 109;
+  private static currentVersion = 112;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1466,6 +1466,84 @@ class DatabaseMigration {
         INDEX intelligence_knowledge_audit_label (label_id, created_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
       await this.updateToSchemaVersion(109);
+    }
+    if (databaseSchemaVersion < 110) {
+      // Admin adapter: a token so only the executor that owns a run can renew
+      // or finish it, and one row per claimed request nonce shared by every
+      // backend worker so a signed request cannot replay against another
+      // process. Both additive; existing runs keep working with a NULL token.
+      await this.$executeQuery('ALTER TABLE admin_adapter_runs ADD owner_token CHAR(36) NULL');
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS admin_nonces (
+        scope VARCHAR(160) NOT NULL,
+        nonce VARCHAR(128) NOT NULL,
+        expires_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (scope, nonce),
+        INDEX admin_nonces_expiry (expires_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(110);
+    }
+    if (databaseSchemaVersion < 111) {
+      // Private relay submissions: every raw transaction handed to an owned
+      // Tor or I2P endpoint, with the lease the worker holds while relaying,
+      // the attempt count and the hash of the owner token that authorizes
+      // readback and abort. The raw hex stays here because a retry needs it;
+      // the token itself is never stored.
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS intelligence_private_relay_submissions (
+        submission_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        txid CHAR(64) NOT NULL,
+        raw_tx MEDIUMTEXT NOT NULL,
+        method VARCHAR(32) NOT NULL,
+        state VARCHAR(16) NOT NULL,
+        relay_endpoint_id VARCHAR(64) NULL,
+        attempts INT UNSIGNED NOT NULL DEFAULT 0,
+        lease_until DATETIME(3) NULL,
+        lease_owner VARCHAR(64) NULL,
+        owner_token_hash CHAR(64) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        relayed_at DATETIME(3) NULL,
+        confirmed_block_height INT UNSIGNED NULL,
+        last_error VARCHAR(512) NULL,
+        PRIMARY KEY (submission_id),
+        UNIQUE INDEX intelligence_private_relay_txid (network, txid),
+        INDEX intelligence_private_relay_claim (network, state, lease_until)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(111);
+    }
+    if (databaseSchemaVersion < 112) {
+      // Bootstrap (AssumeUTXO) verification runs and operator jobs. Each row
+      // carries the backend's own network; the JSON document is the record.
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS universe_bootstrap_verifications (
+        verification_id CHAR(36) NOT NULL,
+        snapshot_id VARCHAR(128) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        state VARCHAR(16) NOT NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        document JSON NOT NULL,
+        PRIMARY KEY (verification_id),
+        INDEX universe_bootstrap_verifications_snapshot (snapshot_id, network, created_at),
+        INDEX universe_bootstrap_verifications_state (network, state, updated_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS universe_bootstrap_jobs (
+        job_id CHAR(36) NOT NULL,
+        network VARCHAR(16) NOT NULL,
+        node_id VARCHAR(64) NOT NULL,
+        job_type VARCHAR(32) NOT NULL,
+        idempotency_key VARCHAR(128) NOT NULL,
+        state VARCHAR(16) NOT NULL,
+        lease_owner VARCHAR(128) NULL,
+        lease_expires_at DATETIME(3) NULL,
+        created_at DATETIME(3) NOT NULL,
+        updated_at DATETIME(3) NOT NULL,
+        document JSON NOT NULL,
+        PRIMARY KEY (job_id),
+        UNIQUE INDEX universe_bootstrap_jobs_idempotency (network, idempotency_key),
+        INDEX universe_bootstrap_jobs_claim (network, state, lease_expires_at, created_at),
+        INDEX universe_bootstrap_jobs_node (network, node_id, state)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(112);
     }
 
     if (databaseSchemaVersion < 106 && config.MEMPOOL.NETWORK === 'liquid') {

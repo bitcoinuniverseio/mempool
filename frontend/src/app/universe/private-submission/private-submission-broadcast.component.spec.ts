@@ -165,11 +165,11 @@ describe('private broadcast: the receipt shows the exact backend status', () => 
   });
 
   it('refresh and abort use the submission token and re-read the record', () => {
-    const get = vi.fn(() => of(record('aborted')));
-    const abort = vi.fn(() => of({ success: true, status: 'aborted' }));
+    const get = vi.fn(() => of(record('cancelled')));
+    const abort = vi.fn(() => of({ success: true, status: 'cancelled' }));
     const c = component({
       getCapabilities$: () => of(capabilities),
-      submitPrivate$: () => of(record('queued')),
+      submitPrivate$: () => of({ ...record('queued'), owner_token: 'a'.repeat(64) }),
       getPrivateSubmission$: get,
       abortPrivate$: abort,
     });
@@ -178,9 +178,9 @@ describe('private broadcast: the receipt shows the exact backend status', () => 
     c.submitPrivate();
     expect(c.broadcastReceipt?.can_abort).toBe(true);
     c.abort();
-    expect(abort).toHaveBeenCalledWith('tok');
-    expect(get).toHaveBeenCalledWith('tok');
-    expect(c.broadcastReceipt?.status).toBe('aborted');
+    expect(abort).toHaveBeenCalledWith('tok', 'a'.repeat(64));
+    expect(get).toHaveBeenCalledWith('tok', 'a'.repeat(64));
+    expect(c.broadcastReceipt?.status).toBe('cancelled');
   });
 });
 

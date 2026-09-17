@@ -5,6 +5,24 @@ import { BootstrapChainstatesComponent } from './bootstrap-chainstates.component
 import { BootstrapOverviewComponent } from './bootstrap-overview.component';
 
 afterEach(() => vi.useRealTimers());
+describe('Bootstrap overview subfeature statuses', () => {
+  it('renders each subfeature status with the reason the backend gave', () => {
+    const component = new BootstrapOverviewComponent({} as any, { markForCheck: vi.fn() } as any);
+    const rows = component.subfeatures({
+      snapshot_catalogue_status: 'unavailable', snapshot_catalogue_reason: 'No catalogue file is configured.',
+      verification_store_status: 'unavailable', verification_store_reason: 'Verification runs need the durable MySQL store (DATABASE.ENABLED).',
+      planning_status: 'unavailable', operator_status: 'available', operator_reason: null,
+    } as any);
+    expect(rows.map(r => [r.label, r.status])).toEqual([
+      ['Snapshot catalogue', 'unavailable'], ['Verification store', 'unavailable'], ['Planning', 'unavailable'], ['Operator jobs', 'available'],
+    ]);
+    expect(rows[0].reason).toContain('catalogue');
+    expect(rows[1].reason).toContain('MySQL');
+    expect(rows[2].reason).toContain('verification store');
+    expect(rows[3].reason).toBeNull();
+    expect(component.subfeatures({} as any).every(r => r.status === 'unavailable')).toBe(true);
+  });
+});
 describe('Bootstrap owned observation lifecycle', () => {
   it('uses selected network for every API operation', () => {
     const http = { get: vi.fn(() => of([])), post: vi.fn(() => of({})) };
