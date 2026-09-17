@@ -669,12 +669,25 @@ export function readNotReadyReasons(
   if (!capability) {return null;}
   const health = readHealth(capability);
   const codes = new Set(capability.degradedReasons ?? []);
+  // Which protocol service a reason belongs to, so "not configured" names the
+  // service instead of leaving the reader to guess which one.
+  const owners = new Map<string, Set<string>>();
   if (health) {
-    for (const component of [health.node, health.confirmed, health.address, health.mempool, ...health.protocols, health.summary]) {
+    for (const component of [health.node, health.confirmed, health.address, health.mempool, health.summary]) {
       for (const code of component.degradedReasons ?? []) {codes.add(code);}
     }
+    for (const protocol of health.protocols) {
+      for (const code of protocol.degradedReasons ?? []) {
+        codes.add(code);
+        if (!owners.has(code)) {owners.set(code, new Set());}
+        owners.get(code)!.add(protocol.protocolId);
+      }
+    }
   }
-  const readings = describeChainReasons([...codes]);
+  const readings = describeChainReasons([...codes]).map((reading) => {
+    const names = owners.get(reading.code);
+    return names?.size ? { ...reading, text: `${[...names].join(', ')}: ${reading.text}` } : reading;
+  });
   if (readings.length) {return readings;}
   if (health?.summary.allOfferedReady || (!capability.health && capability.ready)) {return null;}
   return [{ code: '', text: 'The service report states no reason for its incomplete readiness.', kind: 'unstated' }];
