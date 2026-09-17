@@ -53,11 +53,45 @@ export interface PrivateBroadcastRecord {
   network: string;
   queued_at_utc: string;
   status:
-    'queued' | 'acknowledged' | 'aborted' | 'broadcast_completed' | 'failed';
+    | 'queued'
+    | 'acknowledged'
+    | 'aborted'
+    | 'broadcast_completed'
+    | 'failed'
+    | 'relaying'
+    | 'submitted'
+    | 'confirmed'
+    | 'rejected'
+    | 'cancelled'
+    | 'abort-too-late';
   retry_count: number;
   can_abort: boolean;
   last_error?: string;
+  /** Returned exactly once, by the POST that created the record; needed for readback and abort. */
+  owner_token?: string;
+  duplicate?: boolean;
+  relay_endpoint_id?: string;
+  relayed_at_utc?: string;
+  confirmed_block_height?: number;
+  updated_at_utc?: string;
 }
+
+export const PRIVATE_BROADCAST_STATUSES: readonly PrivateBroadcastRecord['status'][] = [
+  'queued',
+  'acknowledged',
+  'aborted',
+  'broadcast_completed',
+  'failed',
+  'relaying',
+  'submitted',
+  'confirmed',
+  'rejected',
+  'cancelled',
+  'abort-too-late',
+];
+
+/** Header carrying the owner token on private submission readback and abort. */
+export const PRIVATE_SUBMISSION_OWNER_TOKEN_HEADER = 'X-Submission-Owner-Token';
 
 export interface AcceleratorProvider {
   provider_id: string;
