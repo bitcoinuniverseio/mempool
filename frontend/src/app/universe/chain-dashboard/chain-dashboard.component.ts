@@ -117,6 +117,8 @@ interface DashboardViewModel {
   readonly viewStale: boolean;
   /** When the dashboard document was produced by the overlay. */
   readonly viewObserved: string | null;
+  /** The same, as an elapsed phrase; null when the time cannot be read. */
+  readonly viewObservedAge: string | null;
 }
 
 /**
@@ -304,6 +306,7 @@ export class ChainDashboardComponent implements OnInit {
       subsystems: (view?.subsystems ?? []).map((row) => this.subsystemReading(row, now)),
       viewStale,
       viewObserved: view?.observedAt ?? null,
+      viewObservedAge: formatElapsed(view?.observedAt ?? null, now),
     };
   }
 
