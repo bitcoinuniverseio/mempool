@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
+import { chainNetwork } from '@app/universe/chain-network';
 
 /**
  * Local personalization for the explorer.
@@ -106,7 +107,7 @@ export class UniverseLocalService {
 
   private newEntry(entry: UniverseEntryInput): UniverseEntry | null {
     // Only new writes use current navigation state. Historical entries use their own path/provenance.
-    const network = entry.network ?? ((entry.chain ?? 'bitcoin') === 'bitcoin' ? this.currentNetwork() : 'mainnet');
+    const network = entry.network ?? chainNetwork(entry.chain ?? 'bitcoin', this.currentNetwork(), this.stateService.env);
     return this.sanitizeEntry({ ...entry, network, at: Date.now() });
   }
 
@@ -232,7 +233,7 @@ export class UniverseLocalService {
     kind: UniverseEntryKind,
     value: string,
     chain: ExplorerChain = 'bitcoin',
-    network: ExplorerNetwork = chain === 'bitcoin' ? this.currentNetwork() : 'mainnet',
+    network: ExplorerNetwork = chainNetwork(chain, this.currentNetwork(), this.stateService.env),
   ): boolean {
     const id = entryKey({ chain, network, kind, value });
     return this.bookmarkSubject.value.some((item) => entryKey(item) === id);

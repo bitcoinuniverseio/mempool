@@ -448,7 +448,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     }
     this.saved = this.local.toggleBookmark({
       chain: this.chain,
-      network: 'mainnet',
+      network: this.api.chainNetwork(this.chain),
       kind,
       value: this.reference,
       path: this.router.url.split('?')[0],
@@ -722,7 +722,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
             )
           : of({
               chain: this.chain,
-              network: 'mainnet',
+              network: this.api.chainNetwork(this.chain),
               state: 'unavailable',
               reason: 'section-not-supported',
             });
@@ -736,7 +736,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
             )
           : of({
               chain: this.chain,
-              network: 'mainnet',
+              network: this.api.chainNetwork(this.chain),
               state: 'unavailable',
               reason: 'section-not-supported',
             });
@@ -757,7 +757,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     }
     this.local.recordVisit({
       chain: this.chain,
-      network: 'mainnet',
+      network: this.api.chainNetwork(this.chain),
       kind,
       value: this.reference,
       path: this.router.url.split('?')[0],
@@ -770,7 +770,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     return (
       !!kind &&
       !!this.reference &&
-      this.local.isBookmarked(kind, this.reference, this.chain, 'mainnet')
+      this.local.isBookmarked(kind, this.reference, this.chain, this.api.chainNetwork(this.chain))
     );
   }
 
@@ -822,6 +822,15 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       return $localize`:@@universe.chain.error-not-found:The ${this.chainName}:CHAIN: authority has no record of this object. It may not exist, or it may be outside the range this indexer covers.`;
     }
     if (status === '503') {
+      // The configured network is not one this overlay serves. Name it: the
+      // page must never read as mainnet data under another network's name.
+      const body = (error as { error?: unknown }).error;
+      const reasons = typeof body === 'string' ? [body]
+        : typeof body === 'object' && body !== null ? [(body as { error?: unknown }).error, (body as { message?: unknown }).message] : [];
+      if (reasons.includes(`${this.chain}-network-unavailable`)) {
+        const network = this.api.chainNetwork(this.chain);
+        return $localize`:@@universe.chain.error-network-unavailable:The ${this.chainName}:CHAIN: authority does not serve ${network}:NETWORK:, the network this deployment is configured to read. Nothing is shown from another network.`;
+      }
       return $localize`:@@universe.chain.error-unavailable:The ${this.chainName}:CHAIN: authority is not answering right now. Nothing here is stale data presented as current: the page shows no facts rather than old ones.`;
     }
     if (status === '400') {

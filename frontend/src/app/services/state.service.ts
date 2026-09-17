@@ -101,6 +101,12 @@ export interface Env {
   STRATUM_ENABLED: boolean;
   SERVICES_API?: string;
   ONION_SERVICES_API?: string;
+  /**
+   * Which network each non-Bitcoin chain is read from, as a JSON object such
+   * as {"dogecoin":"testnet"} (or that object as a JSON string). Unlisted
+   * chains read mainnet; Bitcoin always follows the network selector.
+   */
+  UNIVERSE_CHAIN_NETWORKS?: Record<string, string> | string;
   customize?: Customization;
   PROD_DOMAINS: string[];
 }
@@ -154,6 +160,7 @@ const defaultEnv: Env = {
   'SERVICES_API': '',
   // The onion services endpoint a Tor-served deployment names for itself.
   'ONION_SERVICES_API': '',
+  'UNIVERSE_CHAIN_NETWORKS': {},
   'PROD_DOMAINS': [],
 };
 

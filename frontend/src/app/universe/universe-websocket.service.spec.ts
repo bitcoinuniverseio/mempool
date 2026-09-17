@@ -18,6 +18,12 @@ describe('parseUniverseLiveEnvelope', () => {
     expect(parseUniverseLiveEnvelope(envelope, 'dogecoin')).toEqual(envelope);
   });
 
+  it('accepts only the network the chain is configured to', () => {
+    expect(parseUniverseLiveEnvelope({ ...envelope, network: 'testnet' }, 'dogecoin')).toBeNull();
+    expect(parseUniverseLiveEnvelope({ ...envelope, network: 'testnet' }, 'dogecoin', 'testnet')).toEqual({ ...envelope, network: 'testnet' });
+    expect(parseUniverseLiveEnvelope(envelope, 'dogecoin', 'testnet')).toBeNull();
+  });
+
   it('rejects cross-chain, unsafe sequence, and unknown-channel messages', () => {
     expect(parseUniverseLiveEnvelope(envelope, 'zcash')).toBeNull();
     expect(

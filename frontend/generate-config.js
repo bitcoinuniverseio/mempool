@@ -98,14 +98,21 @@ if (process.env.DOCKER_COMMIT_HASH) {
 
 const newConfig = `(function (window) {
   window.__env = window.__env || {};${settings.reduce((str, obj) => `${str}
-    window.__env.${obj.key} = ${typeof obj.value === 'string' ? `'${obj.value}'` : obj.value};`, '')}
+    window.__env.${obj.key} = ${typeof obj.value === 'string' ? `'${obj.value}'` : isJsonObject(obj.value) ? JSON.stringify(obj.value) : obj.value};`, '')}
     window.__env.GIT_COMMIT_HASH = '${gitCommitHash}';
     window.__env.PACKAGE_JSON_VERSION = '${packetJsonVersion}';
   }((typeof global !== 'undefined') ? global : this));`;
 
+// An object setting (UNIVERSE_CHAIN_NETWORKS) is substituted as a quoted JSON
+// string in the Docker template, so an unset variable renders '' rather than
+// a syntax error; the frontend parses the string.
+function isJsonObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 const newConfigTemplate = `(function (window) {
   window.__env = window.__env || {};${settings.reduce((str, obj) => `${str}
-    window.__env.${obj.key} = ${typeof obj.value === 'string' ? `'\${__${obj.key}__}'` : `\${__${obj.key}__}`};`, '')}
+    window.__env.${obj.key} = ${typeof obj.value === 'string' || isJsonObject(obj.value) ? `'\${__${obj.key}__}'` : `\${__${obj.key}__}`};`, '')}
     window.__env.GIT_COMMIT_HASH = '${gitCommitHash}';
     window.__env.PACKAGE_JSON_VERSION = '${packetJsonVersion}';
   }(this));`;
