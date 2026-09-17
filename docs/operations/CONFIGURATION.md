@@ -252,6 +252,17 @@ publish an authority's lag without publishing where it lives.
 time and by the dev proxy. It is optional; without it the build uses its
 defaults.
 
+`UNIVERSE_CHAIN_NETWORKS` (Docker frontend: `UNIVERSE_CHAIN_NETWORKS`, a JSON string)
+names which network each non-Bitcoin chain is read from, for example
+`{"dogecoin":"testnet"}`. Values are `mainnet`, `testnet` or `regtest` per
+chain; the default `{}` reads every chain from mainnet. Bitcoin is never listed:
+it follows the network selector, and the selector never implies a Dogecoin or
+Zcash network. An entry the frontend cannot use is ignored with a console
+warning and that chain reads mainnet. The overlay must serve the named scope
+(`UNIVERSE_DOGECOIN_NETWORKS` for Dogecoin, the indexer's declared network for
+Zcash); a scope it does not serve is shown as unavailable under that network,
+never as mainnet data.
+
 The dev server proxy table is `frontend/proxy.conf.local.js`, and it targets
 `http://localhost:8999`. To point the dev server at a different backend, edit
 the targets there. There is no environment variable for it.

@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { StateService } from '@app/services/state.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { configuredChainNetworks } from '@app/universe/chain-network';
 
 // Owner-scoped calls read a bearer header from this; the specs here make none.
 const ownerKeyStub = { headers: () => ({}), key: null };
@@ -14,8 +15,8 @@ interface Recorder {
 
 function build(
   isBrowser: boolean,
-  respond: (url: string) => Observable<unknown> = (url: string) =>
-    of(url.includes('/api/v1/chains') ? [] : {}),
+  respond: (url: string) => Observable<unknown> = capabilityRows,
+  chainNetworks?: unknown,
 ): Recorder {
   const urls: string[] = [];
   const httpClient = {
@@ -34,13 +35,20 @@ function build(
       NGINX_PROTOCOL: 'https',
       NGINX_HOSTNAME: 'explorer.internal',
       NGINX_PORT: '443',
+      UNIVERSE_CHAIN_NETWORKS: chainNetworks,
     },
   } as unknown as StateService;
   return { service: new UniverseApiService(httpClient, stateService, ownerKeyStub as never), urls };
 }
 
+/** Answers a per-chain capability read with a row that matches its own URL. */
+function capabilityRows(url: string): Observable<unknown> {
+  const match = /\/api\/v1\/chains\/([a-z]+)\?network=([a-z0-9]+)/.exec(url);
+  return of(match ? { chain: match[1], network: match[2] } : {});
+}
+
 describe('UniverseApiService addressing', () => {
-  it('cancels prior Bitcoin health and keeps the other picker rows on mainnet', () => {
+  it('cancels prior Bitcoin health and keeps the other picker rows on their own network', () => {
     const changed = new BehaviorSubject('');
     const state = { isBrowser: true, env: {}, network: '', networkChanged$: changed } as unknown as StateService;
     const pending = new Map<string, Subject<unknown>>();
@@ -53,18 +61,23 @@ describe('UniverseApiService addressing', () => {
     const received: unknown[] = [];
     const subscription = service.getChains$().subscribe(value => received.push(value));
     state.network = 'signet'; changed.next('signet');
-    expect(pending.has('/api/v1/chains?network=signet')).toBe(true);
-    pending.get('/api/v1/chains?network=mainnet')?.next([{ chain: 'bitcoin', network: 'mainnet' }]);
+    expect(pending.has('/api/v1/chains/bitcoin?network=signet')).toBe(true);
+    expect(pending.has('/api/v1/chains/dogecoin?network=mainnet')).toBe(true);
+    expect(pending.has('/api/v1/chains/zcash?network=mainnet')).toBe(true);
+    pending.get('/api/v1/chains/bitcoin?network=mainnet')?.next({ chain: 'bitcoin', network: 'mainnet' });
     expect(received).toEqual([]);
     const rows = ['bitcoin', 'dogecoin', 'zcash'].map(chain => ({ chain, network: chain === 'bitcoin' ? 'signet' : 'mainnet' }));
-    pending.get('/api/v1/chains?network=signet')?.next(rows);
+    for (const row of rows) {
+      const response = pending.get('/api/v1/chains/' + row.chain + '?network=' + row.network);
+      response?.next(row); response?.complete();
+    }
     expect(received).toEqual([rows]);
     subscription.unsubscribe();
   });
 
   it('rejects a capability row from another network', () => {
     const state = { isBrowser: true, env: {}, network: 'signet' } as unknown as StateService;
-    const service = new UniverseApiService({ get: () => of([{ chain: 'bitcoin', network: 'mainnet' }]) } as unknown as HttpClient, state, ownerKeyStub as never);
+    const service = new UniverseApiService({ get: () => of({ chain: 'bitcoin', network: 'mainnet' }) } as unknown as HttpClient, state, ownerKeyStub as never);
     let failure: Error | undefined;
     service.getChains$().subscribe({ error: error => failure = error });
     expect(failure?.message).toBe('authority-network-mismatch');
@@ -112,7 +125,9 @@ describe('UniverseApiService addressing', () => {
     service.getChainTransaction$('zcash', 'a'.repeat(64)).subscribe();
     service.search$('tick & rune', 'zcash', true).subscribe();
     expect(urls).toEqual([
-      '/api/v1/chains?network=mainnet',
+      '/api/v1/chains/bitcoin?network=mainnet',
+      '/api/v1/chains/dogecoin?network=mainnet',
+      '/api/v1/chains/zcash?network=mainnet',
       '/api/v1/dogecoin/status?network=mainnet',
       '/api/v1/zcash/tx/' + 'a'.repeat(64) + '?network=mainnet',
       '/api/v1/universe/search?q=tick%20%26%20rune&chain=zcash&all=true&network=mainnet',
@@ -179,6 +194,124 @@ describe('UniverseApiService addressing', () => {
     );
   });
 });
+
+describe('UniverseApiService chain network context', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  beforeEach(() => { warn.mockClear(); configuredChainNetworks({}); });
+
+  it('reads every chain from mainnet when nothing is configured', () => {
+    const { service, urls } = build(true);
+    service.getChainDashboard$('dogecoin').subscribe();
+    service.getChainProtocolList$('zcash', 'zrc20').subscribe();
+    expect(urls).toEqual([
+      '/api/v1/dogecoin/dashboard?network=mainnet',
+      '/api/v1/zcash/protocols/zrc20?network=mainnet&limit=100',
+    ]);
+    expect(service.chainNetwork('dogecoin')).toBe('mainnet');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('sends every Dogecoin read to the configured network while Zcash stays on mainnet and Bitcoin follows the selector', () => {
+    const urls: string[] = [];
+    const state = { isBrowser: true, network: 'signet', env: { UNIVERSE_CHAIN_NETWORKS: { dogecoin: 'testnet' } } } as unknown as StateService;
+    const service = new UniverseApiService({ get: (url: string) => { urls.push(url); return of(url.includes('/search') ? { activeChain: 'dogecoin', groups: [] } : capabilityRow(url)); } } as unknown as HttpClient, state, ownerKeyStub as never);
+    expect(service.chainNetwork('bitcoin')).toBe('signet');
+    expect(service.chainNetwork('dogecoin')).toBe('testnet');
+    expect(service.chainNetwork('zcash')).toBe('mainnet');
+    service.getChains$().subscribe();
+    service.getChainStatus$('dogecoin').subscribe();
+    service.getChainStatus$('zcash').subscribe();
+    service.getChainDashboard$('dogecoin').subscribe();
+    service.getChainMempool$('dogecoin', 10).subscribe();
+    service.getChainCandidateBuckets$('dogecoin').subscribe();
+    service.getChainRecentBlocks$('dogecoin', 5).subscribe();
+    service.getChainFees$('dogecoin').subscribe();
+    service.getChainFees$('zcash').subscribe();
+    service.getChainTransaction$('dogecoin', 'a'.repeat(64)).subscribe();
+    service.getChainProtocols$('dogecoin').subscribe();
+    service.getChainProtocolList$('dogecoin', 'drc20', 25, 0).subscribe();
+    service.getChainProtocolDetail$('dogecoin', 'drc20', 'tick').subscribe();
+    service.getChainProtocolSection$('dogecoin', 'drc20', 'tick', 'holders', 25, 0).subscribe();
+    service.getChainProtocolDetail$('zcash', 'zrc20', 'tick').subscribe();
+    service.search$('abc', 'dogecoin', false).subscribe();
+    service.getSources$('dogecoin').subscribe();
+    expect(urls).toEqual([
+      '/api/v1/chains/bitcoin?network=signet',
+      '/api/v1/chains/dogecoin?network=testnet',
+      '/api/v1/chains/zcash?network=mainnet',
+      '/api/v1/dogecoin/status?network=testnet',
+      '/api/v1/zcash/status?network=mainnet',
+      '/api/v1/dogecoin/dashboard?network=testnet',
+      '/api/v1/dogecoin/mempool?network=testnet&limit=10',
+      '/api/v1/dogecoin/candidate-buckets?network=testnet',
+      '/api/v1/dogecoin/blocks/recent?network=testnet&limit=5',
+      '/api/v1/dogecoin/fees?network=testnet',
+      '/api/v1/zcash/fees?network=mainnet',
+      '/api/v1/dogecoin/tx/' + 'a'.repeat(64) + '?network=testnet',
+      '/api/v1/dogecoin/protocols?network=testnet',
+      '/api/v1/dogecoin/protocols/drc20?network=testnet&limit=25&cursor=0',
+      '/api/v1/dogecoin/protocols/drc20/tick?network=testnet',
+      '/api/v1/dogecoin/protocols/drc20/tick/holders?network=testnet&limit=25&cursor=0',
+      '/api/v1/zcash/protocols/zrc20/tick?network=mainnet',
+      '/api/v1/universe/search?q=abc&chain=dogecoin&all=false&network=testnet',
+      '/api/v1/universe/sources?chain=dogecoin&network=testnet',
+    ]);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('accepts the map as a JSON string, the shape a Docker environment value takes', () => {
+    const { service, urls } = build(true, undefined, '{"zcash":"testnet"}');
+    service.getChainFees$('zcash').subscribe();
+    service.getChainFees$('dogecoin').subscribe();
+    expect(urls).toEqual(['/api/v1/zcash/fees?network=testnet', '/api/v1/dogecoin/fees?network=mainnet']);
+  });
+
+  it.each([
+    { dogecoin: 'signet' }, { dogecoin: 'Testnet' }, { dogecoin: 7 }, 'not json', ['testnet'], { bitcoin: 'testnet' },
+  ])('ignores an invalid configuration %j with a warning and reads mainnet', (value) => {
+    const { service, urls } = build(true, undefined, value);
+    service.getChainDashboard$('dogecoin').subscribe();
+    expect(urls).toEqual(['/api/v1/dogecoin/dashboard?network=mainnet']);
+    expect(service.chainNetwork('bitcoin')).toBe('mainnet');
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain('UNIVERSE_CHAIN_NETWORKS');
+  });
+
+  it('never lets a mainnet capability record stand in for a configured testnet scope', () => {
+    const state = { isBrowser: true, env: { UNIVERSE_CHAIN_NETWORKS: { dogecoin: 'testnet' } }, network: '' } as unknown as StateService;
+    const service = new UniverseApiService({ get: (url: string) => of(url.includes('dogecoin')
+      ? { chain: 'dogecoin', network: 'mainnet', ready: true }
+      : capabilityRow(url)) } as unknown as HttpClient, state, ownerKeyStub as never);
+    let failure: Error | undefined;
+    service.getChains$().subscribe({ error: error => failure = error });
+    expect(failure?.message).toBe('authority-network-mismatch');
+  });
+
+  it('passes the typed unavailable record for a configured scope through under its own network', () => {
+    const state = { isBrowser: true, env: { UNIVERSE_CHAIN_NETWORKS: { dogecoin: 'testnet' } }, network: '' } as unknown as StateService;
+    const unavailable = { chain: 'dogecoin', network: 'testnet', ready: false, sync: { state: 'unavailable' } };
+    const service = new UniverseApiService({ get: (url: string) => of(url.includes('dogecoin') ? unavailable : capabilityRow(url)) } as unknown as HttpClient, state, ownerKeyStub as never);
+    let rows: unknown[] = [];
+    service.getChains$().subscribe(value => rows = value);
+    expect(rows).toEqual([{ chain: 'bitcoin', network: 'mainnet' }, unavailable, { chain: 'zcash', network: 'mainnet' }]);
+  });
+
+  it('does not re-read Dogecoin when only the Bitcoin selector changes', () => {
+    const changed = new BehaviorSubject('');
+    const state = { isBrowser: true, env: { UNIVERSE_CHAIN_NETWORKS: { dogecoin: 'testnet' } }, network: '', networkChanged$: changed } as unknown as StateService;
+    const urls: string[] = [];
+    const service = new UniverseApiService({ get: (url: string) => { urls.push(url); return of({ chain: 'dogecoin', network: 'testnet' }); } } as unknown as HttpClient, state, ownerKeyStub as never);
+    const subscription = service.getChainStatus$('dogecoin').subscribe();
+    state.network = 'signet'; changed.next('signet');
+    expect(urls).toEqual(['/api/v1/dogecoin/status?network=testnet']);
+    subscription.unsubscribe();
+  });
+});
+
+function capabilityRow(url: string): unknown {
+  const match = /\/api\/v1\/chains\/([a-z]+)\?network=([a-z0-9]+)/.exec(url);
+  return match ? { chain: match[1], network: match[2] } : {};
+}
 
 describe('UniverseApiService pending-set bounds', () => {
   // Zcash refuses a limit above 200 as a bad request rather than trimming it,
