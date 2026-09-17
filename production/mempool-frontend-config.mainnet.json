@@ -6,7 +6,7 @@
   "LIQUID_TESTNET_ENABLED": false,
   "STRATUM_ENABLED": true,
   "SIGNET_ENABLED": true,
-  "MEMPOOL_WEBSITE_URL": "https://mempool.space",
+  "MEMPOOL_WEBSITE_URL": "https://explorer.bitcoinuniverse.io",
   "LIQUID_WEBSITE_URL": "https://liquid.network",
   "MAINNET_BLOCK_AUDIT_START_HEIGHT": 773911,
   "TESTNET_BLOCK_AUDIT_START_HEIGHT": 2417829,
@@ -18,5 +18,5 @@
   "ACCELERATOR_BUTTON": true,
   "PUBLIC_ACCELERATIONS": true,
   "AUDIT": true,
-  "PROD_DOMAINS": "mempool.space"
+  "PROD_DOMAINS": "explorer.bitcoinuniverse.io"
 }

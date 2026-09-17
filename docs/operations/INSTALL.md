@@ -19,7 +19,7 @@ them. This page covers what is different, in order.
 | --- | --- | --- |
 | Node.js | 24.19.0 | pinned in `.nvmrc`; the toolchain the CI fleet and the release artifact use |
 | npm | 11.17.0 | pinned alongside Node |
-| Rust and `cargo` | 1.84 | `rust/gbt/rust-toolchain`. The backend's `preinstall` script builds `rust/gbt` before anything else, so `npm ci` in `backend/` fails without `cargo` on the path |
+| Rust and `cargo` | 1.89.0 | `rust/gbt/rust-toolchain`. The locked engine dependencies need edition 2024, which 1.84 lacks. The backend's `preinstall` script builds `rust/gbt` before anything else, so `npm ci` in `backend/` fails without `cargo` on the path |
 | Bitcoin Core | a `txindex=1` node with RPC enabled | the only source of Bitcoin chain data |
 | MariaDB or MySQL | MariaDB 10.5 or later; the Universe fleet standard is MySQL 8.4 LTS | blocks, mining, statistics, and price history |
 | An address index | optional | without one, address and unspent-output lookups report that they cannot be served |
