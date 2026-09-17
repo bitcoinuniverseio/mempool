@@ -309,7 +309,7 @@ const defaults: IConfig = {
   'EXTERNAL_DATA_SERVER': {
     // Unset by default: this deployment never calls a hosted third-party API.
     'MEMPOOL_API': '',
-    'MEMPOOL_ONION': 'http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api/v1',
+    'MEMPOOL_ONION': '',
     'LIQUID_API': 'https://liquid.network/api/v1',
     'LIQUID_ONION': 'http://liquidmom47f6s3m53ebfxn47p76a6tlnxib3wp6deux7wuzotdr6cyd.onion/api/v1'
   },

@@ -2,8 +2,8 @@
   "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.1.0",
   "sourceRepository": "bitcoinuniverseio/backend-apis",
-  "sourceSha": "04ff6efd3ea2dd841742ecf48932f0b10a8b5dd0",
-  "generatedAt": "2026-09-05T22:45:43.323Z",
+  "sourceSha": "7ec4602e7a5dcd6495268ae64698280657cc9c73",
+  "generatedAt": "2026-09-17T05:45:55.810Z",
   "primaryStrip": [
     "ORDINALS",
     "RUNES",
@@ -1839,13 +1839,14 @@
           "route": "/api/v1/dogecoin/protocols/doginals",
           "authorityPath": "/api/v1/inscriptions",
           "evidence": "source-contract",
-          "acceptance": "NOT TESTED"
+          "acceptance": "NOT TESTED",
+          "pagination": "cursor"
         },
         {
           "id": "chain-detail",
           "method": "GET",
-          "route": "/api/v1/dogecoin/protocols/doginals/:reference",
-          "authorityPath": "/inscription/:reference",
+          "route": "/api/v1/dogecoin/protocols/doginals/:id",
+          "authorityPath": "/inscription/:id",
           "evidence": "source-contract",
           "acceptance": "NOT TESTED"
         }
@@ -1895,23 +1896,25 @@
           "route": "/api/v1/dogecoin/protocols/drc20",
           "authorityPath": "/api/v1/drc20/tokens",
           "evidence": "source-contract",
-          "acceptance": "NOT TESTED"
+          "acceptance": "NOT TESTED",
+          "pagination": "cursor"
         },
         {
           "id": "chain-detail",
           "method": "GET",
-          "route": "/api/v1/dogecoin/protocols/drc20/:reference",
-          "authorityPath": "/api/v1/drc20/tokens/:reference",
+          "route": "/api/v1/dogecoin/protocols/drc20/:ticker",
+          "authorityPath": "/api/v1/drc20/tokens/:ticker",
           "evidence": "source-contract",
           "acceptance": "NOT TESTED"
         },
         {
           "id": "holders",
           "method": "GET",
-          "route": "/api/v1/dogecoin/protocols/drc20/:reference/holders",
-          "authorityPath": "/api/v1/drc20/tokens/:reference/holders",
+          "route": "/api/v1/dogecoin/protocols/drc20/:ticker/holders",
+          "authorityPath": "/api/v1/drc20/tokens/:ticker/holders",
           "evidence": "source-contract",
-          "acceptance": "NOT TESTED"
+          "acceptance": "NOT TESTED",
+          "pagination": "cursor"
         }
       ],
       "authorizedReadOperations": [
@@ -1943,7 +1946,11 @@
       "visualToken": "protocol-tap-doge",
       "implementedReadOperations": [
         "registry",
-        "activity"
+        "activity",
+        "chain-list",
+        "chain-detail",
+        "holders",
+        "events"
       ],
       "readOperationDescriptors": [
         {
@@ -1961,11 +1968,50 @@
           "authorityPath": "/token-explorer/doge-tap",
           "evidence": "source-contract",
           "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "chain-list",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doge-tap",
+          "authorityPath": "/token-explorer/doge-tap/assets",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED",
+          "pagination": "offset"
+        },
+        {
+          "id": "chain-detail",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doge-tap/:ref",
+          "authorityPath": "/token-explorer/doge-tap/assets/:ref",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "holders",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doge-tap/:ref/holders",
+          "authorityPath": "/token-explorer/doge-tap/assets/:ref/holders",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED",
+          "pagination": "offset"
+        },
+        {
+          "id": "events",
+          "method": "GET",
+          "route": "/api/v1/dogecoin/protocols/doge-tap/:ref/events",
+          "authorityPath": "/token-explorer/doge-tap/assets/:ref/events",
+          "evidence": "source-contract",
+          "acceptance": "NOT TESTED",
+          "pagination": "offset"
         }
       ],
       "authorizedReadOperations": [
         "registry",
-        "activity"
+        "activity",
+        "chain-list",
+        "chain-detail",
+        "holders",
+        "events"
       ],
       "releaseStatus": "BLOCKED",
       "indexerAuthority": "index-doge-tap",
@@ -2004,13 +2050,14 @@
           "route": "/api/v1/dogecoin/protocols/dunes",
           "authorityPath": "/api/v1/dunes/tokens",
           "evidence": "source-contract",
-          "acceptance": "NOT TESTED"
+          "acceptance": "NOT TESTED",
+          "pagination": "cursor"
         },
         {
           "id": "chain-detail",
           "method": "GET",
-          "route": "/api/v1/dogecoin/protocols/dunes/:reference",
-          "authorityPath": "/api/v1/dunes/tokens/:reference",
+          "route": "/api/v1/dogecoin/protocols/dunes/:dune",
+          "authorityPath": "/api/v1/dunes/tokens/:dune",
           "evidence": "source-contract",
           "acceptance": "NOT TESTED"
         }
@@ -2064,8 +2111,8 @@
         {
           "id": "chain-detail",
           "method": "GET",
-          "route": "/api/v1/zcash/protocols/zerdinals/:reference",
-          "authorityPath": "/zcash-metaprotocols/inscriptions/:reference",
+          "route": "/api/v1/zcash/protocols/zerdinals/:id",
+          "authorityPath": "/zcash-metaprotocols/inscriptions/:id",
           "evidence": "source-contract",
           "acceptance": "NOT TESTED"
         }
@@ -2117,8 +2164,8 @@
         {
           "id": "chain-detail",
           "method": "GET",
-          "route": "/api/v1/zcash/protocols/zrunes/:reference",
-          "authorityPath": "/zcash-metaprotocols/zrunes/:reference",
+          "route": "/api/v1/zcash/protocols/zrunes/:id",
+          "authorityPath": "/zcash-metaprotocols/zrunes/:id",
           "evidence": "source-contract",
           "acceptance": "NOT TESTED"
         }
@@ -2170,8 +2217,8 @@
         {
           "id": "chain-detail",
           "method": "GET",
-          "route": "/api/v1/zcash/protocols/zrc20/:reference",
-          "authorityPath": "/zcash-metaprotocols/tokens/:reference",
+          "route": "/api/v1/zcash/protocols/zrc20/:tick",
+          "authorityPath": "/zcash-metaprotocols/tokens/:tick",
           "evidence": "source-contract",
           "acceptance": "NOT TESTED"
         }

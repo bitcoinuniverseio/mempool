@@ -19,9 +19,13 @@
     <p class="warning" *ngIf="vm.pulse.ceilingReached" i18n="universe.pulse.ceiling">
       Sampling stopped at this page's limit. Reload to start a new sample.
     </p>
-    <p class="warning" *ngIf="!vm.pulse.authorityAnswering" i18n="universe.pulse.authority-down">
+    <p class="warning" *ngIf="vm.pulse.observation === 'unavailable'" i18n="universe.pulse.authority-down">
+      The asset authority is not answering, and it has not resolved any transaction
+      since this page opened, so nothing is claimed.
+    </p>
+    <p class="warning" *ngIf="vm.pulse.observation === 'stale'" i18n="universe.pulse.authority-stale">
       The asset authority stopped answering. The tally below is frozen at the last
-      transaction it confirmed, and nothing new is being claimed.
+      transaction it confirmed at {{ vm.pulse.lastSampleAt | date: 'mediumTime' }}, and nothing new is being claimed.
     </p>
   </section>
 

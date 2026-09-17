@@ -21,6 +21,30 @@ export interface CoreIndex {
 
 type TaskName = 'blocksPrices' | 'coinStatsIndex';
 
+export type SingleTaskStatus =
+  | 'completed'
+  | 'already-running'
+  | 'disabled'
+  | 'deferred'
+  | 'network-inapplicable'
+  | 'failed';
+
+/**
+ * What actually happened when a single task was asked to run. A caller that
+ * needs authoritative completion (the admin adapter) must only trust
+ * `completed`, and even then confirm the persisted rows itself.
+ */
+export interface SingleTaskOutcome {
+  task: TaskName;
+  status: SingleTaskStatus;
+  /** Why the task did not run, for every status other than completed. */
+  reason?: string;
+  /** The failure message, for status failed. */
+  error?: string;
+  /** Wall-clock bounds of the work, for status completed. */
+  checkpoint?: { startedAt: string; finishedAt: string };
+}
+
 class Indexer {
   private runIndexer = true;
   private indexerRunning = false;
@@ -77,14 +101,20 @@ class Indexer {
     return null;
   }
 
-  public reindex(): void {
-    if (Common.indexingEnabled()) {
-      if (this.reindexTimeout) {
-        clearTimeout(this.reindexTimeout);
-        this.reindexTimeout = undefined;
-      }
-      this.runIndexer = true;
+  /**
+   * Releases the indexing loop to run again. Returns whether the request was
+   * accepted; it is refused when indexing is disabled in this deployment.
+   */
+  public reindex(): boolean {
+    if (!Common.indexingEnabled()) {
+      return false;
     }
+    if (this.reindexTimeout) {
+      clearTimeout(this.reindexTimeout);
+      this.reindexTimeout = undefined;
+    }
+    this.runIndexer = true;
+    return true;
   }
 
   private scheduleNextRun(timeout: number): void {
@@ -110,17 +140,26 @@ class Indexer {
         return;
       } else { // debounce
         clearTimeout(this.tasksScheduled[task]);
+        delete this.tasksScheduled[task];
       }
     }
-    this.tasksScheduled[task] = setTimeout(async () => {
+    const handle = setTimeout(async () => {
+      // Release the slot before the work starts so the task can schedule its
+      // own successor. Identity-compared: a replaced timer's callback never
+      // fires, but it must not be able to clear a newer handle either way.
+      if (this.tasksScheduled[task] === handle) {
+        delete this.tasksScheduled[task];
+      }
       try {
-        await this.runSingleTask(task);
+        const outcome = await this.runSingleTask(task);
+        if (outcome.status === 'failed') {
+          logger.err(`Scheduled task ${task} failed: ${outcome.error ?? 'unknown error'}`);
+        }
       } catch (e) {
         logger.err(`Unexpected error in scheduled task ${task}: ` + (e instanceof Error ? e.message : e));
-      } finally {
-        clearTimeout(this.tasksScheduled[task]);
       }
     }, timeout);
+    this.tasksScheduled[task] = handle;
   }
 
   /**
@@ -130,41 +169,55 @@ class Indexer {
    *
    * @asyncSafe
    */
-  public async runSingleTask(task: TaskName): Promise<void> {
-    if (!Common.indexingEnabled() || this.tasksRunning[task]) {
-      return;
+  public async runSingleTask(task: TaskName): Promise<SingleTaskOutcome> {
+    if (!Common.indexingEnabled()) {
+      return { task, status: 'disabled', reason: 'Indexing is disabled in this deployment.' };
+    }
+    if (this.tasksRunning[task]) {
+      return { task, status: 'already-running', reason: `The ${task} task is already running.` };
     }
     this.tasksRunning[task] = true;
+    const startedAt = new Date().toISOString();
 
-    switch (task) {
-      case 'blocksPrices': {
-        if (!['testnet', 'signet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK) && config.FIAT_PRICE.ENABLED) {
-          let lastestPriceId;
+    try {
+      switch (task) {
+        case 'blocksPrices': {
+          if (['testnet', 'signet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK)) {
+            return { task, status: 'network-inapplicable', reason: `Coins on ${config.MEMPOOL.NETWORK} have no fiat price.` };
+          }
+          if (!config.FIAT_PRICE.ENABLED) {
+            return { task, status: 'disabled', reason: 'Fiat prices are switched off in this deployment.' };
+          }
+          let lastestPriceId: number | null | undefined;
           try {
             lastestPriceId = await PricesRepository.$getLatestPriceId();
           } catch (e) {
             logger.debug('failed to fetch latest price id from db: ' + (e instanceof Error ? e.message : e));
-          }          if (priceUpdater.historyInserted === false || lastestPriceId === null) {
+          }
+          if (priceUpdater.historyInserted === false || lastestPriceId === null || lastestPriceId === undefined) {
             logger.debug(`Blocks prices indexer is waiting for the price updater to complete`, logger.tags.mining);
             this.scheduleSingleTask(task, 10000);
-          } else {
-            logger.debug(`Blocks prices indexer will run now`, logger.tags.mining);
-            await mining.$indexBlockPrices();
+            return { task, status: 'deferred', reason: 'Price history is not available yet; the task was rescheduled.' };
           }
+          logger.debug(`Blocks prices indexer will run now`, logger.tags.mining);
+          await mining.$indexBlockPrices();
+          return { task, status: 'completed', checkpoint: { startedAt, finishedAt: new Date().toISOString() } };
         }
-      } break;
 
-      case 'coinStatsIndex': {
-        logger.debug(`Indexing coinStatsIndex now`);
-        try {
+        case 'coinStatsIndex': {
+          logger.debug(`Indexing coinStatsIndex now`);
           await mining.$indexCoinStatsIndex();
-        } catch (e) {
-          logger.debug(`failed to index coinstatsindex: ` + (e instanceof Error ? e.message : e));
+          return { task, status: 'completed', checkpoint: { startedAt, finishedAt: new Date().toISOString() } };
         }
-      } break;
+      }
+      return { task, status: 'failed', error: `Unknown task ${String(task)}.` };
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
+      logger.debug(`failed to run ${task}: ` + error);
+      return { task, status: 'failed', error };
+    } finally {
+      this.tasksRunning[task] = false;
     }
-
-    this.tasksRunning[task] = false;
   }
 
   /** @asyncSafe */

@@ -91,8 +91,10 @@ import { timeMachineService } from './api/intelligence/time-machine/time-machine
 import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
 import { boundedHistoryFlush } from './api/intelligence/time-machine/history-shutdown';
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
+import { orderingEvidenceService } from './api/intelligence/private-submission/ordering-evidence.service';
 import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
+import { startPrivateRelayWorker } from './api/intelligence/private-submission/private-relay.runtime';
 import rbfCache from './api/rbf-cache';
 import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
 import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
@@ -228,6 +230,10 @@ class Server {
         next();
       })
       .use('/internal/admin/v1', adminAdapterJsonParser())
+      // Bootstrap operator jobs reuse the admin adapter signature, which is
+      // computed over the raw body: the raw bytes must be captured before the
+      // general JSON parser consumes them.
+      .use('/api/v1/intelligence/bootstrap/operator', adminAdapterJsonParser())
       .use(express.urlencoded({ extended: true, limit: '10mb' }))
       .use(express.text({ type: ['text/plain', 'application/base64'], limit: '10mb' }))
       .use(express.json({ limit: '10mb' }))
@@ -461,6 +467,8 @@ class Server {
       else timeMachineService.markObservationFailure();
     });
     blockObservationHub.subscribe('templates', (block, transactions) => { templateCollectorService.observeBlock(block, transactions); });
+    // Ordering evidence compares the mined order with the templates recorded for the height, so it reads after the template collector.
+    blockObservationHub.subscribe('ordering-evidence', (block, transactions) => { orderingEvidenceService.observeBlock(block, transactions); });
     // The hub contains each observer's failure; the matcher's own rejection is reported there.
     blockObservationHub.subscribe('watchlist-matcher', (block, transactions) => watchlistMatcher.observeBlock(block, transactions).then(() => undefined));
     blocks.setNewAsyncBlockCallback((block, _txIds, transactions) => blockObservationHub.dispatch(block, transactions).then(() => undefined));
@@ -479,6 +487,9 @@ class Server {
       developerIdentity.startOutboxWorker();
       // Cold schedule: one getblocktemplate every two minutes plus one after each block.
       templateCollectorService.startPolling();
+      // Leased relay worker: reclaims expired leases on start, so a restart
+      // mid-relay resumes instead of stranding the row.
+      startPrivateRelayWorker();
       globalNetworkService.startSnapshots(10 * 60_000, () => blocks.getCurrentBlockHeight());
     }
     websocketHandler.setupConnectionHandling();

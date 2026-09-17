@@ -23,7 +23,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
             <h1 class="m-0">AssumeUTXO Snapshot #{{ snapshot.height }}</h1>
             <div class="text-muted small font-monospace mt-1 text-break">Block Hash: {{ snapshot.block_hash }}</div>
           </div>
-          <span class="badge" [ngClass]="snapshot.status === 'pinned_core' ? 'bg-success' : 'bg-secondary'">
+          <span class="badge" [ngClass]="snapshot.status === 'pinned_core' ? 'bg-success' : snapshot.status === 'invalid' ? 'bg-danger' : 'bg-secondary'">
             {{ snapshot.status | uppercase }}
           </span>
         </div>
@@ -43,20 +43,20 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="card p-4 bg-body-tertiary border mb-4">
             <h2 class="h5 mb-3">Snapshot Commitments & Cryptographic Hashes</h2>
             <div class="p-3 border rounded bg-body mb-3">
-              <div class="text-muted small">Serialized UTXO Hash (hash_serialized_3)</div>
-              <div class="font-monospace small text-break mt-1">{{ snapshot.base_utxo_hash }}</div>
+              <div class="text-muted small">Pinned UTXO commitment (hash_serialized_3, operator-typed from Core chainparams)</div>
+              <div class="font-monospace small text-break mt-1">{{ snapshot.base_utxo_hash ?? 'No commitment is pinned for this snapshot and Core version.' }}</div>
             </div>
 
             <div class="p-3 border rounded bg-body mb-3">
-              <div class="text-muted small">File SHA-256 Checksum</div>
+              <div class="text-muted small">File SHA-256 (from the signed manifest)</div>
               <div class="font-monospace small text-break mt-1">{{ snapshot.sha256_checksum }}</div>
             </div>
 
             <div class="row g-2">
               <div class="col-6">
                 <div class="p-2 border rounded bg-body">
-                  <div class="text-muted small">Total UTXOs</div>
-                  <div class="fw-bold font-monospace">{{ snapshot.coins_count | number }} coins</div>
+                  <div class="text-muted small">Pinned coin count</div>
+                  <div class="fw-bold font-monospace">{{ snapshot.coins_count === null ? 'not pinned' : (snapshot.coins_count | number) + ' coins' }}</div>
                 </div>
               </div>
               <div class="col-6">
@@ -92,23 +92,48 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <dt class="col-sm-5 text-muted">Activation Block</dt>
               <dd class="col-sm-7 font-monospace small">#{{ snapshot.height }}</dd>
 
+              <dt class="col-sm-5 text-muted">Producer</dt>
+              <dd class="col-sm-7 font-monospace small">{{ snapshot.producer_id }}</dd>
+
+              <dt class="col-sm-5 text-muted">Pinned commitment</dt>
+              <dd class="col-sm-7 small">{{ snapshot.pinned_commitment ? 'pinned for Core ' + snapshot.release_version : 'none pinned' }}</dd>
+
               <dt class="col-sm-5 text-muted">Verification Status</dt>
               <dd class="col-sm-7">
                 <span class="text-success small fw-bold" *ngIf="snapshot.status === 'pinned_core'">
-                  Hardcoded in Bitcoin Core source
+                  A verification run over the bytes reached valid
                 </span>
-                <span class="text-muted small" *ngIf="snapshot.status !== 'pinned_core'">
-                  No independent attestation established
+                <span class="text-danger small fw-bold" *ngIf="snapshot.status === 'invalid'">
+                  The latest verification run over the bytes failed
                 </span>
+                <span class="text-muted small" *ngIf="snapshot.status === 'pending' || snapshot.status === 'verifying'">
+                  A verification run is {{ snapshot.status }}
+                </span>
+                <span class="text-muted small" *ngIf="snapshot.status === 'unverified'">
+                  No verification run over the bytes has reached valid
+                </span>
+                <span class="text-muted small" *ngIf="snapshot.status === 'unavailable'">
+                  The verification store is unavailable; no run state can be read
+                </span>
+                <div class="small text-muted font-monospace" *ngIf="snapshot.latest_verification_id">latest run {{ snapshot.latest_verification_id }}: {{ snapshot.latest_verification_state }}</div>
+              </dd>
+
+              <dt class="col-sm-5 text-muted">Download</dt>
+              <dd class="col-sm-7 small text-break">
+                <a *ngIf="snapshot.download_url" [href]="snapshot.download_url" rel="noopener">{{ snapshot.download_url }}</a>
+                <span *ngIf="!snapshot.download_url" class="text-muted">Local source; not served over https.</span>
               </dd>
             </dl>
 
             <div class="mt-auto pt-3 border-top">
+              <a [href]="manifestUrl" target="_blank" rel="noopener" class="btn btn-outline-secondary w-100 mb-2">
+                Signed manifest (JSON)
+              </a>
               <a [routerLink]="['/node/bootstrap/verify' | relativeUrl]" class="btn btn-outline-primary w-100 mb-2">
-                Verify File Checksum
+                Verify the snapshot bytes
               </a>
               <a [routerLink]="['/node/bootstrap/planner' | relativeUrl]" class="btn btn-outline-secondary w-100">
-                Simulate Hardware IBD Timeline
+                Plan a load on the owned node
               </a>
             </div>
           </div>
@@ -119,6 +144,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 })
 export class BootstrapSnapshotDetailComponent implements OnInit, OnDestroy {
   get bootstrapNetwork(): string {const n=this.bootstrapApi.network;return n==='mainnet'?'main':n==='testnet'?'test':n==='testnet4'?'testnet4':n;}
+  get manifestUrl(): string {return this.snapshot ? this.bootstrapApi.snapshotManifestUrl(this.snapshot.snapshot_id) : '';}
   loading = true;
   error: string | null = null;
   snapshot: AssumeUtxoSnapshot | null = null;
