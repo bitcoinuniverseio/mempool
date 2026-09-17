@@ -603,9 +603,12 @@ class AdminAdapterRoutes {
     );
     // A restart run is cut short by the restart it asked for; the process
     // that comes up closes it from the adapter job it recorded.
-    setTimeout(() => {
-      resumeDeploymentRuns().catch((e) => logger.warn('[admin-adapter] deployment run resume failed: ' + (e instanceof Error ? e.message : String(e))));
-    }, 5_000).unref();
+    // (The boundary tests load this module in a bare VM without timers.)
+    if (typeof setTimeout === 'function') {
+      setTimeout(() => {
+        resumeDeploymentRuns().catch((e) => logger.warn('[admin-adapter] deployment run resume failed: ' + (e instanceof Error ? e.message : String(e))));
+      }, 5_000).unref();
+    }
   }
 }
 
