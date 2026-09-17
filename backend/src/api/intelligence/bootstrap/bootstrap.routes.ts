@@ -3,6 +3,7 @@ import {
   adminAdapterGuard,
   adminAdapterJsonParser,
 } from '../../admin-adapter/admin-adapter.security';
+import { createAdminReplayStore } from '../../admin-adapter/admin-adapter.replay';
 import bootstrapService, { BootstrapEvidenceError } from './bootstrap.service';
 
 function fail(res: Response, err: unknown): Response {
@@ -22,7 +23,9 @@ export const OPERATOR_PREFIX = '/api/v1/intelligence/bootstrap/operator';
 
 class BootstrapRoutes {
   public initRoutes(app: Application): void {
-    app.use(OPERATOR_PREFIX, adminAdapterJsonParser(), adminAdapterGuard());
+    // The same shared replay store as the admin adapter: a nonce accepted
+    // here is claimed for every backend worker, and no store means fail closed.
+    app.use(OPERATOR_PREFIX, adminAdapterJsonParser(), adminAdapterGuard(createAdminReplayStore()));
     bootstrapService.startWorker();
 
     app.get(
@@ -215,7 +218,13 @@ class BootstrapRoutes {
           if (!job) {
             return res.status(404).json({ error: 'Job not found' });
           }
-          res.json(job);
+          // The job id is unguessable, but the readback is public: the operator
+          // key id and the host path of the written snapshot stay private.
+          const { requested_by: _requestedBy, ...publicJob } = job as any;
+          const result = (publicJob as any).result && typeof (publicJob as any).result === 'object'
+            ? { ...(publicJob as any).result, output_path: undefined }
+            : (publicJob as any).result;
+          res.json({ ...publicJob, result });
         } catch (err: any) {
           fail(res, err);
         }
