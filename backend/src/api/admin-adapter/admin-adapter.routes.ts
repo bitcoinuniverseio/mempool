@@ -31,6 +31,7 @@ import {
   listExplorerOperations,
 } from './admin-adapter.operations';
 import runStore, { AdminRunConflict, AdminRunNotFound } from './admin-adapter.runs';
+import { resumeDeploymentRuns } from './deployment-control.resume';
 
 const {
   ADMIN_CONTROL_SUPPORTED_VERSIONS,
@@ -600,6 +601,11 @@ class AdminAdapterRoutes {
     logger.info(
       `[admin-adapter] Explorer admin adapter mounted at ${PREFIX} (database ${config.DATABASE.ENABLED ? 'enabled' : 'disabled'}).`,
     );
+    // A restart run is cut short by the restart it asked for; the process
+    // that comes up closes it from the adapter job it recorded.
+    setTimeout(() => {
+      resumeDeploymentRuns().catch((e) => logger.warn('[admin-adapter] deployment run resume failed: ' + (e instanceof Error ? e.message : String(e))));
+    }, 5_000).unref();
   }
 }
 
