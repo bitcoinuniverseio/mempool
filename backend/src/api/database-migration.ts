@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 109;
+  private static currentVersion = 110;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1466,6 +1466,21 @@ class DatabaseMigration {
         INDEX intelligence_knowledge_audit_label (label_id, created_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
       await this.updateToSchemaVersion(109);
+    }
+    if (databaseSchemaVersion < 110) {
+      // Admin adapter: a token so only the executor that owns a run can renew
+      // or finish it, and one row per claimed request nonce shared by every
+      // backend worker so a signed request cannot replay against another
+      // process. Both additive; existing runs keep working with a NULL token.
+      await this.$executeQuery('ALTER TABLE admin_adapter_runs ADD owner_token CHAR(36) NULL');
+      await this.$executeQuery(`CREATE TABLE IF NOT EXISTS admin_nonces (
+        scope VARCHAR(160) NOT NULL,
+        nonce VARCHAR(128) NOT NULL,
+        expires_at DATETIME(3) NOT NULL,
+        PRIMARY KEY (scope, nonce),
+        INDEX admin_nonces_expiry (expires_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+      await this.updateToSchemaVersion(110);
     }
 
     if (databaseSchemaVersion < 106 && config.MEMPOOL.NETWORK === 'liquid') {

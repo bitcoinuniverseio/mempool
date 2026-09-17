@@ -435,6 +435,24 @@ class RedisCache {
   public setIgnoreBlocksCache(): void {
     this.ignoreBlocksCache = true;
   }
+
+  /**
+   * Atomically claims a key for ttlMs (SET NX PX). Returns true when this call
+   * made the claim and false when the key already existed. Throws when Redis
+   * is disabled or not connected, so the caller can fail closed.
+   *
+   * @asyncUnsafe The caller turns a rejection into an unavailable answer.
+   */
+  public async $claimOnce(key: string, ttlMs: number): Promise<boolean> {
+    if (!config.REDIS.ENABLED) {
+      throw new Error('Redis is disabled');
+    }
+    if (!this.connected) {
+      throw new Error('Redis is not connected');
+    }
+    const answer = await this.client.set(key, '1', { NX: true, PX: Math.max(1, Math.round(ttlMs)) });
+    return answer === 'OK';
+  }
 }
 
 export default new RedisCache();

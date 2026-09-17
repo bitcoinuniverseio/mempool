@@ -474,7 +474,11 @@ export interface TxTrackingInfo {
   acceleratedBy?: number[],
   acceleratedAt?: number,
   feeDelta?: number,
-  confirmed?: boolean
+  confirmed?: boolean,
+  /** Additive: how the initial status was established. Absent on later delta frames. */
+  status?: 'confirmed' | 'mempool' | 'replaced' | 'unknown' | 'unavailable',
+  blockHeight?: number,
+  blockHash?: string,
 }
 
 export interface WebsocketResponse {
