@@ -44,6 +44,11 @@
 @media (min-width: 992px) {
   .dash-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+    // An odd panel count would leave the last one beside an empty cell.
+    .panel:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
   }
 }
 
