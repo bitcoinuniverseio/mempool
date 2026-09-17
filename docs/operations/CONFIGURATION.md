@@ -135,7 +135,7 @@ purpose: the `all` range is the whole series.
 
 ### `FIAT_PRICE`
 
-`ENABLED` (default `true`), `PAID`, `API_KEY`.
+`ENABLED` (backend default `true`, Docker default `false`), `PAID`, `API_KEY`.
 
 Worth understanding before you turn it on: the price task calls public exchange
 APIs directly from the backend. Those are market data sources, not blockchain
@@ -163,11 +163,37 @@ credentials. Routes the backend's outbound requests through a SOCKS5 proxy.
 | Section | State | Why |
 | --- | --- | --- |
 | `LIGHTNING`, `LND`, `CLIGHTNING` | off, and off by default | The inherited Lightning product is not part of the Universe explorer. `/api/v1/backend-info` reports `lightning: false` on the public deployment |
-| `MEMPOOL_SERVICES` | `API` empty, `ACCELERATIONS` false | Upstream's hosted services. Leave both unset |
-| `EXTERNAL_DATA_SERVER` | `MEMPOOL_API` empty | **Universe change.** Upstream ships a hosted endpoint here. The remaining onion and Liquid entries are upstream defaults this fork has not cleared; they are not read by a mainnet Bitcoin deployment, and nothing in the Universe deployment path calls them. Do not enable them |
+| `MEMPOOL_SERVICES` | `API` empty, `ACCELERATIONS` false | Accounts, accelerations, invoices and the other services routes report `unconfigured` until `API` names a Bitcoin Universe services endpoint. The Docker start script refuses any other host |
+| `EXTERNAL_DATA_SERVER` | `MEMPOOL_API` and `MEMPOOL_ONION` empty | **Universe change.** Upstream ships hosted endpoints here; the about-page routes stay unmounted until `MEMPOOL_API` names a Bitcoin Universe endpoint, and `MEMPOOL_ONION` is the onion host of that same deployment, never a provider switch. `LIQUID_API` / `LIQUID_ONION` keep the Liquid asset catalogue (see the metadata exception below) |
 | `REPLICATION` | off | Replicates audit and statistics data from other mempool servers |
 | `MAXMIND` | off | GeoIP databases, used only by the Lightning product |
 | `WALLETS`, `STRATUM` | off | Upstream features this fork does not use |
+
+### Owned endpoint prerequisites and the metadata exception
+
+Every runtime endpoint the backend or the frontend calls is either a relative
+path on its own origin, loopback, a container name, or a host under
+`bitcoinuniverse.io`. `scripts/universe/check-origins.mjs` enforces that on the
+source tree, on the built bundle, and (through
+`scripts/universe/docker-runtime-defaults.test.mjs`) on the configuration the
+container start scripts render. The scripts themselves refuse to start on any
+other host, on a URL carrying credentials, or on a malformed value, and they
+never echo the value they refused, only the field name and the host.
+
+| Feature | Prerequisite | Unconfigured behaviour |
+| --- | --- | --- |
+| About-page contributors, donations, translators | `EXTERNAL_DATA_SERVER.MEMPOOL_API` (Docker: `EXTERNAL_DATA_SERVER_MEMPOOL_API`) | routes not mounted, `404` |
+| Accounts, accelerations, invoices, faucet, Lightning metadata, proofs | `MEMPOOL_SERVICES.API` (Docker: `MEMPOOL_SERVICES_API`) and the frontend `SERVICES_API` (Docker frontend: `SERVICES_API`) | capabilities report the dependency as not configured; the frontend stays on its own origin |
+| The same over Tor | `EXTERNAL_DATA_SERVER.MEMPOOL_ONION` and the frontend `ONION_SERVICES_API`, both naming this deployment's own `.onion` host | clearnet endpoints are used; the page hostname alone never switches providers |
+| Fiat prices | `FIAT_PRICE.ENABLED` (Docker: `FIAT_PRICE_ENABLED`, default `false`) | `/api/v1/prices` answers `-1` for every currency |
+| Mining pool table refresh | `MEMPOOL.AUTOMATIC_POOLS_UPDATE` with an explicit `POOLS_JSON_URL` and `POOLS_JSON_TREE_URL` (Docker defaults are empty) | the bundled `pools-v2.json` is used |
+
+The one permitted external runtime category is **Liquid asset catalogue
+metadata**: asset names, tickers, precision, icons and issuer details read from
+`EXTERNAL_DATA_SERVER.LIQUID_API` / `LIQUID_ONION` (`liquid.network` and its
+onion). It covers collection metadata only. Balances, ownership, transfers,
+history and every other chain fact come from the owned Elements node and
+indexer, and the origin gate rejects any attempt to widen the exception.
 
 ## Gateway
 
@@ -225,6 +251,17 @@ publish an authority's lag without publishing where it lives.
 `frontend/mempool-frontend-config.json`, read by `frontend/generate-config.js` at build
 time and by the dev proxy. It is optional; without it the build uses its
 defaults.
+
+`UNIVERSE_CHAIN_NETWORKS` (Docker frontend: `UNIVERSE_CHAIN_NETWORKS`, a JSON string)
+names which network each non-Bitcoin chain is read from, for example
+`{"dogecoin":"testnet"}`. Values are `mainnet`, `testnet` or `regtest` per
+chain; the default `{}` reads every chain from mainnet. Bitcoin is never listed:
+it follows the network selector, and the selector never implies a Dogecoin or
+Zcash network. An entry the frontend cannot use is ignored with a console
+warning and that chain reads mainnet. The overlay must serve the named scope
+(`UNIVERSE_DOGECOIN_NETWORKS` for Dogecoin, the indexer's declared network for
+Zcash); a scope it does not serve is shown as unavailable under that network,
+never as mainnet data.
 
 The dev server proxy table is `frontend/proxy.conf.local.js`, and it targets
 `http://localhost:8999`. To point the dev server at a different backend, edit

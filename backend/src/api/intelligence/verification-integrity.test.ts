@@ -23,14 +23,16 @@ const participants = [
 ];
 
 describe('verification evidence integrity', () => {
-  it('cannot verify an unknown snapshot without a trusted manifest or snapshot bytes', () => {
-    expect(() => bootstrapService.verifySnapshot({ snapshot_id: 'unknown', file_sha256: '00'.repeat(32),
-      base_height: 840000, expected_txoutset_hash: '00'.repeat(32) })).toThrow(/unavailable/i);
+  it('cannot verify an unknown snapshot without a trusted manifest or snapshot bytes', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
+    await expect(bootstrapService.verifySnapshot({ snapshot_id: 'unknown', file_sha256: '00'.repeat(32),
+      base_height: 840000, expected_txoutset_hash: '00'.repeat(32) })).rejects.toThrow(/unavailable/i);
   });
 
-  it('cannot start a node job when no authorized executor or durable job store exists', () => {
-    expect(() => bootstrapService.createOperatorJob({ job_type: 'load_snapshot', node_id: 'missing', snapshot_id: 'unknown' }))
-      .toThrow(/unavailable/i);
+  it('cannot start a node job without a verified control-plane request, and not without the operator prerequisites either', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {
+    await expect(bootstrapService.createOperatorJob({ job_type: 'load_snapshot', node_id: 'missing', snapshot_id: 'unknown', idempotency_key: 'idem-12345678', confirm: 'load_snapshot' }, undefined))
+      .rejects.toThrow(expect.objectContaining({ code: 'UNAUTHORIZED', status: 401 }));
+    await expect(bootstrapService.createOperatorJob({ job_type: 'load_snapshot', node_id: 'missing', snapshot_id: 'unknown', idempotency_key: 'idem-12345678', confirm: 'load_snapshot' }, { keyId: 'ops', elevated: true }))
+      .rejects.toThrow(/unavailable/i);
   });
 
   it('does not manufacture calendar receipts, proof upgrades or Bitcoin attestations', /** @asyncUnsafe Jest awaits this test and reports its rejection. */ async () => {

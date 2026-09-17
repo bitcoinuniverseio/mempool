@@ -20,7 +20,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Source-reported serialized UTXO set snapshots, SHA-256 integrity checksums, and Base UTXO hash commitments.
+          The trusted catalogue's snapshots with their signed manifests, operator-pinned Bitcoin Core commitments and the latest verification run over each file's bytes.
         </p>
 
         <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
@@ -50,8 +50,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <th>Block Hash</th>
                 <th>Coins Count</th>
                 <th>Size</th>
-                <th>Serialized UTXO Hash</th>
+                <th>Pinned UTXO Hash</th>
                 <th>Core Version</th>
+                <th>Producer</th>
+                <th>Verification</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -59,14 +61,20 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <tr *ngFor="let s of snapshots">
                 <td class="font-monospace fw-bold">#{{ s.height }}</td>
                 <td class="font-monospace small text-truncate" style="max-width: 180px;">{{ s.block_hash }}</td>
-                <td class="font-monospace">{{ s.coins_count | number }}</td>
+                <td class="font-monospace">{{ s.coins_count === null ? 'not pinned' : (s.coins_count | number) }}</td>
                 <td>{{ (s.file_size_bytes / 1073741824).toFixed(2) }} GB</td>
-                <td class="font-monospace small text-truncate" style="max-width: 180px;">{{ s.base_utxo_hash }}</td>
+                <td class="font-monospace small text-truncate" style="max-width: 180px;">{{ s.base_utxo_hash ?? 'no commitment pinned' }}</td>
                 <td><span class="badge bg-secondary font-monospace">{{ s.release_version }}</span></td>
+                <td class="font-monospace small">{{ s.producer_id }}</td>
                 <td>
-                  <a [routerLink]="['/node/bootstrap/snapshot' | relativeUrl, s.height]" class="btn btn-sm btn-outline-primary">
+                  <span class="badge" [ngClass]="s.status === 'pinned_core' ? 'bg-success' : s.status === 'invalid' ? 'bg-danger' : 'bg-secondary'">{{ s.status }}</span>
+                  <div class="small text-muted" *ngIf="s.latest_verification_state">latest run: {{ s.latest_verification_state }}</div>
+                </td>
+                <td class="text-nowrap">
+                  <a [routerLink]="['/node/bootstrap/snapshot' | relativeUrl, s.height]" class="btn btn-sm btn-outline-primary me-1">
                     Details
                   </a>
+                  <a [href]="manifestUrl(s)" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">Manifest</a>
                 </td>
               </tr>
             </tbody>
@@ -91,6 +99,10 @@ export class BootstrapSnapshotsComponent implements OnInit, OnDestroy {
     private bootstrapApi: BootstrapApiService,
     private cdr: ChangeDetectorRef
   ) {}
+
+  manifestUrl(snapshot: AssumeUtxoSnapshot): string {
+    return this.bootstrapApi.snapshotManifestUrl(snapshot.snapshot_id);
+  }
 
   ngOnInit(): void {
     this.sub = this.bootstrapApi.networkChanged$.subscribe(() => {

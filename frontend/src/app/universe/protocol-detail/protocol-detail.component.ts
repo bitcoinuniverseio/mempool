@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, map, of, shareReplay, switchMap, take, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, map, of, shareReplay, startWith, switchMap, take, tap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
@@ -14,6 +14,13 @@ import {
   SourceEntry,
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import {
+  ProtocolAvailability,
+  availabilityLabel,
+  normalizeReleaseStatus,
+  protocolAvailability,
+  sourceForProtocol,
+} from '@app/universe/protocol-availability';
 import {
   ProtocolActivityRow,
   ProtocolObjectRow,
@@ -46,12 +53,29 @@ interface ProtocolDetailViewModel {
   readonly protocol?: ExplorerProtocolDefinition;
   readonly copy?: ProtocolCopy;
   readonly source?: SourceEntry | null;
+  /** null when the authority snapshot could not be read at all. */
+  readonly sourcesByAuthority?: ReadonlyMap<string, SourceEntry> | null;
+  /** What the authority can answer for right now; the primary label. */
+  readonly availability?: ProtocolAvailability;
+  /** True only when the authority behind this protocol can answer right now. */
   readonly live?: boolean;
   readonly onThisChain?: boolean;
   readonly pulse?: PulseState;
   readonly events?: readonly PulseEvent[];
   readonly pinned?: boolean;
 }
+
+/**
+ * The outcome of resolving the route's protocol id against the registry.
+ * A registry outage is its own outcome: it is never reported as a missing
+ * protocol, and it is caught inside the attempt so the route stream that
+ * carries the next navigation is never terminated by it.
+ */
+export type ProtocolResolution =
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'registry-error' }
+  | { readonly kind: 'missing' }
+  | { readonly kind: 'found'; readonly protocol: ExplorerProtocolDefinition };
 
 /**
  * One protocol, explained and evidenced.
@@ -82,6 +106,8 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   private objectPages: ExplorerProtocolObjectsPage[] = [];
   private objectSubscription?: Subscription;
   private protocolChain = 'bitcoin';
+  /** Re-reads the registry for the current route after a registry failure. */
+  private readonly registryRetry$ = new BehaviorSubject<number>(0);
 
   constructor(
     private route: ActivatedRoute,
@@ -94,22 +120,36 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.pulse.start();
 
-    // The protocol itself resolves once per navigation. Title and history are
-    // recorded there, not in the live stream below, so a ticking pulse never
-    // re-runs a page-level side effect.
-    const protocol$ = this.route.paramMap.pipe(
-      switchMap((params) => {
-        this.activitySubscription?.unsubscribe();
-        this.objectSubscription?.unsubscribe();
-        this.activity$.next({ kind: 'loading' });
-        this.objects$.next({ kind: 'loading' });
+    // The protocol resolves once per navigation, and again per Retry click
+    // after a registry failure. Title and history are recorded there, not in
+    // the live stream below, so a ticking pulse never re-runs a page-level
+    // side effect. Each resolution attempt is cancelled by the next one, so a
+    // late registry answer cannot paint a protocol the route has left; the
+    // registry re-emits on a network switch, which reaches the same path.
+    const protocol$ = combineLatest([this.route.paramMap, this.registryRetry$]).pipe(
+      switchMap(([params]) => {
         const id = (params.get('id') || '').toLowerCase();
         return this.api.getProtocols$().pipe(
-          map((registry) => findProtocol(registry.protocols || [], id)),
+          map((registry): ProtocolResolution => {
+            const protocol = findProtocol(registry.protocols || [], id);
+            return protocol ? { kind: 'found', protocol } : { kind: 'missing' };
+          }),
+          catchError(() => of<ProtocolResolution>({ kind: 'registry-error' })),
+          startWith<ProtocolResolution>({ kind: 'loading' }),
         );
       }),
-      tap((protocol) => {
-        if (!protocol) {return;}
+      tap((resolution) => {
+        // Whatever the outcome, reads for the previous protocol or network
+        // are cancelled so they cannot land on this one.
+        this.activitySubscription?.unsubscribe();
+        this.objectSubscription?.unsubscribe();
+        if (resolution.kind !== 'found') {
+          const state = resolution.kind === 'loading' ? 'loading' : 'idle';
+          this.activity$.next({ kind: state });
+          this.objects$.next({ kind: state });
+          return;
+        }
+        const protocol = resolution.protocol;
         this.protocolChain = protocol.chain;
         this.seo.setTitle(protocol.displayName);
         this.local.recordVisit({
@@ -125,25 +165,40 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     );
 
     this.vm$ = protocol$.pipe(
-      switchMap((protocol) => {
-        if (!protocol) {
+      switchMap((resolution) => {
+        if (resolution.kind === 'loading') {
+          return of<ProtocolDetailViewModel>({ kind: 'loading' });
+        }
+        if (resolution.kind === 'registry-error') {
+          return of<ProtocolDetailViewModel>({ kind: 'error' });
+        }
+        if (resolution.kind === 'missing') {
           return of<ProtocolDetailViewModel>({ kind: 'missing' });
         }
+        const protocol = resolution.protocol;
         return combineLatest([
           this.api.getSources$(protocol.chain).pipe(
-            map((response) => response.sources || []),
-            catchError(() => of([] as SourceEntry[])),
+            map((response): ReadonlyMap<string, SourceEntry> | null =>
+              Array.isArray(response?.sources)
+                ? new Map(response.sources.map((entry) => [entry.authorityId, entry]))
+                : null),
+            // A snapshot that could not be read leaves availability unknown;
+            // it is not an empty snapshot, which would read as unconfigured.
+            catchError(() => of(null)),
           ),
           this.pulse.state$,
           this.local.preferences$,
         ]).pipe(
-          map(([sources, pulse, preferences]): ProtocolDetailViewModel => {
+          map(([sourcesByAuthority, pulse, preferences]): ProtocolDetailViewModel => {
+            const availability = protocolAvailability(protocol, sourcesByAuthority);
             return {
               kind: 'ready',
               protocol,
               copy: protocolCopy(protocol.id, protocol.family),
-              source: sources.find((entry) => entry.authorityId === protocol.indexerAuthority) ?? null,
-              live: isLive(protocol),
+              source: sourceForProtocol(protocol, sourcesByAuthority),
+              sourcesByAuthority,
+              availability,
+              live: availability === 'available',
               onThisChain: protocol.chain === 'bitcoin',
               pulse,
               events: pulse.recent.filter((event) => event.protocolIds.includes(protocol.id)),
@@ -154,6 +209,11 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
         );
       }),
     );
+  }
+
+  /** Re-reads the registry for the current route, cancelling any attempt in flight. */
+  retryRegistry(): void {
+    this.registryRetry$.next(this.registryRetry$.value + 1);
   }
 
   ngOnDestroy(): void {
@@ -284,8 +344,24 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     this.local.togglePinnedProtocol(protocolId);
   }
 
+  /** The primary label: what the authority can answer for right now. */
+  availabilityLabel(availability: ProtocolAvailability): string {
+    return availabilityLabel(availability);
+  }
+
+  availabilityTone(availability: ProtocolAvailability): string {
+    switch (availability) {
+      case 'available': return 'proven';
+      case 'catching-up': return 'partial';
+      case 'degraded':
+      case 'unreachable': return 'unavailable';
+      default: return 'neutral';
+    }
+  }
+
+  /** The registry release status, a qualifier beside the availability label. */
   statusLabel(protocol: ExplorerProtocolDefinition): string {
-    switch (normalizeStatus(protocol)) {
+    switch (normalizeReleaseStatus(protocol)) {
       case 'production verified':
       case 'verified read only':
         return $localize`:@@universe.detail.status-live:Readable in this explorer`;
@@ -298,23 +374,36 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  statusTone(protocol: ExplorerProtocolDefinition): string {
-    return isLive(protocol) ? 'proven' : 'partial';
-  }
-
-  /** Says what is actually missing, so a blocked entry is never a mystery. */
+  /**
+   * Says what is actually missing, so a blocked entry is never a mystery.
+   * The current authority state decides, not the release status: a verified
+   * reader whose authority is unreachable or behind is still not readable.
+   */
   limitation(vm: ProtocolDetailViewModel): string | null {
     if (!vm.onThisChain) {
       return $localize`:@@universe.detail.other-chain:This protocol lives on ${vm.protocol.chain}:chain:, which this explorer does not serve. It is listed so the registry stays complete, not because it is readable here.`;
     }
-    if (vm.live) {return null;}
-    if (!vm.source || vm.source.status === 'unconfigured') {
-      return $localize`:@@universe.detail.no-authority:No first-party authority for this protocol is configured in this deployment, so the explorer makes no claim about it. Nothing is inferred from transaction shape to fill the gap.`;
+    switch (vm.availability) {
+      case 'available':
+        return null;
+      case 'disabled':
+        return $localize`:@@universe.detail.disabled:This protocol is deliberately turned off in this deployment, so no protocol state is shown for it.`;
+      case 'unconfigured':
+        return $localize`:@@universe.detail.no-authority:No first-party authority for this protocol is configured in this deployment, so the explorer makes no claim about it. Nothing is inferred from transaction shape to fill the gap.`;
+      case 'unreachable':
+        return $localize`:@@universe.detail.authority-unreachable:The authority for this protocol is configured but not answering, so no protocol state is shown for it.`;
+      case 'catching-up':
+        return $localize`:@@universe.detail.authority-catching-up:The authority for this protocol is still catching up with the chain, so its state is behind and is not called readable yet.`;
+      case 'degraded':
+        return $localize`:@@universe.detail.authority-degraded:The authority for this protocol answered without a checkpoint, so nothing it reports can be proven against the chain right now.`;
+      case 'unknown':
+        if (vm.sourcesByAuthority === null) {
+          return $localize`:@@universe.detail.authority-unknown:The authority status for this protocol could not be read, so the explorer does not call it readable right now.`;
+        }
+        return $localize`:@@universe.detail.status-unknown-limitation:The registry does not state what this protocol implements here, so the explorer makes no claim about it.`;
+      default:
+        return $localize`:@@universe.detail.adapter-pending:The authority is reachable, but the explorer's reader for this protocol is not finished, so its state is not shown yet.`;
     }
-    if (vm.source.status === 'unreachable') {
-      return $localize`:@@universe.detail.authority-unreachable:The authority for this protocol is configured but not answering, so no protocol state is shown for it.`;
-    }
-    return $localize`:@@universe.detail.adapter-pending:The authority is reachable, but the explorer's reader for this protocol is not finished, so its state is not shown yet.`;
   }
 
   coverageLabel(protocol: ExplorerProtocolDefinition): string | null {
@@ -331,15 +420,6 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   trackByEvent(index: number, event: PulseEvent): string {
     return event.txid;
   }
-}
-
-function normalizeStatus(protocol: ExplorerProtocolDefinition): string {
-  return (protocol.releaseStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
-}
-
-function isLive(protocol: ExplorerProtocolDefinition): boolean {
-  const status = normalizeStatus(protocol);
-  return status === 'verified read only' || status === 'production verified';
 }
 
 /** Matches on id first, then on any alias, so old links keep working. */

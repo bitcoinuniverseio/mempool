@@ -8,6 +8,7 @@ import {
   loadFailureMessage,
 } from '@app/shared/load-state';
 import {
+  AcceleratorDirectoryRef,
   AcceleratorProvider,
   PrivateSubmissionApiService,
 } from './private-submission.service';
@@ -25,7 +26,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div>
           <h1 class="h2 mb-1">Accelerator Providers</h1>
           <p class="text-muted mb-0">
-            Signed provider directory: claimed pools and published fees.
+            The owned provider directory is the trust root: identities, signing keys and their validity windows, and the terms each provider declares. Nothing here is probed or paid.
           </p>
         </div>
         <a
@@ -40,7 +41,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
       <div class="card bg-dark border-secondary mb-4" *ngIf="!loadError">
         <div class="card-header border-secondary">
-          <h5 class="card-title mb-0">Available Acceleration Services</h5>
+          <h5 class="card-title mb-0">Providers in the owned directory</h5>
+          <div class="small text-muted" *ngIf="directory">
+            {{ directory.source }}, revision {{ directory.revision }}, loaded {{ directory.loaded_at_utc }}<span *ngIf="network"> for {{ network }}</span>.
+          </div>
         </div>
         <div
           class="table-responsive"
@@ -54,17 +58,19 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <tr>
                 <th>Provider</th>
                 <th>Networks</th>
+                <th>Keys and validity</th>
                 <th>Claimed partner pools</th>
                 <th>Minimum fee</th>
                 <th>Max vsize</th>
+                <th>Payment methods</th>
                 <th>Health</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngIf="loaded && providers.length === 0">
-                <td colspan="7" class="text-muted">
-                  The provider directory is empty.
+                <td colspan="9" class="text-muted">
+                  The owned directory lists no provider for this network.
                 </td>
               </tr>
               <tr *ngFor="let p of providers">
@@ -78,8 +84,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                   >
                     {{ p.name }}
                   </a>
+                  <div class="small text-muted font-monospace">{{ p.provider_id }}</div>
+                  <div class="small text-muted" *ngIf="p.issuer">issuer {{ p.issuer }}<span *ngIf="p.protocol_version">, protocol {{ p.protocol_version }}</span></div>
                   <div class="small text-muted" *ngIf="isExpired(p)">
-                    directory entry expired {{ p.expires_at }}
+                    every directory key expired {{ p.expires_at }}
                   </div>
                 </td>
                 <td>
@@ -88,6 +96,13 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                     class="badge bg-secondary me-1"
                     >{{ network }}</span
                   >
+                </td>
+                <td class="small">
+                  <div *ngFor="let k of p.keys || []" class="font-monospace">
+                    {{ k.kid }} ({{ k.algorithm }}): {{ k.validFrom }} to {{ k.validUntil ?? 'no end of validity' }}
+                  </div>
+                  <div *ngIf="!p.keys?.length" class="font-monospace text-break">identity key {{ p.identity_key }}</div>
+                  <div class="text-muted">valid from {{ p.effective_from }} until {{ p.expires_at ?? 'no end of validity' }}</div>
                 </td>
                 <td>
                   <span
@@ -108,17 +123,17 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <td class="font-monospace">
                   {{ p.maximum_tx_vsize | number }} vB
                 </td>
+                <td class="small">
+                  <span *ngFor="let m of p.payment_methods" class="badge bg-secondary me-1">{{ m }}</span>
+                  <span *ngIf="!p.payment_methods?.length" class="text-muted">none declared</span>
+                </td>
                 <td>
                   <span
                     class="badge"
                     [ngClass]="
                       healthClass(isExpired(p) ? null : p.health_status)
                     "
-                    >{{
-                      isExpired(p)
-                        ? 'EXPIRED / HEALTH UNKNOWN'
-                        : 'Reported: ' + p.health_status
-                    }}</span
+                    >{{ healthLabel(p) }}</span
                   >
                 </td>
                 <td>
@@ -149,6 +164,8 @@ export class PrivateSubmissionAcceleratorsComponent
     this.networkSub?.unsubscribe();
   }
   public providers: AcceleratorProvider[] = [];
+  public directory: AcceleratorDirectoryRef | null = null;
+  public network: string | null = null;
   public loaded = false;
   public loadError: string | null = null;
 
@@ -158,6 +175,8 @@ export class PrivateSubmissionAcceleratorsComponent
     this.networkSub = this.api.network$.subscribe(() => {
       this.request?.unsubscribe();
       this.providers = [];
+      this.directory = null;
+      this.network = null;
       this.loaded = false;
       this.loadError = null;
       this.request = this.api.listAccelerators$().subscribe({
@@ -174,6 +193,8 @@ export class PrivateSubmissionAcceleratorsComponent
             return;
           }
           this.providers = res.providers;
+          this.directory = res.directory ?? null;
+          this.network = res.network ?? null;
           this.loaded = true;
           this.loadError = null;
         },
@@ -187,15 +208,28 @@ export class PrivateSubmissionAcceleratorsComponent
     });
   }
 
+  /** A null expires_at is a key with no end of validity, not an expired one. */
   public isExpired(provider: AcceleratorProvider): boolean {
+    if (provider.expires_at === null || provider.expires_at === undefined) {
+      return false;
+    }
     const expires = Date.parse(provider.expires_at);
     return !Number.isFinite(expires) || expires <= Date.now();
+  }
+
+  public healthLabel(provider: AcceleratorProvider): string {
+    if (this.isExpired(provider)) {
+      return 'EXPIRED / HEALTH UNKNOWN';
+    }
+    return provider.health_status === 'unmeasured'
+      ? 'Not measured: no endpoint is probed'
+      : 'Reported: ' + provider.health_status;
   }
 
   public healthClass(
     health: AcceleratorProvider['health_status'] | null
   ): string {
-    if (health === null) {
+    if (health === null || health === 'unmeasured') {
       return 'bg-secondary';
     }
     if (health === 'online') {

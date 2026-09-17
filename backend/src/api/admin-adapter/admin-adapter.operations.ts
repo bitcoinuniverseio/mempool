@@ -18,12 +18,52 @@ import {
   ALLOWED_INDEXER_TASKS,
   DEPLOYMENT_CONTROL_REASON,
   type AllowedIndexerTask,
+  deploymentControlAvailability,
   deploymentControlConfigured,
   explorerOperationDefinitions,
   findExplorerOperationDefinition,
 } from './admin-adapter.catalog';
+import {
+  DEPLOYMENT_CONTROL_LIMITS,
+  deploymentControlClient,
+  rollbackTargetFromJournal,
+  type DeploymentCapabilities,
+  type DeploymentControlClient,
+  type DeploymentControlState,
+  type DeploymentRequest,
+} from './deployment-control.client';
 import { explorerEnvironment, releaseShaOrNull } from './admin-adapter.identity';
 import runStore from './admin-adapter.runs';
+
+/**
+ * Reads back what an indexing task is supposed to have persisted, so a run
+ * is only called complete when the rows say so. Every query error is returned,
+ * never swallowed, because an unreadable checkpoint proves nothing.
+ *
+ * @asyncUnsafe The caller wraps the readback in try/catch.
+ */
+async function readIndexerCheckpoint(task: AllowedIndexerTask): Promise<{ remaining: number; indexedTip: number | null }> {
+  if (task === 'blocksPrices') {
+    const [remainingRows]: any[] = await DB.query(
+      'SELECT COUNT(*) AS remaining FROM blocks LEFT JOIN blocks_prices ON blocks.height = blocks_prices.height LEFT JOIN prices ON blocks_prices.price_id = prices.id WHERE blocks_prices.height IS NULL OR prices.id IS NULL',
+    );
+    const [tipRows]: any[] = await DB.query('SELECT MAX(height) AS tip FROM blocks_prices');
+    return {
+      remaining: Number(remainingRows[0]?.remaining ?? 0),
+      indexedTip: tipRows[0]?.tip === null || tipRows[0]?.tip === undefined ? null : Number(tipRows[0].tip),
+    };
+  }
+  const [remainingRows]: any[] = await DB.query(
+    'SELECT COUNT(*) AS remaining FROM blocks WHERE (utxoset_size IS NULL OR total_input_amt IS NULL) AND stale = 0',
+  );
+  const [tipRows]: any[] = await DB.query(
+    'SELECT MAX(height) AS tip FROM blocks WHERE utxoset_size IS NOT NULL AND total_input_amt IS NOT NULL AND stale = 0',
+  );
+  return {
+    remaining: Number(remainingRows[0]?.remaining ?? 0),
+    indexedTip: tipRows[0]?.tip === null || tipRows[0]?.tip === undefined ? null : Number(tipRows[0].tip),
+  };
+}
 
 /**
  * The handlers behind the catalog.
@@ -127,14 +167,127 @@ function databasePrecondition() {
       );
 }
 
-function deploymentControlPrecondition() {
-  return deploymentControlConfigured()
-    ? satisfied('deployment-control', 'Host deployment control is enabled')
-    : unsatisfied(
+/** Test seam: the adapter client the deployment operations talk to. */
+let controlClient: DeploymentControlClient = deploymentControlClient;
+export function useDeploymentControlClient(client: DeploymentControlClient | null): void {
+  controlClient = client ?? deploymentControlClient;
+}
+
+/**
+ * The adapter's own answer, fresh, is the precondition. It is not a flag:
+ * an operator who sets the endpoint without running the adapter gets the
+ * unreachable reason, and an adapter whose capability document does not
+ * support the action gets that adapter's reason.
+ */
+function deploymentControlPrecondition(operationId: string, control: DeploymentControlState) {
+  const { availability, availabilityReason } = deploymentControlAvailability(operationId, control);
+  return availability === 'enabled'
+    ? satisfied(
         'deployment-control',
-        'Host deployment control is enabled',
-        DEPLOYMENT_CONTROL_REASON,
-      );
+        'The deployment adapter answers and supports this operation',
+        control.state === 'ready'
+          ? `Adapter ${control.capabilities.adapterVersion} on target ${control.capabilities.target}, current release ${control.capabilities.currentRelease ?? 'unknown'}.`
+          : null,
+      )
+    : unsatisfied('deployment-control', 'The deployment adapter answers and supports this operation', availabilityReason ?? DEPLOYMENT_CONTROL_REASON);
+}
+
+/** @asyncSafe probe never rejects; every outcome is a state, and a thrown one is reported as unreachable. */
+async function probeControl(): Promise<DeploymentControlState> {
+  try {
+    return await controlClient.probe();
+  } catch (e) {
+    return { state: 'unreachable', reason: 'The deployment adapter did not answer its capability route: ' + (e instanceof Error ? e.message : String(e)), capabilities: null, probedAt: new Date().toISOString() };
+  }
+}
+
+function releaseLabel(sha: string | null): string {
+  return sha ? sha.slice(0, 12) : 'unknown';
+}
+
+/**
+ * Submits one job to the adapter and drives it to a terminal state.
+ *
+ * The job id and the release serving before the request are written to the
+ * run before the job is awaited, because a restart replaces this very
+ * process: if the wait is cut short, the run still names the job that can
+ * be read back from the adapter. A wait that reaches the operation's bound
+ * reports the job as still running, never as done.
+ * @asyncUnsafe The route turns a rejection into a FAILED run.
+ */
+async function driveDeployment(
+  operation: 'restart' | 'rollback',
+  operationId: string,
+  context: ExplorerExecutionContext,
+  timeoutSeconds: number,
+): Promise<ExplorerHandlerResult> {
+  const control = await probeControl();
+  const precondition = deploymentControlPrecondition(operationId, control);
+  if (!precondition.satisfied || control.state !== 'ready') {
+    throw new Error(precondition.detail ?? DEPLOYMENT_CONTROL_REASON);
+  }
+  const capabilities: DeploymentCapabilities = control.capabilities;
+  const request: DeploymentRequest = {
+    operationId: context.runId,
+    idempotencyKey: context.idempotencyKey ?? context.runId,
+    target: capabilities.target,
+  };
+  let expectedRelease = capabilities.currentRelease;
+  if (operation === 'rollback') {
+    const journalTarget = rollbackTargetFromJournal(capabilities);
+    if (!journalTarget) {
+      throw new Error('The deployment adapter journal holds no previous verified release to roll back to.');
+    }
+    request.release = journalTarget.release;
+    expectedRelease = journalTarget.release;
+  }
+  const startedAt = Date.now();
+  const accepted = await controlClient.submit(operation, request);
+  const partial = {
+    jobId: accepted.jobId,
+    adapterTarget: capabilities.target,
+    releaseBefore: capabilities.currentRelease,
+    requestedRelease: request.release ?? null,
+    replayedByAdapter: accepted.replayed,
+  };
+  await runStore.transition(context.runId, 'RUNNING', { progressPercent: 30, result: partial });
+
+  const budgetMs = Math.max(DEPLOYMENT_CONTROL_LIMITS.pollIntervalMs, timeoutSeconds * 1000 - (Date.now() - startedAt));
+  const { job, timedOut } = await controlClient.waitForJob(accepted.jobId, budgetMs);
+  const evidence = [
+    `Adapter job ${job.jobId} (${job.operation}) on ${job.target || capabilities.target} is ${job.state}.`,
+    `Release before: ${releaseLabel(job.releaseBefore ?? capabilities.currentRelease)}; after: ${releaseLabel(job.releaseAfter)}; expected: ${releaseLabel(expectedRelease)}.`,
+    ...job.evidence.map((line) => 'Adapter: ' + line),
+  ];
+  const result = {
+    ...partial,
+    jobState: job.state,
+    releaseAfter: job.releaseAfter,
+    expectedRelease,
+    jobStartedAt: job.startedAt,
+    jobFinishedAt: job.finishedAt,
+    jobError: job.error,
+    waitedMs: Date.now() - startedAt,
+    timedOut,
+  };
+  if (timedOut) {
+    return {
+      summary: `The adapter job ${job.jobId} was still ${job.state} after ${timeoutSeconds}s; read it back from the adapter before treating the ${operation} as done.`,
+      result,
+      verification: { verified: false, evidence: [...evidence, 'The wait reached the operation bound before the job reached a terminal state.'] },
+    };
+  }
+  if (job.state === 'failed') {
+    throw new Error(`The deployment adapter reported the ${operation} job ${job.jobId} failed: ${job.error ?? 'no reason given'}.`);
+  }
+  const verified = job.state === 'succeeded' && job.releaseAfter !== null && job.releaseAfter === expectedRelease;
+  return {
+    summary: verified
+      ? `The ${operation} completed: release ${releaseLabel(job.releaseAfter)} is serving after the adapter's health-checked cutover.`
+      : `The adapter reported the ${operation} job succeeded but the serving release (${releaseLabel(job.releaseAfter)}) does not match the expected ${releaseLabel(expectedRelease)}.`,
+    result,
+    verification: { verified, evidence },
+  };
 }
 
 const HANDLERS: Record<string, Handler> = {
@@ -375,16 +528,28 @@ const HANDLERS: Record<string, Handler> = {
       });
     },
     async execute() {
-      const reconciled = await runStore.reconcileAbandonedRuns();
+      const outcome = await runStore.reconcileAbandonedRuns();
+      const verified = outcome.verified && outcome.error === undefined && outcome.remaining === 0;
       return {
-        summary:
-          reconciled === 0
-            ? 'No abandoned runs were found.'
-            : `${reconciled} abandoned runs were moved to NEEDS_REVIEW.`,
-        result: { reconciled },
+        summary: outcome.error !== undefined
+          ? `Reconciliation stopped on a storage error after ${outcome.reconciled} runs.`
+          : (outcome.remaining ?? 0) > 0
+            ? `${outcome.reconciled} abandoned runs were moved to NEEDS_REVIEW; ${outcome.remaining} remain.`
+            : outcome.reconciled === 0
+              ? 'No abandoned runs were found.'
+              : `${outcome.reconciled} abandoned runs were moved to NEEDS_REVIEW.`,
+        result: {
+          reconciled: outcome.reconciled,
+          remaining: outcome.remaining,
+          storageError: outcome.error ?? null,
+        },
         verification: {
-          verified: true,
-          evidence: ['Every run with an expired lease now carries a terminal state.'],
+          verified,
+          evidence: verified
+            ? ['The expired-lease query answered and no run with an expired lease remains.']
+            : outcome.error !== undefined
+              ? [`The run store answered with an error: ${outcome.error}`]
+              : [`${outcome.remaining} runs with an expired lease still remain.`],
         },
       };
     },
@@ -484,18 +649,62 @@ const HANDLERS: Record<string, Handler> = {
         redactedInput: { task },
       });
     },
-    async execute(context) {
+    async execute(context): Promise<ExplorerHandlerResult> {
       const task = String(context.input.task ?? '');
       if (!(ALLOWED_INDEXER_TASKS as readonly string[]).includes(task)) {
         throw new Error(`Only ${ALLOWED_INDEXER_TASKS.join(' and ')} can be run this way.`);
       }
-      await indexer.runSingleTask(task as AllowedIndexerTask);
+      const outcome = await indexer.runSingleTask(task as AllowedIndexerTask);
+      if (outcome.status === 'failed') {
+        throw new Error(`The ${task} task failed: ${outcome.error ?? 'unknown error'}`);
+      }
+      if (outcome.status !== 'completed') {
+        return {
+          summary: `The ${task} task did not run: ${outcome.reason ?? outcome.status}.`,
+          result: { task, status: outcome.status, reason: outcome.reason ?? null },
+          verification: {
+            verified: false,
+            evidence: [`The indexer answered ${outcome.status}: ${outcome.reason ?? 'no reason given'}.`],
+          },
+        };
+      }
+      let checkpoint: Awaited<ReturnType<typeof readIndexerCheckpoint>>;
+      try {
+        checkpoint = await readIndexerCheckpoint(task as AllowedIndexerTask);
+      } catch (e) {
+        return {
+          summary: `The ${task} task returned, but its persisted checkpoint could not be read.`,
+          result: {
+            task,
+            status: outcome.status,
+            startedAt: outcome.checkpoint?.startedAt ?? null,
+            finishedAt: outcome.checkpoint?.finishedAt ?? null,
+            checkpointError: e instanceof Error ? e.message : String(e),
+          },
+          verification: {
+            verified: false,
+            evidence: ['The checkpoint readback failed, so completion is unproven.'],
+          },
+        };
+      }
+      const verified = checkpoint.remaining === 0;
       return {
-        summary: `The ${task} task ran to completion.`,
-        result: { task },
+        summary: verified
+          ? `The ${task} task completed and no block is left without its ${task} data.`
+          : `The ${task} task returned but ${checkpoint.remaining} blocks are still missing ${task} data.`,
+        result: {
+          task,
+          status: outcome.status,
+          startedAt: outcome.checkpoint?.startedAt ?? null,
+          finishedAt: outcome.checkpoint?.finishedAt ?? null,
+          remaining: checkpoint.remaining,
+          indexedTip: checkpoint.indexedTip,
+        },
         verification: {
-          verified: true,
-          evidence: [`The indexer returned from ${task} without throwing.`],
+          verified,
+          evidence: verified
+            ? [`The database reports 0 blocks missing ${task} data; the newest indexed height is ${checkpoint.indexedTip ?? 'unknown'}.`]
+            : [`The database still reports ${checkpoint.remaining} blocks missing ${task} data.`],
         },
       };
     },
@@ -530,13 +739,16 @@ const HANDLERS: Record<string, Handler> = {
       if (String(context.input.confirmation ?? '') !== 'REINDEX EXPLORER BLOCKS') {
         throw new Error('This operation requires the exact typed confirmation.');
       }
-      indexer.reindex();
+      const scheduled = indexer.reindex();
+      if (!scheduled) {
+        throw new Error('The indexer refused the request because indexing is disabled in this deployment.');
+      }
       return {
-        summary: 'The indexing loop was released to run again.',
-        result: { scheduled: true },
+        summary: 'The indexing loop was released to run again. Indexing itself runs in the background and is not complete.',
+        result: { scheduled, indexingCompleted: false },
         verification: {
           verified: true,
-          evidence: ['The indexer accepted the request to run again.'],
+          evidence: ['The indexer accepted the request to run again; this proves scheduling, not completion.'],
         },
       };
     },
@@ -544,39 +756,67 @@ const HANDLERS: Record<string, Handler> = {
 
   'explorer.service.restart': {
     async buildPreview() {
+      const control = await probeControl();
+      const current = control.state === 'ready' ? control.capabilities.currentRelease : null;
       return preview({
         target: target('service'),
-        preconditions: [deploymentControlPrecondition()],
-        effects: ['Stops and starts the Explorer backend process.'],
-        expectedPostconditions: ['The Explorer answers its capability route again from a new process.'],
-        warnings: ['Every open WebSocket stream is dropped and has to reconnect.'],
+        preconditions: [deploymentControlPrecondition('explorer.service.restart', control)],
+        effects: [
+          `Asks the deployment adapter to run the release tooling's health-checked cutover of release ${releaseLabel(current)}, restarting the backend and overlay units.`,
+          'The run records the adapter job id before the restart replaces this process; the job is then polled to its terminal state.',
+        ],
+        expectedPostconditions: [`The adapter job succeeds and reports release ${releaseLabel(current)} serving from a new process.`],
+        warnings: [
+          'Every open WebSocket stream is dropped and has to reconnect.',
+          'This process is the one being restarted: if the run record shows the job still running, read the job back from the adapter after the restart.',
+        ],
         reversible: false,
         users: 'Every open WebSocket stream is dropped and reconnects.',
-        publicServices: 'The Explorer is unreachable for the length of the restart.',
+        publicServices:
+          'The gateway keeps the public origin up while the backend and overlay restart; API routes answer errors until the new process passes the live verification.',
+        durationSeconds: 120,
       });
     },
-    async execute() {
-      // No shell, no unit name, no fallback. Until an operator wires the
-      // deployment adapter, this refuses with the exact unmet precondition.
-      throw new Error(DEPLOYMENT_CONTROL_REASON);
+    /** @asyncUnsafe The route turns a rejection into a FAILED run. */
+    async execute(context) {
+      if (String(context.input.confirmation ?? '') !== 'RESTART EXPLORER BACKEND') {
+        throw new Error('This operation requires the exact typed confirmation.');
+      }
+      // No shell, no unit name, no fallback: one signed request to the adapter.
+      return driveDeployment('restart', 'explorer.service.restart', context, 600);
     },
   },
 
   'explorer.release.rollback': {
     async buildPreview() {
+      const control = await probeControl();
+      const capabilities = control.state === 'ready' ? control.capabilities : null;
+      const journalTarget = capabilities ? rollbackTargetFromJournal(capabilities) : null;
       return preview({
         target: target('release'),
-        preconditions: [deploymentControlPrecondition()],
-        effects: ['Replaces the running Explorer release with the previous verified one.'],
-        expectedPostconditions: ['The Explorer reports the previous verified release sha.'],
+        preconditions: [deploymentControlPrecondition('explorer.release.rollback', control)],
+        effects: [
+          `Asks the deployment adapter to roll back from release ${releaseLabel(capabilities?.currentRelease ?? null)} to ${releaseLabel(journalTarget?.release ?? null)}, the previous release its journal verified${journalTarget ? ' at ' + journalTarget.verifiedAt : ''}.`,
+          'The rollback runs through the release tooling and passes the live verification before it is reported done.',
+        ],
+        expectedPostconditions: [`The adapter job succeeds and reports release ${releaseLabel(journalTarget?.release ?? null)} serving.`],
         warnings: [
           'Rolling back healthy code because of a dependency incident makes things worse, not better.',
+          'This process is replaced by the rollback: if the run record shows the job still running, read the job back from the adapter afterwards.',
         ],
         reversible: false,
+        users: 'The site serves the previous build; every open WebSocket stream reconnects.',
+        publicServices:
+          'The gateway keeps the public origin up while the units restart on the previous release; API routes answer errors until it passes the live verification.',
+        durationSeconds: 300,
       });
     },
-    async execute() {
-      throw new Error(DEPLOYMENT_CONTROL_REASON);
+    /** @asyncUnsafe The route turns a rejection into a FAILED run. */
+    async execute(context) {
+      if (String(context.input.confirmation ?? '') !== 'ROLL BACK EXPLORER RELEASE') {
+        throw new Error('This operation requires the exact typed confirmation.');
+      }
+      return driveDeployment('rollback', 'explorer.release.rollback', context, 900);
     },
   },
 };
