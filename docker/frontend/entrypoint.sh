@@ -128,6 +128,10 @@ __PUBLIC_ACCELERATIONS__=${PUBLIC_ACCELERATIONS:=false}
 __HISTORICAL_PRICE__=${HISTORICAL_PRICE:=true}
 __ADDITIONAL_CURRENCIES__=${ADDITIONAL_CURRENCIES:=false}
 __STRATUM_ENABLED__=${STRATUM_ENABLED:=false}
+# Which network each non-Bitcoin chain is read from, as a JSON object such as
+# {"dogecoin":"testnet"}. Unlisted chains read mainnet; Bitcoin follows the
+# network selector. The frontend parses this string.
+__UNIVERSE_CHAIN_NETWORKS__=${UNIVERSE_CHAIN_NETWORKS:={}}
 
 # Export as environment variables to be used by envsubst
 export __MAINNET_ENABLED__
@@ -169,6 +173,7 @@ export __PUBLIC_ACCELERATIONS__
 export __HISTORICAL_PRICE__
 export __ADDITIONAL_CURRENCIES__
 export __STRATUM_ENABLED__
+export __UNIVERSE_CHAIN_NETWORKS__
 
 folder=$(find "${__MEMPOOL_WWW__}" -name "config.js" | xargs dirname)
 echo ${folder}

@@ -8,13 +8,14 @@ import { StateService } from '@app/services/state.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { ZcashScannerService, ZcashScanResult } from './zcash-scanner.service';
 import { ZCASH_SCANNER_SAMPLES } from './zcash-scanner-samples';
+import { chainNetwork } from '../chain-network';
 @Component({selector:'app-zcash-viewing-key-workspace',templateUrl:'./zcash-viewing-key-workspace.component.html',styleUrls:['../product-page.scss'],standalone:true,imports:[RelativeUrlPipe,CommonModule,FormsModule,RouterModule],changeDetection:ChangeDetectionStrategy.OnPush})
 export class ZcashViewingKeyWorkspaceComponent implements OnDestroy {
  viewingKey='';keyType='unified-full';network='mainnet';mode='owned-blocks';startHeight=2500000;blockCount=1;artifactInput='[]';scanning=false;error:string|null=null;
  private resultSubject=new BehaviorSubject<ZcashScanResult|null>(null);readonly result$=this.resultSubject.asObservable();
  private active?:{promise:Promise<ZcashScanResult>;cancel:()=>void};private abort?:AbortController;private generation=0;private networkSubscription:Subscription;
  resume:{hash:string;height:number}|null=null;
- constructor(seo:SeoService,private scanner:ZcashScannerService,private cdr:ChangeDetectorRef,state:StateService){seo.setTitle('Zcash Client-Only Viewing-Key Workspace');this.networkSubscription=state.networkChanged$.subscribe(()=>this.clear());}
+ constructor(seo:SeoService,private scanner:ZcashScannerService,private cdr:ChangeDetectorRef,state:StateService){seo.setTitle('Zcash Client-Only Viewing-Key Workspace');this.network=chainNetwork('zcash','mainnet',state.env);this.networkSubscription=state.networkChanged$.subscribe(()=>this.clear());}
  clear(resetResume=true){this.generation++;this.active?.cancel();this.abort?.abort();this.scanning=false;this.error=null;this.resultSubject.next(null);if(resetResume)this.resume=null;this.cdr.markForCheck();}
  clearKey(){this.clear();this.viewingKey='';}
  loadSample(pool:'sapling'|'orchard'){this.clear();const sample=ZCASH_SCANNER_SAMPLES[pool];this.network=sample.network;this.mode=sample.mode;this.keyType=sample.key_type;this.viewingKey=sample.viewing_key;this.artifactInput=JSON.stringify(sample.outputs,null,2);}

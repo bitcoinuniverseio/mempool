@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { StateService } from '@app/services/state.service';
-import { ExplorerChain } from '@app/universe/universe.types';
+import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
+import { chainNetwork } from '@app/universe/chain-network';
 import { EMPTY, Observable } from 'rxjs';
 
 export interface UniverseLiveEnvelope {
   readonly schemaVersion: 'universe-websocket-v1';
   readonly chain: ExplorerChain;
-  readonly network: 'mainnet';
+  readonly network: ExplorerNetwork;
   readonly channel:
     'chain-status' | 'mempool-snapshot' | 'candidate-buckets'
     | 'confirmed-protocol-activity';
@@ -36,7 +37,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export function parseUniverseLiveEnvelope(
   value: unknown,
-  expectedChain: ExplorerChain
+  expectedChain: ExplorerChain,
+  expectedNetwork: ExplorerNetwork = 'mainnet'
 ): UniverseLiveEnvelope | null {
   if (!isRecord(value)) {
     return null;
@@ -44,7 +46,7 @@ export function parseUniverseLiveEnvelope(
   if (
     value.schemaVersion !== 'universe-websocket-v1' ||
     value.chain !== expectedChain ||
-    value.network !== 'mainnet' ||
+    value.network !== expectedNetwork ||
     !CHANNELS.includes(value.channel as (typeof CHANNELS)[number]) ||
     typeof value.snapshotId !== 'string' ||
     !value.snapshotId ||
@@ -68,6 +70,9 @@ export class UniverseWebsocketService {
     if (!this.stateService.isBrowser || typeof WebSocket === 'undefined') {
       return EMPTY;
     }
+    // Bitcoin live frames stay on mainnet as before; every other chain
+    // subscribes to and accepts only its configured network.
+    const network = chainNetwork(chain, 'mainnet', this.stateService.env);
     return new Observable<UniverseLiveEnvelope>((observer) => {
       const cursors = new Map<string, ResumeCursor>();
       let socket: WebSocket | null = null;
@@ -90,7 +95,7 @@ export class UniverseWebsocketService {
               type: 'subscribe',
               subscriptions: CHANNELS.map((channel) => ({
                 chain,
-                network: 'mainnet',
+                network,
                 channel,
                 ...cursors.get(channel),
               })),
@@ -116,7 +121,7 @@ export class UniverseWebsocketService {
             }
             return;
           }
-          const envelope = parseUniverseLiveEnvelope(parsed, chain);
+          const envelope = parseUniverseLiveEnvelope(parsed, chain, network);
           if (!envelope) {
             return;
           }
