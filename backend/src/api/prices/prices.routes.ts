@@ -14,7 +14,9 @@ class PricesRoutes {
     res.header('Cache-control', 'public');
     res.setHeader('Expires', new Date(Date.now() + 360_0000 / config.MEMPOOL.PRICE_UPDATES_PER_HOUR).toUTCString());
 
-    res.json(pricesUpdater.getLatestPrices());
+    // The served price plus its provenance: a disabled or stale observation
+    // is marked as such rather than presented as the current quote.
+    res.json(pricesUpdater.getAdvertisedPrices());
   }
 }
 

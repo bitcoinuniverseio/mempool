@@ -13,6 +13,7 @@ import blocks from '../blocks';
 import capabilities from '../capabilities';
 import memPool from '../mempool';
 import { adminAdapterGuard, adminAdapterJsonParser, hasSignedAdminElevation } from './admin-adapter.security';
+import { createAdminReplayStore } from './admin-adapter.replay';
 import {
   adminEnvelope,
   adminTimestamp,
@@ -214,7 +215,7 @@ class AdminAdapterRoutes {
   public initRoutes(app: Application): void {
     // Also support standalone registration; the full app captures these bytes
     // before its general parsers consume the request stream.
-    app.use(PREFIX, adminAdapterJsonParser(), adminAdapterGuard());
+    app.use(PREFIX, adminAdapterJsonParser(), adminAdapterGuard(createAdminReplayStore()));
 
     app.get(`${PREFIX}/manifest`, async (_request: Request, response: Response) => {
       try {
@@ -376,7 +377,7 @@ class AdminAdapterRoutes {
         const correlationId =
           String(request.headers['x-bu-admin-correlation-id'] ?? '').slice(0, 128) || randomUUID();
         const actor = String(request.headers['x-bu-admin-actor'] ?? '').slice(0, 200) || 'control-center';
-        const { run, replayed } = await runStore.create({
+        const { run, replayed, ownerToken } = await runStore.create({
           operationId: operation.id,
           operationVersion: operation.version,
           target: previewBody.target,
@@ -388,29 +389,42 @@ class AdminAdapterRoutes {
           rollbackSupported: operation.rollbackSupported,
           redactedInput: input,
         });
-        if (replayed) {
+        if (replayed || ownerToken === null) {
           response.json({ ...adminEnvelope(), run });
           return;
         }
 
         if (operation.lock) {
-          await runStore.acquireLock(`${operation.lock}:${previewBody.target}`, run.runId);
+          try {
+            await runStore.acquireLock(`${operation.lock}:${previewBody.target}`, run.runId);
+          } catch (e) {
+            // The run was already inserted QUEUED. Leave a terminal, inspectable
+            // record rather than a row that waits forever for a lock it lost.
+            const message = e instanceof Error ? e.message : String(e);
+            await runStore.transition(run.runId, 'FAILED', {
+              error: { class: 'lock_conflict', message: message.slice(0, 700), retryable: true },
+              logs: [{ at: adminTimestamp(), level: 'error', message: message.slice(0, 1000) }],
+            }, ownerToken);
+            throw e instanceof AdminRunConflict
+              ? new AdminRunConflict(`${message} Run ${run.runId} was recorded as FAILED.`)
+              : e;
+          }
         }
         await runStore.transition(run.runId, 'PRECHECK', {
           logs: [{ at: adminTimestamp(), level: 'info', message: 'Preconditions verified.' }],
-        });
-        await runStore.transition(run.runId, 'RUNNING', { progressPercent: 10 });
+        }, ownerToken);
+        await runStore.transition(run.runId, 'RUNNING', { progressPercent: 10 }, ownerToken);
 
         try {
-          const outcome = await operation.execute({
+          const outcome = await runStore.withHeartbeat(run.runId, ownerToken, () => operation.execute({
             runId: run.runId,
             correlationId,
             actor,
             reason: run.reason,
             idempotencyKey: run.idempotencyKey,
             input,
-          });
-          await runStore.transition(run.runId, 'VERIFYING', { progressPercent: 90 });
+          }));
+          await runStore.transition(run.runId, 'VERIFYING', { progressPercent: 90 }, ownerToken);
           const finished = await runStore.transition(
             run.runId,
             outcome.verification.verified ? 'SUCCEEDED' : 'NEEDS_REVIEW',
@@ -432,6 +446,7 @@ class AdminAdapterRoutes {
                     ]),
               ],
             },
+            ownerToken,
           );
           response.json({ ...adminEnvelope(), run: finished });
         } catch (e) {
@@ -439,7 +454,7 @@ class AdminAdapterRoutes {
           const failed = await runStore.transition(run.runId, 'FAILED', {
             error: { class: 'operation_failed', message: message.slice(0, 700), retryable: true },
             logs: [{ at: adminTimestamp(), level: 'error', message: message.slice(0, 1000) }],
-          });
+          }, ownerToken);
           response.json({ ...adminEnvelope(), run: failed });
         }
       } catch (e) {
