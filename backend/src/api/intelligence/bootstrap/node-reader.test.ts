@@ -107,7 +107,7 @@ describe('Owned bootstrap chainstates', () => {
     expect(
       f.call.mock.calls.filter(([m]) => m === 'getchainstates')
     ).toHaveLength(1);
-    const service = new BootstrapService(f.reader),
+    const service = new BootstrapService({ nodes: f.reader, store: null }),
       overview = await service.getOverview();
     expect(overview).toMatchObject({
       configured_nodes_count: 1,
