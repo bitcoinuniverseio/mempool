@@ -229,6 +229,10 @@ class Server {
         next();
       })
       .use('/internal/admin/v1', adminAdapterJsonParser())
+      // Bootstrap operator jobs reuse the admin adapter signature, which is
+      // computed over the raw body: the raw bytes must be captured before the
+      // general JSON parser consumes them.
+      .use('/api/v1/intelligence/bootstrap/operator', adminAdapterJsonParser())
       .use(express.urlencoded({ extended: true, limit: '10mb' }))
       .use(express.text({ type: ['text/plain', 'application/base64'], limit: '10mb' }))
       .use(express.json({ limit: '10mb' }))

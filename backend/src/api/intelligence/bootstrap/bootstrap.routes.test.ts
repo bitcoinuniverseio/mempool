@@ -32,6 +32,10 @@ function mountedApp(): { uses: Array<{ path: string; handlers: Handler[] }>; pos
     get: () => app,
     post: (path: string, ...handlers: Handler[]) => { posts[path] = handlers; return app; },
   };
+  // The guard is mounted with the process replay store; this single-process
+  // test opts into the in-memory one explicitly, as the production selector
+  // never chooses it on its own.
+  process.env.EXPLORER_ADMIN_REPLAY_STORE = 'memory';
   bootstrapRoutes.initRoutes(app);
   return { uses, posts };
 }
@@ -46,11 +50,17 @@ function response(): { status: jest.Mock; json: jest.Mock; setHeader: jest.Mock;
   return res;
 }
 
+// The guard verifies against the replay store asynchronously and answers or
+// calls next() later, so each handler is awaited until it either advanced or
+// sent a response.
 async function runChain(handlers: Handler[], req: any, res: any): Promise<void> {
   for (const handler of handlers) {
-    let advanced = false;
-    await handler(req, res, () => { advanced = true; });
-    if (!advanced) {
+    const outcome = await new Promise<'next' | 'sent'>((resolve) => {
+      const originalJson = res.json;
+      res.json = jest.fn((body: unknown) => { const r = originalJson(body); resolve('sent'); return r; });
+      Promise.resolve(handler(req, res, () => resolve('next'))).catch(() => resolve('sent'));
+    });
+    if (outcome !== 'next') {
       return;
     }
   }
