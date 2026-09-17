@@ -2,6 +2,14 @@ import type {
   AdminEnvironment,
   AdminOperationDefinition,
 } from '@bitcoinuniverse/ecosystem-contracts/admin-control';
+import {
+  DEPLOYMENT_CONTROL_ENDPOINT_VARIABLE,
+  DEPLOYMENT_CONTROL_KEY_VARIABLE,
+  deploymentControlClient,
+  deploymentControlConfig,
+  rollbackTargetFromJournal,
+  type DeploymentControlState,
+} from './deployment-control.client';
 
 /**
  * What the Control Center may ask this Explorer to do, described without
@@ -23,10 +31,13 @@ const ALL_ENVIRONMENTS: AdminEnvironment[] = [
   'development',
 ];
 
-export const DEPLOYMENT_CONTROL_ENVIRONMENT_VARIABLE = 'EXPLORER_DEPLOYMENT_CONTROL';
+export const DEPLOYMENT_CONTROL_ENVIRONMENT_VARIABLES = [
+  DEPLOYMENT_CONTROL_ENDPOINT_VARIABLE,
+  DEPLOYMENT_CONTROL_KEY_VARIABLE,
+] as const;
 
 export const DEPLOYMENT_CONTROL_REASON =
-  'Host-level deployment control is not enabled for this process. An operator has to configure the deployment adapter and set EXPLORER_DEPLOYMENT_CONTROL=enabled before the Control Center can restart or roll back this Explorer.';
+  `Host-level deployment control is not configured for this process. An operator has to run the owned deployment adapter on this host and set ${DEPLOYMENT_CONTROL_ENDPOINT_VARIABLE} and ${DEPLOYMENT_CONTROL_KEY_VARIABLE} before the Control Center can restart or roll back this Explorer.`;
 
 /** Operations that cannot run without host-level deployment control. */
 export const DEPLOYMENT_CONTROLLED_OPERATIONS = [
@@ -38,10 +49,49 @@ export const DEPLOYMENT_CONTROLLED_OPERATIONS = [
 export const ALLOWED_INDEXER_TASKS = ['blocksPrices', 'coinStatsIndex'] as const;
 export type AllowedIndexerTask = (typeof ALLOWED_INDEXER_TASKS)[number];
 
+/** Whether the adapter is named at all. Configured is not ready: readiness is what the adapter answers. */
 export function deploymentControlConfigured(
   environment: Record<string, string | undefined> = process.env,
 ): boolean {
-  return String(environment[DEPLOYMENT_CONTROL_ENVIRONMENT_VARIABLE] ?? '').trim() === 'enabled';
+  try {
+    return deploymentControlConfig(environment) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The availability of one deployment-controlled operation, from what the
+ * adapter has actually answered. A flag cannot make this 'enabled'; only a
+ * capability document that supports the action can, and for a rollback the
+ * journal has to hold a previous verified release as well.
+ */
+export function deploymentControlAvailability(
+  operationId: string,
+  control: DeploymentControlState,
+): { availability: AdminOperationDefinition['availability']; availabilityReason: string | null } {
+  if (control.state === 'unconfigured') {
+    return { availability: 'not_configured', availabilityReason: control.reason };
+  }
+  if (control.state === 'unprobed' || control.state === 'unreachable') {
+    return { availability: 'unavailable', availabilityReason: control.reason };
+  }
+  const { capabilities } = control;
+  if (operationId === 'explorer.service.restart') {
+    return capabilities.supports.restart
+      ? { availability: 'enabled', availabilityReason: null }
+      : { availability: 'unavailable', availabilityReason: capabilities.reasons.restart ?? 'The deployment adapter does not support a restart on this host.' };
+  }
+  if (operationId === 'explorer.release.rollback') {
+    if (!capabilities.supports.rollback) {
+      return { availability: 'unavailable', availabilityReason: capabilities.reasons.rollback ?? 'The deployment adapter does not support a rollback on this host.' };
+    }
+    if (!rollbackTargetFromJournal(capabilities)) {
+      return { availability: 'unavailable', availabilityReason: 'The deployment adapter journal holds no previous verified release to roll back to.' };
+    }
+    return { availability: 'enabled', availabilityReason: null };
+  }
+  return { availability: 'enabled', availabilityReason: null };
 }
 
 function definition(
@@ -278,13 +328,14 @@ const DEFINITIONS: AdminOperationDefinition[] = [
         pattern: null,
       },
     ],
-    sideEffects: ['Stops and starts the Explorer backend process.'],
-    postconditions: ['The Explorer answers its capability route again from a new process.'],
-    timeoutSeconds: 120,
+    sideEffects: ['Runs the release tooling\'s health-checked cutover of the current release, which restarts the backend and overlay units and verifies the live origin.'],
+    postconditions: ['The deployment adapter reports the job succeeded with the same release serving from a new process.'],
+    timeoutSeconds: 600,
     retryPolicy: 'none',
     lock: 'explorer:service:restart',
     userImpact: 'Every open WebSocket stream is dropped and reconnects.',
-    publicServiceImpact: 'The Explorer is unreachable for the length of the restart.',
+    publicServiceImpact:
+      'The gateway keeps the public origin up while the backend and overlay restart; API routes answer errors until the new process passes the live verification.',
   }),
   definition({
     id: 'explorer.release.rollback',
@@ -293,7 +344,7 @@ const DEFINITIONS: AdminOperationDefinition[] = [
     action: 'rollback',
     name: 'Roll back to the previous verified Explorer release',
     description:
-      'Asks the operator-controlled deployment adapter to put the previous verified release back in service. The target release comes from the recorded promotion journal, never from this request.',
+      'Asks the operator-controlled deployment adapter to put the previous verified release back in service through the release tooling\'s health-checked rollback. The target release comes from the adapter\'s promotion journal, never from this request.',
     risk: 'IRREVERSIBLE',
     requiredPermission: 'operate.irreversible',
     inputFields: [
@@ -310,31 +361,33 @@ const DEFINITIONS: AdminOperationDefinition[] = [
     ],
     sideEffects: ['Replaces the running Explorer release with the previous verified one.'],
     postconditions: ['The Explorer reports the previous verified release sha.'],
-    timeoutSeconds: 600,
+    timeoutSeconds: 900,
     retryPolicy: 'none',
     lock: 'explorer:release:rollback',
-    userImpact: 'The site briefly serves the previous build.',
-    publicServiceImpact: 'A short interruption while the switch happens.',
+    userImpact: 'The site serves the previous build; every open WebSocket stream reconnects.',
+    publicServiceImpact:
+      'The gateway keeps the public origin up while the units restart on the previous release; API routes answer errors until it passes the live verification.',
   }),
 ];
 
 /**
  * The catalog, with the availability of the deployment-controlled operations
- * recomputed on every call. Host configuration can change between restarts,
- * and an operation that is unavailable stays visible with the exact reason
- * rather than disappearing from the panel.
+ * recomputed on every call from what the deployment adapter last answered.
+ * Host configuration can change between restarts, and an operation that is
+ * unavailable stays visible with the exact reason rather than disappearing
+ * from the panel.
  */
 export function explorerOperationDefinitions(
   environment: Record<string, string | undefined> = process.env,
+  control: DeploymentControlState = environment === process.env
+    ? deploymentControlClient.known()
+    : deploymentControlConfigured(environment)
+      ? { state: 'unprobed', reason: 'The deployment adapter is configured but has not answered its capability route yet.', capabilities: null, probedAt: null }
+      : { state: 'unconfigured', reason: DEPLOYMENT_CONTROL_REASON, capabilities: null, probedAt: null },
 ): AdminOperationDefinition[] {
-  const enabled = deploymentControlConfigured(environment);
   return DEFINITIONS.map((operation) =>
     DEPLOYMENT_CONTROLLED_OPERATIONS.includes(operation.id)
-      ? {
-          ...operation,
-          availability: enabled ? ('enabled' as const) : ('not_configured' as const),
-          availabilityReason: enabled ? null : DEPLOYMENT_CONTROL_REASON,
-        }
+      ? { ...operation, ...deploymentControlAvailability(operation.id, control) }
       : operation,
   );
 }
@@ -342,8 +395,9 @@ export function explorerOperationDefinitions(
 export function findExplorerOperationDefinition(
   operationId: string,
   environment: Record<string, string | undefined> = process.env,
+  control?: DeploymentControlState,
 ): AdminOperationDefinition {
-  const found = explorerOperationDefinitions(environment).find(
+  const found = explorerOperationDefinitions(environment, control).find(
     (operation) => operation.id === operationId,
   );
   if (!found) {

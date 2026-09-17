@@ -1,9 +1,11 @@
+import config from '../../../config';
 import {
   SubmissionCapabilities,
   SubmissionDiagnosisResult,
   PrivateBroadcastRecord,
   AcceleratorProvider,
   AcceleratorReceipt,
+  ReceiptVerificationResult,
   TransactionOrderingEvidence,
   PrivateRelayOverview,
 } from './private-submission.models';
@@ -14,29 +16,25 @@ import {
   readPrivateRelaySubmission,
   submitPrivateRelay,
 } from './private-relay.submissions';
+import { AcceleratorDirectoryError, acceleratorDirectory, providerView, verifyAcceleratorReceipt } from './accelerator-directory';
+import { BlockOrderingEvidence, OrderingEvidenceError, OrderingEvidenceService, orderingEvidenceService, OrderingFindings } from './ordering-evidence.service';
+import { DiagnosisNotFound, DiagnosisReaders, diagnoseFromOwnedMempool, ownedDiagnosisReaders } from './transaction-diagnosis';
 
 /**
- * Raised when a read has no source behind it. The routes map the code to a
- * status, so an absent integration is reported as an absent integration rather
- * than as an answer.
+ * Raised when a read has no source behind it, or names nothing the source
+ * holds. The routes map the status: 503 for an absent integration, 404 for
+ * an absent record.
  */
 export class SubmissionEvidenceError extends Error {
   constructor(
     public readonly code: string,
-    message: string
+    message: string,
+    public readonly status: number = 503
   ) {
     super(message);
   }
 }
 
-const registryUnavailable =
-  'The accelerator provider registry is unavailable. Provider identities, health and receipt trust cannot be determined until the owned signed provider directory is configured (PRE-04).';
-
-const orderingUnavailable =
-  'Ordering evidence is unavailable. Template and first-seen observation require the owned relay sensor and template recorder, which are not configured on this deployment (PRE-01).';
-
-const diagnosisUnavailable =
-  'Acceleration diagnosis is unavailable. Feerate, policy, RBF and CPFP findings require the owned mempool and policy source for this transaction, which is not wired to this route (PRE-01).';
 
 /**
  * Private submission, acceleration and ordering evidence.
@@ -60,6 +58,10 @@ const diagnosisUnavailable =
  * deployment does not have.
  */
 export class PrivateSubmissionService {
+  /** Test seams for the owned readers behind diagnosis and ordering. */
+  public diagnosisReaders: DiagnosisReaders = ownedDiagnosisReaders;
+  public ordering: OrderingEvidenceService = orderingEvidenceService;
+
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
   public async getOverview(): Promise<PrivateRelayOverview> {
     return privateRelayOverview();
@@ -70,11 +72,16 @@ export class PrivateSubmissionService {
     return privateRelayCapabilities();
   }
 
-  public diagnoseTransaction(_rawTxOrTxid: string): SubmissionDiagnosisResult {
-    throw new SubmissionEvidenceError(
-      'unavailable-source',
-      diagnosisUnavailable
-    );
+  /** Facts of the requested transaction's own mempool entry; a transaction this mempool does not hold is a typed 404. */
+  public diagnoseTransaction(rawTxOrTxid: string): SubmissionDiagnosisResult {
+    try {
+      return diagnoseFromOwnedMempool(rawTxOrTxid, this.diagnosisReaders);
+    } catch (e) {
+      if (e instanceof DiagnosisNotFound) {
+        throw new SubmissionEvidenceError('transaction-not-in-mempool', e.message, 404);
+      }
+      throw e;
+    }
   }
 
   /** @asyncUnsafe The route turns a rejection into an exact HTTP answer. */
@@ -104,104 +111,68 @@ export class PrivateSubmissionService {
     return abortPrivateRelaySubmission(submissionId, ownerToken);
   }
 
-  public listAcceleratorProviders(): { providers: AcceleratorProvider[] } {
-    throw new SubmissionEvidenceError(
-      'unavailable-registry',
-      registryUnavailable
-    );
-  }
-
-  public getAcceleratorProvider(
-    _providerId: string
-  ): AcceleratorProvider | undefined {
-    throw new SubmissionEvidenceError(
-      'unavailable-registry',
-      registryUnavailable
-    );
-  }
-
-  /**
-   * Reads the payload the caller supplied and reports what is missing from it.
-   *
-   * A structurally complete receipt is not a verified receipt: the signature
-   * has to be checked against the provider's key, and there is no registry to
-   * take that key from. So a complete payload reports unavailable trust rather
-   * than success, and an incomplete one reports its own faults, which is a
-   * finding this deployment can actually make.
-   */
-  public verifyAcceleratorReceipt(receipt: Partial<AcceleratorReceipt>): {
-    verified: false;
-    stage: 'invalid' | 'unavailable-registry';
-    errors: string[];
-  } {
-    const errors: string[] = [];
-    if (
-      !receipt ||
-      typeof receipt !== 'object' ||
-      Array.isArray(receipt) ||
-      JSON.stringify(receipt).length > 16384
-    )
-      return {
-        verified: false,
-        stage: 'invalid',
-        errors: ['Receipt must be a JSON object no larger than16KiB.'],
-      };
-    for (const [key, max] of [
-      ['provider_id', 256],
-      ['receipt_id', 256],
-      ['provider_signature', 8192],
-    ] as const)
-      if (typeof receipt[key] === 'string' && receipt[key]!.length > max)
-        errors.push(key + ' is too long');
-    if (typeof receipt?.provider_id !== 'string' || !receipt.provider_id.trim())
-      errors.push('provider_id is required');
-    if (typeof receipt?.receipt_id !== 'string' || !receipt.receipt_id.trim())
-      errors.push('receipt_id is required');
-    if (
-      typeof receipt?.provider_signature !== 'string' ||
-      !receipt.provider_signature.trim()
-    )
-      errors.push('provider_signature is required');
-    if (
-      typeof receipt?.txid !== 'string' ||
-      !/^[0-9a-f]{64}$/i.test(receipt.txid)
-    )
-      errors.push('Valid 32-byte txid is required');
-
-    if (errors.length > 0) {
-      return { verified: false, stage: 'invalid', errors };
+  private directory(): ReturnType<typeof acceleratorDirectory> {
+    try {
+      return acceleratorDirectory();
+    } catch (e) {
+      if (e instanceof AcceleratorDirectoryError) {
+        throw new SubmissionEvidenceError('unavailable-registry', e.message + ' (reason: ' + e.reason + ')');
+      }
+      throw e;
     }
+  }
+
+  /** Providers from the owned directory that list this deployment's network. */
+  public listAcceleratorProviders(): { providers: AcceleratorProvider[]; network: string; directory: { source: string; revision: string; loaded_at_utc: string } } {
+    const directory = this.directory();
+    const network = config.MEMPOOL.NETWORK;
     return {
-      verified: false,
-      stage: 'unavailable-registry',
-      errors: [registryUnavailable],
+      providers: directory.providers.filter(provider => provider.networks.includes(network)).map(provider => providerView(provider, directory)),
+      network,
+      directory: { source: directory.source, revision: directory.revision, loaded_at_utc: directory.loaded_at_utc },
     };
   }
 
-  public getTransactionOrdering(
-    _txid: string
-  ): TransactionOrderingEvidence | undefined {
-    throw new SubmissionEvidenceError(
-      'unavailable-source',
-      orderingUnavailable
-    );
+  public getAcceleratorProvider(providerId: string): AcceleratorProvider {
+    const directory = this.directory();
+    const provider = directory.providers.find(entry => entry.id === providerId);
+    if (!provider) {
+      throw new SubmissionEvidenceError('provider-not-in-directory', `Provider ${providerId} is not in the owned directory (revision ${directory.revision}).`, 404);
+    }
+    return providerView(provider, directory);
   }
 
-  public getBlockOrdering(_blockHash: string): {
-    block_hash: string;
-    transactions: TransactionOrderingEvidence[];
-  } {
-    throw new SubmissionEvidenceError(
-      'unavailable-source',
-      orderingUnavailable
-    );
+  /**
+   * Structural faults are the caller's; everything past them is decided by
+   * the owned directory's key for the named provider: the signed payload
+   * encoding documented on AcceleratorReceipt, the key's validity at issue,
+   * the network, the expiry and a replay of a receipt already verified here.
+   */
+  public verifyAcceleratorReceipt(receipt: Partial<AcceleratorReceipt>, now = Date.now()): ReceiptVerificationResult {
+    return verifyAcceleratorReceipt(receipt, { now });
   }
 
-  public listOrderingFindings(): { findings: TransactionOrderingEvidence[] } {
-    throw new SubmissionEvidenceError(
-      'unavailable-source',
-      orderingUnavailable
-    );
+  private orderingRead<T>(read: () => T): T {
+    try {
+      return read();
+    } catch (e) {
+      if (e instanceof OrderingEvidenceError) {
+        throw new SubmissionEvidenceError(e.code, e.message, e.status);
+      }
+      throw e;
+    }
+  }
+
+  public getTransactionOrdering(txid: string): TransactionOrderingEvidence {
+    return this.orderingRead(() => this.ordering.getTransactionOrdering(txid));
+  }
+
+  public getBlockOrdering(blockHash: string): BlockOrderingEvidence {
+    return this.orderingRead(() => this.ordering.getBlockOrdering(blockHash));
+  }
+
+  public listOrderingFindings(): OrderingFindings {
+    return this.ordering.listOrderingFindings();
   }
 }
 
