@@ -227,6 +227,27 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
    * resolves to a page the template can state truthfully; transport and
    * invalid document failures land here as an error with an explicit retry.
    */
+  /**
+   * IMPLEMENTATION-HANDOFF [FE-READS-02] | activity/objects operation rows.
+   * Verified: every resolved ID attempts both activity and objects; implemented
+   * routes vary by descriptor, and Ordex declares only registry. Source-contract
+   * descriptors are inventory, not proof of a working read or complete history.
+   * Prerequisites: authoritative per-protocol read adapters and BE acceptance.
+   * 1. Reconcile each readOperationDescriptor with its actual detail/chain/asset
+   *    consumer. Preserve specialized Ordinals, Runes, ANIMA and other-chain views.
+   * 2. When adding a missing reader, wire its typed client and owning route;
+   *    use descriptors to select supported sections while retaining explicit
+   *    unavailable/not-implemented feedback for required but unfinished readers.
+   * 3. Keep page cursors, cancellation and retry scoped to protocol, chain and
+   *    network. Test first-page, next-page failure/retry, duplicate/reorg events,
+   *    refresh and navigation during in-flight requests against owned authorities.
+   * 4. Extend protocol-detail.component.spec.ts and universe-protocol-contract.spec.ts;
+   *    run their frontend npm test paths. End-to-end acceptance must assert
+   *    nonempty known fixtures, persisted authority readback and usable links on
+   *    Signet or justified supported Testnet, not only valid empty JSON.
+   * Source references: pinned PROTOCOL-COVERAGE.json and backend read descriptors.
+   * No invented mint/trade paths; inventory actual offered journeys separately.
+   */
   loadActivity(protocolId: string): void {
     this.activitySubscription?.unsubscribe();
     this.activityPages = [];

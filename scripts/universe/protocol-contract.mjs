@@ -181,6 +181,26 @@ export function assertRosterResolvesUniquely(protocols, report = new Report()) {
  * served right now, which is a check that passes the day it is written and
  * says nothing after. Every field here exists so a mismatch names both sides.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [FE-GATE-04] | all 39 protocols and operation IDs.
+ * Verified: this validates shape/status vocabulary; it does not require passing
+ * operation evidence. A roster gate PASS is not the requested release GO.
+ * Prerequisites: BE acceptance schema plus complete operation inventory.
+ * 1. Extend schema validation to reject missing/duplicate operation IDs,
+ *    acceptance evidence with mismatched protocol/network/revision, and claimed
+ *    complete coverage with unresolved applicable rows or an unknown denominator.
+ * 2. Keep roster consistency mode usable during development; add an explicit
+ *    release acceptance mode that fails on FAIL/BLOCKED/NOT TESTED and requires
+ *    justified exclusions. Do not silently redefine --check as functional tests.
+ * 3. Bind evidence to accepted code/config/dependencies; changes invalidate only
+ *    affected evidence. Historical readable declarations must not count as passes.
+ * 4. Extend protocol-contract.test.mjs with forged complete, absent evidence,
+ *    missing operation, wrong-network/revision and fully evidenced fixtures.
+ *    Run node --test scripts/universe/protocol-contract.test.mjs and this script
+ *    --check. After qualification, use --record --from the accepted manifest,
+ *    review generated changes, then --against the deployed owned manifest.
+ * Preserve prior WP08 handoff requirements. No generated files are hand-edited.
+ */
 export function validateManifest(manifest, report = new Report()) {
   if (typeof manifest !== 'object' || manifest === null) {
     report.fail('The manifest is not an object.');
