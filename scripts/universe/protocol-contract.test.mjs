@@ -12,6 +12,7 @@ import {
   diffManifests,
   protocolCopyIds,
   readmeBlockOf,
+  releaseGate,
   renderMarkdown,
   renderReadmeBlock,
   renderRoster,
@@ -305,5 +306,295 @@ test('a served roster identical to the pin reports nothing', () => {
   assert.deepEqual(
     diffManifests(comparable(pinned), comparable(pinned)).problems,
     [],
+  );
+});
+
+
+/**
+ * The release gate.
+ *
+ * The roster check runs on every commit, and a gate that runs constantly is one
+ * people learn to make green. Each case below is a way a release could be
+ * declared complete without being complete, so the gate has to refuse it.
+ */
+
+/** The pin with every operation accepted, which is what a real release needs. */
+function releasable(manifest, overrides = {}) {
+  const protocols = manifest.protocols.map((protocol) => ({
+    ...protocol,
+    networks: ['mainnet'],
+    coverage: 'unknown',
+    releaseStatus: 'BLOCKED',
+    readOperationDescriptors: (protocol.readOperationDescriptors ?? []).map(
+      (operation) => ({ ...operation, acceptance: 'PASS' }),
+    ),
+  }));
+  const declared = protocols.reduce(
+    (total, protocol) => total + protocol.readOperationDescriptors.length,
+    0,
+  );
+  return {
+    ...manifest,
+    sourceSha: 'a'.repeat(40),
+    protocols,
+    acceptance: {
+      declared,
+      passed: declared,
+      failed: 0,
+      blocked: 0,
+      notApplicable: 0,
+      notTested: 0,
+      rejected: 0,
+    },
+    ...overrides,
+  };
+}
+
+test('a release with every operation accepted passes', () => {
+  assert.deepEqual(releaseGate(releasable(pinned)).problems, []);
+});
+
+test('the roster this repository pins today is not releasable', () => {
+  // The pinned manifest carries no acceptance summary and no accepted
+  // operation. The roster check passes on it; the release gate must not.
+  assert.deepEqual(validateManifest(pinned).problems, []);
+  assert.notEqual(releaseGate(pinned).problems.length, 0);
+});
+
+test('a manifest with no acceptance summary has an unknown denominator', () => {
+  const stripped = releasable(pinned);
+  delete stripped.acceptance;
+  assert.match(
+    problems(releaseGate(stripped)),
+    /publishes no acceptance summary, so the denominator is unknown/,
+  );
+});
+
+test('a denominator that does not count the declared operations is refused', () => {
+  const manifest = releasable(pinned);
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        acceptance: { ...manifest.acceptance, declared: 4, passed: 4 },
+      }),
+    ),
+    /counts 4 declared operations; the manifest declares/,
+  );
+});
+
+test('a summary claiming more passes than the descriptors do is refused', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        protocols: [
+          {
+            ...first,
+            readOperationDescriptors: first.readOperationDescriptors.map(
+              (operation, index) =>
+                index === 0
+                  ? { ...operation, acceptance: 'NOT TESTED' }
+                  : operation,
+            ),
+          },
+          ...rest,
+        ],
+      }),
+    ),
+    /descriptors claim to pass/,
+  );
+});
+
+test('an acceptance value outside the closed set is refused', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        protocols: [
+          {
+            ...first,
+            readOperationDescriptors: first.readOperationDescriptors.map(
+              (operation) => ({ ...operation, acceptance: 'COMPLETE' }),
+            ),
+          },
+          ...rest,
+        ],
+      }),
+    ),
+    /carries acceptance "COMPLETE"/,
+  );
+});
+
+test('unqualified evidence records block a release', () => {
+  const manifest = releasable(pinned);
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        acceptance: { ...manifest.acceptance, rejected: 2 },
+      }),
+    ),
+    /2 acceptance records could not be qualified as evidence/,
+  );
+});
+
+test('a release cut from something that is not a commit is refused by validation', () => {
+  assert.match(
+    problems(releaseGate(releasable(pinned, { sourceSha: 'development' }))),
+    /names no commit it was produced from/,
+  );
+});
+
+test('a manifest from another revision than the release intends is refused', () => {
+  assert.match(
+    problems(releaseGate(releasable(pinned), { sourceSha: 'b'.repeat(40) })),
+    /The release intends b{40}; the manifest was produced by a{40}/,
+  );
+});
+
+test('a protocol that does not serve the released network is refused', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  assert.match(
+    problems(
+      releaseGate(
+        {
+          ...manifest,
+          protocols: [{ ...first, networks: ['signet'] }, ...rest],
+        },
+        { network: 'mainnet' },
+      ),
+    ),
+    new RegExp(`${first.id} does not declare the mainnet network`),
+  );
+});
+
+test('a duplicated operation is refused', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  const doubled = [
+    ...first.readOperationDescriptors,
+    first.readOperationDescriptors[0],
+  ];
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        protocols: [
+          {
+            ...first,
+            readOperationDescriptors: doubled,
+            implementedReadOperations: doubled.map((operation) => operation.id),
+          },
+          ...rest,
+        ],
+      }),
+    ),
+    /more than once/,
+  );
+});
+
+test('an operation list that does not match the descriptors is refused', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        protocols: [
+          { ...first, implementedReadOperations: ['registry'] },
+          ...rest,
+        ],
+      }),
+    ),
+    /lists operations its descriptors do not match/,
+  );
+});
+
+test('a complete coverage claim is refused while an operation is unaccepted', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        protocols: [
+          {
+            ...first,
+            coverage: 'complete',
+            readOperationDescriptors: first.readOperationDescriptors.map(
+              (operation, index) =>
+                index === 0
+                  ? { ...operation, acceptance: 'BLOCKED' }
+                  : operation,
+            ),
+          },
+          ...rest,
+        ],
+      }),
+    ),
+    /claims complete historical coverage with 1 operations not accepted/,
+  );
+});
+
+test('a readable release label is refused while an operation is unaccepted', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        protocols: [
+          {
+            ...first,
+            releaseStatus: 'VERIFIED READ ONLY',
+            indexerAuthority: first.indexerAuthority ?? 'ord',
+            readOperationDescriptors: first.readOperationDescriptors.map(
+              (operation, index) =>
+                index === 0
+                  ? { ...operation, acceptance: 'NOT APPLICABLE' }
+                  : operation,
+            ),
+          },
+          ...rest,
+        ],
+      }),
+    ),
+    /carries release status VERIFIED READ ONLY with 1 operations not accepted/,
+  );
+});
+
+test('blocked and not applicable are honest results, and neither is a pass', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.protocols;
+  assert.match(
+    problems(
+      releaseGate({
+        ...manifest,
+        protocols: [
+          {
+            ...first,
+            readOperationDescriptors: first.readOperationDescriptors.map(
+              (operation, index) =>
+                index === 0
+                  ? { ...operation, acceptance: 'BLOCKED' }
+                  : operation,
+            ),
+          },
+          ...rest,
+        ],
+        acceptance: {
+          ...manifest.acceptance,
+          passed: manifest.acceptance.passed - 1,
+          blocked: 1,
+        },
+      }),
+    ),
+    /1 blocked, 0 not applicable, 0 not tested/,
   );
 });
