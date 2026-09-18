@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+/*
+ * Outstanding: WP08 of the Dogecoin mainnet readiness plan. The recorded
+ * manifest must only be regenerated from a qualified source, after the
+ * acceptance rows in the handoff bundle pass.
+ */
 /**
  * The protocol roster gate.
  *
