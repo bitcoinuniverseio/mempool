@@ -1,5 +1,5 @@
 import { ChainCapabilityEnvelope, HealthObservation, UniverseExplorerHealthV2 } from '../universe.types';
-import { describeChainReasons } from './chain-reasons';
+import { ChainReasonReading, describeChainReasons } from './chain-reasons';
 
 // Current availability needs an observation from the bounded health poll.
 export const HEALTH_MAX_AGE_MS = 120_000;
@@ -96,22 +96,110 @@ export function healthServiceSummary(capability: ChainCapabilityEnvelope | null 
 export interface HealthDiagnostic {
   id: string;
   name: string;
+  /** The service that answered for this row, or null when it names none. */
+  authority: string | null;
   state: string;
   observation: string;
+  /** The exact instant behind `observation`, for a tooltip. */
+  observedAt: string | null;
   checkpoint: string | null;
-  reasons: readonly string[];
+  blockHash: string | null;
+  blockHashShort: string | null;
+  reasons: readonly ChainReasonReading[];
   effect: string;
 }
 
+/**
+ * The words a reader sees for a service state. The wire values are a machine
+ * contract, so "degraded; partial coverage" is what arrives; it is not what a
+ * person should have to read.
+ */
+const AVAILABILITY_WORDS: Readonly<Record<string, string>> = {
+  ready: 'Working',
+  degraded: 'Problems',
+  unavailable: 'Not available',
+  unknown: 'Unknown',
+};
+
+const COVERAGE_WORDS: Readonly<Record<string, string>> = {
+  complete: 'full history',
+  partial: 'part of the history',
+  unavailable: 'no history',
+  unknown: 'history unknown',
+};
+
+const MEMPOOL_COVERAGE_WORDS: Readonly<Record<string, string>> = {
+  complete: 'all pending transactions',
+  partial: 'some pending transactions',
+  unavailable: 'no pending transactions',
+  unknown: 'pending coverage unknown',
+};
+
+/**
+ * Display names for the protocols a health report can carry. The tab registry
+ * in multichain-view owns the same names, but it imports this module, so the
+ * short list is repeated here rather than creating a cycle.
+ */
+const PROTOCOL_NAMES: Readonly<Record<string, string>> = {
+  doginals: 'Doginals',
+  drc20: 'DRC-20',
+  tap_doge: 'TAP on Doge',
+  dunes: 'Dunes',
+  zerdinals: 'Zerdinals',
+  zrunes: 'ZRunes',
+  zrc20: 'ZRC-20',
+};
+
+function serviceState(availability: string, coverage: string, coverageWords = COVERAGE_WORDS): string {
+  const state = AVAILABILITY_WORDS[availability] ?? 'Unknown';
+  const cover = coverageWords[coverage];
+  return cover ? `${state}, ${cover}` : state;
+}
+
+/** A refresh failure kind is an internal label; say what it means instead. */
+const FAILURE_WORDS: Readonly<Record<string, string>> = {
+  transport: 'the last refresh could not reach the service',
+  timeout: 'the last refresh timed out',
+  'invalid-response': 'the last refresh returned something unreadable',
+  unavailable: 'the service reported itself unavailable',
+  'not-found': 'the service had no record for that request',
+};
+
+function failureSentence(kind: string): string {
+  return FAILURE_WORDS[kind] ?? `the last refresh failed (${kind})`;
+}
+
+/** Seconds are precise but unreadable past a minute or two. */
+function formatAge(seconds: number): string {
+  if (seconds < 60) { return `${seconds}s`; }
+  if (seconds < 3600) { return `${Math.floor(seconds / 60)} min`; }
+  if (seconds < 86400) { return `${Math.floor(seconds / 3600)} h`; }
+  return `${Math.floor(seconds / 86400)} d`;
+}
+
+function capitalise(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** Enough of a block hash to recognise, with the whole value kept for copying. */
+function shortHash(hash: string): string {
+  return hash.length > 20 ? `${hash.slice(0, 10)}…${hash.slice(-6)}` : hash;
+}
 export function healthDiagnostics(capability: ChainCapabilityEnvelope | null | undefined, now = Date.now()): readonly HealthDiagnostic[] {
   const health = readHealth(capability);
   if (!health) {return [];}
   const entries = [
-    { id: 'node', name: 'Node', row: health.node, state: `${health.node.reachability}; ${nodeHealthLabel(capability, now)}`, effect: 'Base chain synchronization.' },
-    { id: 'confirmed', name: 'Confirmed history', row: health.confirmed, state: `${health.confirmed.availability}; ${health.confirmed.coverage} coverage`, effect: 'Historical blocks, transactions and outpoints.' },
-    { id: 'address', name: 'Address history', row: health.address, state: `${health.address.availability}; ${health.address.coverage} coverage`, effect: 'Confirmed address balances and activity.' },
-    { id: 'mempool', name: 'Mempool', row: health.mempool, state: health.mempool.supported ? `${health.mempool.state}; ${health.mempool.completeness} coverage` : 'Not offered', effect: 'Pending transactions and arrivals.' },
-    ...health.protocols.map(row => ({ id: row.protocolId, name: row.protocolId.replace(/_/g, ' '), row, state: `${row.availability}; ${row.coverage} coverage; ${row.qualification}`, effect: 'This protocol’s assets and history.' })),
+    { id: 'node', name: 'Node', row: health.node, state: `${health.node.reachability === 'reachable' ? 'Reachable' : health.node.reachability === 'unreachable' ? 'Not reachable' : 'Unknown'}, ${nodeHealthLabel(capability, now).toLowerCase()}`, effect: 'The base chain itself.' },
+    { id: 'confirmed', name: 'Confirmed history', row: health.confirmed, state: serviceState(health.confirmed.availability, health.confirmed.coverage), effect: 'Past blocks, transactions and outputs.' },
+    { id: 'address', name: 'Address history', row: health.address, state: serviceState(health.address.availability, health.address.coverage), effect: 'Confirmed balances and activity for an address.' },
+    { id: 'mempool', name: 'Pending transactions', row: health.mempool, state: health.mempool.supported ? serviceState(health.mempool.state, health.mempool.completeness, MEMPOOL_COVERAGE_WORDS) : 'Not offered', effect: 'Transactions waiting to be confirmed.' },
+    ...health.protocols.map(row => ({
+      id: row.protocolId,
+      name: PROTOCOL_NAMES[row.protocolId] ?? row.protocolId.replace(/_/g, ' '),
+      row,
+      state: serviceState(row.availability, row.coverage),
+      effect: 'Assets and history for this protocol.',
+    })),
   ];
   return entries.map(({ id, name, row, state, effect }) => {
     const age = row.observedAt ? Math.max(0, Math.floor((now - Date.parse(row.observedAt)) / 1000)) : null;
@@ -119,10 +207,23 @@ export function healthDiagnostics(capability: ChainCapabilityEnvelope | null | u
     const height = checkpoint?.heightAtomic ?? ('heightAtomic' in row ? row.heightAtomic : null);
     const hash = checkpoint?.blockHash ?? ('blockHash' in row ? row.blockHash : null);
     return {
-      id, name: row.authorityId ? `${name} · ${row.authorityId}` : name, state, effect,
-      observation: age === null ? 'No observation' : `${observationCurrent(row, now) ? 'Observed' : 'Last known; stale'} ${age}s ago · ${row.observedAt}`,
-      checkpoint: height === null ? null : `Block ${height}${hash ? ` · ${hash}` : ''}`,
-      reasons: [...describeChainReasons(row.degradedReasons).map(reason => reason.text), ...(row.lastFailureKind ? [`Latest refresh: ${row.lastFailureKind}`] : [])],
+      id,
+      name,
+      // The service that answered, kept beside the name rather than glued into it.
+      authority: row.authorityId ?? null,
+      state,
+      effect,
+      // "Checked 12s ago" is the fact; the exact instant belongs in a tooltip,
+      // not printed twice in the same sentence.
+      observation: age === null ? 'Not checked yet' : `${observationCurrent(row, now) ? 'Checked' : 'Last checked'} ${formatAge(age)} ago`,
+      observedAt: row.observedAt ?? null,
+      checkpoint: height === null ? null : `Block ${height}`,
+      blockHash: hash ?? null,
+      blockHashShort: hash ? shortHash(hash) : null,
+      reasons: [
+        ...describeChainReasons(row.degradedReasons),
+        ...(row.lastFailureKind ? [{ code: `latest-refresh:${row.lastFailureKind}`, text: capitalise(failureSentence(row.lastFailureKind)) + '.', kind: 'fault' as const }] : []),
+      ],
     };
   });
 }
