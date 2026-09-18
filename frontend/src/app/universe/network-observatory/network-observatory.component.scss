@@ -1,3 +1,15 @@
+// The observed fee can contain a long floating-point value. Keep every table
+// column inside the panel instead of allowing that value to widen the table.
+.fleet-table {
+  table-layout: fixed;
+
+  th,
+  td {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
 @media (max-width: 767.98px) {
   .fleet-table,
   .fleet-table tbody {
