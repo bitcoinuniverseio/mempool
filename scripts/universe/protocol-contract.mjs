@@ -1,20 +1,8 @@
 #!/usr/bin/env node
 /*
- * IMPLEMENTATION-HANDOFF [WP08] BEGIN
- * Integrate accepted revisions and publicly release through existing process
- * Coverage: RELEASE, REGISTRY, SECURITY; defects: V02; functional status: BLOCKED.
- * Observed: Production backend SHA 50e20af differs from prepared develop 73847ff; no candidate acceptance or deployment was performed. Registry pins another source SHA and must be refreshed only after qualification.
- * Sources: S-MEMPOOL,S-BACKEND (research-register.json in the server handoff).
- * Prerequisites: WP01, WP02, WP03, WP04, WP05, WP06, WP07.
- * 1. Review targeted main/develop drift: backend production is main 50e20af911175e3788748e5dea116684dcbbc8ce; preparation starts develop 73847ffdf8735c09953328e129674f88140722f2. Use baseline.json and patches; preserve existing legitimate changes and never deploy preparation comments as a completed repair.
- * 2. After every required row passes on Signet or justified Dogecoin testnet, pin accepted commits, locks, schema, binary hashes and config. Update backend registry qualification and regenerate mempool docs/protocols manifest using scripts/universe/protocol-contract.mjs --record --from <qualified manifest>. Do not hand-edit generated JSON.
- * 3. Use existing .github/workflows/universe-release-artifact.yml and backend overlay release process on self-hosted runners. Review existing PRs and exact accepted commits, merge legitimate release work, prevent deployment before gates, deploy dependencies/API/frontend in compatible order with backups and ready rollback.
- * 4. Verify public routes, deployed SHA/artifact receipts, mainnet identity, dependency health and correct enabled capabilities. These are release operational checks, not mainnet functional transactions. Mainnet testing funds/transfers are prohibited.
- * 5. Update corresponding existing public/private docs repositories when identified; their absence from the local named-folder scan is a preparation gap, not permission to invent new products. Keep secret values and personal data out of artifacts; no credential rotation is authorized.
- * Verification: Existing CI gates: documentation, backend build/test, frontend build, mobile/adaptive, WebKit/Firefox. Run affected candidate tests and dependent regressions, then deployment receipts/public exposure. No release commands executed here.
- * Acceptance: GO = every applicable operation PASS plus all work packages implemented/verified, no unresolved required issue, all legitimate release changes integrated, and actual public Mainnet release with receipts. No claimed guaranteed runtime correctness.
- * Rollback: Prepare immutable previous artifact, compatible schema rollback/restore, endpoint switches and health thresholds before rollout; rollback unsafe rollout without losing indexed state.
- * IMPLEMENTATION-HANDOFF [WP08] END
+ * Outstanding: WP08 of the Dogecoin mainnet readiness plan. The recorded
+ * manifest must only be regenerated from a qualified source, after the
+ * acceptance rows in the handoff bundle pass.
  */
 /**
  * The protocol roster gate.
