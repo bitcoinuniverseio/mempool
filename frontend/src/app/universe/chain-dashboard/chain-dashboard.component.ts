@@ -56,6 +56,7 @@ import {
   readStatusRail,
 } from '@app/universe/multichain-explorer/multichain-view';
 import { ChainReasonReading, describeChainReasons } from '@app/universe/multichain-explorer/chain-reasons';
+import { ChainReasonListComponent } from '@app/universe/multichain-explorer/chain-reason-list.component';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 import {
@@ -160,13 +161,13 @@ const FEE_BASIS_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-chain-dashboard',
   standalone: true,
-  imports: [RelativeUrlPipe, 
+  imports: [RelativeUrlPipe,
     CommonModule,
     RouterModule,
     ChainTimelineComponent,
     ChainLensComponent,
     ChainHealthDetailsComponent,
-  ],
+   ChainReasonListComponent],
   templateUrl: './chain-dashboard.component.html',
   styleUrls: ['./chain-dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

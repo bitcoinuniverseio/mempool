@@ -52,7 +52,10 @@ describe('independent chain health presentation', () => {
     const row = healthCapability();
     Object.assign(row.health!.node, patch);
     expect(readStatusRail(row, chainProfile('zcash'), NOW).find(item => item.id === 'state')?.value).toBe('Status unknown');
-    expect(healthDiagnostics(row, NOW)[0].observation).toContain('Last known');
+    // Stale or failed evidence must read as the last thing seen, never as a
+    // present-tense check.
+    expect(healthDiagnostics(row, NOW)[0].observation).toContain('Last checked');
+    expect(healthDiagnostics(row, NOW)[0].observation).not.toMatch(/^Checked/);
     expect(healthDiagnostics(row, NOW)[0].checkpoint).toContain('9007199254740993');
   });
   it('does not use a summary sync flag in place of node evidence', () => {
