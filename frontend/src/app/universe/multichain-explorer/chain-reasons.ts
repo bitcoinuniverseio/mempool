@@ -123,6 +123,18 @@ const REASON_COPY: Record<string, ReasonCopy> = {
     text: $localize`:@@universe.reason.reorg-evidence-tail-only:This authority keeps reorganisation evidence for recent blocks only, not for the whole chain.`,
     kind: 'limit',
   },
+  'pending-protocol-coverage-partial': {
+    text: $localize`:@@universe.reason.pending-protocol-coverage-partial:This authority sees some pending transactions but not all of them, so a missing one does not mean it does not exist.`,
+    kind: 'limit',
+  },
+  'pending-protocol-coverage-unknown': {
+    text: $localize`:@@universe.reason.pending-protocol-coverage-unknown:This authority has not stated what pending coverage it offers, so none is assumed.`,
+    kind: 'limit',
+  },
+  'reorg-evidence-unknown': {
+    text: $localize`:@@universe.reason.reorg-evidence-unknown:This authority has not stated what reorganisation evidence it keeps, so none is assumed.`,
+    kind: 'limit',
+  },
   'protocol-qualification-pending': {
     text: $localize`:@@universe.reason.protocol-qualification-pending:Protocol qualification has not been established.`,
     kind: 'fault',
