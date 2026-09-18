@@ -13,6 +13,22 @@ const hash = (value: unknown): boolean => value === null || (typeof value === 's
 const triState = (value: unknown): boolean => value === null || typeof value === 'boolean';
 
 /** Reject unknown versions and malformed/context-mismatched health before any green reading. */
+/*
+ * IMPLEMENTATION-HANDOFF [WP05] BEGIN
+ * Verify actual consumer outcomes and preserve all offered explorer features
+ * Coverage: UI-HEALTH, UI-PROTOCOLS, UI-REGRESSION; defects: V01; functional status: NOT TESTED.
+ * Observed: Source preserves truthful health and network context. Screenshots and API responses establish problems, not complete browser journeys. Fixture-driven tests cannot prove working backend dependencies.
+ * Sources: S-MEMPOOL,S-BACKEND (research-register.json in the server handoff).
+ * Prerequisites: WP01, WP02, WP03, WP04.
+ * 1. Preserve readHealth validation, observationCurrent expiry, network matching and Why diagnostics. Wire any additive per-path evidence through universe.types and shared contracts before altering the health view; keep partial coverage visible alongside availability.
+ * 2. Exercise Dogecoin overview, protocol directory/list/detail, block, transaction, outpoint and address/holdings/history routes against the real candidate API. Resolve fixture IDs from testnet authorities; include empty/error/pending/success states, direct URL, refresh, back, reconnect and network switch with an in-flight request.
+ * 3. Use one existing localhost app port and one browser tab. Capture desktop/mobile and supported light/dark themes, keyboard focus and Why-link detail. Validate links for doginals, drc20, doge-tap and dunes and exact integer formatting.
+ * 4. Retest every inventory row sharing changed contracts, including Bitcoin/Zcash paths and existing mining/statistics/search/portfolio/websocket surfaces. Keep all unexecuted rows NOT TESTED. Do not hide features to reduce denominator.
+ * Verification: mempool/frontend npm test -- src/app/universe/multichain-explorer/chain-health.spec.ts src/app/universe/multichain-explorer/protocol-row-state.spec.ts src/app/universe/multichain-explorer/protocol-index.spec.ts src/app/universe/chain-health.service.spec.ts; node scripts/universe/protocol-contract.mjs (inspect CLI before use). Live synthetic-check.mjs is read-only but broad; run on candidate only with known test IDs.
+ * Acceptance: Real API/UI results persist across refresh/reconnect; no cross-network data, false-ready state, rounding, hidden feature or existing-capability regression. All coverage rows require independent evidence.
+ * Rollback: Retain previous frontend immutable artifact and compatible API contracts; switch back if route/health regressions occur without altering authority truth.
+ * IMPLEMENTATION-HANDOFF [WP05] END
+ */
 export function readHealth(capability: ChainCapabilityEnvelope | null | undefined): UniverseExplorerHealthV2 | null {
   const health: unknown = capability?.health;
   if (!record(health) || health.schemaVersion !== 'universe-explorer-health-v2'
