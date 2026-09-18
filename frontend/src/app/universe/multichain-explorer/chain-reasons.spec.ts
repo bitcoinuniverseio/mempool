@@ -17,6 +17,12 @@ describe('describeChainReason', () => {
     // faults they describe an outage that is not happening.
     expect(describeChainReason('pending-protocol-coverage-unavailable').kind).toBe('limit');
     expect(describeChainReason('reorg-evidence-tail-only').kind).toBe('limit');
+    // The backend derives these from the authority's published coverage
+    // dimensions, so each one must read as a stated limit rather than fall
+    // through to the unstated wording.
+    expect(describeChainReason('pending-protocol-coverage-partial').kind).toBe('limit');
+    expect(describeChainReason('pending-protocol-coverage-unknown').kind).toBe('limit');
+    expect(describeChainReason('reorg-evidence-unknown').kind).toBe('limit');
     expect(describeChainReason('protocol-authority-unavailable').kind).toBe('fault');
   });
 
