@@ -28,6 +28,18 @@ export interface ExplorerProtocolDefinition {
   coverage: ProtocolCoverage | string | null;
 }
 
+/**
+ * What a run concluded about one operation. NOT TESTED is the default and the
+ * only value a descriptor carries without a qualified evidence record behind
+ * it, so it is never a synonym for working.
+ */
+export type ExplorerAcceptance =
+  | 'PASS'
+  | 'FAIL'
+  | 'BLOCKED'
+  | 'NOT TESTED'
+  | 'NOT APPLICABLE';
+
 /** Source-declared handler support, independent of configured authority or E2E acceptance. */
 export interface ExplorerReadOperation {
   id: string;
@@ -35,13 +47,31 @@ export interface ExplorerReadOperation {
   route: string;
   authorityPath: string | null;
   evidence: 'source-contract';
-  acceptance: 'NOT TESTED';
+  acceptance: ExplorerAcceptance;
+}
+
+/**
+ * How many declared operations have been accepted. The denominator counts what
+ * the manifest declares, not what the evidence ledger happens to hold, so a
+ * reader is never shown a share of an unknown total.
+ */
+export interface ExplorerAcceptanceSummary {
+  declared: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  notApplicable: number;
+  notTested: number;
+  /** Records that were present but could not be qualified as evidence. */
+  rejected: number;
 }
 
 export interface ProtocolsResponse {
   registryVersion: string;
   primaryStrip: string[];
   protocols: ExplorerProtocolDefinition[];
+  /** Absent while a deployment predates the acceptance summary. */
+  acceptance?: ExplorerAcceptanceSummary;
 }
 
 export type SourceStatus =
