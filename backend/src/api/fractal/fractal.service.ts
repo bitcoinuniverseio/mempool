@@ -34,6 +34,34 @@ const cat20Unavailable =
  * chosen pair of characters, and a token directory with holders and balances
  * that no indexer had observed.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [TX-07] TX-07-MEMPOOL-FRACTAL-READS
+ * Coverage G17/P-cat20-*; D12/D14. R-FRACTAL-040/R-CAT/R-ARCH.
+ * Verified cause: all seven public read methods unconditionally throw 503. This
+ * is missing implementation, not a problem solved by setting an environment flag.
+ * 1. Add PROPOSED NEW fractal-read.client.ts as a small read-only, per-network
+ * owned-node transport. Reuse existing outbound transport/security conventions
+ * and the read-port contract in backend-apis/src/cat20/fractal-node-read.client.ts;
+ * do not import wallet/signing modules or create another blockchain indexer.
+ * 2. Replace $getTip/$getMempool/$getBlock/$getTransaction throws with validated
+ * owned-node reads. Allowlist only needed read RPC methods, enforce context and
+ * node identity, bound payload/deadline, and map a proven missing tx to null.
+ * Decode raw tx values as exact atomic strings; unavailable fee/prevout is not 0.
+ * 3. Replace $getCat20Tokens/$getCat20Token/$getCat20Holders throws with the
+ * existing first-party index-cat20 read contract, retaining pagination/coverage.
+ * Use authoritative deploy/mint/transfer/burn decisions, never txid suffixes or
+ * current holder balances as transaction effects. Preserve exact types already
+ * in fractal.types.ts and add nullable evidence fields where data is unknown.
+ * 4. Let the overlay summary reader call this owned base-tx read path plus the
+ * CAT authority projection; no circular request back into the summary endpoint.
+ * Separate mainnet/Testnet configuration, credentials and caches. Missing
+ * configuration remains explicit 503; never restore the removed constants.
+ * Depends TX-01/02; coordinate FractalRoutes, frontend API/context and new tx
+ * route. Tests: backend/src/api/fractal/fractal.service.test.ts plus new read-
+ * client tests for all seven methods, wrong chain, timeout, absence, large values,
+ * CAT validity and reorg. Use the existing backend test runner; commands in
+ * COMMANDS.md are verified against package.json. No signing/broadcast needed.
+ */
 export class FractalService {
   /** @asyncSafe */
   public async $getTip(): Promise<{ height: number; hash: string; time: number; network: string }> {

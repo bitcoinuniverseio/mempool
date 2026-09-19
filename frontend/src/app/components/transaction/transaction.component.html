@@ -80,6 +80,24 @@
   <ng-template [ngIf]="!isLoadingTx && !error">
 
     <!-- Universe protocol asset flow -->
+    <!-- IMPLEMENTATION-HANDOFF [TX-06] TX-06-FE-TX-ENTRY
+    Coverage G01/G08/G12/G13; D01/D05. R-USER.
+    1. Pass the explicit selected chain/network and stable base-tx status revision
+    into the flow/summary integration. Derive confirmation/replacement revision
+    from this existing tx state, not a second base-chain request or global window.
+    2. Render the compact summary automatically once txid/context are valid; do
+    not require expanding Flow or clicking an outpoint. Keep native tx loading,
+    HTTP errors, fee/CPFP/RBF/acceleration details and inputs/outputs unchanged.
+    3. Ensure exactly one summary instance here: AssetFlowComponent owns its
+    summary child under TX-06. Its independent request must not wait on a slow
+    outpoint-enrichment request. Hide stale prior-tx data immediately on navigation.
+    4. For Liquid, keep native confidential-asset handling and explicitly state
+    public visibility limits; never send a Liquid txid to a Bitcoin authority.
+    Depends TX-01/05/06 and G16 visibility coverage. Tests: direct deep link,
+    search navigation, reload/back/forward, network switch, confirmation and RBF.
+    Run targeted browser capture on an existing isolated localhost application,
+    not a second frontend instance or another agent's browser session.
+    -->
     <app-universe-asset-flow *ngIf="txId" [txid]="txId"></app-universe-asset-flow>
 
     <!-- CPFP Details -->

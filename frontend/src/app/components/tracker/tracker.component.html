@@ -119,6 +119,20 @@
       </div>
     </div>
 
+    <!-- IMPLEMENTATION-HANDOFF [TX-07] TX-07-FE-TRACKER-UI
+    Coverage G14/G13; D11. R-USER.
+    1. Insert the shared compact transaction-assets component before this panel
+    when an actual transaction/context is known, with explicit network and base
+    status/replacement inputs. Do not make the user click See more details first.
+    2. Keep tracker progress, confirmation time, acceleration receipts and error
+    states. Distinguish missing/unconfirmed base tx from enrichment pending.
+    3. Use the same quantity semantics and logo fallback as detail mode; no
+    tracker-only aggregation or duplicated source fetch logic.
+    Depends TX-06 and TX-07 TrackerModule import. Tests: both tracker modes, direct
+    load, waiting tx, known tx, replacement, back navigation and 360px layout.
+    A source outage must leave the ordinary tracker usable and show an explicit
+    summary retry state; it must not turn into zero tokens or an endless skeleton.
+    -->
     <div class="bottom-panel" *ngIf="!error || waitingForTransaction">
       @if (isLoading) {
         <div class="progress-icon">

@@ -156,6 +156,20 @@
   <!-- ------------------------------------------------------------------ -->
   <!-- Transaction                                                         -->
   <!-- ------------------------------------------------------------------ -->
+  <!-- IMPLEMENTATION-HANDOFF [TX-07] TX-07-FE-CHAIN-UI
+  Coverage G15/G13; D09. R-USER.
+  1. Add the shared automatic transaction summary inside this transaction-only
+  view, before the detailed parties/actions. Pass explicit resolved chain,
+  network, txid and status revision. Keep quantity units/protocol badges visible.
+  2. Preserve the existing outpoint chips, action evidence, ZRC-20 ruleset
+  comparison and public-privacy boundary. No summary for a block/address page
+  unless separately requested; their existing holdings UI remains unchanged.
+  3. Mark known counts partial when any required source is unavailable. Keep
+  missing logo distinct from missing asset evidence and provide one safe fallback.
+  Depends TX-06/TX-07. Tests: Dogecoin/Zcash tx direct load/reload/navigation,
+  shielded-only tx visibility, mixed assets/rulesets, theme and mobile. Same
+  canonical summary contract must produce matching detail/tracker/chain rows.
+  -->
   <ng-container *ngIf="vm.transaction as tx">
 
     <section class="panel tx-status" aria-labelledby="tx-status-heading">

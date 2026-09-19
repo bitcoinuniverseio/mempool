@@ -9,6 +9,31 @@ const ts = require('typescript');
 const ledgerPath = resolve(root, 'docs/acceptance/2026-09-05-inventory.json');
 const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8').replace(/^\uFEFF/, ''));
 const app = resolve(root, 'frontend/src/app');
+/**
+ * IMPLEMENTATION-HANDOFF [TX-08] TX-08-ACCEPTANCE-HARNESS
+ * Coverage ALL summary rows and existing dependent read operations. R-USER.
+ * 1. Extend this existing source-driven inventory with TrackerModule, the new
+ * Fractal tx route and the shared summary entry points. Retain existing rows;
+ * source discovery alone does not make a row PASS or prove an API works.
+ * 2. Add PROPOSED NEW scripts/universe/acceptance-tx-assets.mjs using the existing
+ * browser harness and one dedicated page against one already-running isolated
+ * application. Its case manifest must bind protocol/operation/context/real txid,
+ * authority revision/checkpoint, expected identity/atomic amounts, source readback
+ * and UI assertions. Require real Signet or justified chain Testnet evidence.
+ * 3. Exercise accepted/invalid/candidate/proven-empty, each observed lifecycle
+ * event, exact precision, duplicate positions, metadata failure, pagination,
+ * refresh/reconnect/navigation and network isolation. Read-only cases may reuse
+ * real historical test-network txs; do not invent a wallet/faucet/send requirement.
+ * 4. Use isolated controlled fault tests for deterministic outage/reorg/retry
+ * boundaries. Keep their evidence distinct from public test-network journeys.
+ * Keep every failed/blocked/untested row and prerequisite visible. No fixture
+ * route or mocked authority may be counted as end-to-end acceptance.
+ * 5. Export a final matrix and release gate bound to accepted commits/config,
+ * then execute the existing release process only after every required gate.
+ * Depends TX-01 through TX-07; regression includes tracker/detail views,
+ * address/portfolio consumers, chain pages, media and gateway. The new runner
+ * command is PROPOSED until created; existing commands are in COMMANDS.md.
+ */
 const sources = [
   ['master-page.module.ts', ''], ['app-routing.module.ts', ''],
   ['universe/universe-routing.module.ts', 'protocols'],

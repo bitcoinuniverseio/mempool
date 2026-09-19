@@ -664,6 +664,25 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
       : 'zcash';
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [TX-07] TX-07-FE-CHAIN-STATE
+   * Coverage G15/P-doginals-* /P-drc20-* /P-tap_doge-* /P-dunes-* /P-z*-*;
+   * D09. R-USER/R-ARCH. Existing chain payload has position/action chips but no
+   * shared tx-level count/logo summary.
+   * 1. Wire the shared summary child with context from the resolved route and
+   * transaction envelope. Import UniverseSharedModule into this standalone
+   * component's imports. Do not reuse the Bitcoin-selected-network default.
+   * 2. Reuse the base tx envelope for status changes; cancel/reset the child on
+   * chain/tx/network navigation. Keep all existing chain detail and holdings paths.
+   * 3. Maintain ZRC-20 ruleset identity and privacy notices; never combine two
+   * ruleset balances, or convert public unobservability into a zero inventory.
+   * 4. Backend summary dispatch must use actual Dogecoin/Zcash authorities, not
+   * TransactionFlowService's Bitcoin mempool client. Add reader mapping in TX-07.
+   * Depends TX-01/05/06 and backend chain readers. Tests: existing multichain
+   * component/model tests plus shared-summary integration: same txid on two
+   * chains, wrong network, pending/candidate/invalid actions, reload and errors.
+   * Other pageRequest branches are regression scope, not newly invented workflows.
+   */
   private pageRequest$(
     context: RequestContext
   ): Observable<ChainExplorerPayload | null> {

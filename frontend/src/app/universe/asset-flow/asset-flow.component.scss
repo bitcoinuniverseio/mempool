@@ -1,3 +1,20 @@
+/**
+ * IMPLEMENTATION-HANDOFF [TX-06] TX-06-FE-LAYOUT
+ * Coverage G13; D01. R-USER. Existing theme tokens are the design baseline.
+ * 1. Put summary layout in the proposed transaction-assets component stylesheet:
+ * wrapping header, bounded logo box, flexible name column and exact quantity
+ * column. Use existing --u-* surface/text/border tokens, not a new palette.
+ * 2. At 360px avoid a forced wide table; stack labelled side/effect quantities,
+ * wrap long identifiers, keep exact digits selectable and provide accessible
+ * copy when shortening visually. Do not rely on hover to reveal quantities.
+ * 3. Keep logos dimensioned to avoid layout shift; support missing/broken media,
+ * reduced motion and visible keyboard focus. Announce loading/errors politely
+ * without rereading the entire table on every checkpoint refresh.
+ * 4. Preserve the native transaction flow chart and current detailed flow layout.
+ * Depends TX-06 component. Tests: targeted Angular build plus live screenshots
+ * at 360/768/1440, light/dark, keyboard traversal and contrast audit. Existing
+ * fixture screenshots are styling evidence only, not protocol E2E acceptance.
+ */
 .universe-asset-flow {
   margin: 1.5rem 0;
   padding: 1rem 1.25rem 1.25rem;
