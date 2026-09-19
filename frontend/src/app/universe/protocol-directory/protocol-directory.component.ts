@@ -251,6 +251,26 @@ export class ProtocolDirectoryComponent implements OnInit {
     }
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [FE-COVERAGE-01] | all protocol/operation coverage rows.
+   * Verified: this label trusts coverage from the registry, although the pinned
+   * manifest has 123 NOT TESTED descriptors and seven historical complete rows.
+   * Prerequisite: backend acceptance schema and evidence gate (BE work packages).
+   * 1. Add a typed, network/revision-bound acceptance summary to universe.types.ts
+   *    after its backend contract is agreed; keep runtime readiness independent.
+   * 2. Derive completion from passed/applicable operation counts with evidence,
+   *    never from source ready, a checkpoint, HTTP 200, or a historical string.
+   *    Missing evidence and a zero/unknown denominator must remain unverified.
+   * 3. Share derivation with ProtocolDetailComponent.coverageLabel; expose failed,
+   *    blocked and untested counts without dropping any of the 39 roster IDs.
+   * 4. Extend directory/detail/availability specs for historical complete plus
+   *    NOT TESTED, stale authority plus accepted reads, revision/network mismatch,
+   *    and a fully evidenced denominator. Run npm test -- in frontend with those
+   *    three spec paths, then AOT and desktop/mobile theme checks for UI changes.
+   * Acceptance requires real supported Signet/Testnet readback evidence, separate
+   * from these unit checks. No production config/migration is changed here.
+   * Roll back frontend and backend contract versions together if incompatible.
+   */
   coverageLabel(protocol: ExplorerProtocolDefinition): string {
     const coverage = protocol.coverage;
     if (coverage === null || coverage === undefined || coverage === '') {
