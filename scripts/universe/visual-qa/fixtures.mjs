@@ -337,6 +337,15 @@ export const detailFixtures = {
   '/api/v1/mining/pools/1m': fixtures['/api/v1/mining/pools/1w'],
   '/api/v1/mining/pools/3m': fixtures['/api/v1/mining/pools/1w'],
   '/api/v1/mining/pools/6m': fixtures['/api/v1/mining/pools/1w'],
+  // Every window the pools panel can ask for. 1m was missing, so the transaction
+  // page's request fell through to the static server, was answered with
+  // index.html, and failed JSON parsing: an uncaught HttpErrorResponse on every
+  // transaction screenshot, in both themes and both viewports.
+  '/api/v1/mining/pools/24h': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/3d': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/1m': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/3m': fixtures['/api/v1/mining/pools/1w'],
+  '/api/v1/mining/pools/6m': fixtures['/api/v1/mining/pools/1w'],
   '/api/v1/mining/pools/1y': fixtures['/api/v1/mining/pools/1w'],
   '/api/v1/mining/pools/2y': fixtures['/api/v1/mining/pools/1w'],
   '/api/v1/mining/pools/3y': fixtures['/api/v1/mining/pools/1w'],
@@ -461,6 +470,15 @@ export const detailFixtures = {
   '/api/v1/mining/reward-stats/144': { startBlock: 887_268, endBlock: 887_412, totalReward: '46_800_000_000'.replace(/_/g, ''), totalFee: '1_400_000_000'.replace(/_/g, ''), totalTx: '412_004'.replace(/_/g, '') },
   '/api/v1/mining/blocks/fees/1w': [{ avgHeight: 887_000, timestamp: 1_772_000_000, avgFees: 12_884_901 }],
   '/api/v1/difficulty-adjustments/1m': [[1_772_000_000, 887_000, 1.1e14, 3.18]],
+  // The historical price the address and transaction pages ask for when they
+  // show a fiat figure beside a base-coin amount. Missing, so it was answered
+  // with index.html and raised an uncaught parse failure on every address
+  // screenshot. The asset panels state no fiat value of their own; this is the
+  // surrounding page's request.
+  '/api/v1/historical-price': {
+    prices: [{ time: 1_772_100_000, USD: 84_000, EUR: 78_000, GBP: 66_000, CAD: 114_000, CHF: 74_000, AUD: 126_000, JPY: 12_600_000 }],
+    exchangeRates: { USDEUR: 0.93, USDGBP: 0.79, USDCAD: 1.36, USDCHF: 0.88, USDAUD: 1.5, USDJPY: 150 },
+  },
   '/api/v1/capabilities': {
     schemaVersion: 'capabilities-v1',
     features: {
