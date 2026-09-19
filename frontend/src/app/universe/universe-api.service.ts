@@ -276,6 +276,31 @@ export class UniverseApiService {
   }
 
   /** Protocol asset flow for one transaction. Never cached: state changes as the transaction confirms. */
+  /**
+   * IMPLEMENTATION-HANDOFF [TX-05] TX-05-FE-API
+   * Coverage G01/G08-G12/P-*-api; D05. R-ANGULAR-20/R-ARCH.
+   * Current flow has no component-owned deadline and the observed public read
+   * exceeded 15 seconds. Type parameters do not validate untrusted responses.
+   * 1. Add getTransactionAssets$(context,txid,paging?) for the new same-origin
+   * transactions/:txid/assets contract. Use explicit validated chain/network;
+   * retain requestForNetwork context checks and add the TX-01 summary decoder.
+   * 2. Set an eight-second client deadline around the complete summary request
+   * (the backend target is five seconds). Convert timeout/unconfigured/partial/
+   * not-found to distinct states. Never catch a failure into assets:[] or zero.
+   * 3. SwitchMap on txid/context/status-revision and cancel prior HTTP work.
+   * Share one request among sibling views for a context/txid/revision; clear it
+   * on context changes, confirmation, replacement or reorg. Do not use a global
+   * shareReplay that can leak a mainnet payload into Signet or another chain.
+   * 4. Retry is user-triggered plus a bounded refresh on actual status/checkpoint
+   * changes; honor retryAfter, no infinite retry or per-logo request waterfall.
+   * Expose pagination without changing the counts to the number of loaded rows.
+   * Depends TX-01/02/04 backend; keep getTransactionFlow$ independent so a slow
+   * legacy flow cannot hold the compact summary hostage. Existing browser/SSR
+   * origins and self-host-only transport remain unchanged.
+   * Tests: universe-api.service.spec.ts and new summary decoder tests: cancellation,
+   * deadline, wrong network, invalid txid, partial sources, replay isolation,
+   * back/forward, pagination and no duplicate subscriptions.
+   */
   getTransactionFlow$(txid: string): Observable<ExplorerTransactionAssetFlow> {
     return this.scopedRequest<ExplorerTransactionAssetFlow>(
       this.apiBaseUrl + '/api/v1/universe/transactions/' + txid

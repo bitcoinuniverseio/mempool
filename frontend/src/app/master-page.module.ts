@@ -190,6 +190,27 @@ export const masterPageRoutes: Routes = [
         data: { networks: ['bitcoin'] },
       },
       {
+        /**
+         * IMPLEMENTATION-HANDOFF [TX-07] TX-07-FE-FRACTAL-ROUTE
+         * Coverage G17/P-cat20-*; D12. R-CAT/R-USER.
+         * Current routes expose Fractal dashboard and CAT20 token pages but no tx route;
+         * UniverseApiService.getFractalTx$ already targets /api/v1/fractal/tx/:txid.
+         * 1. Add PROPOSED NEW fractal/fractal-transaction.component.ts/html/spec.ts
+         * and a literal fractal/tx/:txid route before broad fallbacks. Reuse the existing
+         * Fractal API for base tx and shared summary for CAT20 evidence; do not build
+         * another chain dashboard or wallet/transaction constructor.
+         * 2. Bind Fractal network explicitly in both API and summary requests. Validate
+         * that the existing backend Fractal service supports that context; add the
+         * missing context contract alongside its actual handler if it does not.
+         * 3. Link authoritative CAT20 transaction references to this route; preserve
+         * token detail routes and never route CAT20 txids to Bitcoin /tx by accident.
+         * 4. Keep only advertised/read-only scope. For proof-dependent RGB/Taproot
+         * Assets and Wildkin routes elsewhere in this file, reconcile public authority
+         * read coverage under G16; a commitment is not public proof of token quantity.
+         * Depends TX-01/05/06/07 backend Fractal reader. Tests: new route/component
+         * spec, existing fractal.component.spec.ts, direct/reload/back and wrong-network
+         * CAT20 Testnet read journey. Confirm actual supported Testnet, never assume Signet.
+         */
         path: 'fractal/cat20',
         loadComponent: () => import('@app/universe/fractal/cat20-center.component').then(m => m.Cat20CenterComponent),
         data: { networks: ['bitcoin'] },

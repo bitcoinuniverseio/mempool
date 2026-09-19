@@ -355,6 +355,29 @@ const OVERLAY_CHAIN_PREFIXES = [
  * where the address family answers that it cannot be served rather than not
  * existing.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [TX-08] TX-08-GATEWAY-MEDIA
+ * Coverage G05/G12/G18; D07/D13. R-ARCH/R-OWASP-SSRF.
+ * Current /api/v1/universe/* already reaches the overlay, so the new summary
+ * API needs no parallel proxy. /universe-media/v1/objects/* has no route here
+ * and falls through to static SPA handling; this is a source-proven wiring gap.
+ * 1. Add a narrow read-only content-hash media route to the configured first-
+ * party media origin or an overlay-owned safe media read handler. Permit only
+ * GET/HEAD, validate the hash/path and response MIME/size, and reject redirects.
+ * Do not add a generic URL proxy or expose media ingestion/admin endpoints.
+ * 2. Preserve CSP self-only image policy. New API returns direct object URLs,
+ * not mapped-content 307 redirects (proxy deliberately refuses redirects).
+ * 3. Preserve root overlay queries with explicit chain/network and all existing
+ * network-prefixed base APIs/WebSockets. Do not route /signet through mainnet.
+ * 4. Keep the five-second summary-service/eight-second client deadlines within
+ * existing gateway limits. No retries of writes; abort upstream work on client
+ * close and do not leak tokens/headers into diagnostics.
+ * Depends TX-04/05. Tests: node --test scripts/universe/gateway.test.mjs
+ * scripts/universe/gateway-https.test.mjs scripts/universe/gateway-overlay-handoff.test.mjs;
+ * add media routing, wrong hash/MIME, redirect refusal, methods, request abort,
+ * network query forwarding and no HTML fallback for a missing image.
+ * Release accepted gateway artifact using existing socket handover/rollback.
+ */
 export function routeFor(pathname, originalUrl, acceptsHtml = false) {
   if (pathname === '/v2/universe' || pathname.startsWith('/v2/universe/')) {
     return { upstream: null, status: 404 };
