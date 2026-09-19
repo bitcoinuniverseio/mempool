@@ -17,8 +17,13 @@ import { ɵresolveComponentResources as resolveComponentResources } from '@angul
  * resolve to nothing: they are Sass, which is the build's job to compile, and no
  * assertion here depends on a computed style.
  */
-export async function resolveTemplates(specUrl: string): Promise<void> {
-  const base = dirname(fileURLToPath(specUrl));
+export async function resolveTemplates(
+  specUrl: string,
+  relativeBase = '.',
+): Promise<void> {
+  // A component's templateUrl is relative to the component, not to whichever
+  // spec renders it, so a spec in another directory says where to look.
+  const base = resolve(dirname(fileURLToPath(specUrl)), relativeBase);
   await resolveComponentResources((url: string) => {
     if (url.endsWith('.scss') || url.endsWith('.css')) {
       return Promise.resolve({ text: () => Promise.resolve('') } as Response);
