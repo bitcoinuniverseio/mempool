@@ -47,28 +47,6 @@ const COMMIT_SHA = /^[0-9a-f]{7,64}$/;
  * frontend and a backend reporting different builds a detectable fault rather
  * than an open question.
  */
-/**
- * IMPLEMENTATION-HANDOFF [TX-08] TX-08-RELEASE-GATE
- * Coverage G18; all required coverage rows. R-USER/R-ARCH.
- * 1. Extend the manifest/build proof to record accepted summary schema, backend
- * and frontend revisions, metadata-service revision, projection schema/version,
- * and per-context source capabilities. Do not equate registry labels or HTTP200
- * with functional acceptance; keep test evidence bound to actual code/config.
- * 2. Add read-only preflight assertions for the new summary route, safe logo
- * object route, production context and reader inventory. Preserve every existing
- * release gate and unrelated capability. No automatic cutover before GO.
- * 3. Functional GO requires every applicable required row PASS on Signet or
- * justified chain Testnet with real authority/API/UI evidence, plus isolated
- * fault tests. A fixture screenshot or baseline unit pass is not end-to-end GO.
- * 4. Then execute the established release.sh install/preflight/cutover and the
- * backend overlay release workflow for their accepted revisions. Capture actual
- * receipts, artifact/deployed identities and public exposure; rollback via the
- * known prior release if unsafe. No mainnet test transactions/funds are required.
- * Depends all TX packages. Tests: node --test scripts/universe/release-manifest.test.mjs
- * scripts/universe/release-gates.test.mjs scripts/universe/workflow-safety.test.mjs.
- * Read source release.sh usage first; deployment commands are not executed in
- * this preparation. Never merge unknown concurrent work or bypass release gates.
- */
 export function buildManifest({ commit, builtAt }) {
   if (!COMMIT_SHA.test(String(commit ?? ''))) {
     throw new Error(`release manifest needs a commit, got ${JSON.stringify(commit ?? null)}`);

@@ -134,29 +134,6 @@ export interface BackendInfo {
 
 // --- Transaction asset flow ---
 
-/**
- * IMPLEMENTATION-HANDOFF [TX-01] TX-01-FE-CONTRACT
- * Coverage G01-G07/P-*-identity; D01/D02. R-USER/R-ORD-029.
- * Current frontend asset refs omit backend decimals and have no logo or summary.
- * 1. Mirror the new backend summary-v1 contract in a PROPOSED NEW
- * transaction-assets/transaction-assets.types.ts and export it here. Keep legacy
- * flow and chain payloads compatible; add optional decimals only where sourced.
- * 2. Preserve quantities as strings and unknown metadata as null. Model known
- * counts separately from a nullable complete total; separate fungible types,
- * collectible items, other assets, candidate actions and protocol coverage.
- * 3. Use [chain,network,protocolId,assetId,ruleset] identity throughout rendering.
- * Never key by ticker or sum alternate rulesets. Each displayed quantity must
- * state whether it is input, output or an authoritative protocol effect.
- * 4. Add a runtime summary decoder, not just an HttpClient generic: validate
- * schema/context/txid, non-negative integer strings, decimals bounds, safe
- * relative media URL, count consistency and unique row identities. Unknown
- * fields may survive version evolution; malformed required data is an error.
- * Depends backend TX-01; consumed by TX-06 component and UniverseApiService.
- * Tests: PROPOSED NEW transaction-assets/transaction-assets.types.spec.ts with
- * large quantities, fractional precision, wrong context, duplicate identities,
- * invalid URLs and partial payloads; keep universe-api.service.spec.ts passing.
- * No wallet signing, price conversion or new token balance semantics belongs here.
- */
 export interface ExplorerAssetRef {
   protocolId: string;
   assetId: string;

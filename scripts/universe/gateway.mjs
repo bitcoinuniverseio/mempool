@@ -325,6 +325,28 @@ const HASHED_ASSET = /\.[0-9a-f]{16,}\.(?:js|css|woff2?|ttf|png|jpe?g|svg|webp|a
  * same `/api/v1/` prefix the backend uses, so the gateway has to name them
  * explicitly: anything not listed here still belongs to the Bitcoin backend.
  */
+/**
+ * The read-only content-addressed media object path.
+ *
+ * Only this exact shape is routed: the prefix plus one sha256 digest, nothing
+ * else. A digest is the whole request, so there is no path to traverse and no
+ * parameter to point somewhere else. Media ingestion and administrative routes
+ * under the same family are deliberately not matched here, and neither is any
+ * other path: this is not a general URL proxy.
+ */
+const MEDIA_OBJECT_PATH = /^\/universe-media\/v1\/objects\/[0-9a-f]{64}$/;
+
+/**
+ * Where content-addressed media objects are read from.
+ *
+ * Unset means the deployment serves no curated media, and the route answers
+ * 404 rather than falling through to the single page application, which would
+ * hand an <img> tag an HTML document.
+ */
+const MEDIA = process.env.UNIVERSE_GATEWAY_MEDIA
+  ? new URL(process.env.UNIVERSE_GATEWAY_MEDIA)
+  : null;
+
 const OVERLAY_CHAIN_PREFIXES = [
   '/api/v1/chains',
   '/api/v1/bitcoin',
@@ -354,29 +376,6 @@ const OVERLAY_CHAIN_PREFIXES = [
  * its own `/api/v1/` prefix. That is a deployment reading Bitcoin Core alone,
  * where the address family answers that it cannot be served rather than not
  * existing.
- */
-/**
- * IMPLEMENTATION-HANDOFF [TX-08] TX-08-GATEWAY-MEDIA
- * Coverage G05/G12/G18; D07/D13. R-ARCH/R-OWASP-SSRF.
- * Current /api/v1/universe/* already reaches the overlay, so the new summary
- * API needs no parallel proxy. /universe-media/v1/objects/* has no route here
- * and falls through to static SPA handling; this is a source-proven wiring gap.
- * 1. Add a narrow read-only content-hash media route to the configured first-
- * party media origin or an overlay-owned safe media read handler. Permit only
- * GET/HEAD, validate the hash/path and response MIME/size, and reject redirects.
- * Do not add a generic URL proxy or expose media ingestion/admin endpoints.
- * 2. Preserve CSP self-only image policy. New API returns direct object URLs,
- * not mapped-content 307 redirects (proxy deliberately refuses redirects).
- * 3. Preserve root overlay queries with explicit chain/network and all existing
- * network-prefixed base APIs/WebSockets. Do not route /signet through mainnet.
- * 4. Keep the five-second summary-service/eight-second client deadlines within
- * existing gateway limits. No retries of writes; abort upstream work on client
- * close and do not leak tokens/headers into diagnostics.
- * Depends TX-04/05. Tests: node --test scripts/universe/gateway.test.mjs
- * scripts/universe/gateway-https.test.mjs scripts/universe/gateway-overlay-handoff.test.mjs;
- * add media routing, wrong hash/MIME, redirect refusal, methods, request abort,
- * network query forwarding and no HTML fallback for a missing image.
- * Release accepted gateway artifact using existing socket handover/rollback.
  */
 export function routeFor(pathname, originalUrl, acceptsHtml = false) {
   if (pathname === '/v2/universe' || pathname.startsWith('/v2/universe/')) {
@@ -411,6 +410,22 @@ export function routeFor(pathname, originalUrl, acceptsHtml = false) {
     return overlay.portfolioV2
       ? { upstream: overlay.upstream, path: originalUrl, dynamicOverlay: true }
       : { upstream: null, status: 404 };
+  }
+  // Token logos. Without this the path falls through to the static single
+  // page application, so a missing image renders as an HTML document rather
+  // than a 404 the browser can treat as a broken image.
+  if (MEDIA_OBJECT_PATH.test(pathname)) {
+    if (!MEDIA) {
+      return { upstream: null, status: 404 };
+    }
+    // The digest is the entire request; any query string is discarded rather
+    // than forwarded, so nothing a caller appends can change what is served.
+    return { upstream: MEDIA, path: pathname, mediaObject: true };
+  }
+  if (pathname.startsWith('/universe-media/')) {
+    // Every other route in this family, ingestion and administration included,
+    // is refused at the edge rather than proxied.
+    return { upstream: null, status: 404 };
   }
   if (pathname === '/api/v1/zcash/privacy' || pathname.startsWith('/api/v1/zcash/privacy/')) {
     return { upstream: BACKEND, path: originalUrl };

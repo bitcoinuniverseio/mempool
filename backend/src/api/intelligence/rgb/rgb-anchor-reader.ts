@@ -2,23 +2,6 @@ import { Transaction } from 'bitcoinjs-lib';
 import { WorkbenchCoreReader, ownedWorkbenchCore } from '../workbench/workbench-core';
 export class RgbEvidenceError extends Error { constructor(public status: number, message: string) { super(message); } }
 /** Public transaction resolver only: private RGB consignments never reach this API. */
-/**
- * IMPLEMENTATION-HANDOFF [TX-07] TX-07-RGB-VISIBILITY
- * Coverage G16/T-rgb-*; R-USER and actual proof-boundary contract.
- * 1. Preserve this existing RGB surface in the scope inventory. An anchor or
- * syntactic commitment is not a verified asset identity or a fungible quantity.
- * 2. Only add RGB summary facts through an authorized, validated public state/
- * proof reader scoped to network, contract and anchor tx. If the evidence is
- * not public or not available, emit that coverage state, never a zero amount
- * or a guessed one-token count. Do not move private consignments into a public
- * shared cache, logs, screenshots or browser response.
- * 3. Keep existing RGB validation/anchor routes and private user flows intact;
- * this is read-only summary integration, not a new wallet or issuance product.
- * Depends TX-01/02/06; tests: rgb-anchor-reader.test.ts and summary tests for
- * candidate-only anchor, validated public state, absent/private proof, wrong
- * network and cache separation. Protocol-version/proof-reader availability
- * remains an explicit prerequisite until its actual source contract is checked.
- */
 export class RgbAnchorReader {
   constructor(private core: WorkbenchCoreReader = ownedWorkbenchCore) {}
   /** @asyncUnsafe rejections propagate to the caller, which handles them. */

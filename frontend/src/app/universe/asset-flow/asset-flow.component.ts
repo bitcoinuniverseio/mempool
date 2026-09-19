@@ -34,31 +34,6 @@ export class AssetFlowComponent implements OnChanges {
 
   constructor(private universeApiService: UniverseApiService) {}
 
-  /**
-   * IMPLEMENTATION-HANDOFF [TX-06] TX-06-FE-LIFECYCLE
-   * Coverage G01/G02/G08-G12; D01/D05/D08. R-USER/R-ANGULAR-20.
-   * Current ngOnChanges loads detailed flow only; plainSummary counts position
-   * rows/actions, raw groupDigits ignores decimals, and some UI keys omit protocol.
-   * 1. Add PROPOSED NEW transaction-assets/transaction-assets.component.ts/html/
-   * scss/spec.ts, with explicit tx/context/status inputs and its own summary
-   * request state. Embed it before this detailed flow, not behind flow success.
-   * 2. Keep this component's flow evidence and inputs/outputs. Add a bounded
-   * flow timeout and explicit Retry; clear old state on tx/network change. Refresh
-   * on an actual confirmation/reorg/replacement revision, not every render/tick.
-   * 3. Replace assetId-only transfer and track-position comparisons with full
-   * protocol-aware identity (and ruleset where applicable). Do not claim a known
-   * transfer from positions whose state/evidence is conflicting or unknown.
-   * 4. The summary child formats exact quantities using decimal string arithmetic;
-   * missing decimals is labelled atomic units or unavailable, never whole tokens.
-   * Display explicit output/input/effect labels and never add unlike quantities.
-   * 5. Keep metadata optional: a logo failure has one deterministic protocol-icon
-   * fallback and cannot hide a token row or reset an accepted count.
-   * Depends TX-01/04/05; declare child in UniverseSharedModule, not a lazy page
-   * module. Tests: asset-flow.component.spec.ts and new child spec: duplicate
-   * outpoints, mixed protocols with identical IDs, candidate/invalid/partial
-   * states, timeout/retry, repeated navigation, confirmation and teardown.
-   * Preserve the native BTC flow, fee details and explorer links.
-   */
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes.txid || !this.txid) {
       return;

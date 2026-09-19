@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 
 // Importing the gateway must not open a socket.
 process.env.UNIVERSE_GATEWAY_NO_LISTEN = '1';
+// A media origin is configured so the content-addressed object route can be
+// exercised; the unconfigured case is asserted by its own route test.
+process.env.UNIVERSE_GATEWAY_MEDIA = 'http://127.0.0.1:8997';
 const { routeFor, websocketUpstreamFor, inheritedListenerFd, contentSecurityPolicy } =
   await import('./gateway.mjs');
 
@@ -15,6 +18,7 @@ const { routeFor, websocketUpstreamFor, inheritedListenerFd, contentSecurityPoli
 
 const OVERLAY_PORT = '3400';
 const BACKEND_PORT = '8996';
+const MEDIA_PORT = '8997';
 
 function port(route) {
   return route === null ? null : route.upstream.port;
@@ -551,4 +555,41 @@ test('a network socket reaches that network backend with the prefix removed, or 
   // Root sockets are unchanged.
   assert.equal(withNetworks.websocketRouteFor('/api/v1/ws').upstream.port, BACKEND_PORT);
   assert.equal(withNetworks.websocketRouteFor('/api/v1/universe/ws').upstream.port, OVERLAY_PORT);
+});
+
+test('a content-addressed media object is routed to the media origin only', () => {
+  const hash = 'a'.repeat(64);
+  const path = `/universe-media/v1/objects/${hash}`;
+  const route = routeFor(path, `${path}?cache=bust`);
+  // A digest is the entire request. The query string is discarded rather than
+  // forwarded, so nothing a caller appends changes what is served.
+  assert.equal(route.path, path);
+  assert.equal(route.mediaObject, true);
+  assert.equal(route.upstream.port, MEDIA_PORT);
+});
+
+test('a malformed or absent media digest is a 404, never the application shell', () => {
+  for (const path of [
+    '/universe-media/v1/objects/',
+    '/universe-media/v1/objects/not-a-digest',
+    `/universe-media/v1/objects/${'a'.repeat(63)}`,
+    `/universe-media/v1/objects/${'a'.repeat(65)}`,
+    `/universe-media/v1/objects/${'A'.repeat(64)}`,
+    `/universe-media/v1/objects/${'a'.repeat(64)}/../../etc/passwd`,
+  ]) {
+    // Returning the single page application here would hand an <img> tag an
+    // HTML document instead of a broken image.
+    assert.deepEqual(routeFor(path, path), { upstream: null, status: 404 });
+    assert.deepEqual(routeFor(path, path, true), { upstream: null, status: 404 });
+  }
+});
+
+test('media ingestion and administration are refused at the edge, not proxied', () => {
+  for (const path of [
+    '/universe-media/v1/ingest',
+    '/universe-media/v1/assets/runes/UNCOMMON.GOODS',
+    '/universe-media/internal/jobs',
+  ]) {
+    assert.deepEqual(routeFor(path, path), { upstream: null, status: 404 });
+  }
 });

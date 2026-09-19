@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take, timeout } from 'rxjs';
+import { TransactionAssetSummary, decodeTransactionAssetSummary } from './transaction-assets/transaction-assets.types';
 import { StateService } from '@app/services/state.service';
 import { ProtocolPageKind, readProtocolFailure, readProtocolPage } from './universe-protocol-contract';
 import { chainNetwork } from './chain-network';
@@ -96,6 +97,12 @@ import { OwnerKeyService } from '@app/universe/intelligence-platform/owner-key.s
 
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
+/**
+ * The client deadline for one summary read, outside the backend's own five
+ * second budget so a slow dependency surfaces as a retryable timeout here.
+ */
+export const UNIVERSE_SUMMARY_DEADLINE_MS = 8_000;
+
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
 
 /** The chains the picker lists, each read from its own network. */
@@ -276,34 +283,34 @@ export class UniverseApiService {
   }
 
   /** Protocol asset flow for one transaction. Never cached: state changes as the transaction confirms. */
-  /**
-   * IMPLEMENTATION-HANDOFF [TX-05] TX-05-FE-API
-   * Coverage G01/G08-G12/P-*-api; D05. R-ANGULAR-20/R-ARCH.
-   * Current flow has no component-owned deadline and the observed public read
-   * exceeded 15 seconds. Type parameters do not validate untrusted responses.
-   * 1. Add getTransactionAssets$(context,txid,paging?) for the new same-origin
-   * transactions/:txid/assets contract. Use explicit validated chain/network;
-   * retain requestForNetwork context checks and add the TX-01 summary decoder.
-   * 2. Set an eight-second client deadline around the complete summary request
-   * (the backend target is five seconds). Convert timeout/unconfigured/partial/
-   * not-found to distinct states. Never catch a failure into assets:[] or zero.
-   * 3. SwitchMap on txid/context/status-revision and cancel prior HTTP work.
-   * Share one request among sibling views for a context/txid/revision; clear it
-   * on context changes, confirmation, replacement or reorg. Do not use a global
-   * shareReplay that can leak a mainnet payload into Signet or another chain.
-   * 4. Retry is user-triggered plus a bounded refresh on actual status/checkpoint
-   * changes; honor retryAfter, no infinite retry or per-logo request waterfall.
-   * Expose pagination without changing the counts to the number of loaded rows.
-   * Depends TX-01/02/04 backend; keep getTransactionFlow$ independent so a slow
-   * legacy flow cannot hold the compact summary hostage. Existing browser/SSR
-   * origins and self-host-only transport remain unchanged.
-   * Tests: universe-api.service.spec.ts and new summary decoder tests: cancellation,
-   * deadline, wrong network, invalid txid, partial sources, replay isolation,
-   * back/forward, pagination and no duplicate subscriptions.
-   */
   getTransactionFlow$(txid: string): Observable<ExplorerTransactionAssetFlow> {
     return this.scopedRequest<ExplorerTransactionAssetFlow>(
       this.apiBaseUrl + '/api/v1/universe/transactions/' + txid
+    );
+  }
+
+  /**
+   * The compact transaction asset summary for one transaction.
+   *
+   * Deliberately independent of {@link getTransactionFlow$}: the summary is the
+   * thing a page shows first, and the observed detailed flow took twenty one
+   * seconds against a base read of one. An eight second client deadline sits
+   * outside the backend's five second one, so a stalled dependency produces an
+   * explicit timeout the user can retry rather than an open-ended skeleton.
+   *
+   * The response is decoded, not merely typed: a mismatched chain, network or
+   * txid is an error, so a late answer for a previous transaction can never be
+   * rendered as this one's inventory. A failure is never caught into an empty
+   * asset list.
+   */
+  getTransactionAssets$(txid: string, chain = 'bitcoin'): Observable<TransactionAssetSummary> {
+    return this.chainNetwork$(chain).pipe(
+      switchMap((network) => this.requestForNetwork<unknown>(
+        this.apiBaseUrl + '/api/v1/universe/transactions/' + txid + '/assets', network, undefined, chain,
+      ).pipe(
+        timeout(UNIVERSE_SUMMARY_DEADLINE_MS),
+        map((value) => decodeTransactionAssetSummary(value, { chain, network, txid })),
+      )),
     );
   }
 

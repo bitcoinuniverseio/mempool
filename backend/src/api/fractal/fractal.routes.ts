@@ -57,24 +57,6 @@ class FractalRoutes {
     }
   }
 
-  /**
-   * IMPLEMENTATION-HANDOFF [TX-07] TX-07-MEMPOOL-FRACTAL-ROUTES
-   * Coverage G17/P-cat20-api/P-cat20-network; D14. R-FRACTAL-040.
-   * 1. Validate explicit network on every Fractal read and pass it to the per-
-   * network TX-07 service, not a mutable global singleton selection. Keep legacy
-   * omitted-network mainnet behavior only as a documented compatibility default;
-   * the new summary and Fractal tx UI must always send context explicitly.
-   * 2. Keep 404 only for proven absence and typed 503 for unconfigured/unavailable
-   * sources; distinguish malformed input/unsupported network before any RPC call.
-   * Never expose a raw RPC method, credentials, arbitrary origin or signing route.
-   * 3. Extend getFractalTx$ and all existing Fractal consumers together with the
-   * context-aware response contract. Preserve tip/mempool/block/CAT reads under
-   * this existing gateway route rather than adding a duplicate public API family.
-   * Depends TX-07 FractalService and TX-05 summary dispatch. Tests: new route
-   * integration cases for validation/statuses plus fractal.service.test.ts and
-   * Fractal frontend route tests. Verify actual deployed node version/context
-   * against pinned release metadata before Mainnet release, not by API label alone.
-   */
   private async $getTransaction(req: Request, res: Response): Promise<void> {
     try {
       const tx = await fractalService.$getTransaction(req.params.txid);

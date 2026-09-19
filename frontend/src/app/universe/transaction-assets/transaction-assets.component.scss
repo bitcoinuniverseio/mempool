@@ -1,0 +1,231 @@
+/**
+ * Layout for the compact transaction asset summary.
+ *
+ * Uses the existing --u-* surface, text and border tokens rather than a new
+ * palette, so the summary reads as part of the page it sits above in both
+ * themes. At narrow widths the table stacks instead of forcing a horizontal
+ * scroll, and every exact quantity stays fully visible and selectable: a
+ * quantity revealed only on hover is not a quantity a user can check.
+ */
+
+.universe-transaction-assets {
+  margin: 1.5rem 0 0;
+  padding: 1rem 1.25rem 1.25rem;
+  background: var(--bg, var(--u-surface-raised));
+  border-radius: 4px;
+
+  .summary-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+
+    h2 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+  }
+
+  .summary-count {
+    font-size: 0.9rem;
+    color: var(--u-text-muted, #9aa0a6);
+  }
+
+  .summary-breakdown {
+    font-size: 0.8rem;
+    color: var(--u-text-muted, #9aa0a6);
+  }
+
+  .summary-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+
+    .skeleton-bar {
+      display: block;
+      height: 1.25rem;
+      border-radius: 3px;
+      background: var(--u-surface-sunken, rgba(255, 255, 255, 0.06));
+    }
+  }
+
+  .summary-notice {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    color: var(--u-text-muted, #9aa0a6);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .summary-retry {
+    background: transparent;
+    border: 1px solid var(--u-border, rgba(255, 255, 255, 0.2));
+    border-radius: 3px;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 0.15rem 0.6rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus, #4c9aff);
+      outline-offset: 2px;
+    }
+  }
+
+  .gap-list {
+    word-break: break-word;
+    font-size: 0.75rem;
+  }
+
+  .summary-table {
+    width: 100%;
+    margin-top: 0.75rem;
+    border-collapse: collapse;
+    table-layout: auto;
+
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      padding: 0.45rem 0.5rem;
+      border-bottom: 1px solid var(--u-border, rgba(255, 255, 255, 0.08));
+      font-weight: normal;
+    }
+
+    thead th {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: var(--u-text-muted, #9aa0a6);
+    }
+  }
+
+  .asset-cell {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+  }
+
+  .asset-logo {
+    /* Fixed box in both states, so a late or failed image cannot shift the row. */
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+
+    img,
+    .asset-logo-fallback {
+      width: 24px;
+      height: 24px;
+      display: block;
+      border-radius: 3px;
+    }
+
+    .asset-logo-fallback {
+      background: var(--u-surface-sunken, rgba(255, 255, 255, 0.08));
+      border: 1px solid var(--u-border, rgba(255, 255, 255, 0.15));
+    }
+  }
+
+  .asset-identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .asset-name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .asset-id,
+  .asset-ruleset,
+  .asset-kind {
+    font-size: 0.75rem;
+    color: var(--u-text-muted, #9aa0a6);
+    overflow-wrap: anywhere;
+  }
+
+  .protocol-badge {
+    display: inline-block;
+    padding: 0.05rem 0.4rem;
+    border: 1px solid var(--u-border, rgba(255, 255, 255, 0.2));
+    border-radius: 3px;
+    font-size: 0.75rem;
+  }
+
+  .quantity-cell {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .quantity-exact,
+  .quantity-atomic {
+    /* The full digits stay selectable; nothing is truncated behind a hover. */
+    overflow-wrap: anywhere;
+    user-select: text;
+  }
+
+  .quantity-units,
+  .quantity-partial,
+  .quantity-unavailable,
+  .quantity-ticker {
+    display: inline-block;
+    font-size: 0.72rem;
+    color: var(--u-text-muted, #9aa0a6);
+  }
+
+  .summary-effects {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--u-text-muted, #9aa0a6);
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      padding: 0.15rem 0;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .universe-transaction-assets {
+    padding: 0.85rem;
+
+    /* Stacked rows rather than a table that scrolls sideways at 360px. */
+    .summary-table,
+    .summary-table tbody,
+    .summary-table tr,
+    .summary-table td,
+    .summary-table th {
+      display: block;
+      width: auto;
+    }
+
+    .summary-table thead {
+      display: none;
+    }
+
+    .summary-table tr {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--u-border, rgba(255, 255, 255, 0.08));
+    }
+
+    .summary-table td,
+    .summary-table th {
+      border-bottom: 0;
+      padding: 0.15rem 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .universe-transaction-assets .skeleton-bar {
+    animation: none;
+  }
+}
