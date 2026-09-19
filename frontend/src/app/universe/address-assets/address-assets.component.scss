@@ -114,3 +114,31 @@
       'outputs outputs';
   }
 }
+
+/* IMPLEMENTATION-HANDOFF [UI-WP05:ADDRESS-LAYOUT] 2026-09-19
+ * Coverage C22-C32/C33-C44; defects F02/F04. Preparation only.
+ * Verified: the quantity column is max-content on desktop AND below 575px;
+ * an arbitrary-precision integer can therefore set the row's intrinsic width.
+ * All output identifiers are expanded by default, creating unbounded height.
+ * Sources R01 WCAG 2.2 reflow; existing global u-tokens; UI-WP03 shared layout.
+ * 1. Import the proposed shared asset-summary mixin after UI-WP03. Use bounded
+ *    Held/Positions columns and a minmax(0,1fr) identity area, min-width:0 on
+ *    every flexible child. Eliminate the unconstrained max-content amount.
+ * 2. Use container-driven cards at <=720px, with labelled Held/Positions boxes
+ *    below identity; verify the panel inside the real address page container.
+ * 3. Keep full quantity text in the explicit exact-value detail. Primary values
+ *    use the same labelled compaction as transactions and never wrap digits.
+ * 4. Keep output references in an expanded detail list with readable mono text
+ *    and safe line wrapping; every link remains at least the u-touch-target
+ *    floor. Do not clamp or omit actual outpoint links to reduce panel height.
+ * 5. Reserve fixed logo and skeleton boxes, use existing state token pairs,
+ *    and restore keyboard focus rings in both themes and forced-colors mode.
+ *    No new global palette, external font, arbitrary animation or decorative
+ *    chart is required. Keep this work limited to the requested asset panels.
+ * Tests: C22-C32 crossed with the address route; 39 and 1000 digit stress
+ * values, 320px width, 200/400 percent zoom, both themes, details and links.
+ * Check document width and control bounds, not screenshots alone. Browser
+ * application tests were NOT RUN; the separate HTML reference is not a pass.
+ * Dependencies UI-WP03/04/05 markup. Revert paired local styles on rollback;
+ * do not modify the global universe-identifier mixin to repair this panel.
+ */

@@ -178,6 +178,9 @@ function logo(value: unknown): SummaryLogo | null {
   }
   const contentHash = row.contentHash;
   const objectPath = row.objectPath;
+  // The producer marks a curated logo verified. A row that does not say so
+  // is not promoted to one here; it becomes the labelled fallback instead.
+  if (row.verified !== true) {return null;}
   if (typeof contentHash !== 'string' || !CONTENT_HASH.test(contentHash)) {return null;}
   if (typeof objectPath !== 'string'
     || objectPath !== '/universe-media/v1/objects/' + contentHash) {
@@ -323,3 +326,30 @@ export function exactQuantity(quantityAtomic: string | null, assetDecimals: numb
 export function coverageIncomplete(summary: TransactionAssetSummary): boolean {
   return summary.counts.totalCount === null;
 }
+
+/* IMPLEMENTATION-HANDOFF [UI-WP01:TX-CONTRACT] 2026-09-19
+ * Coverage C01-C08; defects F03/F05/F06. Preparation only; no behavior changed.
+ * Verified: decodeTransactionAssetSummary accepts unequal non-null totals,
+ * casts unknown coverage states, and logo() promotes any matching path to
+ * verified:true. The backend contract distinguishes rejected effects from
+ * candidates through evidence; this decoder drops that evidence.
+ * Source R05: backend-apis contracts/transaction-asset-summary.ts at local
+ * df0b12a5d1f15b03c2d0969f88bbba14a23cb369; R01 WCAG 2.2 status clarity.
+ * 1. Require asset/coverage arrays, validate the coverage enum and each
+ *    chain/network, reject duplicate protocol coverage, and validate totals
+ *    against unique identities and classification counts using integer strings.
+ * 2. A non-null total requires nonempty conclusive coverage and equals the
+ *    known count. Fail closed on contradictions; never render false emptiness.
+ * 3. Keep the exact same-origin/hash logo constraint; require verified===true.
+ *    Invalid artwork becomes a labelled fallback without discarding amounts.
+ * 4. Preserve validated effect evidence/checkpoint needed by UI-WP02. Until
+ *    reason is proven, accepted:false means Not accepted, not Unconfirmed.
+ * 5. Retain null decimals and null quantities. Never use Number/parseFloat for
+ *    amounts. Coordinate schema compatibility with UI-WP07 before deployment.
+ * Tests: extend transaction-assets.types.spec.ts beside this file; run from
+ * frontend: npm test -- src/app/universe/transaction-assets (NOT RUN here).
+ * Assert mismatched totals/context/enums fail; false logo is fallback; u128,
+ * zero, null, decimals 0/38, duplicate identities and empty partial stay exact.
+ * Dependencies: UI-WP07 contract review before UI-WP02/03. No migration; roll
+ * back consumer and producer compatibly, never weaken validation for rollout.
+ */

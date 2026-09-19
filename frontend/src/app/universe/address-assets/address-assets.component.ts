@@ -292,3 +292,32 @@ function addPosition(
   }
   return true;
 }
+
+/* IMPLEMENTATION-HANDOFF [UI-WP04:ADDRESS-DATA] 2026-09-19
+ * Coverage C33-C44; defects F04/F09/F10/F11. Preparation only.
+ * Verified: ProtocolHolding drops unit metadata, addPosition keys only by
+ * protocol/id, and missing quantity becomes null without flagging partial.
+ * The template calls formatAtomicAmount with its default zero decimals.
+ * Sources R05 identity/unknown-unit invariants; R01 truthful status feedback.
+ * 1. Preserve assetId, assetKind, identity context and supported ruleset in the
+ *    holding view model. Coordinate ExplorerAssetRef with UI-WP07; never invent
+ *    absent rulesets/decimals or merge distinguishable ledgers. Reject ambiguous
+ *    mixed-context evidence instead of displaying an authoritative total.
+ * 2. Keep BigInt sums. Track quantityKnown independently from coverage, and
+ *    mark unknown/malformed contributing quantity visibly. Missing units render
+ *    smallest units via UI-WP02 presenter, not implied whole-token quantities.
+ *    Do not change formatAtomicAmount's shared default for unrelated consumers.
+ * 3. Retain the two-batch limit and explicit checked/unchecked denominator.
+ *    notResolved>0 must produce partial scope even when queried rows succeeded.
+ *    Preserve duplicate, foreign-outpoint and mixed-checkpoint safeguards.
+ * 4. Separate complete zero-UTXO state from loading/absent input. Render a
+ *    truthful empty holdings panel after an authoritative complete empty list.
+ * 5. Add explicit bounded retry for enrichment failure without refetching on
+ *    render; preserve cancellation and route/network clearing on input change.
+ * 6. Verify outpointRoute retains the active network prefix; route behavior
+ *    is unresolved, not a proven routing bug. Never link Signet to mainnet.
+ * Tests: extend address-assets.component.spec.ts; from frontend run npm test --
+ * src/app/universe/address-assets (NOT RUN). Cover null/zero/huge quantities,
+ * >two batches, conflicting identity, duplicate/mixed checkpoints, network
+ * navigation and empty/error/retry. No wallet, signing or migration is added.
+ */

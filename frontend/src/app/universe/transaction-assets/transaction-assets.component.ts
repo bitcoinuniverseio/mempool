@@ -313,3 +313,31 @@ export class TransactionAssetsComponent implements OnChanges {
       : `${found} ${noun}`;
   }
 }
+
+/* IMPLEMENTATION-HANDOFF [UI-WP02:TX-VIEW] 2026-09-19
+ * Coverage C09-C21; defects F06/F07/F08. Preparation only.
+ * Verified: ngOnChanges combineLatest waits for the registry's first value;
+ * rows() is mapped twice by the template; gapNames discards state/reason;
+ * classify equates every 503 with configuration and every 404 with absence.
+ * Sources: R03 RxJS combineLatest; R05 summary-v1; R02 Angular 20 accessibility.
+ * 1. After UI-WP01, produce a stable display model once per response. Seed the
+ *    registry stream with an empty Map so optional names never delay amounts.
+ *    Keep switchMap cancellation and context validation across route/network.
+ * 2. Add a pure shared quantity presenter (PROPOSED NEW asset-summary/
+ *    asset-summary.presentation.ts): exact decimal strings plus raw-unit state,
+ *    explicit approximation for long headlines, full exact strings for copy.
+ *    Never copy the abbreviation, round with floats, or sum unlike assets.
+ * 3. Build coverage rows with protocol, state, reason, retry eligibility. Show
+ *    unsupported/unconfigured/private-history limits as limits, not Waiting.
+ * 4. Replace false=>unconfirmed with Not accepted unless evidence proves a
+ *    narrower status. Preserve accepted effects separately from input/output.
+ * 5. Distinguish proven base-tx absence from a missing API route, and temporary
+ *    outage from configuration using observed API error codes; keep unknown
+ *    errors generic. Honor retryAfterSeconds; one explicit retry, no polling.
+ * 6. Localize derived labels; key row expansion by full identity and clear on
+ *    context change. Key failed images by identity plus contentHash/revision.
+ * Tests: transaction-assets.component.spec.ts; npm test --
+ * src/app/universe/transaction-assets (NOT RUN). Test delayed registry, stale
+ * responses, retry cooldown, accepted:false, all eight coverage states, logo
+ * recovery, null/zero and focus after refresh. Dependencies UI-WP01/UI-WP07.
+ */
