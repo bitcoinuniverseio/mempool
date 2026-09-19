@@ -158,6 +158,9 @@
   <!-- ------------------------------------------------------------------ -->
   <ng-container *ngIf="vm.transaction as tx">
 
+    <app-universe-transaction-assets *ngIf="reference" [txid]="reference" [chain]="chain"
+      [statusRevision]="tx.statusLabel"></app-universe-transaction-assets>
+
     <section class="panel tx-status" aria-labelledby="tx-status-heading">
       <h2 id="tx-status-heading" i18n="universe.chain.tx-status-title">Status</h2>
       <p class="verdict">

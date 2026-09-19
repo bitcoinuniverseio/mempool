@@ -1,0 +1,396 @@
+@use '../universe-tokens' as u;
+
+/**
+ * The transaction asset summary.
+ *
+ * Every colour comes from the theme tokens, never from a literal: the same
+ * markup is read on a white page and a near-black one, and a grey chosen
+ * against one of them falls through the contrast floor on the other.
+ *
+ * At narrow widths the table stacks into cards rather than scrolling
+ * sideways, and each stacked amount carries its own In/Out label, because a
+ * bare number in a stacked row says nothing about which side it is on. Exact
+ * amounts always print in full and stay selectable; nothing meaningful is
+ * hidden behind a hover.
+ */
+
+.universe-transaction-assets {
+  @include u.universe-surface;
+  @include u.universe-state-tokens;
+
+  margin: var(--u-space-4) 0 0;
+  padding: var(--u-space-4);
+
+  .universe-chip {
+    @include u.universe-chip;
+  }
+
+  .summary-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--u-space-2) var(--u-space-3);
+    margin-bottom: var(--u-space-3);
+
+    h2 {
+      font-size: var(--u-text-lg);
+      font-weight: var(--u-weight-semibold);
+      margin: 0;
+      color: var(--u-text-primary);
+    }
+  }
+
+  .summary-count {
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
+  }
+
+  .summary-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--u-space-2);
+
+    .skeleton-bar {
+      display: block;
+      height: 1.5rem;
+      border-radius: var(--u-radius-sm);
+      background: var(--u-surface-sunken);
+    }
+  }
+
+  .summary-notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--u-space-2) var(--u-space-3);
+    margin: 0;
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
+  }
+
+  .summary-retry {
+    background: var(--u-surface-raised);
+    border: 1px solid var(--u-border-strong);
+    border-radius: var(--u-radius-sm);
+    color: var(--u-text-primary);
+    cursor: pointer;
+    font: inherit;
+    font-weight: var(--u-weight-semibold);
+    padding: 0.25rem 0.85rem;
+
+    @include u.universe-touch-box;
+
+    &:hover {
+      background: var(--u-surface-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+
+    th,
+    td {
+      text-align: left;
+      vertical-align: top;
+      padding: var(--u-space-2) var(--u-space-2);
+      border-bottom: 1px solid var(--u-divider);
+      font-weight: 400;
+      color: var(--u-text-primary);
+    }
+
+    th:first-child,
+    td:first-child {
+      padding-left: 0;
+    }
+
+    td:last-child {
+      padding-right: 0;
+    }
+
+    thead th {
+      font-size: var(--u-text-xs);
+      font-weight: var(--u-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--u-text-secondary);
+      border-bottom-color: var(--u-border);
+    }
+
+    tbody tr:last-child th,
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+  }
+
+  // The In/Out label each stacked amount carries on a narrow screen. On a wide
+  // one the column header already says it, so it is not repeated.
+  .cell-label {
+    display: none;
+    font-size: var(--u-text-xs);
+    font-weight: var(--u-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--u-text-secondary);
+  }
+
+  .asset-cell {
+    display: flex;
+    gap: var(--u-space-2);
+    align-items: flex-start;
+  }
+
+  .asset-logo {
+    // A fixed box in both states, so a late, missing or broken image cannot
+    // shift the row it sits in.
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+
+    img,
+    .asset-logo-fallback {
+      width: 28px;
+      height: 28px;
+      display: block;
+      border-radius: var(--u-radius-sm);
+    }
+
+    img {
+      object-fit: contain;
+      background: var(--u-surface-sunken);
+    }
+
+    // The stand-in reads as deliberate: the protocol's own hue as a border and
+    // its initials as the mark. Never a bare grey square, which reads as an
+    // image that failed, and never mistakable for a published token logo.
+    .asset-logo-fallback {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--u-surface-sunken);
+      border: 1px solid var(--u-border-strong);
+      color: var(--u-text-secondary);
+      font-size: 0.7rem;
+      font-weight: var(--u-weight-bold);
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .asset-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .asset-name {
+    font-weight: var(--u-weight-semibold);
+    overflow-wrap: anywhere;
+  }
+
+  .asset-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .asset-kind {
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+
+  .asset-id {
+    @include u.universe-identifier;
+
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-cell {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .quantity-value {
+    // The full digits stay visible and selectable. Nothing meaningful is put
+    // behind a hover or an ellipsis.
+    overflow-wrap: anywhere;
+    user-select: text;
+  }
+
+  .quantity-ticker {
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-note {
+    display: block;
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-none {
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-partial {
+    margin-top: 0.25rem;
+  }
+
+  .summary-effects {
+    list-style: none;
+    margin: var(--u-space-3) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--u-space-2);
+
+    &:empty {
+      display: none;
+    }
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: var(--u-text-sm);
+      color: var(--u-text-secondary);
+    }
+
+    .universe-chip {
+      text-transform: capitalize;
+    }
+  }
+
+  .summary-gaps {
+    margin-top: var(--u-space-3);
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
+
+    summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--u-space-2);
+      cursor: pointer;
+
+      @include u.universe-touch-line;
+
+      &:focus-visible {
+        outline: 2px solid var(--u-focus-ring);
+        outline-offset: 2px;
+      }
+    }
+
+    .gap-intro {
+      margin: var(--u-space-2) 0 0.25rem;
+    }
+
+    .gap-list {
+      margin: 0;
+      padding-left: 1.1rem;
+      columns: 2;
+
+      li {
+        break-inside: avoid;
+      }
+    }
+  }
+}
+
+// Stacked cards instead of a table that scrolls sideways on a phone.
+@media (max-width: 575.98px) {
+  .universe-transaction-assets {
+    padding: var(--u-space-3);
+
+    .summary-table,
+    .summary-table tbody,
+    .summary-table tr,
+    .summary-table td,
+    .summary-table th {
+      display: block;
+      width: auto;
+    }
+
+    .summary-table thead {
+      // Visually hidden, not removed: the column meaning moves into each
+      // stacked cell's own label so nothing is lost.
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .summary-table tr {
+      padding: var(--u-space-2) 0;
+      border-bottom: 1px solid var(--u-divider);
+    }
+
+    .summary-table tr:last-child {
+      border-bottom: 0;
+    }
+
+    .summary-table th,
+    .summary-table td {
+      border-bottom: 0;
+      padding: 0.15rem 0;
+    }
+
+    .cell-label {
+      display: inline-block;
+      min-width: 2.5rem;
+    }
+
+    .summary-table td.quantity-cell {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.4rem;
+    }
+
+    .summary-gaps .gap-list {
+      columns: 1;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .universe-transaction-assets .skeleton-bar {
+    animation: none;
+  }
+}
+
+/* IMPLEMENTATION-HANDOFF [UI-WP03:TX-LAYOUT] 2026-09-19
+ * Coverage C22-C32; defects F01/F02. Preparation only; do not add active CSS yet.
+ * Verified: table-layout:auto, flex on th.asset-cell, and overflow-wrap:anywhere
+ * on .quantity-value allow content to dominate column sizing and split digits.
+ * The only stacking breakpoint is a 575.98px viewport, not the panel width.
+ * Sources R01 WCAG 2.2 reflow; R06 CSS table model; existing global u-tokens.
+ * 1. With TX-MARKUP, restore the desktop th to table-cell and put flex inside
+ *    its identity child. Set an explicit colgroup/fixed layout or measured
+ *    bounded column sizing; the identity column is the flexible remainder.
+ * 2. Add container-type:inline-size on the panel. At <=720px container width,
+ *    use stacked asset rows with labelled two-column Inputs/Outputs. Confirm
+ *    semantic table accessibility; never use CSS to remove accessible labels.
+ * 3. Give every flexible child min-width:0. Primary quantities use tabular nums,
+ *    white-space:nowrap and the shared compact presenter, not word-break or
+ *    a smaller unreadable font. Exact disclosure may wrap at its full width.
+ * 4. Use existing u-space 4/8/12/16/24 and radius 5/8 tokens, 40px fixed logo
+ *    boxes, 44px controls, restrained separators and state foreground/surface
+ *    pairs. Keep brand accents separate from evidence colors; no palette fork.
+ * 5. Extract common styles to PROPOSED NEW ../asset-summary/_asset-summary.scss
+ *    and reuse in address-assets. Do not alter the global identifier mixin.
+ * 6. Reserve loading geometry; retain focus rings, forced-colors borders and
+ *    reduced-motion rules. No nested page-wide horizontal scrolling.
+ * Tests: actual Angular views at all C22-C32 widths/themes; assert amount
+ *    line boxes, no document overflow, correct hit targets and focus order.
+ * Run root npm run checkscreenshots:changed and frontend type/template checks
+ * after implementation (NOT RUN here). Rollback local styles with markup.
+ */

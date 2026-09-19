@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { UniverseSharedModule } from '@app/universe/universe-shared.module';
 import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
 import { SharedModule } from '@app/shared/shared.module';
@@ -36,6 +37,7 @@ export class TrackerRoutingModule { }
     SharedModule,
     GraphsModule,
     TxBowtieModule,
+    UniverseSharedModule,
   ],
   declarations: [
     TrackerComponent,
