@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
-import { TimeoutError } from 'rxjs';
+import { BehaviorSubject, Observable, TimeoutError, catchError, combineLatest, map, of, startWith, switchMap } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { ExplorerProtocolDefinition } from '@app/universe/universe.types';
 import {
   SummaryAsset,
   SummaryCoverageState,
@@ -12,20 +12,24 @@ import {
 } from './transaction-assets.types';
 
 /**
- * The automatic, compact asset summary shown at the top of every transaction
- * page: how many distinct supported assets the transaction touches, which
- * protocols they belong to, their verified logo where one exists, and the
- * exact quantity on each side.
+ * The automatic asset summary at the top of every transaction page: how many
+ * supported assets the transaction touches, which protocol each belongs to,
+ * its logo, and the exact amount in and out.
  *
  * It owns its own request. It is not a projection of the detailed flow and it
  * does not wait for one, because the detailed flow reads every outpoint from
  * every authority and was observed taking twenty one seconds.
  *
  * The states it distinguishes are the point of the component, and none of them
- * may collapse into another: loading, a partial answer with named gaps, a
- * source outage, a malformed payload, a transaction the base authority proves
- * does not exist, and a transaction every applicable source proves carries no
- * supported assets. Only the last of those may say zero.
+ * may collapse into another: loading, a partial answer, a source outage, a
+ * malformed payload, a transaction the base authority proves does not exist,
+ * and a transaction every applicable source proves carries no supported
+ * assets. Only the last of those may say none.
+ *
+ * Wording is plain on purpose. A visitor reading a transaction page is not
+ * assumed to know what divisibility, coverage or an atomic unit is, so the
+ * view says "smallest units", "Partial" and "Not published" instead, and the
+ * precise machine states stay in the payload for the people who need them.
  */
 
 export type SummaryStateKind =
@@ -39,21 +43,32 @@ export type SummaryStateKind =
 export interface SummaryViewState {
   kind: SummaryStateKind;
   summary?: TransactionAssetSummary;
+  /** Registry definitions by protocol id, for official names and colours. */
+  protocols?: Map<string, ExplorerProtocolDefinition>;
 }
 
-/** One quantity as the template renders it: exact where possible, labelled otherwise. */
+/** One amount as the view renders it: exact where possible, labelled otherwise. */
 export interface DisplayQuantity {
-  /** 'exact' carries a decimal value; 'atomic' carries raw digits to label. */
-  kind: 'exact' | 'atomic' | 'unavailable';
+  /** 'exact' carries a decimal value; 'raw' carries smallest-unit digits. */
+  kind: 'exact' | 'raw' | 'none';
   value: string;
-  /** True when the side or effect the value came from is itself incomplete. */
+  /** True when the side the value came from was only partly proven. */
   partial: boolean;
 }
 
 export interface DisplayAsset {
   key: string;
   asset: SummaryAsset;
-  /** Set once a logo request fails, so the fallback is used exactly once. */
+  /** The registry entry, or a placeholder built from the id. */
+  protocol: ExplorerProtocolDefinition;
+  /** The heading shown for the asset: its name, ticker, or id. */
+  title: string;
+  /** The id, only when it is not already the title. Empty otherwise. */
+  subtitle: string;
+  /** Plain-language asset kind, e.g. "Token". Empty when it adds nothing. */
+  kindLabel: string;
+  /** One or two letters standing in for a missing logo. */
+  initials: string;
   logoFailed: boolean;
   inputs: DisplayQuantity;
   outputs: DisplayQuantity;
@@ -68,6 +83,23 @@ const INCONCLUSIVE: ReadonlySet<SummaryCoverageState> = new Set<SummaryCoverageS
   'unavailable',
   'not-publicly-observable',
 ]);
+
+/**
+ * Plain words for the authority's asset classification.
+ *
+ * The authority classifies; this only translates. A kind with no useful plain
+ * word maps to an empty string rather than to a guess or to the raw token,
+ * because a label a visitor cannot read is worse than no label.
+ */
+const KIND_LABELS: Readonly<Record<string, string>> = {
+  fungible: 'Token',
+  inscription: 'Collectible',
+  'non-fungible': 'Collectible',
+  name: 'Name',
+  sat: 'Rare sat',
+  data: 'Data',
+  'protocol-event': 'Event',
+};
 
 @Component({
   selector: 'app-universe-transaction-assets',
@@ -110,21 +142,30 @@ export class TransactionAssetsComponent implements OnChanges {
     const txid = this.txid;
     const chain = this.chain;
     this.state$ = this.retry$.pipe(
-      switchMap(() => this.universeApiService.getTransactionAssets$(txid, chain).pipe(
-        map((summary): SummaryViewState => ({ kind: 'summary', summary })),
+      switchMap(() => combineLatest([
+        this.universeApiService.getTransactionAssets$(txid, chain),
+        // Registry names and colours are presentation only. If the registry is
+        // unavailable the summary still renders, with ids standing in for the
+        // official names; metadata never gates a proven amount.
+        this.universeApiService.getProtocols$().pipe(
+          map((response) => new Map(response.protocols.map((entry) => [entry.id, entry]))),
+          catchError(() => of(new Map<string, ExplorerProtocolDefinition>())),
+        ),
+      ]).pipe(
+        map(([summary, protocols]): SummaryViewState => ({ kind: 'summary', summary, protocols })),
         catchError((error: unknown) => of<SummaryViewState>({ kind: this.classify(error) })),
         startWith<SummaryViewState>({ kind: 'loading' }),
       )),
     );
   }
 
-  /** Retry is explicit and bounded: one user action, one fresh request. */
+  /** Retry is explicit and bounded: one press, one fresh request. */
   retry(): void {
     this.retry$.next(this.retry$.value + 1);
   }
 
   /**
-   * Distinguishes the failure kinds a user needs told apart. A timeout, an
+   * Distinguishes the failure kinds a visitor needs told apart. A timeout, an
    * unconfigured authority and a proven-absent transaction are three different
    * facts, and none of them is an empty asset list.
    */
@@ -145,12 +186,21 @@ export class TransactionAssetsComponent implements OnChanges {
    * read the same ledger; keying by assetId alone would merge them into one
    * row and silently drop a proven asset.
    */
-  rows(summary: TransactionAssetSummary): DisplayAsset[] {
+  rows(state: SummaryViewState): DisplayAsset[] {
+    const summary = state.summary;
+    if (!summary) {return [];}
     return summary.assets.map((asset) => {
       const key = summaryAssetKey(asset);
+      const protocol = this.protocolFor(state, asset.protocolId);
+      const title = asset.displayName || asset.ticker || asset.assetId;
       return {
         key,
         asset,
+        protocol,
+        title,
+        subtitle: title === asset.assetId ? '' : asset.assetId,
+        kindLabel: KIND_LABELS[asset.assetKind] ?? '',
+        initials: this.initialsFor(protocol, title),
         logoFailed: this.logoFailures.has(key),
         inputs: this.quantity(asset, asset.inputs.quantityAtomic, asset.inputs.complete),
         outputs: this.quantity(asset, asset.outputs.quantityAtomic, asset.outputs.complete),
@@ -158,21 +208,50 @@ export class TransactionAssetsComponent implements OnChanges {
     });
   }
 
+  /** The registry entry, or a placeholder so the badge still names something. */
+  private protocolFor(state: SummaryViewState, protocolId: string): ExplorerProtocolDefinition {
+    const known = state.protocols?.get(protocolId);
+    if (known) {return known;}
+    const readable = protocolId.replace(/[_-]+/g, ' ');
+    return {
+      id: protocolId,
+      shortName: readable,
+      displayName: readable,
+      visualToken: protocolId,
+    } as ExplorerProtocolDefinition;
+  }
+
   /**
-   * One displayable quantity.
+   * One or two letters standing in for a missing logo.
+   *
+   * A labelled placeholder in the protocol's own hue reads as a deliberate
+   * stand-in. An empty grey square reads as an image that failed to load, and
+   * neither may be mistaken for a verified token logo.
+   */
+  private initialsFor(protocol: ExplorerProtocolDefinition, title: string): string {
+    const source = (protocol.shortName || title || '?').trim();
+    const words = source.split(/[\s._-]+/).filter(Boolean);
+    const letters = words.length > 1
+      ? words[0].charAt(0) + words[1].charAt(0)
+      : source.slice(0, 2);
+    return letters.toUpperCase();
+  }
+
+  /**
+   * One displayable amount.
    *
    * An exact decimal needs the authority's divisibility. Without it the digits
-   * are still true, so they are shown labelled as atomic units rather than
-   * being rendered as whole tokens, which would understate the amount by up to
-   * thirty eight orders of magnitude.
+   * are still true, so they are shown labelled as smallest units rather than
+   * as whole tokens, which would understate the amount by up to thirty eight
+   * orders of magnitude.
    */
   private quantity(asset: SummaryAsset, quantityAtomic: string | null, complete: boolean): DisplayQuantity {
     if (quantityAtomic === null) {
-      return { kind: 'unavailable', value: '', partial: !complete };
+      return { kind: 'none', value: '', partial: !complete };
     }
     const exact = exactQuantity(quantityAtomic, asset.decimals);
     return exact === null
-      ? { kind: 'atomic', value: quantityAtomic, partial: !complete }
+      ? { kind: 'raw', value: quantityAtomic, partial: !complete }
       : { kind: 'exact', value: exact, partial: !complete };
   }
 
@@ -185,11 +264,19 @@ export class TransactionAssetsComponent implements OnChanges {
     return row.key;
   }
 
-  /** The protocols that left the inventory inconclusive, for the notice. */
-  gaps(summary: TransactionAssetSummary): string[] {
+  /** How many sources could not answer. Drives the partial notice. */
+  gapCount(summary: TransactionAssetSummary): number {
+    return summary.perProtocolCoverage.filter((entry) => INCONCLUSIVE.has(entry.state)).length;
+  }
+
+  /** The official names of those sources, for the expandable detail. */
+  gapNames(state: SummaryViewState): string[] {
+    const summary = state.summary;
+    if (!summary) {return [];}
     return summary.perProtocolCoverage
       .filter((entry) => INCONCLUSIVE.has(entry.state))
-      .map((entry) => entry.protocolId);
+      .map((entry) => this.protocolFor(state, entry.protocolId).displayName)
+      .sort((a, b) => a.localeCompare(b));
   }
 
   /**
@@ -204,7 +291,25 @@ export class TransactionAssetsComponent implements OnChanges {
     return summary.counts.totalCount === null;
   }
 
-  protocolIcon(protocolId: string): string {
-    return 'protocol-' + protocolId.replace(/_/g, '-');
+  /** The evidence chip for the whole summary: proven, partial, or none found. */
+  summaryChip(summary: TransactionAssetSummary): { state: string; label: string } {
+    if (this.provenEmpty(summary)) {
+      return { state: 'state-proven', label: 'None found' };
+    }
+    return this.incomplete(summary)
+      ? { state: 'state-partial', label: 'Partial' }
+      : { state: 'state-proven', label: 'Complete' };
+  }
+
+  /** The count sentence beside the heading. Plural forms are spelled out. */
+  countLabel(summary: TransactionAssetSummary): string {
+    if (this.provenEmpty(summary)) {
+      return 'No supported assets';
+    }
+    const found = summary.assets.length;
+    const noun = found === 1 ? 'asset' : 'assets';
+    return this.incomplete(summary)
+      ? `${found} ${noun} found so far`
+      : `${found} ${noun}`;
   }
 }

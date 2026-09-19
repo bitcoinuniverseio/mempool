@@ -1,88 +1,97 @@
+@use '../universe-tokens' as u;
+
 /**
- * Layout for the compact transaction asset summary.
+ * The transaction asset summary.
  *
- * Uses the existing --u-* surface, text and border tokens rather than a new
- * palette, so the summary reads as part of the page it sits above in both
- * themes. At narrow widths the table stacks instead of forcing a horizontal
- * scroll, and every exact quantity stays fully visible and selectable: a
- * quantity revealed only on hover is not a quantity a user can check.
+ * Every colour comes from the theme tokens, never from a literal: the same
+ * markup is read on a white page and a near-black one, and a grey chosen
+ * against one of them falls through the contrast floor on the other.
+ *
+ * At narrow widths the table stacks into cards rather than scrolling
+ * sideways, and each stacked amount carries its own In/Out label, because a
+ * bare number in a stacked row says nothing about which side it is on. Exact
+ * amounts always print in full and stay selectable; nothing meaningful is
+ * hidden behind a hover.
  */
 
 .universe-transaction-assets {
-  margin: 1.5rem 0 0;
-  padding: 1rem 1.25rem 1.25rem;
-  background: var(--bg, var(--u-surface-raised));
-  border-radius: 4px;
+  @include u.universe-surface;
+  @include u.universe-state-tokens;
+
+  margin: var(--u-space-4) 0 0;
+  padding: var(--u-space-4);
+
+  .universe-chip {
+    @include u.universe-chip;
+  }
 
   .summary-header {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.5rem 1rem;
+    align-items: center;
+    gap: var(--u-space-2) var(--u-space-3);
+    margin-bottom: var(--u-space-3);
 
     h2 {
-      font-size: 1.1rem;
+      font-size: var(--u-text-lg);
+      font-weight: var(--u-weight-semibold);
       margin: 0;
+      color: var(--u-text-primary);
     }
   }
 
   .summary-count {
-    font-size: 0.9rem;
-    color: var(--u-text-muted, #9aa0a6);
-  }
-
-  .summary-breakdown {
-    font-size: 0.8rem;
-    color: var(--u-text-muted, #9aa0a6);
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
   }
 
   .summary-skeleton {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
+    gap: var(--u-space-2);
 
     .skeleton-bar {
       display: block;
-      height: 1.25rem;
-      border-radius: 3px;
-      background: var(--u-surface-sunken, rgba(255, 255, 255, 0.06));
+      height: 1.5rem;
+      border-radius: var(--u-radius-sm);
+      background: var(--u-surface-sunken);
     }
   }
 
   .summary-notice {
-    margin: 0.75rem 0 0;
-    font-size: 0.85rem;
-    color: var(--u-text-muted, #9aa0a6);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--u-space-2) var(--u-space-3);
+    margin: 0;
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
   }
 
   .summary-retry {
-    background: transparent;
-    border: 1px solid var(--u-border, rgba(255, 255, 255, 0.2));
-    border-radius: 3px;
-    color: inherit;
+    background: var(--u-surface-raised);
+    border: 1px solid var(--u-border-strong);
+    border-radius: var(--u-radius-sm);
+    color: var(--u-text-primary);
     cursor: pointer;
     font: inherit;
-    padding: 0.15rem 0.6rem;
+    font-weight: var(--u-weight-semibold);
+    padding: 0.25rem 0.85rem;
+
+    @include u.universe-touch-box;
+
+    &:hover {
+      background: var(--u-surface-hover);
+    }
 
     &:focus-visible {
-      outline: 2px solid var(--u-focus, #4c9aff);
+      outline: 2px solid var(--u-focus-ring);
       outline-offset: 2px;
     }
   }
 
-  .gap-list {
-    word-break: break-word;
-    font-size: 0.75rem;
-  }
-
   .summary-table {
     width: 100%;
-    margin-top: 0.75rem;
     border-collapse: collapse;
     table-layout: auto;
 
@@ -90,114 +99,215 @@
     td {
       text-align: left;
       vertical-align: top;
-      padding: 0.45rem 0.5rem;
-      border-bottom: 1px solid var(--u-border, rgba(255, 255, 255, 0.08));
-      font-weight: normal;
+      padding: var(--u-space-2) var(--u-space-2);
+      border-bottom: 1px solid var(--u-divider);
+      font-weight: 400;
+      color: var(--u-text-primary);
+    }
+
+    th:first-child,
+    td:first-child {
+      padding-left: 0;
+    }
+
+    td:last-child {
+      padding-right: 0;
     }
 
     thead th {
-      font-size: 0.75rem;
+      font-size: var(--u-text-xs);
+      font-weight: var(--u-weight-semibold);
       text-transform: uppercase;
-      letter-spacing: 0.02em;
-      color: var(--u-text-muted, #9aa0a6);
+      letter-spacing: 0.04em;
+      color: var(--u-text-secondary);
+      border-bottom-color: var(--u-border);
     }
+
+    tbody tr:last-child th,
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+  }
+
+  // The In/Out label each stacked amount carries on a narrow screen. On a wide
+  // one the column header already says it, so it is not repeated.
+  .cell-label {
+    display: none;
+    font-size: var(--u-text-xs);
+    font-weight: var(--u-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--u-text-secondary);
   }
 
   .asset-cell {
     display: flex;
-    gap: 0.6rem;
+    gap: var(--u-space-2);
     align-items: flex-start;
   }
 
   .asset-logo {
-    /* Fixed box in both states, so a late or failed image cannot shift the row. */
-    flex: 0 0 24px;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+    // A fixed box in both states, so a late, missing or broken image cannot
+    // shift the row it sits in.
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
 
     img,
     .asset-logo-fallback {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       display: block;
-      border-radius: 3px;
+      border-radius: var(--u-radius-sm);
     }
 
+    img {
+      object-fit: contain;
+      background: var(--u-surface-sunken);
+    }
+
+    // The stand-in reads as deliberate: the protocol's own hue as a border and
+    // its initials as the mark. Never a bare grey square, which reads as an
+    // image that failed, and never mistakable for a published token logo.
     .asset-logo-fallback {
-      background: var(--u-surface-sunken, rgba(255, 255, 255, 0.08));
-      border: 1px solid var(--u-border, rgba(255, 255, 255, 0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--u-surface-sunken);
+      border: 1px solid var(--u-border-strong);
+      color: var(--u-text-secondary);
+      font-size: 0.7rem;
+      font-weight: var(--u-weight-bold);
+      letter-spacing: 0.02em;
     }
   }
 
   .asset-identity {
     display: flex;
     flex-direction: column;
+    gap: 0.15rem;
     min-width: 0;
   }
 
   .asset-name {
-    font-weight: 600;
+    font-weight: var(--u-weight-semibold);
     overflow-wrap: anywhere;
   }
 
-  .asset-id,
-  .asset-ruleset,
+  .asset-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
   .asset-kind {
-    font-size: 0.75rem;
-    color: var(--u-text-muted, #9aa0a6);
-    overflow-wrap: anywhere;
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
   }
 
-  .protocol-badge {
-    display: inline-block;
-    padding: 0.05rem 0.4rem;
-    border: 1px solid var(--u-border, rgba(255, 255, 255, 0.2));
-    border-radius: 3px;
-    font-size: 0.75rem;
+  .asset-id {
+    @include u.universe-identifier;
+
+    color: var(--u-text-secondary);
   }
 
   .quantity-cell {
     font-variant-numeric: tabular-nums;
   }
 
-  .quantity-exact,
-  .quantity-atomic {
-    /* The full digits stay selectable; nothing is truncated behind a hover. */
+  .quantity-value {
+    // The full digits stay visible and selectable. Nothing meaningful is put
+    // behind a hover or an ellipsis.
     overflow-wrap: anywhere;
     user-select: text;
   }
 
-  .quantity-units,
-  .quantity-partial,
-  .quantity-unavailable,
   .quantity-ticker {
-    display: inline-block;
-    font-size: 0.72rem;
-    color: var(--u-text-muted, #9aa0a6);
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-note {
+    display: block;
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-none {
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-partial {
+    margin-top: 0.25rem;
   }
 
   .summary-effects {
     list-style: none;
-    margin: 0.75rem 0 0;
+    margin: var(--u-space-3) 0 0;
     padding: 0;
-    font-size: 0.8rem;
-    color: var(--u-text-muted, #9aa0a6);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--u-space-2);
+
+    &:empty {
+      display: none;
+    }
 
     li {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: var(--u-text-sm);
+      color: var(--u-text-secondary);
+    }
+
+    .universe-chip {
+      text-transform: capitalize;
+    }
+  }
+
+  .summary-gaps {
+    margin-top: var(--u-space-3);
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
+
+    summary {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.4rem;
-      padding: 0.15rem 0;
+      align-items: center;
+      gap: var(--u-space-2);
+      cursor: pointer;
+
+      @include u.universe-touch-line;
+
+      &:focus-visible {
+        outline: 2px solid var(--u-focus-ring);
+        outline-offset: 2px;
+      }
+    }
+
+    .gap-intro {
+      margin: var(--u-space-2) 0 0.25rem;
+    }
+
+    .gap-list {
+      margin: 0;
+      padding-left: 1.1rem;
+      columns: 2;
+
+      li {
+        break-inside: avoid;
+      }
     }
   }
 }
 
-@media (max-width: 600px) {
+// Stacked cards instead of a table that scrolls sideways on a phone.
+@media (max-width: 575.98px) {
   .universe-transaction-assets {
-    padding: 0.85rem;
+    padding: var(--u-space-3);
 
-    /* Stacked rows rather than a table that scrolls sideways at 360px. */
     .summary-table,
     .summary-table tbody,
     .summary-table tr,
@@ -208,18 +318,45 @@
     }
 
     .summary-table thead {
-      display: none;
+      // Visually hidden, not removed: the column meaning moves into each
+      // stacked cell's own label so nothing is lost.
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
 
     .summary-table tr {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--u-border, rgba(255, 255, 255, 0.08));
+      padding: var(--u-space-2) 0;
+      border-bottom: 1px solid var(--u-divider);
     }
 
-    .summary-table td,
-    .summary-table th {
+    .summary-table tr:last-child {
+      border-bottom: 0;
+    }
+
+    .summary-table th,
+    .summary-table td {
       border-bottom: 0;
       padding: 0.15rem 0;
+    }
+
+    .cell-label {
+      display: inline-block;
+      min-width: 2.5rem;
+    }
+
+    .summary-table td.quantity-cell {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.4rem;
+    }
+
+    .summary-gaps .gap-list {
+      columns: 1;
     }
   }
 }
