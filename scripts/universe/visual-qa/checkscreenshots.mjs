@@ -175,6 +175,14 @@ async function main() {
           const context = await browser.newContext({
             viewport: vp,
             deviceScaleFactor: 1,
+            // The app registers a service worker, and a request a service
+            // worker answers never reaches context.route. Without this, the
+            // worker served its cached app shell for API requests, so the page
+            // parsed index.html as JSON and every transaction and address
+            // screenshot carried uncaught parse failures, while the fixtures
+            // this run declares were quietly bypassed. capture.mjs has always
+            // blocked it; this run did not.
+            serviceWorkers: 'block',
           });
 
           await installFixtures(context, 'populated');
@@ -202,10 +210,43 @@ async function main() {
             });
 
             const pageConsoleErrors = [];
+            const consoleDetail = [];
             let pageError = null;
 
             page.on('console', (msg) => {
-              if (msg.type() === 'error') pageConsoleErrors.push(msg.text());
+              if (msg.type() !== 'error') return;
+              // msg.text() abbreviates a logged object to its constructor name,
+              // which in a production build is one or two minified letters and
+              // tells a reader nothing about what failed. The argument handles
+              // still carry the real error, so they are resolved in the page and
+              // the recorded line is replaced with something actionable.
+              const index = pageConsoleErrors.push(msg.text()) - 1;
+              consoleDetail.push(
+                Promise.all(
+                  msg.args().map((arg) =>
+                    arg
+                      .evaluate((value) => {
+                        if (value instanceof Error) {
+                          return value.stack || `${value.name}: ${value.message}`;
+                        }
+                        if (value && typeof value === 'object') {
+                          try {
+                            return JSON.stringify(value);
+                          } catch {
+                            return Object.prototype.toString.call(value);
+                          }
+                        }
+                        return String(value);
+                      })
+                      .catch(() => undefined),
+                  ),
+                )
+                  .then((values) => {
+                    const detail = values.filter(Boolean).join(' ');
+                    if (detail) pageConsoleErrors[index] = detail.slice(0, 600);
+                  })
+                  .catch(() => undefined),
+              );
             });
             page.on('pageerror', (err) => {
               pageError = String(err);
@@ -242,6 +283,10 @@ async function main() {
                 outDiffPath: diffPath,
                 pixelThreshold: 0.1,
               });
+
+              // The console detail resolves asynchronously; the recorded lines
+              // have to be final before they are counted and reported.
+              await Promise.all(consoleDetail);
 
               screenshotsCompared++;
               const unmatched = [...(context._unmatchedFixtureErrors || [])];
