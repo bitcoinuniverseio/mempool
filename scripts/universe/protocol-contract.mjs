@@ -181,6 +181,26 @@ export function assertRosterResolvesUniquely(protocols, report = new Report()) {
  * served right now, which is a check that passes the day it is written and
  * says nothing after. Every field here exists so a mismatch names both sides.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [FE-GATE-04] | all 39 protocols and operation IDs.
+ * Verified: this validates shape/status vocabulary; it does not require passing
+ * operation evidence. A roster gate PASS is not the requested release GO.
+ * Prerequisites: BE acceptance schema plus complete operation inventory.
+ * 1. Extend schema validation to reject missing/duplicate operation IDs,
+ *    acceptance evidence with mismatched protocol/network/revision, and claimed
+ *    complete coverage with unresolved applicable rows or an unknown denominator.
+ * 2. Keep roster consistency mode usable during development; add an explicit
+ *    release acceptance mode that fails on FAIL/BLOCKED/NOT TESTED and requires
+ *    justified exclusions. Do not silently redefine --check as functional tests.
+ * 3. Bind evidence to accepted code/config/dependencies; changes invalidate only
+ *    affected evidence. Historical readable declarations must not count as passes.
+ * 4. Extend protocol-contract.test.mjs with forged complete, absent evidence,
+ *    missing operation, wrong-network/revision and fully evidenced fixtures.
+ *    Run node --test scripts/universe/protocol-contract.test.mjs and this script
+ *    --check. After qualification, use --record --from the accepted manifest,
+ *    review generated changes, then --against the deployed owned manifest.
+ * Preserve prior WP08 handoff requirements. No generated files are hand-edited.
+ */
 export function validateManifest(manifest, report = new Report()) {
   if (typeof manifest !== 'object' || manifest === null) {
     report.fail('The manifest is not an object.');
@@ -615,6 +635,168 @@ export function diffManifests(pinned, served, report = new Report()) {
 }
 
 // ---------------------------------------------------------------------------
+// Release gate
+// ---------------------------------------------------------------------------
+
+/** The only acceptance values a descriptor may carry. */
+const ACCEPTANCE_RESULTS = new Set([
+  'PASS',
+  'FAIL',
+  'BLOCKED',
+  'NOT TESTED',
+  'NOT APPLICABLE',
+]);
+
+/**
+ * The gate a public release must pass, kept apart from the roster check.
+ *
+ * `--check` asks whether this repository still agrees with itself about which
+ * protocols exist. That question has an answer on every commit, and a release
+ * needs a different one: is this exact revision, serving this exact network,
+ * backed by evidence for every operation it advertises.
+ *
+ * Splitting them matters because the roster check is the one that runs
+ * constantly, and a gate that runs constantly is a gate people learn to make
+ * green. Nothing here can be satisfied by editing a label.
+ */
+export function releaseGate(manifest, expected = {}, report = new Report()) {
+  validateManifest(manifest, report);
+  if (report.problems.length) return report;
+
+  const { sourceSha, network } = expected;
+
+  // Wrong revision. validateManifest has already refused a manifest that names
+  // no commit; this is the separate question of whether it names the right one.
+  if (sourceSha && manifest.sourceSha !== sourceSha) {
+    report.fail(
+      `The release intends ${sourceSha}; the manifest was produced by ${manifest.sourceSha}.`,
+    );
+  }
+
+  // Unknown denominator. A percentage whose denominator is missing, or which
+  // counts something other than the operations actually declared here, is the
+  // shape every forged completion takes.
+  const summary = manifest.acceptance;
+  const descriptors = manifest.protocols.flatMap((protocol) =>
+    (protocol.readOperationDescriptors ?? []).map((operation) => ({
+      protocol: protocol.id,
+      ...operation,
+    })),
+  );
+  if (typeof summary !== 'object' || summary === null) {
+    report.fail(
+      'The manifest publishes no acceptance summary, so the denominator is unknown.',
+    );
+  } else {
+    if (summary.declared !== descriptors.length) {
+      report.fail(
+        `The acceptance summary counts ${summary.declared} declared operations; the manifest declares ${descriptors.length}.`,
+      );
+    }
+    const total =
+      summary.passed +
+      summary.failed +
+      summary.blocked +
+      summary.notApplicable +
+      summary.notTested;
+    if (total !== summary.declared) {
+      report.fail(
+        `The acceptance results add up to ${total}, not the ${summary.declared} operations declared.`,
+      );
+    }
+    if (summary.rejected > 0) {
+      report.fail(
+        `${summary.rejected} acceptance records could not be qualified as evidence.`,
+      );
+    }
+  }
+
+  // Missing and duplicate operations.
+  for (const protocol of manifest.protocols) {
+    const operations = protocol.readOperationDescriptors ?? [];
+    if (!operations.length) {
+      report.fail(`${protocol.id} declares no read operations.`);
+      continue;
+    }
+    const ids = operations.map((operation) => operation.id);
+    const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (duplicates.length) {
+      report.fail(
+        `${protocol.id} declares ${[...new Set(duplicates)].join(', ')} more than once.`,
+      );
+    }
+    if (
+      JSON.stringify(protocol.implementedReadOperations) !== JSON.stringify(ids)
+    ) {
+      report.fail(
+        `${protocol.id} lists operations its descriptors do not match.`,
+      );
+    }
+  }
+
+  // Wrong network. A release serves one network, and a protocol that does not
+  // declare it cannot be part of that release.
+  if (network) {
+    for (const protocol of manifest.protocols) {
+      if (!(protocol.networks ?? []).includes(network)) {
+        report.fail(
+          `${protocol.id} does not declare the ${network} network this release serves.`,
+        );
+      }
+    }
+  }
+
+  // Forged completion. Every descriptor carries a value from the closed set,
+  // and a passing operation must be one the summary also counted.
+  const passed = descriptors.filter(
+    (descriptor) => descriptor.acceptance === 'PASS',
+  );
+  for (const descriptor of descriptors) {
+    if (!ACCEPTANCE_RESULTS.has(descriptor.acceptance)) {
+      report.fail(
+        `${descriptor.protocol}.${descriptor.id} carries acceptance ${JSON.stringify(descriptor.acceptance)}.`,
+      );
+    }
+  }
+  if (summary && summary.passed !== passed.length) {
+    report.fail(
+      `The summary counts ${summary.passed} passing operations; ${passed.length} descriptors claim to pass.`,
+    );
+  }
+
+  // Missing history. A complete coverage claim and a verified release label are
+  // both statements about every operation, so neither survives an operation
+  // that was never accepted.
+  for (const protocol of manifest.protocols) {
+    const operations = protocol.readOperationDescriptors ?? [];
+    const unaccepted = operations.filter(
+      (operation) => operation.acceptance !== 'PASS',
+    );
+    if (!unaccepted.length) continue;
+    if (coverageState(protocol.coverage) === 'complete') {
+      report.fail(
+        `${protocol.id} claims complete historical coverage with ${unaccepted.length} operations not accepted.`,
+      );
+    }
+    if (READABLE_STATUSES.has(protocol.releaseStatus)) {
+      report.fail(
+        `${protocol.id} carries release status ${protocol.releaseStatus} with ${unaccepted.length} operations not accepted.`,
+      );
+    }
+  }
+
+  // A release is complete only when nothing is left outstanding. Blocked and
+  // not applicable are honest results, and neither is a pass.
+  if (summary && summary.passed !== summary.declared) {
+    report.fail(
+      `${summary.declared - summary.passed} of ${summary.declared} declared operations are not accepted ` +
+        `(${summary.failed} failed, ${summary.blocked} blocked, ${summary.notApplicable} not applicable, ${summary.notTested} not tested).`,
+    );
+  }
+  return report;
+}
+
+// ---------------------------------------------------------------------------
 // Entry points
 // ---------------------------------------------------------------------------
 
@@ -740,13 +922,33 @@ async function against(source) {
   );
 }
 
+/**
+ * Runs the release gate against a manifest and says nothing but the verdict.
+ *
+ * It reads a served origin or a file so the same command can qualify a release
+ * candidate before it is deployed and the real deployment afterwards.
+ */
+async function release(source, expected) {
+  const manifest = await loadDocument(source);
+  releaseGate(manifest, expected).throwIfFailed(
+    `${source} is not releasable.`,
+  );
+  process.stdout.write(
+    `Release gate passed: ${manifest.protocols.length} protocols from ${manifest.sourceSha}, ` +
+      `all ${manifest.acceptance.declared} declared operations accepted.
+`,
+  );
+}
+
 function usage(message) {
   process.stderr.write(`${message}\n\n`);
   process.stderr.write(
     'Usage:\n' +
       '  protocol-contract.mjs --record --from <url|file>   pin a manifest and rewrite what it generates\n' +
       '  protocol-contract.mjs --check                      the offline gate\n' +
-      '  protocol-contract.mjs --against <url|file>         compare the pin against what is served\n',
+      '  protocol-contract.mjs --against <url|file>         compare the pin against what is served\n' +
+      '  protocol-contract.mjs --release <url|file>         the release gate, stricter than --check\n' +
+      '      [--expect-sha <sha>] [--network <name>]\n',
   );
   process.exit(2);
 }
@@ -757,10 +959,26 @@ async function main() {
   const againstIndex = argv.indexOf('--against');
   const wantsRecord = argv.includes('--record');
   const wantsCheck = argv.includes('--check');
+  const releaseIndex = argv.indexOf('--release');
+  const expectShaIndex = argv.indexOf('--expect-sha');
+  const networkIndex = argv.indexOf('--network');
 
-  const modes = [wantsRecord, wantsCheck, againstIndex !== -1].filter(Boolean);
+  const modes = [
+    wantsRecord,
+    wantsCheck,
+    againstIndex !== -1,
+    releaseIndex !== -1,
+  ].filter(Boolean);
   if (modes.length !== 1) {
-    usage('Pass exactly one of --record, --check, --against.');
+    usage('Pass exactly one of --record, --check, --against, --release.');
+  }
+  if (releaseIndex !== -1) {
+    if (!argv[releaseIndex + 1]) usage('--release needs a url or file.');
+    await release(argv[releaseIndex + 1], {
+      sourceSha: expectShaIndex === -1 ? undefined : argv[expectShaIndex + 1],
+      network: networkIndex === -1 ? undefined : argv[networkIndex + 1],
+    });
+    return;
   }
   if (wantsRecord) {
     if (fromIndex === -1 || !argv[fromIndex + 1]) {

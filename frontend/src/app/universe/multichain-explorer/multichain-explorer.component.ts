@@ -1,5 +1,6 @@
 import { ChainHealthService } from '../chain-health.service';
 import { ChainHealthDetailsComponent } from './chain-health-details.component';
+import { UniverseSharedModule } from '@app/universe/universe-shared.module';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -222,7 +223,13 @@ const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
 @Component({
   selector: 'app-multichain-explorer',
   standalone: true,
-  imports: [RelativeUrlPipe, CommonModule, RouterModule, ChainHealthDetailsComponent],
+  imports: [
+    RelativeUrlPipe,
+    CommonModule,
+    RouterModule,
+    ChainHealthDetailsComponent,
+    UniverseSharedModule,
+  ],
   templateUrl: './multichain-explorer.component.html',
   styleUrls: ['./multichain-explorer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
