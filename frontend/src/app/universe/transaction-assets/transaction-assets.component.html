@@ -1,0 +1,145 @@
+<section class="universe-transaction-assets" *ngIf="state$ | async as state">
+  <header class="summary-header">
+    <h2 i18n="universe.transaction-assets.heading">Assets in this transaction</h2>
+
+    <ng-container [ngSwitch]="state.kind">
+      <span class="summary-count" *ngSwitchCase="'loading'" role="status" aria-live="polite"
+        i18n="universe.transaction-assets.loading">Reading supported assets</span>
+
+      <ng-container *ngSwitchCase="'summary'">
+        <span class="summary-count" role="status" aria-live="polite"
+          *ngIf="provenEmpty(state.summary); else knownCount"
+          i18n="universe.transaction-assets.none">No supported assets in this transaction</span>
+        <ng-template #knownCount>
+          <span class="summary-count" role="status" aria-live="polite">
+            <ng-container *ngIf="incomplete(state.summary); else completeCount">
+              {{ state.summary.counts.knownCountAtomic }}
+              <span i18n="universe.transaction-assets.known">known assets; coverage incomplete</span>
+            </ng-container>
+            <ng-template #completeCount>
+              {{ state.summary.counts.totalCount }}
+              <span i18n="universe.transaction-assets.total">assets total</span>
+            </ng-template>
+            <span class="summary-breakdown">
+              ({{ state.summary.counts.fungibleTypeCountAtomic }}<span
+                i18n="universe.transaction-assets.token-types">&nbsp;token types</span>,
+              {{ state.summary.counts.collectibleItemCountAtomic }}<span
+                i18n="universe.transaction-assets.collectibles">&nbsp;collectibles</span>,
+              {{ state.summary.counts.otherAssetCountAtomic }}<span
+                i18n="universe.transaction-assets.other">&nbsp;other</span>;
+              {{ state.summary.counts.protocolCountAtomic }}<span
+                i18n="universe.transaction-assets.protocols">&nbsp;protocols</span>)
+            </span>
+          </span>
+        </ng-template>
+      </ng-container>
+    </ng-container>
+  </header>
+
+  <ng-container [ngSwitch]="state.kind">
+    <div class="summary-skeleton" *ngSwitchCase="'loading'" aria-hidden="true">
+      <span class="skeleton-bar"></span>
+      <span class="skeleton-bar"></span>
+    </div>
+
+    <p class="summary-notice" *ngSwitchCase="'not-found'" role="status"
+      i18n="universe.transaction-assets.not-found">This transaction was not found by the base chain authority.</p>
+
+    <div class="summary-notice" *ngSwitchCase="'unconfigured'" role="status">
+      <span i18n="universe.transaction-assets.unconfigured">No asset authority is configured for this network, so the
+        inventory is unknown rather than empty.</span>
+    </div>
+
+    <div class="summary-notice summary-retryable" *ngSwitchCase="'timeout'" role="status">
+      <span i18n="universe.transaction-assets.timeout">The asset sources did not answer in time. Nothing is known about
+        this transaction's assets yet.</span>
+      <button type="button" class="summary-retry" (click)="retry()"
+        i18n="universe.transaction-assets.retry">Retry</button>
+    </div>
+
+    <div class="summary-notice summary-retryable" *ngSwitchCase="'error'" role="status">
+      <span i18n="universe.transaction-assets.error">The asset summary could not be read.</span>
+      <button type="button" class="summary-retry" (click)="retry()"
+        i18n="universe.transaction-assets.retry">Retry</button>
+    </div>
+
+    <ng-container *ngSwitchCase="'summary'">
+      <table class="summary-table" *ngIf="state.summary.assets.length">
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.transaction-assets.column.asset">Asset</th>
+            <th scope="col" i18n="universe.transaction-assets.column.protocol">Protocol</th>
+            <th scope="col" i18n="universe.transaction-assets.column.inputs">In this transaction's inputs</th>
+            <th scope="col" i18n="universe.transaction-assets.column.outputs">In this transaction's outputs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows(state.summary); trackBy: trackRow">
+            <th scope="row" class="asset-cell">
+              <span class="asset-logo">
+                <img *ngIf="row.asset.logo && !row.logoFailed" [src]="row.asset.logo.objectPath" alt=""
+                  width="24" height="24" loading="lazy" (error)="onLogoError(row.key)">
+                <span *ngIf="!row.asset.logo || row.logoFailed" class="asset-logo-fallback"
+                  [attr.data-protocol]="protocolIcon(row.asset.protocolId)"
+                  [attr.title]="row.asset.protocolId + ' protocol icon; this asset has no verified logo'"
+                  aria-hidden="true"></span>
+              </span>
+              <span class="asset-identity">
+                <span class="asset-name">{{ row.asset.displayName || row.asset.ticker || row.asset.assetId }}</span>
+                <span class="asset-id">{{ row.asset.assetId }}</span>
+                <span class="asset-ruleset" *ngIf="row.asset.ruleset"
+                  i18n="universe.transaction-assets.ruleset">ruleset: {{ row.asset.ruleset }}</span>
+              </span>
+            </th>
+            <td class="protocol-cell">
+              <span class="protocol-badge">{{ row.asset.protocolId }}</span>
+              <span class="asset-kind">{{ row.asset.assetKind }}</span>
+            </td>
+            <td class="quantity-cell">
+              <ng-container [ngTemplateOutlet]="quantityCell"
+                [ngTemplateOutletContext]="{ quantity: row.inputs, asset: row.asset }"></ng-container>
+            </td>
+            <td class="quantity-cell">
+              <ng-container [ngTemplateOutlet]="quantityCell"
+                [ngTemplateOutletContext]="{ quantity: row.outputs, asset: row.asset }"></ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul class="summary-effects" *ngIf="state.summary.assets.length">
+        <ng-container *ngFor="let row of rows(state.summary); trackBy: trackRow">
+          <li *ngFor="let effect of row.asset.effects">
+            <span class="effect-protocol">{{ row.asset.protocolId }}</span>
+            <span class="effect-type">{{ effect.actionType }}</span>
+            <span class="effect-quantity" *ngIf="effect.quantityAtomic as quantity">{{ quantity }}</span>
+            <span class="effect-label" *ngIf="effect.accepted"
+              i18n="universe.transaction-assets.effect.accepted">accepted protocol effect</span>
+            <span class="effect-label" *ngIf="!effect.accepted"
+              i18n="universe.transaction-assets.effect.candidate">candidate, not an accepted effect</span>
+          </li>
+        </ng-container>
+      </ul>
+
+      <p class="summary-notice summary-gaps" *ngIf="incomplete(state.summary)" role="status">
+        <span i18n="universe.transaction-assets.gaps">Some sources could not answer, so this list may be incomplete. It
+          is not proof that no other assets are present.</span>
+        <span class="gap-list">{{ gaps(state.summary).join(', ') }}</span>
+      </p>
+    </ng-container>
+  </ng-container>
+
+  <ng-template #quantityCell let-quantity="quantity" let-asset="asset">
+    <ng-container [ngSwitch]="quantity.kind">
+      <span *ngSwitchCase="'exact'" class="quantity-exact">{{ quantity.value }}
+        <span class="quantity-ticker" *ngIf="asset.ticker">{{ asset.ticker }}</span></span>
+      <span *ngSwitchCase="'atomic'" class="quantity-atomic">{{ quantity.value }}
+        <span class="quantity-units" i18n="universe.transaction-assets.atomic-units">atomic units (divisibility
+          unknown)</span></span>
+      <span *ngSwitchCase="'unavailable'" class="quantity-unavailable"
+        i18n="universe.transaction-assets.quantity-unavailable">quantity not stated</span>
+    </ng-container>
+    <span class="quantity-partial" *ngIf="quantity.partial"
+      i18n="universe.transaction-assets.quantity-partial">partial evidence</span>
+  </ng-template>
+</section>

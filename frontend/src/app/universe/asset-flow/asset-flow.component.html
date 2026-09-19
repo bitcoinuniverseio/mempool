@@ -1,25 +1,3 @@
-<!-- IMPLEMENTATION-HANDOFF [TX-06] TX-06-FE-SUMMARY-UI
-Coverage G01/G02/G05/G08/G13; defects D01/D02/D05; R-USER.
-Current header is followed by loading bars or position rows, without a
-transaction-level asset count or token-logo/quantity summary.
-1. Mount the TX-06 shared transaction-assets child BEFORE this section, with
-explicit txid, chain, network and base transaction status. It must render
-without waiting for detailed flow success and without a user expansion click.
-2. Child header: known distinct assets and protocol count, separated token
- types and collectible items. Use a qualified known count when incomplete;
-show proven zero only when every relevant source proves absence.
-3. Render each asset's verified thumbnail, name/ticker, protocol badge and
-exact labelled quantity; show input/output or individual accepted effects
-when no single transaction quantity is defined. Do not sum them together.
-4. Provide loading, empty, pending, partial, unavailable, error and Retry.
-Missing logos fall back to a bundled protocol icon with clear semantics.
-Retain the existing detailed evidence, outpoint links and native BTC flow.
-Depends TX-01/04/05/06. Add tests in transaction-assets.component.spec.ts and
-asset-flow.component.spec.ts; visual checks at 360/768/1440px, both themes,
-keyboard and screen reader live-status announcements. Long IDs/quantities
-must stay usable with full exact text available, not a hover-only value.
-No active HTML placeholders or cosmetic fake token rows in preparation.
--->
 <section class="universe-asset-flow" *ngIf="state$ | async as state">
   <header class="flow-header">
     <h2 i18n="universe.flow.title">Universe Asset Flow</h2>

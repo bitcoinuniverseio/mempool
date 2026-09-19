@@ -44,26 +44,6 @@ export interface TaprootAssetsServiceOptions {
  * different answers, and this never turns the second into the first. BOLT12
  * offers have no owned source yet and stay unavailable.
  */
-/**
- * IMPLEMENTATION-HANDOFF [TX-07] TX-07-PUBLIC-PROOF-BOUNDARY
- * Coverage G16/T-taproot_assets-*; required scope reconciliation, not a claim
- * that every public Bitcoin commitment reveals an asset. R-TAPROOT-ASSETS.
- * 1. Keep this offered product in the inventory even though the 39-entry
- * Universe protocol manifest does not enumerate it. Add summary facts only
- * from a validated, explicitly public proof/asset publication bound to the
- * requested anchor tx, network and asset id. Never infer an amount from P2TR.
- * 2. Do not scan or publish a connected wallet's private list/proofs to populate
- * an unauthenticated tx page. Reuse an authorized public-proof read seam where
- * one exists; otherwise report not-publicly-observable and document the exact
- * publication prerequisite rather than returning zero or fabricating one unit.
- * 3. Keep proof authorization, visibility scope and validation state in the
- * summary-reader cache key. Proof unavailability must not hide independently
- * verified Rune/inscription assets on the same transaction.
- * Depends TX-01/02/06. Tests: existing Taproot Assets service/proof tests plus
- * new summary boundary tests: public validated proof, invalid/mismatched proof,
- * private proof not disclosed, missing proof, wrong network and reload. This
- * feature does not authorize new mints, wallet transfers or private-data export.
- */
 export class TaprootAssetsService {
   private authority: TapdAuthority | null | undefined;
 
