@@ -366,3 +366,31 @@
     animation: none;
   }
 }
+
+/* IMPLEMENTATION-HANDOFF [UI-WP03:TX-LAYOUT] 2026-09-19
+ * Coverage C22-C32; defects F01/F02. Preparation only; do not add active CSS yet.
+ * Verified: table-layout:auto, flex on th.asset-cell, and overflow-wrap:anywhere
+ * on .quantity-value allow content to dominate column sizing and split digits.
+ * The only stacking breakpoint is a 575.98px viewport, not the panel width.
+ * Sources R01 WCAG 2.2 reflow; R06 CSS table model; existing global u-tokens.
+ * 1. With TX-MARKUP, restore the desktop th to table-cell and put flex inside
+ *    its identity child. Set an explicit colgroup/fixed layout or measured
+ *    bounded column sizing; the identity column is the flexible remainder.
+ * 2. Add container-type:inline-size on the panel. At <=720px container width,
+ *    use stacked asset rows with labelled two-column Inputs/Outputs. Confirm
+ *    semantic table accessibility; never use CSS to remove accessible labels.
+ * 3. Give every flexible child min-width:0. Primary quantities use tabular nums,
+ *    white-space:nowrap and the shared compact presenter, not word-break or
+ *    a smaller unreadable font. Exact disclosure may wrap at its full width.
+ * 4. Use existing u-space 4/8/12/16/24 and radius 5/8 tokens, 40px fixed logo
+ *    boxes, 44px controls, restrained separators and state foreground/surface
+ *    pairs. Keep brand accents separate from evidence colors; no palette fork.
+ * 5. Extract common styles to PROPOSED NEW ../asset-summary/_asset-summary.scss
+ *    and reuse in address-assets. Do not alter the global identifier mixin.
+ * 6. Reserve loading geometry; retain focus rings, forced-colors borders and
+ *    reduced-motion rules. No nested page-wide horizontal scrolling.
+ * Tests: actual Angular views at all C22-C32 widths/themes; assert amount
+ *    line boxes, no document overflow, correct hit targets and focus order.
+ * Run root npm run checkscreenshots:changed and frontend type/template checks
+ * after implementation (NOT RUN here). Rollback local styles with markup.
+ */

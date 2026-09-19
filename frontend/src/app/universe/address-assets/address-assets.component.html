@@ -60,3 +60,30 @@
 
   </ng-container>
 </section>
+
+<!-- IMPLEMENTATION-HANDOFF [UI-WP05:ADDRESS-MARKUP] 2026-09-19
+Coverage C33-C44/C22-C32; defects F04/F09/F11. Preparation only.
+Sources R01/R02/R05. Depends UI-WP02 shared presenter and UI-WP04 data model.
+1. Use the same hierarchy as the transaction panel: Asset holdings, known
+   identity count and one coverage state. Label the quantity Held, not Inputs
+   or Received. This is a read-only UTXO view, not a complete wallet portfolio.
+2. Replace raw protocol ids as primary identity with asset name, protocol label,
+   fixed fallback mark and compact id. Keep full identity/ruleset in details.
+   Reuse registry presentation without making metadata gate proven holdings.
+3. Replace the truthiness-only quantity span with explicit exact/raw/unknown
+   cases. Zero remains zero; null says Not published; absent decimals says
+   smallest units. Never add a fiat total or sum unrelated asset quantities.
+4. Show output count in the row and move ALL existing outpoint links into an
+   accessible per-asset disclosure. Keep full references available and every
+   route network-correct; no guessed token-detail routes or discarded outputs.
+5. Replace the paragraph pile with one concise checked/total scope statement
+   and expandable source/checkpoint detail. Partial empty and proven empty
+   must differ; unavailable is not empty. Keep an explicit bounded retry.
+6. Match the transaction keyboard, touch, focus, copy-failure and loading states.
+   Localize every new label using the installed Angular i18n conventions.
+Tests: address-assets.component.spec.ts plus actual desktop/mobile routes,
+complete-empty UTXOs, first/last output link, refresh/back/network changes,
+unknown units and quantities, clipboard denial, both themes and zoom.
+Commands are in the handoff and were NOT RUN against the app here. Retain
+portfolio and base-coin balance links; rollback this template with its model.
+-->

@@ -281,3 +281,32 @@ describe('TransactionAssetsComponent presentation', () => {
     expect(component.rows(state)[0].logoFailed).toBe(false);
   });
 });
+
+/* IMPLEMENTATION-HANDOFF [UI-WP06:ACCEPTANCE] 2026-09-19
+ * Coverage C01-C52. Preparation only: existing tests were inspected, NOT RUN.
+ * Verified: these are class-level tests, not rendered Angular/browser E2E.
+ * Some fixtures set complete totals while retaining unconfigured coverage;
+ * they must be made contract-consistent, not used to weaken UI-WP01 validation.
+ * 1. Keep every existing valid assertion and add the UI-WP01/02 adversarial
+ *    decoder/lifecycle cases, using authoritative contract fixtures (UI-WP07).
+ * 2. Add rendered-template tests for exact/raw/null, full identity/copy,
+ *    accepted versus not-accepted effects, counts/filters and coverage reasons.
+ *    Test Angular template compilation; a standalone HTML mock is insufficient.
+ * 3. Add a shared browser matrix to PROPOSED NEW scripts/universe/visual-qa/
+ *    asset-summary.spec.mjs after checking the existing harness API. Cover
+ *    transaction, tracker, address and any confirmed multichain embed, both
+ *    themes, 320/390/768/1024/1440, 200/400 percent zoom and keyboard focus.
+ * 4. Use real Signet read-only API/indexer-to-UI journeys where supported;
+ *    record justified Testnet substitutes per source. Do not spend funds or
+ *    manufacture a transaction requirement for a read-only feature. Faults
+ *    may use labelled isolated integration fixtures, never acceptance mocks.
+ * 5. Retest base BTC values, details/links, network isolation, back/refresh,
+ *    cancellation, unavailable/partial/proven-empty, logos and bounded retries.
+ * 6. Record revision, network, requests, source/checkpoint readback, screenshots
+ *    and assertions per row. Keep BLOCKED/NOT TESTED separate from PASS.
+ * 7. Only after every required row passes, integrate legitimate feature work
+ *    and use the established release process; verify public revision/health
+ *    and preserve rollback. No deployment is authorized by a fixture pass.
+ * Commands: frontend npm test -- src/app/universe/transaction-assets; root
+ * npm run checkscreenshots:changed (NOT RUN here). Read the full handoff prompt.
+ */

@@ -173,6 +173,8 @@ describe('decodeTransactionAssetSummary', () => {
       { objectPath: 'https://cdn.example/x.png', contentHash: HASH, metadataRevision: 'r' },
       { objectPath: '/universe-media/v1/objects/../../etc/passwd', contentHash: '../..', metadataRevision: 'r' },
       { objectPath: '/universe-media/v1/objects/' + HASH, contentHash: 'c'.repeat(64), metadataRevision: 'r' },
+      // Not marked verified by the producer, so it is not promoted to a logo.
+      { objectPath: '/universe-media/v1/objects/' + HASH, contentHash: HASH, metadataRevision: 'r' },
       'not-an-object',
     ]) {
       const summary = decodeTransactionAssetSummary(payload({ assets: [assetRow({ logo })] }), CONTEXT);

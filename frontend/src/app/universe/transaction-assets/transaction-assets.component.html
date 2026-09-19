@@ -83,7 +83,7 @@
         <ng-container *ngFor="let row of rows(state); trackBy: trackRow">
           <li *ngFor="let effect of row.asset.effects">
             <span class="universe-chip" [ngClass]="effect.accepted ? 'state-proven' : 'state-pending'">{{
-              effect.accepted ? effect.actionType : effect.actionType + ' (unconfirmed)' }}</span>
+              effect.accepted ? effect.actionType : effect.actionType + ' (not accepted)' }}</span>
             <span class="effect-asset">{{ row.title }}</span>
           </li>
         </ng-container>
@@ -118,3 +118,31 @@
       i18n="universe.transaction-assets.quantity-partial">Partial</span>
   </ng-template>
 </section>
+
+<!-- IMPLEMENTATION-HANDOFF [UI-WP03:TX-MARKUP] 2026-09-19
+Coverage C22-C32; defects F01/F02/F06/F07. Preparation only.
+Sources R01 WCAG 2.2; R02 Angular 20; R05 summary-v1. Depends UI-WP01/02.
+1. Replace the competing header chips with Assets, known identity count,
+   a short context subtitle, and one overall coverage badge. Counts describe
+   found identities, never a fabricated complete total or portfolio value.
+2. Keep a semantic table on desktop, with flex INSIDE the row-header cell,
+   not on the th. Use one labelled asset list on narrow containers only if
+   table semantics cannot be preserved; never duplicate focusable content.
+3. Put name, restrained protocol label and shortened identifier together.
+   Add an explicit 44px disclosure button per row with aria-expanded/controls.
+   Its inline details expose full identity, ruleset, exact values and copy.
+   Truncation is presentational only; full data is keyboard/touch accessible.
+4. Render Inputs and Outputs as neutral, right-aligned numeric columns with
+   tickers on a separate line. Approximate headlines must be labelled; raw
+   values say smallest units. Null says Not published and never prints zero.
+5. Move summary-effects into their own asset's detail region; label authority
+   acceptance accurately. Retain every existing action and its identity.
+6. Replace Waiting on with Coverage details and per-source state/reason.
+   Keep partial, unavailable, unsupported, private and proven-empty distinct.
+7. Copy actual strings with success/failure feedback; never rely on title
+   tooltips, hover, color alone, or silently successful clipboard operations.
+Tests: component spec plus browser checks at 320/390/768/1024/1440, both
+installed themes, 200/400 percent zoom, keyboard and reduced motion. Assert
+no primary amount wraps; full strings remain available. Commands/fixtures
+are in the handoff; application browser tests were NOT RUN in preparation.
+-->
