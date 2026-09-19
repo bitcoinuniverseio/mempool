@@ -1,0 +1,148 @@
+<section class="universe-transaction-assets" *ngIf="state$ | async as state">
+  <header class="summary-header">
+    <h2 i18n="universe.transaction-assets.heading">Assets</h2>
+
+    <ng-container *ngIf="state.kind === 'summary' && state.summary as summary">
+      <span class="universe-chip" [ngClass]="summaryChip(summary).state">{{ summaryChip(summary).label }}</span>
+      <span class="summary-count" role="status" aria-live="polite">{{ countLabel(summary) }}</span>
+    </ng-container>
+
+    <span class="summary-count" *ngIf="state.kind === 'loading'" role="status" aria-live="polite"
+      i18n="universe.transaction-assets.loading">Checking</span>
+  </header>
+
+  <ng-container [ngSwitch]="state.kind">
+    <div class="summary-skeleton" *ngSwitchCase="'loading'" aria-hidden="true">
+      <span class="skeleton-bar"></span>
+      <span class="skeleton-bar"></span>
+    </div>
+
+    <p class="summary-notice" *ngSwitchCase="'not-found'" role="status"
+      i18n="universe.transaction-assets.not-found">This transaction was not found.</p>
+
+    <p class="summary-notice" *ngSwitchCase="'unconfigured'" role="status"
+      i18n="universe.transaction-assets.unconfigured">Asset sources are not set up for this network, so we cannot say
+      what this transaction carries.</p>
+
+    <div class="summary-notice" *ngSwitchCase="'timeout'" role="status">
+      <span i18n="universe.transaction-assets.timeout">The asset sources did not answer in time.</span>
+      <button type="button" class="summary-retry" (click)="retry()"
+        i18n="universe.transaction-assets.retry">Try again</button>
+    </div>
+
+    <div class="summary-notice" *ngSwitchCase="'error'" role="status">
+      <span i18n="universe.transaction-assets.error">We could not load the assets.</span>
+      <button type="button" class="summary-retry" (click)="retry()"
+        i18n="universe.transaction-assets.retry">Try again</button>
+    </div>
+
+    <ng-container *ngSwitchCase="'summary'">
+      <table class="summary-table" *ngIf="state.summary.assets.length">
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.transaction-assets.column.asset">Asset</th>
+            <th scope="col" i18n="universe.transaction-assets.column.inputs">In</th>
+            <th scope="col" i18n="universe.transaction-assets.column.outputs">Out</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows(state); trackBy: trackRow">
+            <th scope="row" class="asset-cell">
+              <span class="asset-logo">
+                <img *ngIf="row.asset.logo && !row.logoFailed" [src]="row.asset.logo.objectPath" alt=""
+                  width="28" height="28" loading="lazy" decoding="async" (error)="onLogoError(row.key)">
+                <span *ngIf="!row.asset.logo || row.logoFailed" class="asset-logo-fallback"
+                  [attr.title]="row.protocol.displayName + ' symbol. This asset has no published logo.'"
+                >{{ row.initials }}</span>
+              </span>
+              <span class="asset-identity">
+                <span class="asset-name">{{ row.title }}</span>
+                <span class="asset-meta">
+                  <app-protocol-badge [protocol]="row.protocol"></app-protocol-badge>
+                  <span class="asset-kind" *ngIf="row.kindLabel">{{ row.kindLabel }}</span>
+                  <span class="asset-kind" *ngIf="row.asset.ruleset" i18n="universe.transaction-assets.ruleset">{{ row.asset.ruleset }} rules</span>
+                </span>
+                <span class="asset-id" *ngIf="row.subtitle">{{ row.subtitle }}</span>
+              </span>
+            </th>
+            <td class="quantity-cell">
+              <span class="cell-label" aria-hidden="true" i18n="universe.transaction-assets.column.inputs">In</span>
+              <ng-container [ngTemplateOutlet]="amount"
+                [ngTemplateOutletContext]="{ quantity: row.inputs, asset: row.asset }"></ng-container>
+            </td>
+            <td class="quantity-cell">
+              <span class="cell-label" aria-hidden="true" i18n="universe.transaction-assets.column.outputs">Out</span>
+              <ng-container [ngTemplateOutlet]="amount"
+                [ngTemplateOutletContext]="{ quantity: row.outputs, asset: row.asset }"></ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul class="summary-effects">
+        <ng-container *ngFor="let row of rows(state); trackBy: trackRow">
+          <li *ngFor="let effect of row.asset.effects">
+            <span class="universe-chip" [ngClass]="effect.accepted ? 'state-proven' : 'state-pending'">{{
+              effect.accepted ? effect.actionType : effect.actionType + ' (not accepted)' }}</span>
+            <span class="effect-asset">{{ row.title }}</span>
+          </li>
+        </ng-container>
+      </ul>
+
+      <details class="summary-gaps" *ngIf="incomplete(state.summary)">
+        <summary>
+          <span class="universe-chip state-partial" i18n="universe.transaction-assets.gaps.chip">Partial</span>
+          <span i18n="universe.transaction-assets.gaps">Some sources could not answer, so this list may be
+            incomplete.</span>
+        </summary>
+        <p class="gap-intro" i18n="universe.transaction-assets.gaps.intro">Waiting on {{ gapCount(state.summary) }}
+          sources:</p>
+        <ul class="gap-list">
+          <li *ngFor="let name of gapNames(state)">{{ name }}</li>
+        </ul>
+      </details>
+    </ng-container>
+  </ng-container>
+
+  <ng-template #amount let-quantity="quantity" let-asset="asset">
+    <span class="quantity-value" [ngSwitch]="quantity.kind">
+      <ng-container *ngSwitchCase="'exact'">{{ quantity.value }}<span class="quantity-ticker"
+          *ngIf="asset.ticker"> {{ asset.ticker }}</span></ng-container>
+      <ng-container *ngSwitchCase="'raw'">{{ quantity.value }}<span class="quantity-note"
+          title="The source did not publish this asset's decimal places, so this is the raw amount."
+          i18n="universe.transaction-assets.raw-units">smallest units</span></ng-container>
+      <span *ngSwitchCase="'none'" class="quantity-none"
+        i18n="universe.transaction-assets.quantity-none">Not published</span>
+    </span>
+    <span class="universe-chip state-partial quantity-partial" *ngIf="quantity.partial"
+      i18n="universe.transaction-assets.quantity-partial">Partial</span>
+  </ng-template>
+</section>
+
+<!-- IMPLEMENTATION-HANDOFF [UI-WP03:TX-MARKUP] 2026-09-19
+Coverage C22-C32; defects F01/F02/F06/F07. Preparation only.
+Sources R01 WCAG 2.2; R02 Angular 20; R05 summary-v1. Depends UI-WP01/02.
+1. Replace the competing header chips with Assets, known identity count,
+   a short context subtitle, and one overall coverage badge. Counts describe
+   found identities, never a fabricated complete total or portfolio value.
+2. Keep a semantic table on desktop, with flex INSIDE the row-header cell,
+   not on the th. Use one labelled asset list on narrow containers only if
+   table semantics cannot be preserved; never duplicate focusable content.
+3. Put name, restrained protocol label and shortened identifier together.
+   Add an explicit 44px disclosure button per row with aria-expanded/controls.
+   Its inline details expose full identity, ruleset, exact values and copy.
+   Truncation is presentational only; full data is keyboard/touch accessible.
+4. Render Inputs and Outputs as neutral, right-aligned numeric columns with
+   tickers on a separate line. Approximate headlines must be labelled; raw
+   values say smallest units. Null says Not published and never prints zero.
+5. Move summary-effects into their own asset's detail region; label authority
+   acceptance accurately. Retain every existing action and its identity.
+6. Replace Waiting on with Coverage details and per-source state/reason.
+   Keep partial, unavailable, unsupported, private and proven-empty distinct.
+7. Copy actual strings with success/failure feedback; never rely on title
+   tooltips, hover, color alone, or silently successful clipboard operations.
+Tests: component spec plus browser checks at 320/390/768/1024/1440, both
+installed themes, 200/400 percent zoom, keyboard and reduced motion. Assert
+no primary amount wraps; full strings remain available. Commands/fixtures
+are in the handoff; application browser tests were NOT RUN in preparation.
+-->

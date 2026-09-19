@@ -80,6 +80,9 @@
   <ng-template [ngIf]="!isLoadingTx && !error">
 
     <!-- Universe protocol asset flow -->
+    <app-universe-transaction-assets *ngIf="txId" [txid]="txId" chain="bitcoin"
+      [statusRevision]="tx?.status?.block_hash || tx?.status?.confirmed || null"></app-universe-transaction-assets>
+
     <app-universe-asset-flow *ngIf="txId" [txid]="txId"></app-universe-asset-flow>
 
     <!-- CPFP Details -->

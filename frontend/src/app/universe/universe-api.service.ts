@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take, timeout } from 'rxjs';
+import { TransactionAssetSummary, decodeTransactionAssetSummary } from './transaction-assets/transaction-assets.types';
 import { StateService } from '@app/services/state.service';
 import { ProtocolPageKind, readProtocolFailure, readProtocolPage } from './universe-protocol-contract';
 import { chainNetwork } from './chain-network';
@@ -96,6 +97,12 @@ import { OwnerKeyService } from '@app/universe/intelligence-platform/owner-key.s
 
 /** Server-side batch ceilings. Callers must not exceed them. */
 export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
+/**
+ * The client deadline for one summary read, outside the backend's own five
+ * second budget so a slow dependency surfaces as a retryable timeout here.
+ */
+export const UNIVERSE_SUMMARY_DEADLINE_MS = 8_000;
+
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
 
 /** The chains the picker lists, each read from its own network. */
@@ -279,6 +286,31 @@ export class UniverseApiService {
   getTransactionFlow$(txid: string): Observable<ExplorerTransactionAssetFlow> {
     return this.scopedRequest<ExplorerTransactionAssetFlow>(
       this.apiBaseUrl + '/api/v1/universe/transactions/' + txid
+    );
+  }
+
+  /**
+   * The compact transaction asset summary for one transaction.
+   *
+   * Deliberately independent of {@link getTransactionFlow$}: the summary is the
+   * thing a page shows first, and the observed detailed flow took twenty one
+   * seconds against a base read of one. An eight second client deadline sits
+   * outside the backend's five second one, so a stalled dependency produces an
+   * explicit timeout the user can retry rather than an open-ended skeleton.
+   *
+   * The response is decoded, not merely typed: a mismatched chain, network or
+   * txid is an error, so a late answer for a previous transaction can never be
+   * rendered as this one's inventory. A failure is never caught into an empty
+   * asset list.
+   */
+  getTransactionAssets$(txid: string, chain = 'bitcoin'): Observable<TransactionAssetSummary> {
+    return this.chainNetwork$(chain).pipe(
+      switchMap((network) => this.requestForNetwork<unknown>(
+        this.apiBaseUrl + '/api/v1/universe/transactions/' + txid + '/assets', network, undefined, chain,
+      ).pipe(
+        timeout(UNIVERSE_SUMMARY_DEADLINE_MS),
+        map((value) => decodeTransactionAssetSummary(value, { chain, network, txid })),
+      )),
     );
   }
 

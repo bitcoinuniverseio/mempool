@@ -51,6 +51,22 @@ export function sourceForProtocol(
  * the detail page share this one rule so the same unreachable authority can
  * never read as "Unavailable" on one page and "Readable" on the other.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [FE-READINESS-03] | every authority-dependent row.
+ * Verified: ready with a checkpoint is readable, stale is catching-up, and
+ * unconfigured/unreachable remain unavailable. These are runtime observations.
+ * Prerequisites: BE source-health fixes and authority checkpoint reconciliation.
+ * 1. Keep this shared state machine independent of functional coverage; repair
+ *    the authority/configuration cause rather than converting stale to ready.
+ * 2. Validate source identity, selected chain/network, checkpoint and observation
+ *    freshness in the owning backend; propagate explicit degraded reasons.
+ * 3. Extend protocol-availability.spec.ts for missing/expired checkpoints and
+ *    chain/network mismatches after the source contract defines these outcomes.
+ * 4. Verify directory and detail agree across outages, catch-up, recovery and
+ *    network changes. Record deployed revision and public operational snapshot.
+ * Mainnet health observation is not transaction testing or an E2E PASS.
+ * Preserve read-only behavior and existing legitimate supported networks.
+ */
 export function protocolAvailability(
   protocol: ExplorerProtocolDefinition,
   sources: SourcesByAuthority,

@@ -119,6 +119,9 @@
       </div>
     </div>
 
+    <app-universe-transaction-assets *ngIf="txId && tx && !waitingForTransaction" [txid]="txId" chain="bitcoin"
+      [statusRevision]="tx?.status?.block_hash || replaced || null"></app-universe-transaction-assets>
+
     <div class="bottom-panel" *ngIf="!error || waitingForTransaction">
       @if (isLoading) {
         <div class="progress-icon">
