@@ -1,89 +1,266 @@
+<!--
+  The protocol assets an address currently holds.
+
+  The same hierarchy as the transaction summary, with Held and Positions in
+  place of Inputs and Outputs, because a reader moves between the two panels on
+  the same site and they must not look like different products.
+
+  What it states is deliberately narrow: this is what the unspent outputs it
+  checked carried, at the checkpoint it read them at. It is not a wallet
+  valuation, there is no fiat figure, and the scope is always on the page rather
+  than implied.
+-->
 <section class="universe-address-assets" *ngIf="state$ | async as state">
   <ng-container [ngSwitch]="state.kind">
 
     <ng-container *ngSwitchCase="'skipped'"></ng-container>
+
     <div *ngSwitchCase="'source-unavailable'" class="panel unavailable" role="status">
-      <h2>Universe assets</h2><p>{{ state.reason }}</p>
+      <header class="summary-header">
+        <h2 i18n="universe.address.title">Asset holdings</h2>
+      </header>
+      <p class="summary-notice">{{ state.reason }}</p>
     </div>
 
     <div *ngSwitchCase="'loading'" class="panel" aria-busy="true">
-      <h2 i18n="universe.address.title">Universe assets</h2>
-      <p class="skeleton-line"></p>
+      <header class="summary-header">
+        <h2 i18n="universe.address.title">Asset holdings</h2>
+        <span class="summary-count" role="status" aria-live="polite"
+          i18n="universe.address.loading">Checking</span>
+      </header>
+      <!-- Reserved geometry, so the answer arriving does not move the page. -->
+      <div class="summary-skeleton" aria-hidden="true">
+        <span class="skeleton-bar"></span>
+        <span class="skeleton-bar"></span>
+      </div>
     </div>
 
     <div *ngSwitchCase="'unavailable'" class="panel unavailable">
-      <h2 i18n="universe.address.title">Universe assets</h2>
-      <p i18n="universe.address.unavailable">
-        The asset authority could not be reached, so this address's protocol assets
-        are not shown. Its bitcoin balance above is unaffected.
-      </p>
+      <header class="summary-header">
+        <h2 i18n="universe.address.title">Asset holdings</h2>
+      </header>
+      <div class="summary-notice" role="status">
+        <span i18n="universe.address.unavailable">
+          The asset authority could not be reached, so this address's protocol assets
+          are not shown. Its bitcoin balance above is unaffected.
+        </span>
+        <button type="button" class="summary-retry" (click)="retry()"
+          i18n="universe.address.retry">Try again</button>
+      </div>
     </div>
 
     <div *ngSwitchCase="'ready'" class="panel">
-      <h2 i18n="universe.address.title">Universe assets</h2>
+      <header class="summary-header">
+        <h2 i18n="universe.address.title">Asset holdings</h2>
+        <span class="summary-count" role="status" aria-live="polite">
+          <ng-container *ngIf="state.holdings.length"
+            i18n="universe.address.count">{{ state.holdings.length }} held</ng-container>
+          <ng-container *ngIf="!state.holdings.length"
+            i18n="universe.address.none-count">None held</ng-container>
+        </span>
+        <span class="universe-chip summary-badge" [ngClass]="state.partial ? 'state-partial' : 'state-proven'">
+          <ng-container *ngIf="state.partial" i18n="universe.address.scope.partial">Partial</ng-container>
+          <ng-container *ngIf="!state.partial" i18n="universe.address.scope.complete">Complete</ng-container>
+        </span>
+      </header>
 
-      <p class="coverage">
-        <ng-container i18n="universe.address.coverage">
-          Checked {{ state.resolved }} of this address's unspent outputs.
-        </ng-container>
-        <ng-container *ngIf="state.notResolved" i18n="universe.address.not-covered">
-          {{ state.notResolved }} more were not checked on this page.
-        </ng-container>
-      </p>
+      <table class="summary-table" *ngIf="state.holdings.length">
+        <colgroup>
+          <col class="col-asset">
+          <col class="col-quantity">
+          <col class="col-quantity">
+          <col class="col-disclose">
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.address.column.asset">Asset</th>
+            <th scope="col" class="numeric" i18n="universe.address.column.held">Held</th>
+            <th scope="col" class="numeric" i18n="universe.address.column.positions">Positions</th>
+            <th scope="col"><span class="visually-hidden"
+                i18n="universe.address.column.details">Details</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let holding of state.holdings; trackBy: trackByHolding">
+            <tr class="asset-row">
+              <th scope="row" class="asset-cell">
+                <span class="asset-identity-box">
+                  <span class="asset-logo">
+                    <span class="asset-logo-fallback" aria-hidden="true">{{ holding.initials }}</span>
+                  </span>
+                  <span class="asset-identity">
+                    <span class="asset-name">{{ holding.displayName }}</span>
+                    <span class="asset-meta">
+                      <a class="protocol-link"
+                        [routerLink]="['/protocols' | relativeUrl, holding.protocolId]">{{ holding.protocolId }}</a>
+                      <span class="asset-id" *ngIf="holding.shortAssetId !== holding.displayName">{{
+                        holding.shortAssetId }}</span>
+                    </span>
+                  </span>
+                </span>
+              </th>
 
-      <p class="partial" *ngIf="state.partial" i18n="universe.address.partial">
-        At least one output could not be fully accounted for, so this list may be
-        incomplete.
-      </p>
+              <td class="quantity-cell">
+                <span class="cell-label" aria-hidden="true" i18n="universe.address.column.held">Held</span>
+                <span class="quantity-value" [ngSwitch]="holding.held.kind">
+                  <ng-container *ngSwitchCase="'exact'">
+                    <span class="quantity-number">{{ holding.held.headline }}</span>
+                    <span class="quantity-ticker" *ngIf="holding.ticker">{{ holding.ticker }}</span>
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'raw'">
+                    <span class="quantity-number">{{ holding.held.headline }}</span>
+                    <span class="quantity-note" i18n="universe.address.raw-units">smallest units</span>
+                  </ng-container>
+                  <span *ngSwitchCase="'unknown'" class="quantity-none"
+                    i18n="universe.address.quantity-none">Not published</span>
+                </span>
+                <span class="quantity-approx" *ngIf="holding.held.approximate"
+                  i18n="universe.address.quantity-approx">approximate</span>
+              </td>
 
-      <p class="empty" *ngIf="!state.holdings.length" i18n="universe.address.none">
-        No supported protocol asset was found on the outputs checked.
-      </p>
+              <td class="quantity-cell">
+                <span class="cell-label" aria-hidden="true"
+                  i18n="universe.address.column.positions">Positions</span>
+                <span class="quantity-value">
+                  <span class="quantity-number">{{ holding.outpoints.length }}</span>
+                </span>
+              </td>
 
-      <ul class="holding-list" *ngIf="state.holdings.length">
-        <li *ngFor="let holding of state.holdings; trackBy: trackByHolding">
-          <a class="protocol" [routerLink]="['/protocols' | relativeUrl, holding.protocolId]">{{ holding.protocolId }}</a>
-          <span class="asset">{{ holding.displayName }}</span>
-          <span class="quantity" *ngIf="holding.quantityAtomic">{{ amount(holding.quantityAtomic) }}</span>
-          <span class="outputs">
-            <a *ngFor="let outpoint of holding.outpoints"
-               class="identifier"
-               [routerLink]="outpointRoute(outpoint)">{{ shorten(outpoint, 6) }}</a>
+              <td class="disclose-cell">
+                <button type="button" class="asset-disclose" (click)="toggle(holding)"
+                  [attr.aria-expanded]="isExpanded(holding)" [attr.aria-controls]="holding.detailsId"
+                  [attr.aria-label]="'Details for ' + holding.displayName">
+                  <span class="disclose-mark" aria-hidden="true">{{ isExpanded(holding) ? '−' : '+' }}</span>
+                </button>
+              </td>
+            </tr>
+
+            <!--
+              Every output this holding sits on, in the row's own disclosure.
+              None are dropped or clamped to keep the panel short: an outpoint
+              link is how a reader checks the claim.
+            -->
+            <tr class="asset-details-row" *ngIf="isExpanded(holding)">
+              <td [id]="holding.detailsId" colspan="4">
+                <dl class="asset-details">
+                  <dt i18n="universe.address.details.identity">Identity</dt>
+                  <dd>
+                    <span class="detail-value">{{ holding.chain || 'unknown chain' }} /
+                      {{ holding.network || 'unknown network' }} / {{ holding.protocolId }}</span>
+                  </dd>
+
+                  <dt i18n="universe.address.details.asset-id">Asset id</dt>
+                  <dd>
+                    <span class="detail-value identifier">{{ holding.assetId }}</span>
+                    <button type="button" class="copy-button"
+                      (click)="copy(holding.assetKey + ':id', holding.assetId)"
+                      [attr.aria-label]="'Copy the full asset id for ' + holding.displayName"
+                      i18n="universe.address.copy">Copy</button>
+                    <span class="copy-result" role="status"
+                      *ngIf="copyResult(holding.assetKey + ':id') as result">
+                      <ng-container *ngIf="result === 'copied'"
+                        i18n="universe.address.copied">Copied</ng-container>
+                      <ng-container *ngIf="result === 'failed'" i18n="universe.address.copy-failed">Could not copy.
+                        Select the value to copy it yourself.</ng-container>
+                    </span>
+                  </dd>
+
+                  <dt *ngIf="holding.ruleset" i18n="universe.address.details.ruleset">Ruleset</dt>
+                  <dd *ngIf="holding.ruleset">{{ holding.ruleset }}</dd>
+
+                  <dt i18n="universe.address.details.divisibility">Divisibility</dt>
+                  <dd>
+                    <ng-container *ngIf="holding.decimals !== null">{{ holding.decimals }}</ng-container>
+                    <ng-container *ngIf="holding.decimals === null"
+                      i18n="universe.address.details.divisibility-unknown">Not published, so amounts are shown in the
+                      smallest units</ng-container>
+                  </dd>
+
+                  <dt i18n="universe.address.details.exact">Exact amount held</dt>
+                  <dd>
+                    <ng-container *ngIf="holding.held.kind === 'unknown'"
+                      i18n="universe.address.quantity-none">Not published</ng-container>
+                    <ng-container *ngIf="holding.held.kind !== 'unknown'">
+                      <span class="detail-value quantity-exact">{{ holding.held.exact }}</span>
+                      <span class="quantity-note" *ngIf="holding.held.kind === 'raw'"
+                        i18n="universe.address.raw-units">smallest units</span>
+                      <button type="button" class="copy-button"
+                        (click)="copy(holding.assetKey + ':held', holding.held.exact)"
+                        [attr.aria-label]="'Copy the exact amount held for ' + holding.displayName"
+                        i18n="universe.address.copy">Copy</button>
+                      <span class="copy-result" role="status"
+                        *ngIf="copyResult(holding.assetKey + ':held') as result">
+                        <ng-container *ngIf="result === 'copied'"
+                          i18n="universe.address.copied">Copied</ng-container>
+                        <ng-container *ngIf="result === 'failed'" i18n="universe.address.copy-failed">Could not copy.
+                          Select the value to copy it yourself.</ng-container>
+                      </span>
+                    </ng-container>
+                  </dd>
+
+                  <dt i18n="universe.address.details.outputs">Outputs</dt>
+                  <dd>
+                    <ul class="outpoint-list">
+                      <li *ngFor="let outpoint of holding.outpoints">
+                        <a class="identifier" *ngIf="outpointParts(outpoint) as parts"
+                          [routerLink]="['/outpoint' | relativeUrl, parts.txid, parts.vout]">{{
+                          shorten(outpoint, 10) }}</a>
+                        <span class="identifier" *ngIf="!outpointParts(outpoint)">{{ outpoint }}</span>
+                      </li>
+                    </ul>
+                  </dd>
+                </dl>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+
+      <p class="summary-notice" *ngIf="!state.holdings.length && state.provenEmpty" role="status"
+        i18n="universe.address.proven-empty">Every unspent output this address holds was checked, and none carries a
+        supported protocol asset.</p>
+
+      <p class="summary-notice" *ngIf="!state.holdings.length && !state.provenEmpty" role="status"
+        i18n="universe.address.partial-empty">No supported protocol asset was found on the outputs checked, but not
+        every output could be checked, so this is not proof that the address holds none.</p>
+
+      <!--
+        The scope, as one statement with a denominator, and the detail behind a
+        disclosure. Partial and proven empty are never worded the same way.
+      -->
+      <details class="summary-coverage">
+        <summary>
+          <span class="universe-chip" [ngClass]="state.partial ? 'state-partial' : 'state-proven'">
+            <ng-container *ngIf="state.partial" i18n="universe.address.scope.partial">Partial</ng-container>
+            <ng-container *ngIf="!state.partial" i18n="universe.address.scope.complete">Complete</ng-container>
           </span>
-        </li>
-      </ul>
-
-      <p class="asof" *ngIf="state.checkpointHeight">
-        <ng-container>Observed checkpoint: block {{ state.checkpointHeight }}.</ng-container>
-      </p>
+          <span i18n="universe.address.coverage">Checked {{ state.resolved }} of {{ state.total }} unspent
+            outputs</span>
+        </summary>
+        <ul class="coverage-list">
+          <li *ngIf="state.notResolved">
+            <span class="coverage-name" i18n="universe.address.not-checked">Not checked on this page</span>
+            <span class="coverage-state">{{ state.notResolved }}</span>
+          </li>
+          <li *ngIf="state.partial">
+            <span class="coverage-name" i18n="universe.address.scope.limits">Scope</span>
+            <span class="coverage-reason" i18n="universe.address.partial">At least one output could not be fully
+              accounted for, so this list may be incomplete.</span>
+          </li>
+          <li *ngIf="state.checkpointHeight">
+            <span class="coverage-name" i18n="universe.address.asof">Read at block</span>
+            <span class="coverage-state">{{ state.checkpointHeight }}</span>
+          </li>
+          <li *ngIf="!state.checkpointHeight">
+            <span class="coverage-name" i18n="universe.address.asof">Read at block</span>
+            <span class="coverage-reason" i18n="universe.address.asof-unknown">Not published, or the outputs were read
+              at different blocks.</span>
+          </li>
+        </ul>
+        <button type="button" class="summary-retry" *ngIf="state.partial" (click)="retry()"
+          i18n="universe.address.retry-scope">Check these outputs again</button>
+      </details>
     </div>
 
   </ng-container>
 </section>
-
-<!-- IMPLEMENTATION-HANDOFF [UI-WP05:ADDRESS-MARKUP] 2026-09-19
-Coverage C33-C44/C22-C32; defects F04/F09/F11. Preparation only.
-Sources R01/R02/R05. Depends UI-WP02 shared presenter and UI-WP04 data model.
-1. Use the same hierarchy as the transaction panel: Asset holdings, known
-   identity count and one coverage state. Label the quantity Held, not Inputs
-   or Received. This is a read-only UTXO view, not a complete wallet portfolio.
-2. Replace raw protocol ids as primary identity with asset name, protocol label,
-   fixed fallback mark and compact id. Keep full identity/ruleset in details.
-   Reuse registry presentation without making metadata gate proven holdings.
-3. Replace the truthiness-only quantity span with explicit exact/raw/unknown
-   cases. Zero remains zero; null says Not published; absent decimals says
-   smallest units. Never add a fiat total or sum unrelated asset quantities.
-4. Show output count in the row and move ALL existing outpoint links into an
-   accessible per-asset disclosure. Keep full references available and every
-   route network-correct; no guessed token-detail routes or discarded outputs.
-5. Replace the paragraph pile with one concise checked/total scope statement
-   and expandable source/checkpoint detail. Partial empty and proven empty
-   must differ; unavailable is not empty. Keep an explicit bounded retry.
-6. Match the transaction keyboard, touch, focus, copy-failure and loading states.
-   Localize every new label using the installed Angular i18n conventions.
-Tests: address-assets.component.spec.ts plus actual desktop/mobile routes,
-complete-empty UTXOs, first/last output link, refresh/back/network changes,
-unknown units and quantities, clipboard denial, both themes and zoom.
-Commands are in the handoff and were NOT RUN against the app here. Retain
-portfolio and base-coin balance links; rollback this template with its model.
--->

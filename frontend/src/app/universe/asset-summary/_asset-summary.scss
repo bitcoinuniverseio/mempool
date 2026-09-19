@@ -1,0 +1,472 @@
+@use '../universe-tokens' as u;
+
+/**
+ * Layout shared by the transaction asset summary and the address holdings
+ * panel.
+ *
+ * The two panels state different facts and must not be merged, but they are
+ * read one after the other on the same site and their geometry has to match:
+ * the same identity block, the same bounded numeric columns, the same
+ * disclosure control, the same stacking width.
+ *
+ * Two rules here exist because of specific defects.
+ *
+ * The numeric columns are bounded and their values never wrap. An asset
+ * quantity is an arbitrary precision integer, so with an automatic table
+ * layout the longest value in the column sets the column's intrinsic width,
+ * squeezes the identity column to nothing, and then `overflow-wrap: anywhere`
+ * splits the digits of a balance across two lines. A reader cannot tell a
+ * wrapped number from two numbers.
+ *
+ * Stacking is driven by the panel's own width through a container query, not by
+ * the viewport. These panels sit inside page containers of different widths, so
+ * a viewport breakpoint stacks a panel that had room and leaves a narrow one
+ * unstacked.
+ */
+
+/** The panel shell: surface, tokens, and its own containment context. */
+@mixin asset-summary-panel {
+  @include u.universe-surface;
+  @include u.universe-state-tokens;
+
+  // What the stacking breakpoint measures. Without this the query below has
+  // nothing to resolve against and never matches.
+  container-type: inline-size;
+  margin: var(--u-space-4) 0 0;
+  padding: var(--u-space-4);
+}
+
+@mixin asset-summary-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--u-space-2) var(--u-space-3);
+  margin-bottom: var(--u-space-3);
+
+  h2 {
+    font-size: var(--u-text-lg);
+    font-weight: var(--u-weight-semibold);
+    margin: 0;
+    color: var(--u-text-primary);
+  }
+}
+
+/**
+ * The table shell.
+ *
+ * A fixed layout with an explicit colgroup, so the columns are sized by the
+ * design rather than by whichever asset happens to have the longest balance.
+ */
+@mixin asset-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: var(--u-space-2);
+    border-bottom: 1px solid var(--u-divider);
+    font-weight: 400;
+    color: var(--u-text-primary);
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-left: 0;
+  }
+
+  td:last-child {
+    padding-right: 0;
+  }
+
+  thead th {
+    font-size: var(--u-text-xs);
+    font-weight: var(--u-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--u-text-secondary);
+    border-bottom-color: var(--u-border);
+  }
+
+  th.numeric,
+  td.numeric,
+  .quantity-cell {
+    text-align: right;
+  }
+
+  // The identity column takes whatever the bounded columns leave. Every other
+  // column is fixed, so a long value cannot take space from the name.
+  .col-asset {
+    width: auto;
+  }
+
+  .col-quantity {
+    width: 9.5rem;
+  }
+
+  .col-disclose {
+    width: 3rem;
+  }
+
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+/**
+ * The identity block.
+ *
+ * Flex sits on this child of the row header, never on the `th` itself: a `th`
+ * whose display is changed to flex stops being a table cell, and the row loses
+ * the accessible name and the column association a screen reader reads from it.
+ */
+@mixin asset-summary-identity {
+  .asset-identity-box {
+    display: flex;
+    gap: var(--u-space-2);
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .asset-logo {
+    // A fixed box in every state, so a late, missing or broken image cannot
+    // shift the row it sits in.
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+
+    img,
+    .asset-logo-fallback {
+      width: 40px;
+      height: 40px;
+      display: block;
+      border-radius: var(--u-radius-sm);
+    }
+
+    img {
+      object-fit: contain;
+      background: var(--u-surface-sunken);
+    }
+
+    // The stand-in reads as deliberate: a bordered box with the protocol's
+    // initials. Never a bare grey square, which reads as an image that failed,
+    // and never mistakable for a published token logo.
+    .asset-logo-fallback {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--u-surface-sunken);
+      border: 1px solid var(--u-border-strong);
+      color: var(--u-text-secondary);
+      font-size: 0.75rem;
+      font-weight: var(--u-weight-bold);
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .asset-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    // Without this a flex child refuses to shrink below its content, which is
+    // how a long asset name pushes a bounded column off the panel.
+    min-width: 0;
+  }
+
+  .asset-name {
+    font-weight: var(--u-weight-semibold);
+    overflow-wrap: anywhere;
+  }
+
+  .asset-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .asset-kind {
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+
+  .asset-id {
+    @include u.universe-identifier;
+
+    color: var(--u-text-secondary);
+    min-width: 0;
+  }
+}
+
+/**
+ * A primary quantity.
+ *
+ * Tabular numerals so columns of digits line up, and `nowrap` so a balance is
+ * never split across lines. Length is handled by the shared presenter, which
+ * produces a labelled short form; it is never handled by breaking digits or by
+ * shrinking the type below what a person can read.
+ */
+@mixin asset-summary-quantity {
+  .quantity-cell {
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+  }
+
+  .quantity-value {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .quantity-number {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .quantity-ticker,
+  .quantity-note,
+  .quantity-none,
+  .quantity-approx {
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+
+  .quantity-approx {
+    display: block;
+    font-style: italic;
+  }
+
+  .quantity-partial {
+    margin-top: 0.25rem;
+  }
+
+  // The exact value may wrap: it is the disclosure's full-width content, where
+  // completeness matters more than a single line.
+  .quantity-exact {
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+    user-select: text;
+  }
+}
+
+/** The 44px disclosure and copy controls. */
+@mixin asset-summary-controls {
+  .asset-disclose {
+    @include u.universe-touch-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--u-border);
+    border-radius: var(--u-radius-sm);
+    color: var(--u-text-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--u-text-md);
+    line-height: 1;
+
+    &:hover {
+      background: var(--u-surface-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .copy-button {
+    @include u.universe-touch-line;
+
+    background: var(--u-surface-raised);
+    border: 1px solid var(--u-border-strong);
+    border-radius: var(--u-radius-sm);
+    color: var(--u-text-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--u-text-xs);
+    padding: 0.15rem 0.6rem;
+
+    &:hover {
+      background: var(--u-surface-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .copy-result {
+    font-size: var(--u-text-xs);
+    color: var(--u-text-secondary);
+  }
+}
+
+/** The disclosure region's definition list. */
+@mixin asset-summary-details {
+  .asset-details-row > td {
+    padding-top: 0;
+    background: var(--u-surface-sunken);
+  }
+
+  .asset-details {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+    gap: 0.35rem var(--u-space-3);
+    margin: 0;
+    font-size: var(--u-text-sm);
+
+    dt {
+      color: var(--u-text-secondary);
+      font-weight: var(--u-weight-semibold);
+      min-width: 0;
+    }
+
+    dd {
+      margin: 0;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+    }
+  }
+
+  .detail-value {
+    overflow-wrap: anywhere;
+    user-select: text;
+    min-width: 0;
+  }
+
+  .identifier {
+    @include u.universe-identifier;
+  }
+}
+
+/** A screen-reader-only label that still carries an accessible name. */
+@mixin asset-summary-visually-hidden {
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/**
+ * Stacked cards, driven by the panel's own width.
+ *
+ * The table's semantics are kept: only presentation changes, and the column
+ * meaning moves into each cell's own visible label so nothing is lost when the
+ * header row is no longer laid out as a row.
+ */
+@mixin asset-summary-stacked {
+  .summary-table,
+  .summary-table tbody,
+  .summary-table tr,
+  .summary-table td,
+  .summary-table th {
+    display: block;
+    width: auto;
+  }
+
+  .summary-table colgroup {
+    display: none;
+  }
+
+  .summary-table thead {
+    // Visually hidden, never removed: the header cells stay in the
+    // accessibility tree, and each stacked cell also carries its own label.
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .summary-table tr.asset-row {
+    padding: var(--u-space-2) 0;
+    border-bottom: 1px solid var(--u-divider);
+    position: relative;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    border-bottom: 0;
+    padding: 0.15rem 0;
+    text-align: left;
+  }
+
+  .summary-table td.quantity-cell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  .quantity-value {
+    align-items: flex-start;
+  }
+
+  .cell-label {
+    display: inline-block;
+    font-size: var(--u-text-xs);
+    font-weight: var(--u-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--u-text-secondary);
+  }
+
+  .disclose-cell {
+    position: absolute;
+    top: var(--u-space-2);
+    right: 0;
+  }
+
+  .asset-details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+
+    dt {
+      margin-top: 0.4rem;
+    }
+  }
+}
+
+/** Forced colours and reduced motion, applied by both panels. */
+@mixin asset-summary-environment {
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-bar,
+    .skeleton-line {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .asset-logo-fallback,
+    .asset-disclose,
+    .copy-button {
+      border: 1px solid ButtonBorder;
+    }
+
+    .asset-disclose:focus-visible,
+    .copy-button:focus-visible {
+      outline: 2px solid Highlight;
+    }
+  }
+}
