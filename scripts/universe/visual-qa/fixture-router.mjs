@@ -3,6 +3,11 @@ import { chainFixtures, chainStateOverrides } from './chain-fixtures.mjs';
 import { assetFixtures } from './asset-fixtures.mjs';
 import { intelligenceFixtures } from './intelligence-fixtures.mjs';
 
+/** The transaction and block the address and detail fixtures share. */
+const SAMPLE_TXID = '9f4a1c7e5b2d8036a1f4c9e7b3d5081a2c6e4f9b7d3a1c58e26f0b4d9a7c3e15';
+const SAMPLE_BLOCK_HASH =
+  '00000000000000000002a7c4c1e8b7d3f9a5c2e6b0d4f8a1c5e9b3d7f1a5c9e3';
+
 /**
  * Fixture Schema Version.
  */
@@ -121,10 +126,53 @@ export class FixtureRouter {
       path: '/api/v1/universe/transactions/batch',
       response: { results: [] },
     });
+    // The outpoint batch the address holdings panel reads.
+    //
+    // It used to answer every request with an empty result list, so the panel
+    // was only ever reviewed in the state where the authority answered for
+    // nothing. One of the two outputs the address fixture holds now carries a
+    // real position and the other is left unanswered, which is the state the
+    // panel has to get right: exact holdings for what was read, and an explicit
+    // partial scope for what was not.
     this.register({
       method: 'POST',
       path: '/api/v1/universe/outpoints/batch',
-      response: { results: [] },
+      response: {
+        results: [
+          {
+            outpoint: `${SAMPLE_TXID}:0`,
+            status: 'ok',
+            coveredProtocolIds: ['runes'],
+            unknownAttachments: false,
+            checkpoint: {
+              chain: 'bitcoin',
+              network: 'mainnet',
+              heightAtomic: '887412',
+              blockHash: SAMPLE_BLOCK_HASH,
+              reorgEpoch: '0',
+              observedAt: '2026-09-19T00:00:00.000Z',
+            },
+            positions: [
+              {
+                outpoint: `${SAMPLE_TXID}:0`,
+                vout: 0,
+                valueSatsAtomic: '1500000',
+                state: 'active',
+                asset: {
+                  protocolId: 'runes',
+                  assetId: 'UNIVERSE.RUNE',
+                  displayName: 'UNIVERSE',
+                  ticker: 'UNIVERSE',
+                  assetKind: 'fungible',
+                  decimals: 8,
+                },
+                quantityAtomic: '100000000000',
+                evidence: { authorityId: 'ord 0.29', protocolId: 'runes', coverage: 'complete' },
+              },
+            ],
+          },
+        ],
+      },
     });
   }
 
