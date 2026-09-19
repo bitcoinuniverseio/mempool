@@ -402,12 +402,141 @@ function dogeDuneEnvelope(body) {
   };
 }
 
+/**
+ * One asset summary for a chain transaction page.
+ *
+ * Deliberately inconclusive: `totalCount` is null whenever any roster protocol
+ * has no transaction reader, which is the state every deployment is actually in
+ * and the state the panel has to render honestly.
+ */
+function chainAssetSummary(input) {
+  const checkpoint = {
+    chain: input.chain,
+    network: 'mainnet',
+    heightAtomic: input.heightAtomic,
+    blockHash: input.blockHash,
+    reorgEpoch: '0',
+    observedAt: '2026-08-29T04:05:00.000Z',
+  };
+  const evidence = {
+    authorityId: input.authorityId,
+    protocolId: input.protocolId,
+    coverage: 'complete',
+    checkedAt: '2026-08-29T04:05:00.000Z',
+    checkpoint,
+  };
+  return {
+    schemaVersion: 'universe-transaction-asset-summary-v1',
+    chain: input.chain,
+    network: 'mainnet',
+    txid: input.txid,
+    status: 'confirmed',
+    assets: [
+      {
+        chain: input.chain,
+        network: 'mainnet',
+        protocolId: input.protocolId,
+        assetId: input.assetId,
+        ruleset: null,
+        assetKind: input.assetKind,
+        displayName: input.displayName,
+        ticker: input.ticker,
+        decimals: input.decimals,
+        logo: null,
+        inputs: { quantityAtomic: '0', positionCountAtomic: '0', complete: true },
+        outputs: {
+          quantityAtomic: input.quantityAtomic,
+          positionCountAtomic: '1',
+          complete: true,
+        },
+        effects: [
+          {
+            eventId: `${input.txid}:${input.protocolId}:0`,
+            actionType: 'transfer',
+            quantityAtomic: input.quantityAtomic,
+            accepted: true,
+            evidence,
+          },
+        ],
+        evidence: [evidence],
+      },
+    ],
+    perProtocolCoverage: [
+      {
+        protocolId: input.protocolId,
+        chain: input.chain,
+        network: 'mainnet',
+        state: 'complete',
+        reason: 'reader-answered',
+      },
+      ...input.unreadProtocols.map((protocolId) => ({
+        protocolId,
+        chain: input.chain,
+        network: 'mainnet',
+        state: 'unconfigured',
+        reason: 'no-transaction-reader',
+      })),
+    ],
+    counts: {
+      fungibleTypeCountAtomic: input.assetKind === 'fungible' ? '1' : '0',
+      collectibleItemCountAtomic: input.assetKind === 'inscription' ? '1' : '0',
+      otherAssetCountAtomic: '0',
+      protocolCountAtomic: '1',
+      knownCountAtomic: '1',
+      totalCount: input.unreadProtocols.length === 0 ? 1 : null,
+    },
+    retryAfterSeconds: input.unreadProtocols.length === 0 ? null : 5,
+    checkpoint,
+  };
+}
+
 export const chainFixtures = {
   '/api/v1/chains': [capability('bitcoin'), capability('dogecoin'), capability('zcash')],
 
   '/api/v1/dogecoin/status': capability('dogecoin'),
   '/api/v1/zcash/status': capability('zcash'),
 
+  // The asset summary each chain transaction page reads.
+  //
+  // These were missing, and the panel's request failed closed. It went unnoticed
+  // because other missing fixtures on the same pages raised parse failures first
+  // and the pages never rendered far enough to ask.
+  //
+  // Neither states a total: one protocol answered and the rest of the chain's
+  // roster has no transaction reader, so a total would contradict its own
+  // coverage and the decoder rejects that.
+  [`/api/v1/universe/transactions/${DOGE_TXID}/assets`]: chainAssetSummary({
+    chain: 'dogecoin',
+    txid: DOGE_TXID,
+    blockHash: DOGE_BLOCK,
+    heightAtomic: '5623041',
+    protocolId: 'doginals',
+    assetId: `${DOGE_TXID}i0`,
+    assetKind: 'inscription',
+    displayName: 'Doginal #1',
+    ticker: null,
+    decimals: 0,
+    quantityAtomic: '1',
+    authorityId: 'ord-dogecoin',
+    unreadProtocols: ['dunes', 'drc20'],
+  }),
+  [`/api/v1/universe/transactions/${ZEC_TXID}/assets`]: chainAssetSummary({
+    chain: 'zcash',
+    txid: ZEC_TXID,
+    blockHash: ZEC_BLOCK,
+    heightAtomic: '2891044',
+    protocolId: 'zrunes',
+    assetId: 'ZRUNE.UNIVERSE',
+    assetKind: 'fungible',
+    displayName: 'ZRUNE UNIVERSE',
+    ticker: 'ZRUNE',
+    // Divisibility this authority does not state, so the panel shows the true
+    // digits labelled as smallest units rather than a scaled figure.
+    decimals: null,
+    quantityAtomic: '2500000000',
+    authorityId: 'index-zrunes',
+    unreadProtocols: [],
+  }),
   [`/api/v1/dogecoin/tx/${DOGE_TXID}`]: dogecoinTransaction(),
   [`/api/v1/zcash/tx/${ZEC_TXID}`]: zcashTransaction(),
 
