@@ -362,6 +362,101 @@ export const detailFixtures = {
     actions: [{ protocolId: 'runes', actionType: 'transfer', asset: { protocolId: 'runes', assetId: 'UNIVERSE.RUNE', name: 'UNIVERSE' }, quantityAtomic: '100000000000' }],
     sourceEvidence: [{ authorityId: 'ord 0.29', coverage: 'complete', checkpoint: { heightAtomic: '887412' } }],
   },
+  // The asset summary for the same transaction.
+  //
+  // This fixture was missing, and the router falls back to a prefix match, so
+  // the summary endpoint was being served the detailed flow payload above. The
+  // panel correctly rejected it as the wrong schema and rendered its error
+  // state, which meant every transaction and address screenshot reviewed the
+  // panel's failure rather than the panel. An exact path wins over the prefix
+  // fallback, so registering it here is what actually covers the panel.
+  //
+  // It is deliberately not conclusive: one protocol answered and one has no
+  // reader, so `totalCount` is null. A fixture that stated a total while a
+  // roster protocol went unread would be internally inconsistent, and the
+  // decoder rejects exactly that.
+  [`/api/v1/universe/transactions/${TXID_A}/assets`]: {
+    schemaVersion: 'universe-transaction-asset-summary-v1',
+    chain: 'bitcoin',
+    network: 'mainnet',
+    txid: TXID_A,
+    status: 'confirmed',
+    assets: [
+      {
+        chain: 'bitcoin',
+        network: 'mainnet',
+        protocolId: 'runes',
+        assetId: 'UNIVERSE.RUNE',
+        ruleset: null,
+        assetKind: 'fungible',
+        displayName: 'UNIVERSE',
+        ticker: 'UNIVERSE',
+        decimals: 8,
+        logo: null,
+        inputs: { quantityAtomic: '125000000000', positionCountAtomic: '1', complete: true },
+        outputs: { quantityAtomic: '125000000000', positionCountAtomic: '2', complete: true },
+        effects: [
+          {
+            eventId: `${TXID_A}:runes:0`,
+            actionType: 'transfer',
+            quantityAtomic: '100000000000',
+            accepted: true,
+            evidence: {
+              authorityId: 'ord 0.29',
+              protocolId: 'runes',
+              coverage: 'complete',
+              checkedAt: '2026-09-19T00:00:00.000Z',
+              checkpoint: {
+                chain: 'bitcoin',
+                network: 'mainnet',
+                heightAtomic: '887412',
+                blockHash: BLOCK_HASH,
+                reorgEpoch: '0',
+                observedAt: '2026-09-19T00:00:00.000Z',
+              },
+            },
+          },
+        ],
+        evidence: [
+          {
+            authorityId: 'ord 0.29',
+            protocolId: 'runes',
+            coverage: 'complete',
+            checkedAt: '2026-09-19T00:00:00.000Z',
+            checkpoint: {
+              chain: 'bitcoin',
+              network: 'mainnet',
+              heightAtomic: '887412',
+              blockHash: BLOCK_HASH,
+              reorgEpoch: '0',
+              observedAt: '2026-09-19T00:00:00.000Z',
+            },
+          },
+        ],
+      },
+    ],
+    perProtocolCoverage: [
+      { protocolId: 'runes', chain: 'bitcoin', network: 'mainnet', state: 'complete', reason: 'reader-answered' },
+      { protocolId: 'anima', chain: 'bitcoin', network: 'mainnet', state: 'unconfigured', reason: 'no-transaction-reader' },
+    ],
+    counts: {
+      fungibleTypeCountAtomic: '1',
+      collectibleItemCountAtomic: '0',
+      otherAssetCountAtomic: '0',
+      protocolCountAtomic: '1',
+      knownCountAtomic: '1',
+      totalCount: null,
+    },
+    retryAfterSeconds: 5,
+    checkpoint: {
+      chain: 'bitcoin',
+      network: 'mainnet',
+      heightAtomic: '887412',
+      blockHash: BLOCK_HASH,
+      reorgEpoch: '0',
+      observedAt: '2026-09-19T00:00:00.000Z',
+    },
+  },
   '/api/v1/mining/hashrate/3d': { hashrates: [{ timestamp: 1_772_000_000, avgHashrate: 8.1e20 }], difficulty: [{ timestamp: 1_772_000_000, difficulty: 1.1e14, height: 887_000 }], currentHashrate: 8.12e20, currentDifficulty: 1.105e14 },
   '/api/v1/mining/reward-stats/144': { startBlock: 887_268, endBlock: 887_412, totalReward: '46_800_000_000'.replace(/_/g, ''), totalFee: '1_400_000_000'.replace(/_/g, ''), totalTx: '412_004'.replace(/_/g, '') },
   '/api/v1/mining/blocks/fees/1w': [{ avgHeight: 887_000, timestamp: 1_772_000_000, avgFees: 12_884_901 }],
