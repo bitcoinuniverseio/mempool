@@ -310,6 +310,85 @@
       "interpretation": "The isolated service preserved an explicit incomplete result and passed its local invariants, but it did not establish protocol evidence, a checkpoint, HTTP success, browser coherence, or release acceptance."
     }
   },
+  "ownedAuthorityOverlayProbe": {
+    "observedAt": "2026-09-21T21:44:14Z",
+    "candidateBackendCommit": "d3937707",
+    "authority": {
+      "remoteHost": "universe-production-and-backend",
+      "remoteAddress": "152.53.92.251",
+      "servicePort": 8381,
+      "localForwardPort": 18381,
+      "network": "bitcoin:mainnet",
+      "tipHeight": 968047,
+      "tipHash": "00000000000000000001677133ac95086143516ff1d6755a2ef5a2f346a84f4d",
+      "readOnly": true,
+      "remoteServicesRestarted": false,
+      "secretsCollected": false
+    },
+    "transactionSummaryResponses": [
+      {
+        "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+        "httpStatus": 200,
+        "responseSha256": "ef58a4b6b23d761c429914e2dde16c9b6c262b2956ea6179b38581721b1f4769",
+        "schemaVersion": "universe-transaction-asset-summary-v1",
+        "summaryStatus": "confirmed",
+        "assetCount": 0,
+        "sourceEvidenceCount": 1,
+        "coverageCount": 31,
+        "coverageStates": ["unconfigured"],
+        "coverageReasons": ["authority-unconfigured", "no-transaction-reader"],
+        "knownCountAtomic": "0",
+        "totalCount": null,
+        "checkpoint": null,
+        "retryAfterSeconds": 5
+      },
+      {
+        "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
+        "httpStatus": 200,
+        "responseSha256": "f25cf2a38f0d67bd92ea122b92ec359724da5e60737ba68cfe654ce6cc77bc5b",
+        "schemaVersion": "universe-transaction-asset-summary-v1",
+        "summaryStatus": "confirmed",
+        "assetCount": 0,
+        "sourceEvidenceCount": 1,
+        "coverageCount": 31,
+        "coverageStates": ["unconfigured"],
+        "coverageReasons": ["authority-unconfigured", "no-transaction-reader"],
+        "knownCountAtomic": "0",
+        "totalCount": null,
+        "checkpoint": null,
+        "retryAfterSeconds": 5
+      }
+    ],
+    "transactionFlowResponse": {
+      "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+      "httpStatus": 200,
+      "schemaVersion": "universe-transaction-asset-flow-v1",
+      "baseBlockHash": "000000000000000000000178647bc9c2f2b5a93be163f33703cbd37dbf4328bb",
+      "inputs": 0,
+      "outputs": 0,
+      "actions": 0,
+      "sourceEvidenceCount": 1
+    },
+    "addressHoldingsResponses": [
+      {
+        "address": "bc1p0vkpt8ka4wjqve7n34nsk4s34949tf9zrllw79nkd89l26nkjlsqhmvk4p",
+        "httpStatus": 200,
+        "schemaVersion": "universe-address-holdings-v1",
+        "holdings": 1,
+        "coverageCount": 1,
+        "totalCount": null
+      },
+      {
+        "address": "bc1qx6ckdzfrx0r3fymgkfz3s7r6klm9z4ptwdttu2",
+        "httpStatus": 200,
+        "schemaVersion": "universe-address-holdings-v1",
+        "holdings": 1,
+        "coverageCount": 1,
+        "totalCount": null
+      }
+    ],
+    "acceptanceResult": "BLOCKED: the candidate HTTP layer successfully read the owned Mainnet base authority and preserved explicit incomplete coverage, but no protocol authority was configured, no protocol asset evidence was produced, and no total or checkpoint could qualify a functional asset-summary result."
+  },
   "acceptanceImpact": {
     "functionalPass": false,
     "reason": "Real consumer responses contain unconfigured and partial reader states, a checkpoint 3938 blocks behind the owned node tip, and null totalCount values.",
