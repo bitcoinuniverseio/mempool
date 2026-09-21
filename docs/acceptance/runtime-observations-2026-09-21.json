@@ -1,6 +1,6 @@
 {
   "schemaVersion": "universe-runtime-observation-v1",
-  "capturedAt": "2026-09-21T20:20:35.3985354Z",
+  "capturedAt": "2026-09-21T20:38:47.754Z",
   "scope": "read-only runtime and deployment-context observation",
   "provenance": {
     "captureMethod": "bounded HTTP, listener, process, and SSH-context probes",
@@ -144,12 +144,247 @@
       }
     }
   },
+  "remote": {
+    "authorizedReadOnly": true,
+    "captureConfig": "C:\\Users\\ordinalking.SERVER\\.ssh\\config",
+    "hosts": [
+      {
+        "address": "159.195.109.76",
+        "hostname": "universe-indexers",
+        "observedAt": "2026-09-21T20:38:20Z",
+        "connectionExitCode": 0,
+        "listeners": "127.0.0.1 services observed; exact listener inventory retained in the bounded probe output",
+        "services": [
+          {
+            "id": "bitcoin.service",
+            "mainPid": 1925105,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/bitcoin.service",
+            "startedAt": "2026-09-12T05:14:07Z"
+          },
+          {
+            "id": "universe-explorer-electrs.service",
+            "mainPid": 1925107,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-explorer-electrs.service",
+            "startedAt": "2026-09-12T05:14:07Z"
+          },
+          {
+            "id": "universe-dogecoin-blockbook.service",
+            "mainPid": 1775868,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-dogecoin-blockbook.service",
+            "startedAt": "2026-09-16T09:42:00Z"
+          },
+          {
+            "id": "universe-index-doge-tap.service",
+            "mainPid": 3266347,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-index-doge-tap.service",
+            "startedAt": "2026-09-21T08:14:42Z"
+          },
+          {
+            "id": "universe-index-stamps.service",
+            "mainPid": 1886055,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-index-stamps.service",
+            "startedAt": "2026-09-12T04:58:26Z"
+          },
+          {
+            "id": "universe-zcash-metaprotocols-mainnet-read.service",
+            "mainPid": 0,
+            "activeState": "inactive",
+            "subState": "dead",
+            "fragmentPath": null,
+            "startedAt": null
+          },
+          {
+            "id": "universe-ord-authority.service",
+            "mainPid": 1925155,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-authority.service",
+            "startedAt": "2026-09-12T05:14:07Z"
+          },
+          {
+            "id": "universe-ord-dogecoin-full.service",
+            "mainPid": 3945259,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-dogecoin-full.service",
+            "startedAt": "2026-09-19T10:31:34Z"
+          },
+          {
+            "id": "universe-ordtap-writer.service",
+            "mainPid": 1927091,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ordtap-writer.service",
+            "startedAt": "2026-09-12T05:14:20Z"
+          }
+        ],
+        "backendInfo": {
+          "url": "http://127.0.0.1:8996/api/v1/backend-info",
+          "httpStatus": 200,
+          "releaseSha": "537235052",
+          "version": "3.3.1",
+          "backend": "electrum",
+          "chain": "bitcoin",
+          "network": "mainnet",
+          "blocks": 968040,
+          "headers": 968041,
+          "initialBlockDownload": false,
+          "verificationProgress": 0.9999977559608537,
+          "blockHash": "00000000000000000000d54f1ef93ba80dedc3a35f6e263a20ddfe9c311a4386",
+          "observedAt": "2026-09-21T20:38:47.754Z"
+        },
+        "authorityHealth": {
+          "url": "http://127.0.0.1:8793/status",
+          "httpStatus": 200,
+          "schemaVersion": "network-indexer-health-v1",
+          "network": "zcash:mainnet",
+          "checkpointHeight": "3491510",
+          "checkpointHash": "00000000000133a1b8d08001dd9ddaea8e17ffdb2af362ae8dbd6f204d7d28bf",
+          "nodeHeight": "3491510",
+          "networkHeight": "3491513",
+          "blocksBehindNetwork": "3",
+          "nodeSynced": true,
+          "capabilitiesAvailable": "13",
+          "capabilitiesRequired": "13",
+          "lastSuccessfulUpdate": "2026-09-21T20:38:36.000Z"
+        }
+      },
+      {
+        "address": "152.53.92.251",
+        "hostname": "universe-production-and-backend",
+        "observedAt": "2026-09-21T20:35:45Z",
+        "connectionExitCode": 0,
+        "services": [
+          {
+            "id": "universe-bitcoin-signet.service",
+            "mainPid": 1145668,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-bitcoin-signet.service",
+            "network": "signet"
+          },
+          {
+            "id": "universe-dogecoin.service",
+            "mainPid": 633831,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-dogecoin.service"
+          },
+          {
+            "id": "universe-explorer-electrs-signet.service",
+            "mainPid": 1145670,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-explorer-electrs-signet.service",
+            "network": "signet"
+          },
+          {
+            "id": "universe-explorer-electrs-testnet3.service",
+            "mainPid": 1152196,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-explorer-electrs-testnet3.service",
+            "network": "testnet3"
+          },
+          {
+            "id": "universe-mempool.service",
+            "mainPid": 1152289,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-mempool.service",
+            "releasePath": "/opt/universe-mempool/releases/e95837a720ae8ffea31ca4bbc34c600f5bd6f642/universe-mempool-supervisor.mjs"
+          },
+          {
+            "id": "universe-ord-0.29.service",
+            "mainPid": 1449782,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-0.29.service"
+          },
+          {
+            "id": "universe-ord-dogecoin.service",
+            "mainPid": 2792600,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-dogecoin.service"
+          },
+          {
+            "id": "universe-stamps-mysql.service",
+            "mainPid": 1146093,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-stamps-mysql.service"
+          }
+        ],
+        "authorityHealth": {
+          "url": "http://127.0.0.1:8790/status",
+          "httpStatus": 200,
+          "schemaVersion": "network-indexer-health-v1",
+          "network": "zcash:mainnet",
+          "checkpointHeight": "3491503",
+          "checkpointHash": "000000000037a92086f628f15578fae3e781c1c6fdab30fb6df3525bd5d812d4",
+          "nodeHeight": null,
+          "networkHeight": null,
+          "blocksBehindNetwork": null,
+          "nodeSynced": null,
+          "capabilitiesAvailable": "0",
+          "capabilitiesRequired": "13",
+          "lastSuccessfulUpdate": "2026-09-21T20:29:25.000Z",
+          "responseShapeOk": false
+        },
+        "routeObservations": [
+          {
+            "url": "https://127.0.0.1:8081/api/v1/backend-info",
+            "httpStatus": 404,
+            "message": "Not Found"
+          },
+          {
+            "url": "https://127.0.0.1:8081/api/v1/capabilities",
+            "httpStatus": 404,
+            "message": "Not Found"
+          }
+        ]
+      }
+    ]
+  },
   "sshContext": {
     "documentedConfigPath": "D:\\universe.ssh\\config",
     "documentedConfigExists": false,
     "actualConfigPath": "D:\\universe\\.ssh\\config",
     "actualConfigExists": true,
     "actualConfigRead": "DENIED",
+    "approvedAlternateConfigPath": "C:\\Users\\ordinalking.SERVER\\.ssh\\config",
+    "approvedAlternateConfigRead": true,
+    "resolvedTargets": [
+      {
+        "target": "hostinger-web",
+        "hostname": "srv747890.hstgr.cloud",
+        "exitCode": 0,
+        "observedAt": "2026-09-21T20:32:28Z"
+      },
+      {
+        "target": "159.195.109.76",
+        "hostname": "universe-indexers",
+        "exitCode": 0,
+        "observedAt": "2026-09-21T20:38:20Z"
+      },
+      {
+        "target": "152.53.92.251",
+        "hostname": "universe-production-and-backend",
+        "exitCode": 0,
+        "observedAt": "2026-09-21T20:35:45Z"
+      }
+    ],
     "probe": {
       "command": "ssh -F D:\\universe\\.ssh\\config -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1 -G universe",
       "exitCode": 255,
@@ -164,7 +399,8 @@
     "blockedReasons": [
       "Public Signet routes return 503 network-unconfigured.",
       "The local Signet statistics database and address index do not answer.",
-      "The documented SSH execution context is unavailable because the actual config is denied.",
+      "Private Zcash authority observations disagree: one endpoint has no node height and 0 of 13 capabilities, while another bridge is 3 blocks behind.",
+      "The complete application operation denominator remains unresolved.",
       "This observation records identity and availability only; it is not operation acceptance evidence."
     ]
   }

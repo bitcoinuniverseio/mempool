@@ -1,0 +1,155 @@
+{
+  "schemaVersion": "universe-asset-summary-runtime-probe-v1",
+  "capturedAt": "2026-09-21T20:46:09.009Z",
+  "status": "BLOCKED / REAL-ROUTE-OBSERVED",
+  "scope": "read-only public asset-summary consumer probe using transactions obtained from a Universe-owned Mainnet node",
+  "provenance": {
+    "nodeHost": "universe-indexers",
+    "nodeAccess": "approved read-only SSH route",
+    "nodeTip": {
+      "height": 968041,
+      "blockHash": "000000000000000000000178647bc9c2f2b5a93be163f33703cbd37dbf4328bb",
+      "initialBlockDownload": false,
+      "verificationProgress": 1
+    },
+    "candidateSource": "Owned Bitcoin Core RPC and local Explorer backend API",
+    "consumerUrlTemplate": "https://explorer.bitcoinuniverse.io/api/v1/universe/transactions/:txid/assets",
+    "secretsCollected": false,
+    "broadcastPerformed": false
+  },
+  "observations": [
+    {
+      "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+      "httpStatus": 200,
+      "responseSha256": "9715557b6c610f78215718f8e0eeadcca7ea1a6a27a42ea2e99167e2ff05d65b",
+      "schemaVersion": "universe-transaction-asset-summary-v1",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "summaryStatus": "confirmed",
+      "checkpoint": {
+        "height": 964103,
+        "blockHash": "9bc546ebe6b779085ddb14af42e9e5fd9a3c55c73a54707d4469f96888749631",
+        "observedAt": "2026-09-21T20:46:09.008Z"
+      },
+      "assetCount": 10,
+      "sourceEvidenceCount": 3,
+      "coverageCount": 31,
+      "coverageStates": ["complete", "unconfigured"],
+      "coverageReasons": ["no-transaction-reader", "reader-answered"],
+      "counts": {
+        "fungibleTypeCountAtomic": "0",
+        "collectibleItemCountAtomic": "9",
+        "otherAssetCountAtomic": "1",
+        "protocolCountAtomic": "2",
+        "knownCountAtomic": "10",
+        "totalCount": null
+      },
+      "readerEvidence": [
+        {
+          "authorityId": "ord",
+          "protocolIds": ["ordinals", "rare_sats"],
+          "releaseSha": "ord-0.22",
+          "checkpointHeight": 968041,
+          "coverage": "complete"
+        },
+        {
+          "authorityId": "mempool-backend",
+          "protocolIds": ["bitcoin"],
+          "releaseSha": "mempool-3.3.1",
+          "checkpointHeight": 964103,
+          "coverage": "complete"
+        }
+      ]
+    },
+    {
+      "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
+      "httpStatus": 200,
+      "responseSha256": "73b946f12f6372d50a336c2ba4bfada20954b2f8bc00bddfb067e3c7d3837776",
+      "schemaVersion": "universe-transaction-asset-summary-v1",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "summaryStatus": "confirmed",
+      "checkpoint": {
+        "height": 964103,
+        "blockHash": "9bc546ebe6b779085ddb14af42e9e5fd9a3c55c73a54707d4469f96888749631",
+        "observedAt": "2026-09-21T20:46:09.008Z"
+      },
+      "assetCount": 64,
+      "sourceEvidenceCount": 2,
+      "coverageCount": 31,
+      "coverageStates": ["partial", "unconfigured"],
+      "coverageReasons": ["no-transaction-reader", "outpoint-inventory-not-retained"],
+      "counts": {
+        "totalCount": null
+      }
+    },
+    {
+      "txid": "b9beebd4983851255613aeb8b46a50d4655fb44d515b4846d8c4126335012b12",
+      "httpStatus": 200,
+      "responseSha256": "976cf745e24bfaa135fb66d3c0603d4de0388769ecd217d18615a6e3c704e047",
+      "schemaVersion": "universe-transaction-asset-summary-v1",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "summaryStatus": "confirmed",
+      "checkpoint": {
+        "height": 964103,
+        "blockHash": "9bc546ebe6b779085ddb14af42e9e5fd9a3c55c73a54707d4469f96888749631",
+        "observedAt": "2026-09-21T20:46:09.008Z"
+      },
+      "assetCount": 0,
+      "sourceEvidenceCount": 1,
+      "coverageCount": 31,
+      "coverageStates": ["unconfigured"],
+      "coverageReasons": ["no-transaction-reader"],
+      "counts": {
+        "totalCount": null
+      }
+    }
+  ],
+  "additionalContexts": [
+    {
+      "chain": "dogecoin",
+      "network": "mainnet",
+      "nodeHost": "universe-production-and-backend",
+      "nodeState": {
+        "blocks": 100362,
+        "headers": 2303999,
+        "initialBlockDownload": true,
+        "verificationProgress": 0.01290129831078375,
+        "bestBlockHash": "d2a4a0d49a28110b012c4bfb45ebf5903b5f66a1e851dc28bc5364cd640d5ea7"
+      },
+      "consumerObservations": [
+        {
+          "txid": "9bce3b9576235e8231f3eb7500464f4772fd51c95bcd70a2556038b2f9de4119",
+          "httpStatus": 503,
+          "body": {
+            "error": "bitcoin-authority-unconfigured",
+            "authorityId": "mempool-backend"
+          }
+        },
+        {
+          "txid": "5366afeb84099a583c570f77dc65cb22a44434a2eb6c0fbe3c3cf25fe7e9c816",
+          "httpStatus": 503,
+          "body": {
+            "error": "bitcoin-authority-unconfigured",
+            "authorityId": "mempool-backend"
+          }
+        }
+      ],
+      "acceptanceImpact": "Dogecoin is not an accepted functional environment: the owned node is still in initial block download and the public asset-summary consumer cannot reach its base authority."
+    }
+  ],
+  "repeatedProbeDifference": {
+    "firstProbeAt": "2026-09-21T20:46:06.461Z",
+    "firstProbeResult": "HTTP 200 with checkpoint height 0, zero assets, and all listed readers unconfigured",
+    "secondProbeAt": "2026-09-21T20:46:09.009Z",
+    "secondProbeResult": "HTTP 200 with checkpoint height 964103 and changing asset/source-evidence counts",
+    "interpretation": "The route is live, but its result is not stable enough to qualify acceptance without reader-generation and checkpoint consistency proof."
+  },
+  "acceptanceImpact": {
+    "functionalPass": false,
+    "reason": "Real consumer responses contain unconfigured and partial reader states, a checkpoint 3938 blocks behind the owned node tip, and null totalCount values.",
+    "mainnetFunctionalTests": "NOT USED AS RELEASE ACCEPTANCE",
+    "nextAction": "Qualify the owned reader generation and backend checkpoint path on Signet or an accepted Testnet, then repeat positive, empty, partial, unavailable, timeout, confirmation and reorg variants with authoritative readback."
+  }
+}
