@@ -24819,7 +24819,7 @@
     }
   ],
   "currentMatrixArtifact": "docs/acceptance/operation-matrix-2026-09-06.json",
-  "currentMatrixSha256": "f7820a073b0004244d82f6ed26492c7493be05bcab50c72bcb75d25a74e396a8",
+  "currentMatrixSha256": "4be18080cea60bf5ed6ab0a2bd8f35680068513824efdc1e4c33f0a0e205bde3",
   "currentMatrixRowCount": 1617,
   "sourceCandidateCount": 1592,
   "semanticOperationDenominatorReconciled": false,
@@ -25420,6 +25420,122 @@
   ],
   "changed": [
     {
+      "id": "API-0e0f90d1e32d",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/translators",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
+      "id": "API-1c3ef6ee2e7d",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/liquid/liquid.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/liquid/liquid.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/assets/group/:id",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
+      "id": "API-1e45edc7f3c9",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/contributors",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
+      "id": "API-73094bc9f9e2",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/contributors/images/:id",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
       "id": "API-740780b1aee5",
       "before": {
         "kind": "api-candidate",
@@ -25449,6 +25565,35 @@
       }
     },
     {
+      "id": "API-77083d9edd60",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/translators/images/:id",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
       "id": "API-7754d2a583e6",
       "before": {
         "kind": "api-candidate",
@@ -25470,6 +25615,93 @@
         "operation": null,
         "method": "POST",
         "route": "/api/v1/intelligence/bootstrap/operator/snapshots",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
+      "id": "API-c33c895f86c6",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/donations/images/:id",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
+      "id": "API-c80b2b280c0b",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/liquid/liquid.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/liquid/liquid.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/assets/featured",
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      }
+    },
+    {
+      "id": "API-d00d50e4f44f",
+      "before": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": null,
+        "role": "unresolved",
+        "network": "unverified",
+        "requiredServices": [],
+        "assertions": [],
+        "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance."
+      },
+      "after": {
+        "kind": "api-candidate",
+        "entry": null,
+        "sourceFile": "backend/src/api/about.routes.ts",
+        "operation": null,
+        "method": "GET",
+        "route": "/api/v1/donations",
         "role": "unresolved",
         "network": "unverified",
         "requiredServices": [],
@@ -26147,12 +26379,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/translators",
       "sourceArtifacts": [
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-923929e8993f"
+      ]
     },
     {
       "id": "API-0e65cca3e760",
@@ -26449,12 +26683,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/assets/group/:id",
       "sourceArtifacts": [
         "backend/src/api/liquid/liquid.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-49c4092ee0a8"
+      ]
     },
     {
       "id": "API-1ccf8c16fa87",
@@ -26509,12 +26745,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/contributors",
       "sourceArtifacts": [
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-d94fbc8bdcb1"
+      ]
     },
     {
       "id": "API-1e4d3b746d3d",
@@ -26875,7 +27113,9 @@
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-77083d9edd60"
+      ]
     },
     {
       "id": "API-281fbdc13cac",
@@ -27799,7 +28039,9 @@
         "backend/src/api/liquid/liquid.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-1c3ef6ee2e7d"
+      ]
     },
     {
       "id": "API-49d97f5031b3",
@@ -28321,7 +28563,9 @@
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-c33c895f86c6"
+      ]
     },
     {
       "id": "API-58d24d3ee382",
@@ -29347,12 +29591,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/contributors/images/:id",
       "sourceArtifacts": [
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-d0dc32ad3692"
+      ]
     },
     {
       "id": "API-740329687c10",
@@ -29596,12 +29842,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/translators/images/:id",
       "sourceArtifacts": [
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-2818c9c20939"
+      ]
     },
     {
       "id": "API-7754d2a583e6",
@@ -30303,7 +30551,9 @@
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-0e0f90d1e32d"
+      ]
     },
     {
       "id": "API-923e60c52445",
@@ -31764,7 +32014,9 @@
         "backend/src/api/liquid/liquid.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-c80b2b280c0b"
+      ]
     },
     {
       "id": "API-badfae524859",
@@ -32017,12 +32269,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/donations/images/:id",
       "sourceArtifacts": [
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-58a8cfbd3fb7"
+      ]
     },
     {
       "id": "API-c3a958296e1a",
@@ -32215,12 +32469,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/assets/featured",
       "sourceArtifacts": [
         "backend/src/api/liquid/liquid.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-bab3bd5b7d0e"
+      ]
     },
     {
       "id": "API-c88f6a7ef4e3",
@@ -32553,12 +32809,14 @@
       "role": "unresolved",
       "network": "unverified",
       "method": "GET",
-      "route": null,
+      "route": "/api/v1/donations",
       "sourceArtifacts": [
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-f2caf24a5fed"
+      ]
     },
     {
       "id": "API-d032c769af31",
@@ -32603,7 +32861,9 @@
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-73094bc9f9e2"
+      ]
     },
     {
       "id": "API-d244b47137c5",
@@ -32845,7 +33105,9 @@
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-1e45edc7f3c9"
+      ]
     },
     {
       "id": "API-d9aa5fb68bde",
@@ -33678,7 +33940,9 @@
         "backend/src/api/about.routes.ts",
         "docs/acceptance/2026-09-05-controls.json"
       ],
-      "linkedRows": []
+      "linkedRows": [
+        "API-d00d50e4f44f"
+      ]
     },
     {
       "id": "API-f2fe08ad257d",

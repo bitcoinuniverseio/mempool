@@ -28,7 +28,7 @@ test("application source reconciliation preserves the historical candidate set",
   assert.equal(document.historicalRowCount, 1592);
   assert.equal(document.currentMatrixRowCount, 1617);
   assert.equal(document.added.length, 25);
-  assert.equal(document.changed.length, 9);
+  assert.equal(document.changed.length, 17);
   assert.deepEqual(document.removed, []);
 });
 
