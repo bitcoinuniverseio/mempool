@@ -519,6 +519,33 @@
     },
     "remediation": "No ACL bypass, credential export, secret reset, or deployment attempt was performed."
   },
+  "latestReadOnlySignetOrdinalsProbe": {
+    "observedAt": "2026-09-21T22:01:05.892Z",
+    "remoteHost": "universe-production-and-backend",
+    "remoteAddress": "152.53.92.251",
+    "authorityId": "index-ordinals",
+    "servicePort": 3233,
+    "network": "bitcoin:signet",
+    "readyRoute": {
+      "path": "/ready",
+      "httpStatus": 200,
+      "ready": true,
+      "initialObservationComplete": true,
+      "deepReorg": false,
+      "stale": false,
+      "checkpointHeightAtomic": "323137",
+      "checkpointHash": "000000081b470919ba56ef717bb8135c1915c9ccdf4654b3136a80a57e9843d5"
+    },
+    "protectedRoutes": [
+      { "path": "/status", "httpStatus": 401, "reason": "authentication_required" },
+      { "path": "/blockhash", "httpStatus": 401, "reason": "authentication_required" },
+      { "path": "/api/v1/capabilities", "httpStatus": 401, "reason": "authentication_required" },
+      { "path": "/health", "httpStatus": 401, "reason": "authentication_required" }
+    ],
+    "tokenCollected": false,
+    "remoteServicesRestarted": false,
+    "acceptanceResult": "BLOCKED: the owned Signet Ordinals authority is ready and publishes a checkpoint, but its operational read routes require a bearer token that was not collected or exported. This establishes an authorized prerequisite gap, not protocol functional acceptance."
+  },
   "acceptanceImpact": {
     "qualifiedFunctionalEvidence": false,
     "publicMainnetReleaseVerified": false,
