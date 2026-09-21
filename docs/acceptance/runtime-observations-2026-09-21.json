@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "universe-runtime-observation-v1",
+  "capturedAt": "2026-09-21T20:20:35.3985354Z",
+  "scope": "read-only runtime and deployment-context observation",
+  "provenance": {
+    "captureMethod": "bounded HTTP, listener, process, and SSH-context probes",
+    "secretsCollected": false,
+    "credentialsChanged": false,
+    "servicesRestarted": false,
+    "deploymentsPerformed": false,
+    "logs": {
+      "mode": "bounded-redacted",
+      "entries": [
+        {
+          "source": "public-signet",
+          "status": 503,
+          "message": "network-unconfigured"
+        },
+        {
+          "source": "ssh-config",
+          "status": 255,
+          "message": "Can't open user config file D:\\\\universe\\\\.ssh\\\\config: Permission denied"
+        }
+      ]
+    }
+  },
+  "public": {
+    "mainnet": {
+      "backendInfo": {
+        "url": "https://explorer.bitcoinuniverse.io/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "537235052",
+        "version": "3.3.1",
+        "backend": "electrum",
+        "coreVersion": "/Satoshi:31.0.0/",
+        "chain": "bitcoin",
+        "network": "mainnet",
+        "height": 968040,
+        "blockHash": "00000000000000000000d54f1ef93ba80dedc3a35f6e263a20ddfe9c311a4386",
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "observedAt": "2026-09-21T20:20:24.597Z"
+      },
+      "capabilities": {
+        "url": "https://explorer.bitcoinuniverse.io/api/v1/capabilities",
+        "result": "TIMEOUT",
+        "timeoutSeconds": 12
+      }
+    },
+    "signet": {
+      "backendInfo": {
+        "url": "https://explorer.bitcoinuniverse.io/signet/api/v1/backend-info",
+        "httpStatus": 503,
+        "error": "network-unconfigured",
+        "network": "signet"
+      },
+      "capabilities": {
+        "url": "https://explorer.bitcoinuniverse.io/signet/api/v1/capabilities",
+        "httpStatus": 503,
+        "error": "network-unconfigured",
+        "network": "signet"
+      }
+    }
+  },
+  "local": {
+    "network": "signet",
+    "gateway": {
+      "baseUrl": "http://127.0.0.1:8099",
+      "health": {
+        "url": "http://127.0.0.1:8099/__gateway/health",
+        "httpStatus": 200,
+        "body": {
+          "status": "ok"
+        }
+      },
+      "listener": {
+        "address": "127.0.0.1",
+        "port": 8099,
+        "state": "LISTENING",
+        "processId": 35396
+      },
+      "process": {
+        "processId": 35396,
+        "executable": "C:\\Program Files\\nodejs\\node.exe",
+        "commandLine": "node scripts/universe/gateway.mjs",
+        "startedAt": "2026-09-17T17:51:30.0440471+00:00"
+      },
+      "backendInfo": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "version": "3.3.1",
+        "backend": "esplora",
+        "coreVersion": "/Satoshi:31.0.0/",
+        "chain": "bitcoin",
+        "network": "signet",
+        "height": 322778,
+        "blockHash": "00000001dc7ea9cf451fad7b209a45c6ad940e40b99c9f05788dcadec551f33a",
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "observedAt": "2026-09-21T20:20:25.192Z"
+      },
+      "capabilities": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/capabilities",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "network": "signet",
+        "statistics": "unavailable: database did not answer",
+        "addressLookup": "unavailable: address index did not answer",
+        "mining": "disabled",
+        "mempoolIntelligence": "ready",
+        "mempoolIntelligenceRowCount": 52,
+        "generatedAt": "2026-09-21T20:20:17.264Z"
+      }
+    },
+    "backend": {
+      "baseUrl": "http://127.0.0.1:8997",
+      "listener": {
+        "address": "127.0.0.1",
+        "port": 8997,
+        "state": "LISTENING",
+        "processId": 12016
+      },
+      "process": {
+        "processId": 12016,
+        "executable": "C:\\Program Files\\nodejs\\node.exe",
+        "commandLine": "node --max-old-space-size=2048 dist/index.js",
+        "startedAt": "2026-09-17T17:51:30.0337725+00:00"
+      },
+      "backendInfo": {
+        "url": "http://127.0.0.1:8997/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "version": "3.3.1",
+        "backend": "esplora",
+        "coreVersion": "/Satoshi:31.0.0/",
+        "chain": "bitcoin",
+        "network": "signet",
+        "height": 322778,
+        "blockHash": "00000001dc7ea9cf451fad7b209a45c6ad940e40b99c9f05788dcadec551f33a",
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "observedAt": "2026-09-21T20:20:25.218Z"
+      }
+    }
+  },
+  "sshContext": {
+    "documentedConfigPath": "D:\\universe.ssh\\config",
+    "documentedConfigExists": false,
+    "actualConfigPath": "D:\\universe\\.ssh\\config",
+    "actualConfigExists": true,
+    "actualConfigRead": "DENIED",
+    "probe": {
+      "command": "ssh -F D:\\universe\\.ssh\\config -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1 -G universe",
+      "exitCode": 255,
+      "diagnostic": "Can't open user config file D:\\\\universe\\\\.ssh\\\\config: Permission denied"
+    },
+    "remediation": "No ACL bypass, credential export, secret reset, or deployment attempt was performed."
+  },
+  "acceptanceImpact": {
+    "qualifiedFunctionalEvidence": false,
+    "publicMainnetReleaseVerified": false,
+    "mainnetFunctionalTests": "NOT PERFORMED",
+    "blockedReasons": [
+      "Public Signet routes return 503 network-unconfigured.",
+      "The local Signet statistics database and address index do not answer.",
+      "The documented SSH execution context is unavailable because the actual config is denied.",
+      "This observation records identity and availability only; it is not operation acceptance evidence."
+    ]
+  }
+}

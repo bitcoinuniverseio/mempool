@@ -112,13 +112,15 @@ test('actual source matrix preserves named inventories and required distinct var
   const matrix = buildMatrix(), byId = new Map(matrix.rows.map(row => [row.id, row]));
   assert.deepEqual(matrix.sourceCounts, { navigation: 351, namedOperations: 37, protocolIdentities: 39,
     uiCandidates: 304, apiCandidates: 546, additionalRouteDeclarations: 55, components: 302, controls: 1569, handlerBindings: 344 });
-  assert.equal(matrix.sourceGroups['protocol-operation'].length, 119);
+  assert.equal(matrix.sourceGroups['protocol-operation'].length, 123);
+  assert.equal(matrix.sourceGroups['transaction-summary-variant'].length, 21);
   assert.equal(matrix.sourceGroups['health-verification'].length, 40);
   const chainstates = matrix.rows.filter(row => row.route === '/api/v1/intelligence/bootstrap/chainstates' && row.method === 'GET');
   assert.equal(chainstates.length, 1, 'The current all-node chainstates route must be retained exactly once');
   assert.equal(chainstates[0].kind, 'current-api-addition');
   assert.equal(byId.get('API-4dc9791028b6').role, 'public request at this route; no handler authorization guard');
-  assert.equal(matrix.healthHandoff.protocolOperationBindings, 119);
+  assert.equal(matrix.healthHandoff.protocolOperationBindings, 123);
+  assert.equal(matrix.healthHandoff.historicalProtocolOperationBindings, 119);
   assert.equal(byId.get('H-01').priorAssertion.status, 'FAIL');
   assert.equal(byId.get('H-01').status, 'NOT TESTED');
   assert.equal(byId.get('R-04-TX').route, '/api/v1/dogecoin/tx/:txid');
@@ -126,7 +128,10 @@ test('actual source matrix preserves named inventories and required distinct var
   assert.equal(byId.get('R-04-SPENT').entry, '/dogecoin/outpoint/:txid/:vout');
   assert.equal(byId.get('PRO-01/registry').handoffBinding.coverageId, 'PRO-01.registry');
   assert(!byId.has('PRO-01.registry'), 'A second handoff name must not duplicate the existing operation row');
-  assert.equal(byId.get('R-07').links.length, 119);
+  assert.equal(byId.get('R-07').links.length, 123);
+  assert.equal(byId.get('PRO-35/chain-list').status, 'NOT TESTED');
+  assert.equal(byId.get('SUMMARY/transaction-assets/bitcoin/success').status, 'NOT TESTED');
+  assert.equal(byId.get('SUMMARY/transaction-assets/zcash/reorg').network, 'unverified');
   for (let n = 1; n <= 36; n++) assert(byId.has(`Q05-P${String(n).padStart(2, '0')}`));
   for (let n = 1; n <= 12; n++) assert(byId.has(`Q07-A${String(n).padStart(2, '0')}`));
   assert.equal(matrix.sourceGroups['admin-resource-variant'].length, 14);

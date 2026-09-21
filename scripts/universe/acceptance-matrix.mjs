@@ -15,6 +15,7 @@ const output = 'docs/acceptance/operation-matrix-2026-09-06.json';
 const inventories = ['docs/acceptance/2026-09-05-inventory.json', 'docs/acceptance/2026-09-05-controls.json'];
 const protocolFile = 'docs/protocols/PROTOCOL-COVERAGE.json';
 const healthHandoffFile = 'docs/acceptance/explorer-health-handoff-2026-09-06.json';
+const healthReconciliationFile = 'docs/acceptance/explorer-health-reconciliation-2026-09-21.json';
 const universeApiFile = 'frontend/src/app/universe/universe-api.service.ts';
 const catalogFile = 'backend/src/api/admin-adapter/admin-adapter.catalog.ts';
 const adminFile = 'backend/src/api/admin-adapter/admin-adapter.routes.ts';
@@ -58,11 +59,10 @@ export function tableIds(cell) {
 
 /**
  * IMPLEMENTATION-HANDOFF [WP03] | F003, F004 | preparation 2026-09-21
- * State: FAIL. Three executed acceptance-matrix tests fail at buildMatrix because the
- * historical health handoff has 119 operation rows while the current protocol manifest has
- * 123. The existing GET transactions/:txid/assets handler also has no descriptor in the
- * 123-operation roster. The older 1592-row application matrix explicitly says its denominator
- * is not reconciled.
+ * State: IMPLEMENTED LOCALLY. The 119-row historical handoff is preserved and reconciled to
+ * the current 123-operation roster, and the aggregate transaction-assets route has explicit
+ * chain and variant rows. The full application denominator and real network acceptance remain
+ * unresolved.
  * Governing requirements: REQ-COVERAGE;
  * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
  * research/source-register.json.
@@ -80,8 +80,8 @@ export function tableIds(cell) {
  * Rollback: Keep the original 2026-09-06 and health handoff files as historical evidence. Use
  * versioned generated successors and retain reversible source/exporter changes; no application
  * database migration follows from inventory bookkeeping.
- * ANNOTATED is not implemented, verified functionality or release. Preserve existing
- * executable behavior in this preparation.
+ * Local reconciliation is verified by the targeted matrix suite; it is not functional
+ * acceptance or a public release.
  */
 export function buildMatrix({ evidencePath } = {}) {
   const artifacts = new Map(), records = new Map(), parsed = new Map();
@@ -250,8 +250,13 @@ export function buildMatrix({ evidencePath } = {}) {
     }
   }
   const healthHandoff = json(healthHandoffFile);
+  const healthReconciliation = json(healthReconciliationFile);
   assert.equal(read(healthHandoffFile).sha256, '98ed8c95130a94dd30d8d998f4f3a4f84c2b6bfe4aefa084817783600f4805b7', 'Preserve the original health handoff bytes');
   assert.equal(healthHandoff.schema, 'explorer-health-investigation-supplement-v1');
+  assert.equal(healthReconciliation.schemaVersion, 'explorer-health-reconciliation-v1');
+  assert.equal(healthReconciliation.historicalArtifact, healthHandoffFile);
+  assert.equal(healthReconciliation.historicalSha256, read(healthHandoffFile).sha256);
+  assert.equal(healthReconciliation.historicalOperationCount, healthHandoff.protocolOperationRows.length);
   sourceGroups['health-verification'] = uniqueIds(healthHandoff.rows.map(row => ({ id: row.coverageId })), 'health handoff');
   assert.equal(sourceGroups['health-verification'].length, 40, 'Reconcile changed health handoff identities explicitly');
   const historyBindings = {
@@ -328,17 +333,90 @@ export function buildMatrix({ evidencePath } = {}) {
       link(row, identity.id, 'exact protocol identity'); sourceGroups['protocol-operation'].push(id);
     }
   });
-  const handoffOperationIds = uniqueIds(healthHandoff.protocolOperationRows.map(row => ({ id: row.coverageId })), 'health handoff protocol operations');
-  assert.equal(handoffOperationIds.length, sourceGroups['protocol-operation'].length, 'Reconcile changed handoff operation coverage');
-  assert.equal(healthHandoff.protocolCatalogue.length, protocolIds.length, 'Reconcile changed handoff protocol identities');
-  for (const original of healthHandoff.protocolCatalogue) {
+  const descriptorByKey = new Map(protocolManifest.protocols.flatMap(protocol =>
+    protocol.readOperationDescriptors.map(operation => [`${protocol.id}/${operation.id}`, { protocol, operation }])));
+  const historicalOperationKeys = new Set(healthHandoff.protocolOperationRows.map(row => `${row.protocol}/${row.operation}`));
+  const currentOperationKeys = new Set(protocolManifest.protocols.flatMap(protocol =>
+    protocol.readOperationDescriptors.map(operation => `${protocol.id}/${operation.id}`)));
+  assert.equal(healthReconciliation.currentOperationCount, currentOperationKeys.size);
+  assert.equal(healthReconciliation.added.length, currentOperationKeys.size - historicalOperationKeys.size);
+  assert.deepEqual(healthReconciliation.removed, []);
+  assert.deepEqual(healthReconciliation.added.map(row => row.key).sort(),
+    [...currentOperationKeys].filter(key => !historicalOperationKeys.has(key)).sort(),
+    'Reconciliation additions must be exactly the current stable-key delta');
+  assert.equal(new Set(healthReconciliation.added.map(row => row.key)).size, healthReconciliation.added.length,
+    'Reconciliation additions must be unique');
+  for (const addition of healthReconciliation.added) {
+    const found = descriptorByKey.get(addition.key);
+    assert(found, `Reconciliation names an unknown descriptor ${addition.key}`);
+    assert.equal(found.operation.method, addition.method, `${addition.key} method changed`);
+    assert.equal(found.operation.route, addition.route, `${addition.key} route changed`);
+    assert.equal(found.operation.authorityPath, addition.authorityPath, `${addition.key} authority changed`);
+    assert.equal(found.operation.evidence, addition.evidence, `${addition.key} evidence changed`);
+    assert.equal(found.operation.acceptance, addition.acceptance, `${addition.key} acceptance changed`);
+    assert.equal(found.operation.pagination ?? null, addition.pagination ?? null, `${addition.key} pagination changed`);
+  }
+  const catalogueUpdates = new Map(healthReconciliation.catalogueUpdates.map(update => [update.id, update]));
+  const reconciledCatalogue = healthHandoff.protocolCatalogue.map(original => {
+    const update = catalogueUpdates.get(original.id);
+    return update ? { ...original, declaredOperations: update.declaredOperations } : original;
+  });
+  assert.equal(reconciledCatalogue.length, protocolIds.length, 'Reconcile changed handoff protocol identities');
+  for (const original of reconciledCatalogue) {
     const identity = inventory.protocols.find(row => row.id === original.id);
     const protocol = protocolManifest.protocols.find(row => row.id === original.protocol);
     assert(identity?.protocol === original.protocol && protocol?.chain === original.chain && protocol.indexerAuthority === original.authority,
       `Handoff identity or authority mismatch: ${original.id}`);
     assert.deepEqual([...original.declaredOperations].sort(), [...protocol.implementedReadOperations].sort(), `Handoff operation mismatch: ${original.id}`);
   }
-  healthHandoff.protocolOperationRows.forEach((original, index) => {
+  const reconciledProtocolOperationRows = [...healthHandoff.protocolOperationRows,
+    ...healthReconciliation.added.map(addition => {
+      const found = descriptorByKey.get(addition.key);
+      const catalogue = reconciledCatalogue.find(entry => entry.protocol === addition.protocol);
+      return {
+        coverageId: `${catalogue.id}.${addition.id}`,
+        protocol: addition.protocol,
+        chain: found.protocol.chain,
+        operation: addition.id,
+        authority: found.protocol.indexerAuthority,
+        role: 'Explorer reader; authority credentials remain server-side',
+        status: 'NOT TESTED',
+        verificationNetwork: null,
+        testTime: null,
+        evidenceLevel: 'source-contract reconciliation; not executed',
+        apiContractReference: { repository: 'bitcoinuniverseio/backend-apis', descriptorRule: 'Use the current readOperationDescriptors entry for this exact protocol and operation.' },
+        method: addition.method,
+        route: addition.route,
+        inputReference: null,
+        missingPrerequisite: 'Reachable approved candidate/owned authority and real supported-network reference for data operations.',
+        steps: ['Resolve the current descriptor for this operation only.', 'Read through the real application API and authority; compare semantics and context.', 'Verify the intended actual UI or API consumer result and repeat after reload/reconnect.', 'Exercise pagination, failure and recovery variants separately.'],
+        expectedFinalOutcome: 'Actual advertised operation completes accurately with authoritative, context-bound evidence; registry success cannot certify other operations.',
+        workPackage: 'WP03/WP08',
+        endToEndPass: false,
+      };
+    })];
+  const handoffOperationIds = uniqueIds(reconciledProtocolOperationRows.map(row => ({ id: row.coverageId })), 'health handoff protocol operations');
+  assert.equal(handoffOperationIds.length, sourceGroups['protocol-operation'].length, 'Reconcile changed handoff operation coverage');
+  sourceGroups['transaction-summary-variant'] = [];
+  for (const context of healthReconciliation.summaryContexts) for (const variant of healthReconciliation.summaryVariants) {
+    const id = `SUMMARY/transaction-assets/${context.chain}/${variant}`;
+    const row = add(id, 'transaction-summary-variant', {
+      chain: context.chain,
+      network: context.network,
+      operation: 'transaction-asset-summary',
+      variant,
+      method: 'GET',
+      route: '/api/v1/universe/transactions/:txid/assets',
+      query: { chain: context.chain, network: ':supported-network', txid: ':txid' },
+      role: 'public transaction asset consumer',
+      requiredServices: ['mempool-backend', 'owned protocol authorities', 'mempool gateway/frontend'],
+      assertions: ['Preserve exact atomic quantities and identity links.', 'Distinguish proven-empty, incomplete, unavailable and timeout states.', 'Verify confirmation/reorg invalidation and refresh/reconnect persistence.'],
+      remainingWork: 'Execute the route against an actual supported chain/network and every listed reader variant; source presence is not acceptance.',
+    }, ref(healthReconciliationFile, { pointer: `/summaryContexts/${healthReconciliation.summaryContexts.indexOf(context)}/variants/${variant}` }));
+    link(row, 'R-07', 'transaction summary is part of the retained explorer acceptance surface');
+    sourceGroups['transaction-summary-variant'].push(id);
+  }
+  reconciledProtocolOperationRows.forEach((original, index) => {
     const identity = inventory.protocols.find(row => row.protocol === original.protocol);
     const row = records.get(`${identity?.id}/${original.operation}`);
     assert(row && original.coverageId === `${identity.id}.${original.operation}` && row.chain === original.chain && row.authority === original.authority,
@@ -346,7 +424,8 @@ export function buildMatrix({ evidencePath } = {}) {
     row.handoffBinding = { coverageId: original.coverageId, ledgerId: row.id, priorStatus: original.status,
       evidenceLevel: original.evidenceLevel, originalMissingPrerequisite: original.missingPrerequisite,
       steps: original.steps, expectedFinalOutcome: original.expectedFinalOutcome };
-    row.sources.push(ref(healthHandoffFile, { pointer: `/protocolOperationRows/${index}` }));
+    row.sources.push(ref(index < healthHandoff.protocolOperationRows.length ? healthHandoffFile : healthReconciliationFile,
+      { pointer: index < healthHandoff.protocolOperationRows.length ? `/protocolOperationRows/${index}` : `/added/${index - healthHandoff.protocolOperationRows.length}` }));
     link(records.get('R-07'), row.id, 'exact handoff protocol operation');
     link(records.get('T-15'), row.id, 'protocol operation failure, pagination and batch variants remain separately required');
   });
@@ -538,7 +617,9 @@ export function buildMatrix({ evidencePath } = {}) {
     status: 'FUNCTIONAL NO-GO', operationDenominatorReconciled: false, operationDenominator: null,
     countingPolicy: 'Groups and rows overlap. No source-count sum or rendering percentage is application coverage.',
     healthHandoff: { artifact: healthHandoffFile, sha256: read(healthHandoffFile).sha256,
+      reconciliationArtifact: healthReconciliationFile, reconciliationSha256: read(healthReconciliationFile).sha256,
       healthRows: sourceGroups['health-verification'].length, protocolOperationBindings: handoffOperationIds.length,
+      historicalProtocolOperationBindings: healthHandoff.protocolOperationRows.length,
       protocolOperationIds: handoffOperationIds,
       historicalCounts: { FAIL: 8, BLOCKED: 14, 'NOT TESTED': 18 },
       countingPolicy: 'Health scenarios supplement the preserved ledger; period-form protocol IDs bind to existing slash-form IDs without adding operations.' },
@@ -605,6 +686,8 @@ export function validateMatrix(matrix) {
   }
   if (matrix.healthHandoff) {
     assert.equal(matrix.healthHandoff.sha256, sources.get(matrix.healthHandoff.artifact)?.sha256, 'Invalid health handoff source hash lineage');
+    assert.equal(matrix.healthHandoff.reconciliationSha256, sources.get(matrix.healthHandoff.reconciliationArtifact)?.sha256,
+      'Invalid health reconciliation source hash lineage');
     const bindings = matrix.rows.filter(row => row.handoffBinding);
     const bindingIds = uniqueIds(bindings.map(row => ({ id: row.handoffBinding.coverageId })), 'handoff operation bindings');
     assert.deepEqual(bindingIds.sort(), [...matrix.healthHandoff.protocolOperationIds].sort(), 'Lost handoff operation binding');
