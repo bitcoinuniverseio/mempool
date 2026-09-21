@@ -620,6 +620,36 @@
     ],
     "acceptanceResult": "SUPPLEMENTARY MAINNET EVIDENCE ONLY: the candidate exercised real owned base and Ord authorities for Bitcoin and preserved both complete and partial states. This does not qualify Signet or another accepted test network, the remaining protocol readers, the full application denominator or the release gate."
   },
+  "localGatewayBrowserProbe": {
+    "observedAt": "2026-09-21T22:19:10.298Z",
+    "gatewayUrl": "http://127.0.0.1:8098/tx/bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+    "candidateBackendCommit": "d3937707",
+    "candidateMempoolCommit": "02878a2db",
+    "frontendBuildIdentity": {
+      "version": "3.3.1",
+      "sourceCommit": "02878a2db"
+    },
+    "authorityPath": {
+      "baseBackend": "owned Mainnet adapter through local read-only SSH forward",
+      "ord": "owned Mainnet Ord authority through local read-only SSH forward",
+      "network": "bitcoin:mainnet",
+      "checkpointHeightAtomic": "968048",
+      "checkpointHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c"
+    },
+    "userVisibleAssertions": [
+      "Transaction page rendered through the local gateway and candidate API.",
+      "Assets panel showed 10 assets found so far with 9 ordinal items and one uncommon rare sat.",
+      "Assets panel showed Partial coverage details for 28 of 31 sources and Read at block 968048.",
+      "Universe Asset Flow showed Complete evidence, a coinbase explanation, one rare-sat output and ordinal output links.",
+      "After the rebuilt frontend loaded, the coinbase input rendered without an Open the transaction this input came from link.",
+      "The rebuilt footer identified source commit 02878a2db."
+    ],
+    "observedIntegrationWarnings": [
+      "The local custom backend adapter did not expose backend-info, so the page status rail reported Status unknown and Offline.",
+      "The page remained partial because 28 of 31 asset sources were not qualified, even though the selected Ord and base reads were coherent."
+    ],
+    "acceptanceResult": "SUPPLEMENTARY REAL CONSUMER EVIDENCE ONLY: the browser reached the candidate gateway, owned Mainnet sources and rebuilt frontend, and the malformed coinbase previous-output link was removed. This is not Signet acceptance, full denominator acceptance or release GO."
+  },
   "acceptanceImpact": {
     "functionalPass": false,
     "reason": "Real consumer responses contain unconfigured and partial reader states, a checkpoint 3938 blocks behind the owned node tip, and null totalCount values.",
