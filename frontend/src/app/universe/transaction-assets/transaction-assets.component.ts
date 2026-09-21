@@ -1,13 +1,22 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { BehaviorSubject, Observable, TimeoutError, catchError, combineLatest, map, of, startWith, switchMap } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { ExplorerProtocolDefinition } from '@app/universe/universe.types';
 import {
+  PresentedQuantity,
+  initialsFor,
+  presentQuantity,
+  shortenAssetId,
+} from '@app/universe/asset-summary/asset-summary.presentation';
+import {
+  INCONCLUSIVE_COVERAGE,
   SummaryAsset,
+  SummaryCheckpoint,
   SummaryCoverageState,
+  SummaryEffect,
+  SummaryProtocolCoverage,
   TransactionAssetSummary,
-  exactQuantity,
   summaryAssetKey,
 } from './transaction-assets.types';
 
@@ -26,6 +35,12 @@ import {
  * and a transaction every applicable source proves carries no supported
  * assets. Only the last of those may say none.
  *
+ * The display model is built once per response rather than recomputed by the
+ * template. A template that calls a mapping function in a binding runs it on
+ * every change detection pass, and two such bindings over one list produce two
+ * different object identities for the same row, which defeats trackBy and
+ * resets anything the row was holding, including which row a person had open.
+ *
  * Wording is plain on purpose. A visitor reading a transaction page is not
  * assumed to know what divisibility, coverage or an atomic unit is, so the
  * view says "smallest units", "Partial" and "Not published" instead, and the
@@ -37,25 +52,18 @@ export type SummaryStateKind =
   | 'summary'
   | 'not-found'
   | 'unconfigured'
+  | 'unavailable'
   | 'timeout'
   | 'error';
 
 export interface SummaryViewState {
   kind: SummaryStateKind;
   summary?: TransactionAssetSummary;
-  /** Registry definitions by protocol id, for official names and colours. */
-  protocols?: Map<string, ExplorerProtocolDefinition>;
+  /** Everything the template renders, computed once when the response arrives. */
+  model?: SummaryViewModel;
 }
 
-/** One amount as the view renders it: exact where possible, labelled otherwise. */
-export interface DisplayQuantity {
-  /** 'exact' carries a decimal value; 'raw' carries smallest-unit digits. */
-  kind: 'exact' | 'raw' | 'none';
-  value: string;
-  /** True when the side the value came from was only partly proven. */
-  partial: boolean;
-}
-
+/** One asset row, with its identity, amounts and disclosure content. */
 export interface DisplayAsset {
   key: string;
   asset: SummaryAsset;
@@ -63,26 +71,66 @@ export interface DisplayAsset {
   protocol: ExplorerProtocolDefinition;
   /** The heading shown for the asset: its name, ticker, or id. */
   title: string;
-  /** The id, only when it is not already the title. Empty otherwise. */
+  /** The shortened id, only when it is not already the title. Empty otherwise. */
   subtitle: string;
+  /** The complete id, for the disclosure and for copying. */
+  assetId: string;
   /** Plain-language asset kind, e.g. "Token". Empty when it adds nothing. */
   kindLabel: string;
   /** One or two letters standing in for a missing logo. */
   initials: string;
   logoFailed: boolean;
-  inputs: DisplayQuantity;
-  outputs: DisplayQuantity;
+  inputs: PresentedQuantity;
+  outputs: PresentedQuantity;
+  effects: DisplayEffect[];
+  /** True when anything in the disclosure is worth opening it for. */
+  hasDetails: boolean;
+  /** The id of the row's disclosure region, for aria-controls. */
+  detailsId: string;
 }
 
-/** Coverage states that leave the inventory inconclusive. */
-const INCONCLUSIVE: ReadonlySet<SummaryCoverageState> = new Set<SummaryCoverageState>([
-  'partial',
-  'candidate-only',
-  'unsupported-network',
-  'unconfigured',
-  'unavailable',
-  'not-publicly-observable',
-]);
+/** One protocol effect, with the acceptance wording already decided. */
+export interface DisplayEffect {
+  effect: SummaryEffect;
+  /** The plain label: the action, and whether the authority accepted it. */
+  label: string;
+  accepted: boolean;
+  quantity: PresentedQuantity;
+  /** The authority that stated it, or an empty string when none did. */
+  authorityId: string;
+}
+
+/** One protocol's coverage, as the details list renders it. */
+export interface CoverageRow {
+  protocolId: string;
+  name: string;
+  state: SummaryCoverageState;
+  /** Plain-language state, e.g. "Answered" or "Source not reachable". */
+  stateLabel: string;
+  /** Plain-language reason, or an empty string when the payload gave none. */
+  reasonLabel: string;
+  /** True when the gap is temporary, so retrying could change it. */
+  retryable: boolean;
+  /** True when the gap leaves the inventory inconclusive. */
+  inconclusive: boolean;
+}
+
+export interface SummaryViewModel {
+  rows: DisplayAsset[];
+  coverage: CoverageRow[];
+  /** The single overall badge: proven, partial, or none found. */
+  chip: { state: string; label: string };
+  countLabel: string;
+  /** The short context line under the heading. */
+  contextLabel: string;
+  incomplete: boolean;
+  provenEmpty: boolean;
+  /** Coverage rows that leave the inventory inconclusive. */
+  gaps: CoverageRow[];
+  /** True when at least one gap could clear on a retry. */
+  retryable: boolean;
+  checkpoint: SummaryCheckpoint | null;
+}
 
 /**
  * Plain words for the authority's asset classification.
@@ -101,6 +149,55 @@ const KIND_LABELS: Readonly<Record<string, string>> = {
   'protocol-event': 'Event',
 };
 
+/**
+ * Plain words for each coverage state.
+ *
+ * A permanent limit and a temporary outage read differently on purpose. Saying
+ * "Waiting on" for a protocol nobody has a reader for promises an answer that
+ * will never arrive, and a visitor who waits for it is being misled.
+ */
+const COVERAGE_STATE_LABELS: Readonly<Record<SummaryCoverageState, string>> = {
+  complete: 'Answered',
+  'proven-empty': 'Answered, none held',
+  partial: 'Answered in part',
+  'candidate-only': 'Unconfirmed only',
+  'unsupported-network': 'Not available on this network',
+  unconfigured: 'No source set up',
+  unavailable: 'Source not reachable',
+  'not-publicly-observable': 'Not publicly verifiable',
+};
+
+/**
+ * Plain words for the machine-readable reasons the backend contract defines.
+ *
+ * An unknown reason maps to an empty string. Printing a raw token a visitor
+ * cannot read is worse than printing nothing, and the payload still carries it
+ * for anyone reading the API.
+ */
+const COVERAGE_REASON_LABELS: Readonly<Record<string, string>> = {
+  'no-transaction-reader': 'No source reads this protocol per transaction.',
+  'authority-unconfigured': 'This source is not set up on this deployment.',
+  'authority-unavailable': 'This source did not answer.',
+  'unsupported-network': 'This protocol does not run on this network.',
+  'outpoint-inventory-not-retained':
+    'The source no longer keeps the records for some of these outputs.',
+  'public-proof-not-observable':
+    'This protocol keeps its records private, so holdings cannot be verified publicly.',
+  'reader-answered': '',
+};
+
+/**
+ * The states a retry could plausibly change.
+ *
+ * A missing reader and an unsupported network will not change because somebody
+ * pressed a button, so offering a retry for them is a false promise.
+ */
+const RETRYABLE_STATES: ReadonlySet<SummaryCoverageState> = new Set<SummaryCoverageState>([
+  'unavailable',
+  'partial',
+  'candidate-only',
+]);
+
 @Component({
   selector: 'app-universe-transaction-assets',
   templateUrl: './transaction-assets.component.html',
@@ -108,7 +205,34 @@ const KIND_LABELS: Readonly<Record<string, string>> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class TransactionAssetsComponent implements OnChanges {
+/**
+ * IMPLEMENTATION-HANDOFF [WP06] | F007 | preparation 2026-09-21
+ * State: NOT TESTED. PR135 is legitimate unmerged consumer work and backend PR204 is already
+ * merged. Public backend-info reports mempool 537235052 and chain status reports overlay
+ * fcdc2e2f3bd226bead63cdf0b81fad1ef1ad45bd, not the selected candidates. Passing isolated
+ * component tests do not establish real test-network user journeys or deployment.
+ * Governing requirements: REQ-EVIDENCE, REQ-UI, REQ-NETWORK;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: WP01, WP03, WP04, WP05. 1. Preserve the PR135 exact-value, strict-decoder and
+ * coverage-state implementation; it has component evidence but no accepted real-network
+ * journey in this preparation. 2. Exercise Bitcoin, Dogecoin and Zcash consumers against the
+ * actual producer, not visual fixtures or a service-worker cached response. 3. Verify
+ * pending/confirmed/reorg, partial/empty/unavailable, conflict decimals, exact copy, retry
+ * cooldown and bounded logo failures through reload/reconnect and network switching. 4. Run
+ * the frontend Vitest suite and production AOT build; record real requests, authority readback
+ * and usable mobile/keyboard outcomes for WP03 rows. Do not merge or release before WP01/WP02
+ * gates.
+ * Acceptance: All distinct transaction/address asset consumer paths and failure/recovery
+ * variants pass against real supported-network authorities and the accepted candidate,
+ * preserving exact amounts, source identity and truthful state across refresh/reconnect.
+ * Rollback: Producer additions are additive in PR204; retain compatibility while switching
+ * consumer artifacts. Revert only the failed candidate and preserve accepted source/evidence
+ * versions; do not roll back unrelated merged backend work.
+ * ANNOTATED is not implemented, verified functionality or release. Preserve existing
+ * executable behavior in this preparation.
+ */
+export class TransactionAssetsComponent implements OnChanges, OnDestroy {
   @Input() txid: string;
   @Input() chain = 'bitcoin';
   /**
@@ -120,8 +244,16 @@ export class TransactionAssetsComponent implements OnChanges {
 
   state$: Observable<SummaryViewState>;
 
+  /** Which rows a person has opened, keyed by full asset identity. */
+  readonly expanded = new Set<string>();
+  /** What the last copy attempt did, keyed by what was copied. */
+  readonly copyResults = new Map<string, 'copied' | 'failed'>();
+  /** True while an explicit retry is on cooldown, per the payload's request. */
+  retryCooldown = false;
+
   private readonly retry$ = new BehaviorSubject<number>(0);
   private readonly logoFailures = new Set<string>();
+  private cooldownTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private universeApiService: UniverseApiService) {}
 
@@ -132,8 +264,11 @@ export class TransactionAssetsComponent implements OnChanges {
     if (changes.txid || changes.chain) {
       // A new transaction or chain clears everything the previous one proved,
       // immediately, before the next answer arrives. Stale rows from another
-      // transaction are worse than no rows.
+      // transaction are worse than no rows, and a row left open from the
+      // previous transaction would show another transaction's details.
       this.logoFailures.clear();
+      this.expanded.clear();
+      this.copyResults.clear();
     }
     if (!this.txid) {
       this.state$ = of({ kind: 'loading' as const });
@@ -144,30 +279,58 @@ export class TransactionAssetsComponent implements OnChanges {
     this.state$ = this.retry$.pipe(
       switchMap(() => combineLatest([
         this.universeApiService.getTransactionAssets$(txid, chain),
-        // Registry names and colours are presentation only. If the registry is
-        // unavailable the summary still renders, with ids standing in for the
-        // official names; metadata never gates a proven amount.
+        // Registry names and colours are presentation only, so the stream is
+        // seeded with an empty map. combineLatest emits nothing until every
+        // source has emitted once, which without the seed makes an optional
+        // name lookup a gate on every proven amount on the page.
         this.universeApiService.getProtocols$().pipe(
           map((response) => new Map(response.protocols.map((entry) => [entry.id, entry]))),
           catchError(() => of(new Map<string, ExplorerProtocolDefinition>())),
+          startWith(new Map<string, ExplorerProtocolDefinition>()),
         ),
       ]).pipe(
-        map(([summary, protocols]): SummaryViewState => ({ kind: 'summary', summary, protocols })),
+        map(([summary, protocols]): SummaryViewState => ({
+          kind: 'summary',
+          summary,
+          model: this.buildModel(summary, protocols),
+        })),
         catchError((error: unknown) => of<SummaryViewState>({ kind: this.classify(error) })),
         startWith<SummaryViewState>({ kind: 'loading' }),
       )),
     );
   }
 
-  /** Retry is explicit and bounded: one press, one fresh request. */
-  retry(): void {
+  /**
+   * Retry is explicit and bounded: one press, one fresh request, and a cooldown
+   * the payload asked for. Nothing here polls, and no render triggers a refetch.
+   */
+  retry(retryAfterSeconds: number | null = null): void {
+    if (this.retryCooldown) {return;}
     this.retry$.next(this.retry$.value + 1);
+    const seconds = typeof retryAfterSeconds === 'number' && retryAfterSeconds > 0
+      ? Math.min(retryAfterSeconds, 60)
+      : 0;
+    if (seconds === 0) {return;}
+    this.retryCooldown = true;
+    if (this.cooldownTimer !== null) {clearTimeout(this.cooldownTimer);}
+    this.cooldownTimer = setTimeout(() => {
+      this.retryCooldown = false;
+      this.cooldownTimer = null;
+    }, seconds * 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.cooldownTimer !== null) {clearTimeout(this.cooldownTimer);}
   }
 
   /**
-   * Distinguishes the failure kinds a visitor needs told apart. A timeout, an
-   * unconfigured authority and a proven-absent transaction are three different
-   * facts, and none of them is an empty asset list.
+   * Distinguishes the failure kinds a visitor needs told apart.
+   *
+   * The statuses come from what the API actually returns: the summary route
+   * answers 404 only when the base authority proved the transaction absent, and
+   * 503 when the deployment has no source configured. A 502 or 504 is an
+   * upstream outage, which is a different fact from "not set up", and anything
+   * else stays generic rather than being guessed into a specific cause.
    */
   private classify(error: unknown): SummaryStateKind {
     if (error instanceof TimeoutError) {return 'timeout';}
@@ -175,42 +338,114 @@ export class TransactionAssetsComponent implements OnChanges {
     if (response && typeof response.status === 'number') {
       if (response.status === 404) {return 'not-found';}
       if (response.status === 503) {return 'unconfigured';}
+      if (response.status === 502 || response.status === 504) {return 'unavailable';}
     }
     return 'error';
   }
 
   /**
-   * The rows to render, keyed by full identity.
+   * Everything the template needs, built once from one response.
    *
-   * Two protocols may legitimately use the same asset id and two rulesets may
-   * read the same ledger; keying by assetId alone would merge them into one
-   * row and silently drop a proven asset.
+   * Keyed by full identity throughout. Two protocols may legitimately use the
+   * same asset id and two rulesets may read the same ledger; keying by assetId
+   * alone would merge them into one row and silently drop a proven asset.
    */
-  rows(state: SummaryViewState): DisplayAsset[] {
-    const summary = state.summary;
-    if (!summary) {return [];}
-    return summary.assets.map((asset) => {
-      const key = summaryAssetKey(asset);
-      const protocol = this.protocolFor(state, asset.protocolId);
-      const title = asset.displayName || asset.ticker || asset.assetId;
-      return {
-        key,
-        asset,
-        protocol,
-        title,
-        subtitle: title === asset.assetId ? '' : asset.assetId,
-        kindLabel: KIND_LABELS[asset.assetKind] ?? '',
-        initials: this.initialsFor(protocol, title),
-        logoFailed: this.logoFailures.has(key),
-        inputs: this.quantity(asset, asset.inputs.quantityAtomic, asset.inputs.complete),
-        outputs: this.quantity(asset, asset.outputs.quantityAtomic, asset.outputs.complete),
-      };
-    });
+  private buildModel(
+    summary: TransactionAssetSummary,
+    protocols: Map<string, ExplorerProtocolDefinition>,
+  ): SummaryViewModel {
+    const rows = summary.assets.map((asset) => this.buildRow(asset, protocols));
+    const coverage = summary.perProtocolCoverage.map((entry) =>
+      this.buildCoverage(entry, protocols),
+    );
+    const gaps = coverage.filter((entry) => entry.inconclusive);
+    const provenEmpty = summary.counts.totalCount === 0 && summary.assets.length === 0;
+    const incomplete = summary.counts.totalCount === null;
+    return {
+      rows,
+      coverage,
+      gaps,
+      retryable: gaps.some((entry) => entry.retryable),
+      provenEmpty,
+      incomplete,
+      chip: provenEmpty
+        ? { state: 'state-proven', label: 'None found' }
+        : incomplete
+          ? { state: 'state-partial', label: 'Partial' }
+          : { state: 'state-proven', label: 'Complete' },
+      countLabel: this.countLabel(summary, provenEmpty, incomplete),
+      contextLabel: this.contextLabel(summary, rows),
+      checkpoint: summary.checkpoint,
+    };
+  }
+
+  private buildRow(
+    asset: SummaryAsset,
+    protocols: Map<string, ExplorerProtocolDefinition>,
+  ): DisplayAsset {
+    const key = summaryAssetKey(asset);
+    const protocol = this.protocolFor(protocols, asset.protocolId);
+    const title = asset.displayName || asset.ticker || asset.assetId;
+    const inputs = presentQuantity(asset.inputs.quantityAtomic, asset.decimals, asset.inputs.complete);
+    const outputs = presentQuantity(asset.outputs.quantityAtomic, asset.decimals, asset.outputs.complete);
+    const effects = asset.effects.map((effect) => this.buildEffect(effect, asset));
+    return {
+      key,
+      asset,
+      protocol,
+      title,
+      subtitle: title === asset.assetId ? '' : shortenAssetId(asset.assetId, 8),
+      assetId: asset.assetId,
+      kindLabel: KIND_LABELS[asset.assetKind] ?? '',
+      initials: initialsFor(protocol.shortName, title),
+      // The failure is keyed by the artwork, not only by the asset: a replaced
+      // logo is a different image and deserves its own attempt rather than
+      // inheriting the previous revision's failure forever.
+      logoFailed: this.logoFailures.has(this.logoKey(key, asset)),
+      inputs,
+      outputs,
+      effects,
+      hasDetails: true,
+      detailsId: 'asset-details-' + hashKey(key),
+    };
+  }
+
+  private buildEffect(effect: SummaryEffect, asset: SummaryAsset): DisplayEffect {
+    const action = effect.actionType.replace(/[_-]+/g, ' ');
+    return {
+      effect,
+      accepted: effect.accepted,
+      // "Not accepted" covers a rejected record and one no authority has ruled
+      // on. Narrowing it to "unconfirmed" would tell a reader that time alone
+      // will settle it, which for a rejected transfer is false.
+      label: effect.accepted ? action : action + ' (not accepted)',
+      quantity: presentQuantity(effect.quantityAtomic, asset.decimals),
+      authorityId: effect.evidence?.authorityId ?? '',
+    };
+  }
+
+  private buildCoverage(
+    entry: SummaryProtocolCoverage,
+    protocols: Map<string, ExplorerProtocolDefinition>,
+  ): CoverageRow {
+    const reason = entry.reason ?? '';
+    return {
+      protocolId: entry.protocolId,
+      name: this.protocolFor(protocols, entry.protocolId).displayName,
+      state: entry.state,
+      stateLabel: COVERAGE_STATE_LABELS[entry.state] ?? entry.state,
+      reasonLabel: COVERAGE_REASON_LABELS[reason] ?? '',
+      retryable: RETRYABLE_STATES.has(entry.state),
+      inconclusive: INCONCLUSIVE_COVERAGE.has(entry.state),
+    };
   }
 
   /** The registry entry, or a placeholder so the badge still names something. */
-  private protocolFor(state: SummaryViewState, protocolId: string): ExplorerProtocolDefinition {
-    const known = state.protocols?.get(protocolId);
+  private protocolFor(
+    protocols: Map<string, ExplorerProtocolDefinition>,
+    protocolId: string,
+  ): ExplorerProtocolDefinition {
+    const known = protocols.get(protocolId);
     if (known) {return known;}
     const readable = protocolId.replace(/[_-]+/g, ' ');
     return {
@@ -221,123 +456,98 @@ export class TransactionAssetsComponent implements OnChanges {
     } as ExplorerProtocolDefinition;
   }
 
-  /**
-   * One or two letters standing in for a missing logo.
-   *
-   * A labelled placeholder in the protocol's own hue reads as a deliberate
-   * stand-in. An empty grey square reads as an image that failed to load, and
-   * neither may be mistaken for a verified token logo.
-   */
-  private initialsFor(protocol: ExplorerProtocolDefinition, title: string): string {
-    const source = (protocol.shortName || title || '?').trim();
-    const words = source.split(/[\s._-]+/).filter(Boolean);
-    const letters = words.length > 1
-      ? words[0].charAt(0) + words[1].charAt(0)
-      : source.slice(0, 2);
-    return letters.toUpperCase();
-  }
-
-  /**
-   * One displayable amount.
-   *
-   * An exact decimal needs the authority's divisibility. Without it the digits
-   * are still true, so they are shown labelled as smallest units rather than
-   * as whole tokens, which would understate the amount by up to thirty eight
-   * orders of magnitude.
-   */
-  private quantity(asset: SummaryAsset, quantityAtomic: string | null, complete: boolean): DisplayQuantity {
-    if (quantityAtomic === null) {
-      return { kind: 'none', value: '', partial: !complete };
+  /** The count sentence beside the heading. Plural forms are spelled out. */
+  private countLabel(
+    summary: TransactionAssetSummary,
+    provenEmpty: boolean,
+    incomplete: boolean,
+  ): string {
+    if (provenEmpty) {
+      return 'No supported assets';
     }
-    const exact = exactQuantity(quantityAtomic, asset.decimals);
-    return exact === null
-      ? { kind: 'raw', value: quantityAtomic, partial: !complete }
-      : { kind: 'exact', value: exact, partial: !complete };
+    const found = summary.assets.length;
+    const noun = found === 1 ? 'asset' : 'assets';
+    return incomplete ? `${found} ${noun} found so far` : `${found} ${noun}`;
   }
 
-  /** One deterministic fallback per identity. Never a request loop. */
-  onLogoError(key: string): void {
-    this.logoFailures.add(key);
+  /**
+   * The short context line: how many protocols the found assets span.
+   *
+   * It describes what was found, never a total. A count of protocols on the
+   * roster would read as an inventory of the transaction, which it is not.
+   */
+  private contextLabel(summary: TransactionAssetSummary, rows: DisplayAsset[]): string {
+    if (rows.length === 0) {return '';}
+    const protocols = new Set(rows.map((row) => row.asset.protocolId)).size;
+    return protocols === 1 ? '1 protocol' : `${protocols} protocols`;
+  }
+
+  private logoKey(key: string, asset: SummaryAsset): string {
+    const revision = asset.logo ? asset.logo.contentHash + '/' + asset.logo.metadataRevision : '';
+    return key + ' ' + revision;
+  }
+
+  /** One deterministic fallback per artwork revision. Never a request loop. */
+  onLogoError(row: DisplayAsset): void {
+    this.logoFailures.add(this.logoKey(row.key, row.asset));
+    row.logoFailed = true;
+  }
+
+  toggle(row: DisplayAsset): void {
+    if (this.expanded.has(row.key)) {this.expanded.delete(row.key);}
+    else {this.expanded.add(row.key);}
+  }
+
+  isExpanded(row: DisplayAsset): boolean {
+    return this.expanded.has(row.key);
+  }
+
+  /**
+   * Copies the exact value and reports what actually happened.
+   *
+   * Clipboard access can be denied, and a button that shows "Copied" when
+   * nothing was copied is worse than one that shows nothing at all: a person
+   * pastes and loses the value they were trying to keep.
+   */
+  copy(what: string, value: string): void {
+    const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+    if (!clipboard || typeof clipboard.writeText !== 'function') {
+      this.copyResults.set(what, 'failed');
+      return;
+    }
+    clipboard.writeText(value).then(
+      () => this.copyResults.set(what, 'copied'),
+      () => this.copyResults.set(what, 'failed'),
+    );
+  }
+
+  copyResult(what: string): 'copied' | 'failed' | null {
+    return this.copyResults.get(what) ?? null;
   }
 
   trackRow(_index: number, row: DisplayAsset): string {
     return row.key;
   }
 
-  /** How many sources could not answer. Drives the partial notice. */
-  gapCount(summary: TransactionAssetSummary): number {
-    return summary.perProtocolCoverage.filter((entry) => INCONCLUSIVE.has(entry.state)).length;
+  trackCoverage(_index: number, row: CoverageRow): string {
+    return row.protocolId;
   }
 
-  /** The official names of those sources, for the expandable detail. */
-  gapNames(state: SummaryViewState): string[] {
-    const summary = state.summary;
-    if (!summary) {return [];}
-    return summary.perProtocolCoverage
-      .filter((entry) => INCONCLUSIVE.has(entry.state))
-      .map((entry) => this.protocolFor(state, entry.protocolId).displayName)
-      .sort((a, b) => a.localeCompare(b));
-  }
-
-  /**
-   * True only when every applicable source proved absence. Any other state
-   * means the transaction is not known to be empty, merely not known.
-   */
-  provenEmpty(summary: TransactionAssetSummary): boolean {
-    return summary.counts.totalCount === 0 && summary.assets.length === 0;
-  }
-
-  incomplete(summary: TransactionAssetSummary): boolean {
-    return summary.counts.totalCount === null;
-  }
-
-  /** The evidence chip for the whole summary: proven, partial, or none found. */
-  summaryChip(summary: TransactionAssetSummary): { state: string; label: string } {
-    if (this.provenEmpty(summary)) {
-      return { state: 'state-proven', label: 'None found' };
-    }
-    return this.incomplete(summary)
-      ? { state: 'state-partial', label: 'Partial' }
-      : { state: 'state-proven', label: 'Complete' };
-  }
-
-  /** The count sentence beside the heading. Plural forms are spelled out. */
-  countLabel(summary: TransactionAssetSummary): string {
-    if (this.provenEmpty(summary)) {
-      return 'No supported assets';
-    }
-    const found = summary.assets.length;
-    const noun = found === 1 ? 'asset' : 'assets';
-    return this.incomplete(summary)
-      ? `${found} ${noun} found so far`
-      : `${found} ${noun}`;
+  trackEffect(_index: number, row: DisplayEffect): string {
+    return row.effect.eventId;
   }
 }
 
-/* IMPLEMENTATION-HANDOFF [UI-WP02:TX-VIEW] 2026-09-19
- * Coverage C09-C21; defects F06/F07/F08. Preparation only.
- * Verified: ngOnChanges combineLatest waits for the registry's first value;
- * rows() is mapped twice by the template; gapNames discards state/reason;
- * classify equates every 503 with configuration and every 404 with absence.
- * Sources: R03 RxJS combineLatest; R05 summary-v1; R02 Angular 20 accessibility.
- * 1. After UI-WP01, produce a stable display model once per response. Seed the
- *    registry stream with an empty Map so optional names never delay amounts.
- *    Keep switchMap cancellation and context validation across route/network.
- * 2. Add a pure shared quantity presenter (PROPOSED NEW asset-summary/
- *    asset-summary.presentation.ts): exact decimal strings plus raw-unit state,
- *    explicit approximation for long headlines, full exact strings for copy.
- *    Never copy the abbreviation, round with floats, or sum unlike assets.
- * 3. Build coverage rows with protocol, state, reason, retry eligibility. Show
- *    unsupported/unconfigured/private-history limits as limits, not Waiting.
- * 4. Replace false=>unconfirmed with Not accepted unless evidence proves a
- *    narrower status. Preserve accepted effects separately from input/output.
- * 5. Distinguish proven base-tx absence from a missing API route, and temporary
- *    outage from configuration using observed API error codes; keep unknown
- *    errors generic. Honor retryAfterSeconds; one explicit retry, no polling.
- * 6. Localize derived labels; key row expansion by full identity and clear on
- *    context change. Key failed images by identity plus contentHash/revision.
- * Tests: transaction-assets.component.spec.ts; npm test --
- * src/app/universe/transaction-assets (NOT RUN). Test delayed registry, stale
- * responses, retry cooldown, accepted:false, all eight coverage states, logo
- * recovery, null/zero and focus after refresh. Dependencies UI-WP01/UI-WP07.
+/**
+ * A short, stable, DOM-safe id from an identity key.
+ *
+ * An identity key is a JSON tuple and contains quotes and brackets, which a DOM
+ * id and an aria-controls reference cannot carry.
  */
+function hashKey(key: string): string {
+  let hash = 0;
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 31 + key.charCodeAt(index)) | 0;
+  }
+  return (hash >>> 0).toString(36);
+}

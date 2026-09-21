@@ -105,6 +105,7 @@ export class AddressComponent implements OnInit, OnDestroy {
 
   isMobile: boolean;
   showQR: boolean = false;
+  private qrHovered = false;
 
   address: Address;
   addressString: string;
@@ -167,6 +168,22 @@ export class AddressComponent implements OnInit, OnDestroy {
     private formBuilder: UntypedFormBuilder,
     private addressCapabilityService: AddressCapabilityService,
   ) { }
+
+  onQrEnter(): void {
+    this.qrHovered = true;
+    this.showQR = true;
+  }
+
+  onQrLeave(): void {
+    this.qrHovered = false;
+    this.showQR = false;
+  }
+
+  toggleQr(): void {
+    if (!this.qrHovered) {
+      this.showQR = !this.showQR;
+    }
+  }
 
   /**
    * Records a failure in terms the page can render.

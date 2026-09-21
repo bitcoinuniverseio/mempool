@@ -13,18 +13,42 @@
  * but malformed required data is an error rather than something to render.
  */
 
+import { exactDecimal } from '@app/universe/asset-summary/asset-summary.presentation';
+
 export const EXPLORER_TX_ASSET_SUMMARY_SCHEMA_VERSION =
   'universe-transaction-asset-summary-v1';
 
-export type SummaryCoverageState =
-  | 'complete'
-  | 'partial'
-  | 'proven-empty'
-  | 'candidate-only'
-  | 'unsupported-network'
-  | 'unconfigured'
-  | 'unavailable'
-  | 'not-publicly-observable';
+/**
+ * The coverage states, as a value rather than only as a type.
+ *
+ * A type annotation on an untrusted payload is a claim, not a check. The
+ * decoder validates against this set, because an unrecognised state cast to the
+ * union renders as whichever branch the template falls through to, and the
+ * fall-through branch is usually the reassuring one.
+ */
+export const SUMMARY_COVERAGE_STATES = [
+  'complete',
+  'partial',
+  'proven-empty',
+  'candidate-only',
+  'unsupported-network',
+  'unconfigured',
+  'unavailable',
+  'not-publicly-observable',
+] as const;
+
+export type SummaryCoverageState = (typeof SUMMARY_COVERAGE_STATES)[number];
+
+/** Coverage states under which the inventory is not conclusive. */
+export const INCONCLUSIVE_COVERAGE: ReadonlySet<SummaryCoverageState> =
+  new Set<SummaryCoverageState>([
+    'partial',
+    'candidate-only',
+    'unsupported-network',
+    'unconfigured',
+    'unavailable',
+    'not-publicly-observable',
+  ]);
 
 export interface SummaryProtocolCoverage {
   protocolId: string;
@@ -40,11 +64,45 @@ export interface SummaryQuantitySide {
   complete: boolean;
 }
 
+/**
+ * What one authority states it observed, and when.
+ *
+ * Preserved rather than dropped because it is the difference between "this
+ * authority rejected the transfer" and "no authority has ruled on it yet". A
+ * view that has only `accepted: false` cannot tell a reader which it is.
+ */
+export interface SummaryEvidence {
+  authorityId: string;
+  protocolId: string | null;
+  coverage: string;
+  checkedAt: string | null;
+  checkpoint: SummaryCheckpoint | null;
+}
+
 export interface SummaryEffect {
   eventId: string;
   actionType: string;
   quantityAtomic: string | null;
   accepted: boolean;
+  /** The authority's own record for this effect, or null when it sent none. */
+  evidence: SummaryEvidence | null;
+}
+
+/**
+ * The block a reading was taken at.
+ *
+ * Every field is required because a partial checkpoint is not a checkpoint: a
+ * height of zero beside a real block hash is a statement that the reading was
+ * taken at genesis. Absent is represented by a null checkpoint, never by a
+ * checkpoint full of zeroes.
+ */
+export interface SummaryCheckpoint {
+  chain: string;
+  network: string;
+  heightAtomic: string;
+  blockHash: string;
+  reorgEpoch: string;
+  observedAt: string | null;
 }
 
 export interface SummaryLogo {
@@ -71,6 +129,8 @@ export interface SummaryAsset {
   inputs: SummaryQuantitySide;
   outputs: SummaryQuantitySide;
   effects: SummaryEffect[];
+  /** Every authority that contributed a position for this identity. */
+  evidence: SummaryEvidence[];
 }
 
 export interface SummaryCounts {
@@ -92,6 +152,8 @@ export interface TransactionAssetSummary {
   perProtocolCoverage: SummaryProtocolCoverage[];
   counts: SummaryCounts;
   retryAfterSeconds: number | null;
+  /** The reading's checkpoint, or null when no authority stated a complete one. */
+  checkpoint: SummaryCheckpoint | null;
 }
 
 const ATOMIC_INTEGER = /^(0|[1-9][0-9]*)$/;
@@ -197,10 +259,77 @@ function logo(value: unknown): SummaryLogo | null {
   };
 }
 
+/**
+ * A complete checkpoint, or null.
+ *
+ * Partial is null. Accepting a checkpoint with a missing height would let the
+ * view print "block " followed by nothing, and accepting a zero height beside a
+ * real block hash would state that the reading was taken at genesis.
+ */
+function checkpoint(value: unknown): SummaryCheckpoint | null {
+  if (value === null || value === undefined) {return null;}
+  let row: Record<string, unknown>;
+  try {
+    row = record(value, 'checkpoint');
+  } catch {
+    return null;
+  }
+  const heightAtomic = row.heightAtomic;
+  const blockHash = row.blockHash;
+  const reorgEpoch = row.reorgEpoch;
+  if (typeof heightAtomic !== 'string' || !ATOMIC_INTEGER.test(heightAtomic)) {return null;}
+  if (typeof blockHash !== 'string' || !CONTENT_HASH.test(blockHash)) {return null;}
+  if (typeof reorgEpoch !== 'string' || !ATOMIC_INTEGER.test(reorgEpoch)) {return null;}
+  if (typeof row.chain !== 'string' || !row.chain) {return null;}
+  if (typeof row.network !== 'string' || !row.network) {return null;}
+  return {
+    chain: row.chain,
+    network: row.network,
+    heightAtomic,
+    blockHash,
+    reorgEpoch,
+    observedAt: typeof row.observedAt === 'string' ? row.observedAt : null,
+  };
+}
+
+/**
+ * One authority's record, or null when the payload carries none.
+ *
+ * Malformed evidence becomes null rather than an error: evidence enriches the
+ * explanation of a state the payload already states elsewhere, so losing it must
+ * not discard a proven quantity.
+ */
+function evidence(value: unknown): SummaryEvidence | null {
+  if (value === null || value === undefined) {return null;}
+  let row: Record<string, unknown>;
+  try {
+    row = record(value, 'evidence');
+  } catch {
+    return null;
+  }
+  if (typeof row.authorityId !== 'string' || !row.authorityId) {return null;}
+  return {
+    authorityId: row.authorityId,
+    protocolId: typeof row.protocolId === 'string' ? row.protocolId : null,
+    coverage: typeof row.coverage === 'string' ? row.coverage : 'unknown',
+    checkedAt: typeof row.checkedAt === 'string' ? row.checkedAt : null,
+    checkpoint: checkpoint(row.checkpoint),
+  };
+}
+
 function asset(value: unknown, index: number): SummaryAsset {
   const what = 'assets[' + index + ']';
   const row = record(value, what);
+  // An absent effects list and an empty one mean the same thing, but a present
+  // non-array is a malformed payload rather than an empty one.
+  if (row.effects !== undefined && row.effects !== null && !Array.isArray(row.effects)) {
+    throw new SummaryDecodeError(what + '.effects is not an array');
+  }
   const effects = Array.isArray(row.effects) ? row.effects : [];
+  if (row.evidence !== undefined && row.evidence !== null && !Array.isArray(row.evidence)) {
+    throw new SummaryDecodeError(what + '.evidence is not an array');
+  }
+  const assetEvidence = Array.isArray(row.evidence) ? row.evidence : [];
   return {
     chain: text(row.chain, what + '.chain'),
     network: text(row.network, what + '.network'),
@@ -220,13 +349,20 @@ function asset(value: unknown, index: number): SummaryAsset {
         eventId: text(effect.eventId, what + '.effects.eventId'),
         actionType: text(effect.actionType, what + '.effects.actionType'),
         quantityAtomic: atomic(effect.quantityAtomic, what + '.effects.quantityAtomic'),
+        // Only an explicit true is acceptance. Anything else covers both a
+        // rejected record and one no authority has ruled on, which the view
+        // must not narrow to "unconfirmed" without evidence that says so.
         accepted: effect.accepted === true,
+        evidence: evidence(effect.evidence),
       };
     }),
+    evidence: assetEvidence
+      .map(evidence)
+      .filter((entry): entry is SummaryEvidence => entry !== null),
   };
 }
 
-/** The canonical identity key. Never a ticker, a name or a txid. */
+/** The identity key in its one agreed form. Never a ticker, a name or a txid. */
 export function summaryAssetKey(entry: {
   chain: string; network: string; protocolId: string; assetId: string; ruleset: string | null;
 }): string {
@@ -253,7 +389,16 @@ export function decodeTransactionAssetSummary(
   if (txid !== expected.txid || row.chain !== expected.chain || row.network !== expected.network) {
     throw new SummaryDecodeError('summary context mismatch');
   }
-  const assets = Array.isArray(row.assets) ? row.assets.map(asset) : [];
+  // A missing assets array is not an empty inventory. Rendering one as "no
+  // supported assets" is the single most misleading thing this component can
+  // do, so the array is required and its absence is an error.
+  if (!Array.isArray(row.assets)) {
+    throw new SummaryDecodeError('summary.assets is not an array');
+  }
+  if (!Array.isArray(row.perProtocolCoverage)) {
+    throw new SummaryDecodeError('summary.perProtocolCoverage is not an array');
+  }
+  const assets = row.assets.map(asset);
   const identities = new Set(assets.map(summaryAssetKey));
   if (identities.size !== assets.length) {
     throw new SummaryDecodeError('summary lists one asset identity twice');
@@ -272,7 +417,50 @@ export function decodeTransactionAssetSummary(
   if (totalCount !== null && (typeof totalCount !== 'number' || !Number.isSafeInteger(totalCount) || totalCount < 0)) {
     throw new SummaryDecodeError('counts.totalCount is neither null nor a count');
   }
-  const coverage = Array.isArray(row.perProtocolCoverage) ? row.perProtocolCoverage : [];
+  const coverage = row.perProtocolCoverage.map(
+    (entry, index): SummaryProtocolCoverage => {
+      const item = record(entry, 'perProtocolCoverage[' + index + ']');
+      const state = text(item.state, 'coverage.state');
+      if (!(SUMMARY_COVERAGE_STATES as readonly string[]).includes(state)) {
+        throw new SummaryDecodeError('coverage state is not a known state');
+      }
+      const entryChain = text(item.chain, 'coverage.chain');
+      const entryNetwork = text(item.network, 'coverage.network');
+      if (entryChain !== expected.chain || entryNetwork !== expected.network) {
+        throw new SummaryDecodeError('coverage row is from another context');
+      }
+      return {
+        protocolId: text(item.protocolId, 'coverage.protocolId'),
+        chain: entryChain,
+        network: entryNetwork,
+        state: state as SummaryCoverageState,
+        ...(typeof item.reason === 'string' ? { reason: item.reason } : {}),
+      };
+    },
+  );
+  // One decision per protocol. Two rows for one protocol would let the view
+  // pick whichever it read last, and the roster's whole purpose is that each
+  // protocol is accounted for exactly once.
+  const coveredProtocols = new Set(coverage.map((entry) => entry.protocolId));
+  if (coveredProtocols.size !== coverage.length) {
+    throw new SummaryDecodeError('coverage lists one protocol twice');
+  }
+  const conclusive = coverage.filter(
+    (entry) => !INCONCLUSIVE_COVERAGE.has(entry.state),
+  );
+  if (totalCount !== null) {
+    // A stated total is a claim that nothing is missing. It needs conclusive
+    // coverage to stand on, and it has to equal the identities actually listed;
+    // otherwise the count in the heading contradicts the rows beneath it.
+    if (coverage.length === 0 || conclusive.length !== coverage.length) {
+      throw new SummaryDecodeError(
+        'a stated total needs conclusive coverage for every protocol',
+      );
+    }
+    if (totalCount !== identities.size) {
+      throw new SummaryDecodeError('the stated total disagrees with the asset identities');
+    }
+  }
   const retryAfterSeconds = row.retryAfterSeconds;
   return {
     schemaVersion: EXPLORER_TX_ASSET_SUMMARY_SCHEMA_VERSION,
@@ -281,16 +469,7 @@ export function decodeTransactionAssetSummary(
     txid,
     status: text(row.status, 'status'),
     assets,
-    perProtocolCoverage: coverage.map((entry, index) => {
-      const item = record(entry, 'perProtocolCoverage[' + index + ']');
-      return {
-        protocolId: text(item.protocolId, 'coverage.protocolId'),
-        chain: text(item.chain, 'coverage.chain'),
-        network: text(item.network, 'coverage.network'),
-        state: text(item.state, 'coverage.state') as SummaryCoverageState,
-        ...(typeof item.reason === 'string' ? { reason: item.reason } : {}),
-      };
-    }),
+    perProtocolCoverage: coverage,
     counts: {
       fungibleTypeCountAtomic: atomicRequired(counts.fungibleTypeCountAtomic, 'counts.fungible'),
       collectibleItemCountAtomic: atomicRequired(counts.collectibleItemCountAtomic, 'counts.collectible'),
@@ -303,6 +482,7 @@ export function decodeTransactionAssetSummary(
       && Number.isSafeInteger(retryAfterSeconds) && retryAfterSeconds >= 0
       ? retryAfterSeconds
       : null,
+    checkpoint: checkpoint(row.checkpoint),
   };
 }
 
@@ -311,15 +491,13 @@ export function decodeTransactionAssetSummary(
  *
  * String arithmetic only. A null return means the caller must label the atomic
  * digits as atomic units; it never means zero and never means whole tokens.
+ *
+ * Kept as the decoder's own export and delegated to the shared presenter, so
+ * the transaction panel, the address panel and this module cannot scale one
+ * quantity three slightly different ways.
  */
 export function exactQuantity(quantityAtomic: string | null, assetDecimals: number | null): string | null {
-  if (quantityAtomic === null || assetDecimals === null) {return null;}
-  if (!ATOMIC_INTEGER.test(quantityAtomic)) {return null;}
-  if (assetDecimals === 0) {return quantityAtomic;}
-  const padded = quantityAtomic.padStart(assetDecimals + 1, '0');
-  const whole = padded.slice(0, padded.length - assetDecimals);
-  const fraction = padded.slice(padded.length - assetDecimals).replace(/0+$/, '');
-  return fraction.length === 0 ? whole : whole + '.' + fraction;
+  return exactDecimal(quantityAtomic, assetDecimals);
 }
 
 /** True when any consulted source left the inventory inconclusive. */
@@ -327,29 +505,3 @@ export function coverageIncomplete(summary: TransactionAssetSummary): boolean {
   return summary.counts.totalCount === null;
 }
 
-/* IMPLEMENTATION-HANDOFF [UI-WP01:TX-CONTRACT] 2026-09-19
- * Coverage C01-C08; defects F03/F05/F06. Preparation only; no behavior changed.
- * Verified: decodeTransactionAssetSummary accepts unequal non-null totals,
- * casts unknown coverage states, and logo() promotes any matching path to
- * verified:true. The backend contract distinguishes rejected effects from
- * candidates through evidence; this decoder drops that evidence.
- * Source R05: backend-apis contracts/transaction-asset-summary.ts at local
- * df0b12a5d1f15b03c2d0969f88bbba14a23cb369; R01 WCAG 2.2 status clarity.
- * 1. Require asset/coverage arrays, validate the coverage enum and each
- *    chain/network, reject duplicate protocol coverage, and validate totals
- *    against unique identities and classification counts using integer strings.
- * 2. A non-null total requires nonempty conclusive coverage and equals the
- *    known count. Fail closed on contradictions; never render false emptiness.
- * 3. Keep the exact same-origin/hash logo constraint; require verified===true.
- *    Invalid artwork becomes a labelled fallback without discarding amounts.
- * 4. Preserve validated effect evidence/checkpoint needed by UI-WP02. Until
- *    reason is proven, accepted:false means Not accepted, not Unconfirmed.
- * 5. Retain null decimals and null quantities. Never use Number/parseFloat for
- *    amounts. Coordinate schema compatibility with UI-WP07 before deployment.
- * Tests: extend transaction-assets.types.spec.ts beside this file; run from
- * frontend: npm test -- src/app/universe/transaction-assets (NOT RUN here).
- * Assert mismatched totals/context/enums fail; false logo is fallback; u128,
- * zero, null, decimals 0/38, duplicate identities and empty partial stay exact.
- * Dependencies: UI-WP07 contract review before UI-WP02/03. No migration; roll
- * back consumer and producer compatibly, never weaken validation for rollout.
- */

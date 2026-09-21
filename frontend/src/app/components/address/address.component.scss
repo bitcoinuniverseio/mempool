@@ -1,6 +1,6 @@
 .qr-wrapper {
   position: absolute;
-  top: 30px;
+  top: calc(100% + var(--u-space-1));
   right: 0px;
   border: solid 10px var(--active-bg);
   border-radius: 5px;
@@ -11,10 +11,28 @@
   z-index: 99;
 }
 
-.qrSpan {
+.qr-control {
+  display: inline-flex;
   position: relative;
+}
+
+.qrSpan {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
   cursor: pointer;
-  padding-left: 0.4rem;
+  display: inline-flex;
+  justify-content: center;
+  min-height: var(--u-touch-target);
+  min-width: var(--u-touch-target);
+  padding: 0 0 0 0.4rem;
+
+  &:focus-visible {
+    border-radius: var(--u-radius-sm);
+    outline: 2px solid var(--u-focus-ring);
+    outline-offset: 2px;
+  }
 }
 
 .fiat {
@@ -78,6 +96,17 @@ h1 {
 	.details-table td:first-child {
 		white-space: pre-wrap;
 	}
+}
+
+// The address summary is six rows on a phone. Keep its metrics readable while
+// giving the next section enough room to announce itself above the fixed nav.
+// Desktop spacing stays unchanged, and the full values remain intact.
+@media (max-width: 575.98px) {
+  .address-table tr > td,
+  .address-table tr > th {
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
+  }
 }
 
 .tx-link {

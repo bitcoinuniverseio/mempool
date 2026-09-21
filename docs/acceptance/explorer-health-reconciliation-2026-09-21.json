@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "explorer-health-reconciliation-v1",
+  "generatedAt": "2026-09-21T17:28:21.900Z",
+  "historicalArtifact": "docs/acceptance/explorer-health-handoff-2026-09-06.json",
+  "historicalSha256": "98ed8c95130a94dd30d8d998f4f3a4f84c2b6bfe4aefa084817783600f4805b7",
+  "historicalOperationCount": 119,
+  "currentOperationCount": 123,
+  "removed": [],
+  "catalogueUpdates": [
+    {
+      "id": "PRO-35",
+      "protocol": "tap_doge",
+      "declaredOperations": [
+        "registry",
+        "activity",
+        "chain-list",
+        "chain-detail",
+        "holders",
+        "events"
+      ]
+    }
+  ],
+  "added": [
+    {
+      "key": "tap_doge/chain-list",
+      "protocol": "tap_doge",
+      "id": "chain-list",
+      "method": "GET",
+      "route": "/api/v1/dogecoin/protocols/doge-tap",
+      "authorityPath": "/token-explorer/doge-tap/assets",
+      "evidence": "source-contract",
+      "acceptance": "NOT TESTED",
+      "pagination": "offset"
+    },
+    {
+      "key": "tap_doge/chain-detail",
+      "protocol": "tap_doge",
+      "id": "chain-detail",
+      "method": "GET",
+      "route": "/api/v1/dogecoin/protocols/doge-tap/:ref",
+      "authorityPath": "/token-explorer/doge-tap/assets/:ref",
+      "evidence": "source-contract",
+      "acceptance": "NOT TESTED"
+    },
+    {
+      "key": "tap_doge/holders",
+      "protocol": "tap_doge",
+      "id": "holders",
+      "method": "GET",
+      "route": "/api/v1/dogecoin/protocols/doge-tap/:ref/holders",
+      "authorityPath": "/token-explorer/doge-tap/assets/:ref/holders",
+      "evidence": "source-contract",
+      "acceptance": "NOT TESTED",
+      "pagination": "offset"
+    },
+    {
+      "key": "tap_doge/events",
+      "protocol": "tap_doge",
+      "id": "events",
+      "method": "GET",
+      "route": "/api/v1/dogecoin/protocols/doge-tap/:ref/events",
+      "authorityPath": "/token-explorer/doge-tap/assets/:ref/events",
+      "evidence": "source-contract",
+      "acceptance": "NOT TESTED",
+      "pagination": "offset"
+    }
+  ],
+  "summaryVariants": [
+    "success",
+    "proven-empty",
+    "incomplete-authority",
+    "timeout",
+    "precision-conflict",
+    "confirmation",
+    "reorg"
+  ],
+  "summaryContexts": [
+    { "chain": "bitcoin", "network": "unverified" },
+    { "chain": "dogecoin", "network": "unverified" },
+    { "chain": "zcash", "network": "unverified" }
+  ],
+  "decision": "Preserve the historical handoff bytes and add a versioned stable-key reconciliation. The summary rows are source-identified coverage candidates only; they do not qualify network or authority evidence."
+}

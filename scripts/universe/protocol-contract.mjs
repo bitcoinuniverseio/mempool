@@ -34,6 +34,12 @@
  * of any protocol that differs.
  */
 
+import { createHash } from 'node:crypto';
+import {
+  lstatSync,
+  readFileSync,
+  realpathSync,
+} from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -104,6 +110,10 @@ const COVERAGE_STATES = new Set([
   'unknown',
 ]);
 const COMMIT_SHA = /^[0-9a-f]{7,64}$/;
+const SHA256 = /^[0-9a-f]{64}$/i;
+export const ACCEPTANCE_EVIDENCE_SCHEMA_VERSION =
+  'universe-explorer-acceptance-v1';
+const TRUSTED_ACCEPTANCE_PRODUCER = 'universe-acceptance-runner-v1';
 
 const README_MARKER_OPEN = '<!-- protocol-coverage:readable -->';
 const README_MARKER_CLOSE = '<!-- /protocol-coverage:readable -->';
@@ -183,6 +193,10 @@ export function assertRosterResolvesUniquely(protocols, report = new Report()) {
  */
 /**
  * IMPLEMENTATION-HANDOFF [FE-GATE-04] | all 39 protocols and operation IDs.
+ * Reconciled 2026-09-21: --release and releaseGate now exist. Do not create
+ * a parallel gate. WP01 completes evidence qualification; WP02 wires it into
+ * release; WP03 reconciles the denominator. The requirements below are
+ * historical and must be applied to the existing implementation.
  * Verified: this validates shape/status vocabulary; it does not require passing
  * operation evidence. A roster gate PASS is not the requested release GO.
  * Prerequisites: BE acceptance schema plus complete operation inventory.
@@ -659,6 +673,449 @@ const ACCEPTANCE_RESULTS = new Set([
  * constantly, and a gate that runs constantly is a gate people learn to make
  * green. Nothing here can be satisfied by editing a label.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [WP01] | F001 | preparation 2026-09-21
+ * State: IMPLEMENTED LOCALLY. releaseGate now rejects descriptor-only labels, requires a
+ * versioned qualified envelope, checks rooted evidence hashes and identity bindings, and
+ * derives counters from context-qualified rows. Real network evidence and public release
+ * remain unverified.
+ * Governing requirements: REQ-EVIDENCE, REQ-NETWORK, REQ-COVERAGE;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: WP03. 1. Replace label-only qualification in releaseGate with the
+ * qualified-envelope verifier described above; retain offline roster mode. 2. Load safe rooted
+ * evidence paths, verify hashes and candidate/dependency/config bindings, then derive counters
+ * from required rows. 3. Separate Signet acceptance from Mainnet configuration evidence and
+ * qualify exclusions. 4. Extend protocol-contract.test.mjs with missing/tampered/wrong-network
+ * evidence and the saved 123-label forgery. Run node --test
+ * scripts/universe/protocol-contract.test.mjs; source-only gate success is not release
+ * acceptance.
+ * Acceptance: The saved forgery is rejected; real complete qualified Signet or justified
+ * Testnet evidence is accepted for a Mainnet candidate only with its independent configuration
+ * proof; every applicable operation and required variant is accounted for.
+ * Rollback: No database migration is justified by this finding. Version evidence readers
+ * additively; retain previously accepted artifacts for emergency rollback. Never disable the
+ * gate to release.
+ * Local gate behavior is verified by the focused contract suite; it is not release acceptance.
+ */
+function qualifiedAcceptanceKey({
+  protocol,
+  operation,
+  variant,
+  chain,
+  network,
+}) {
+  return [protocol, operation, variant, chain, network].join('|');
+}
+
+function requiredVariants(operation) {
+  const variants = operation.requiredVariants ?? operation.variants;
+  if (!Array.isArray(variants) || !variants.length) return ['default'];
+  return [...new Set(variants.filter((variant) => typeof variant === 'string' && variant))];
+}
+
+function pathIsWithin(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return (
+    relative !== '..' &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative)
+  );
+}
+
+function evidenceRoot(root, report) {
+  const rootPath = path.resolve(root ?? REPOSITORY_ROOT);
+  try {
+    const rootStat = lstatSync(rootPath);
+    if (!rootStat.isDirectory()) {
+      report.fail(`The acceptance evidence root ${rootPath} is not a directory.`);
+      return null;
+    }
+    return { rootPath, rootRealPath: realpathSync(rootPath) };
+  } catch (error) {
+    report.fail(
+      `The acceptance evidence root ${rootPath} could not be read: ${error instanceof Error ? error.message : error}.`,
+    );
+    return null;
+  }
+}
+
+function verifyEvidenceFiles(entries, context, report, owner) {
+  if (!Array.isArray(entries) || !entries.length) {
+    report.fail(`${owner} carries no evidence files.`);
+    return;
+  }
+  if (!context) return;
+
+  for (const entry of entries) {
+    if (typeof entry !== 'object' || entry === null) {
+      report.fail(`${owner} carries a malformed evidence file record.`);
+      continue;
+    }
+    if (typeof entry.path !== 'string' || !entry.path.trim()) {
+      report.fail(`${owner} carries an evidence record with no relative path.`);
+      continue;
+    }
+    if (path.isAbsolute(entry.path)) {
+      report.fail(`${owner} names an absolute evidence path ${entry.path}.`);
+      continue;
+    }
+    if (typeof entry.sha256 !== 'string' || !SHA256.test(entry.sha256)) {
+      report.fail(`${owner} carries an invalid SHA-256 for ${entry.path}.`);
+      continue;
+    }
+
+    const target = path.resolve(context.rootPath, entry.path);
+    if (!pathIsWithin(context.rootPath, target)) {
+      report.fail(`${owner} escapes the evidence root through ${entry.path}.`);
+      continue;
+    }
+
+    let actual;
+    try {
+      const targetStat = lstatSync(target);
+      if (targetStat.isSymbolicLink()) {
+        report.fail(`${owner} names a symlink instead of an evidence file: ${entry.path}.`);
+        continue;
+      }
+      if (!targetStat.isFile()) {
+        report.fail(`${owner} names a non-file evidence path: ${entry.path}.`);
+        continue;
+      }
+      actual = realpathSync(target);
+    } catch (error) {
+      report.fail(
+        `${owner} names unreadable evidence ${entry.path}: ${error instanceof Error ? error.message : error}.`,
+      );
+      continue;
+    }
+
+    if (!pathIsWithin(context.rootRealPath, actual)) {
+      report.fail(`${owner} escapes the evidence root through ${entry.path}.`);
+      continue;
+    }
+
+    let digest;
+    try {
+      digest = createHash('sha256').update(readFileSync(actual)).digest('hex');
+    } catch (error) {
+      report.fail(
+        `${owner} evidence ${entry.path} could not be hashed: ${error instanceof Error ? error.message : error}.`,
+      );
+      continue;
+    }
+    if (digest !== entry.sha256.toLowerCase()) {
+      report.fail(
+        `${owner} evidence ${entry.path} has SHA-256 ${digest}, not the recorded ${entry.sha256}.`,
+      );
+    }
+  }
+}
+
+function validateQualifiedAcceptanceEvidence(
+  manifest,
+  descriptors,
+  summary,
+  evidence,
+  expected,
+  report,
+) {
+  if (typeof evidence !== 'object' || evidence === null) {
+    report.fail(
+      'The release has no qualified acceptance evidence artifact; descriptor labels alone are not evidence.',
+    );
+    return;
+  }
+  if (evidence.schemaVersion !== ACCEPTANCE_EVIDENCE_SCHEMA_VERSION) {
+    report.fail(
+      `The acceptance evidence schema is ${JSON.stringify(evidence.schemaVersion)}; this gate reads ${ACCEPTANCE_EVIDENCE_SCHEMA_VERSION}.`,
+    );
+  }
+  if (
+    typeof evidence.generatedAt !== 'string' ||
+    Number.isNaN(Date.parse(evidence.generatedAt))
+  ) {
+    report.fail('The acceptance evidence carries no readable generatedAt time.');
+  }
+  const provenance = evidence.provenance;
+  if (typeof provenance !== 'object' || provenance === null) {
+    report.fail('The acceptance evidence carries no trusted run provenance.');
+  } else {
+    if (provenance.producer !== TRUSTED_ACCEPTANCE_PRODUCER) {
+      report.fail(
+        `The acceptance evidence producer is ${JSON.stringify(provenance.producer)}, not ${TRUSTED_ACCEPTANCE_PRODUCER}.`,
+      );
+    }
+    if (
+      typeof provenance.executionEnvironment !== 'string' ||
+      !provenance.executionEnvironment.trim()
+    ) {
+      report.fail('The acceptance evidence carries no execution environment.');
+    }
+    if (typeof provenance.command !== 'string' || !provenance.command.trim()) {
+      report.fail('The acceptance evidence carries no run command provenance.');
+    }
+  }
+
+  const candidate = evidence.candidate;
+  if (typeof candidate !== 'object' || candidate === null) {
+    report.fail('The acceptance evidence carries no candidate binding.');
+    return;
+  }
+
+  if (
+    typeof candidate.sourceSha !== 'string' ||
+    !COMMIT_SHA.test(candidate.sourceSha)
+  ) {
+    report.fail('The acceptance candidate carries no valid source revision.');
+  } else if (candidate.sourceSha !== manifest.sourceSha) {
+    report.fail(
+      `The acceptance evidence was produced for ${candidate.sourceSha}, not the manifest revision ${manifest.sourceSha}.`,
+    );
+  }
+  if (expected.sourceSha && candidate.sourceSha !== expected.sourceSha) {
+    report.fail(
+      `The acceptance evidence was produced for ${candidate.sourceSha}, not the intended revision ${expected.sourceSha}.`,
+    );
+  }
+  if (
+    expected.artifactCommit &&
+    candidate.artifactCommit !== expected.artifactCommit
+  ) {
+    report.fail(
+      `The acceptance evidence names artifact ${candidate.artifactCommit}, not the intended artifact ${expected.artifactCommit}.`,
+    );
+  }
+
+  for (const field of ['dependencyRevision', 'acceptanceNetwork', 'deploymentNetwork']) {
+    if (typeof candidate[field] !== 'string' || !candidate[field].trim()) {
+      report.fail(`The acceptance candidate carries no ${field}.`);
+    }
+  }
+  if (
+    typeof candidate.configurationDigest !== 'string' ||
+    !SHA256.test(candidate.configurationDigest)
+  ) {
+    report.fail('The acceptance candidate carries no valid configuration digest.');
+  }
+  if (
+    !Array.isArray(candidate.specificationRevisions) ||
+    !candidate.specificationRevisions.length ||
+    candidate.specificationRevisions.some(
+      (revision) => typeof revision !== 'string' || !revision.trim(),
+    )
+  ) {
+    report.fail('The acceptance candidate carries no specification revisions.');
+  }
+  if (
+    expected.network &&
+    candidate.deploymentNetwork !== expected.network
+  ) {
+    report.fail(
+      `The acceptance evidence targets ${candidate.deploymentNetwork}, not the ${expected.network} network this release serves.`,
+    );
+  }
+
+  const context = evidenceRoot(expected.acceptanceRoot, report);
+  if (candidate.acceptanceNetwork !== candidate.deploymentNetwork) {
+    const proof = candidate.configurationProof;
+    if (typeof proof !== 'object' || proof === null) {
+      report.fail(
+        `Acceptance on ${candidate.acceptanceNetwork} has no independent ${candidate.deploymentNetwork} configuration proof.`,
+      );
+    } else {
+      if (proof.network !== candidate.deploymentNetwork) {
+        report.fail(
+          `The configuration proof targets ${JSON.stringify(proof.network)}, not ${candidate.deploymentNetwork}.`,
+        );
+      }
+      if (proof.configurationDigest !== candidate.configurationDigest) {
+        report.fail('The configuration proof does not bind the candidate configuration digest.');
+      }
+      if (typeof proof.sourceRevision !== 'string' || !proof.sourceRevision.trim()) {
+        report.fail('The configuration proof carries no source revision.');
+      }
+      if (!Array.isArray(proof.assertions) || !proof.assertions.length) {
+        report.fail('The configuration proof carries no assertions.');
+      }
+      verifyEvidenceFiles(proof.evidence, context, report, 'The configuration proof');
+    }
+  }
+
+  const protocolsById = new Map(manifest.protocols.map((protocol) => [protocol.id, protocol]));
+  const required = new Map();
+  for (const descriptor of descriptors) {
+    const protocol = protocolsById.get(descriptor.protocol);
+    if (!protocol) continue;
+    for (const variant of requiredVariants(descriptor)) {
+      const key = qualifiedAcceptanceKey({
+        protocol: descriptor.protocol,
+        operation: descriptor.id,
+        variant,
+        chain: protocol.chain,
+        network: candidate.acceptanceNetwork,
+      });
+      required.set(key, { descriptor, protocol, variant });
+    }
+  }
+
+  if (!Array.isArray(evidence.rows)) {
+    report.fail('The acceptance evidence carries no rows.');
+    return;
+  }
+  const seen = new Map();
+  const counts = {
+    PASS: 0,
+    FAIL: 0,
+    BLOCKED: 0,
+    'NOT APPLICABLE': 0,
+    'NOT TESTED': 0,
+  };
+  for (const row of evidence.rows) {
+    if (typeof row !== 'object' || row === null) {
+      report.fail('The acceptance evidence carries a malformed row.');
+      continue;
+    }
+    const rowFields = ['protocol', 'operation', 'variant', 'role', 'chain', 'network'];
+    if (rowFields.some((field) => typeof row[field] !== 'string' || !row[field].trim())) {
+      report.fail('An acceptance row is missing a stable operation, variant, role, chain, or network key.');
+      continue;
+    }
+    const key = qualifiedAcceptanceKey({
+      protocol: row.protocol,
+      operation: row.operation,
+      variant: row.variant,
+      chain: row.chain,
+      network: row.network,
+    });
+    if (seen.has(key)) {
+      report.fail(`The acceptance evidence repeats ${key}.`);
+      continue;
+    }
+    seen.set(key, row);
+    const expectedRow = required.get(key);
+    if (!expectedRow) {
+      report.fail(`The acceptance evidence contains an unrequired row ${key}.`);
+      continue;
+    }
+
+    const { descriptor, protocol } = expectedRow;
+    if (row.chain !== protocol.chain) {
+      report.fail(`${key} names chain ${row.chain}, but the manifest names ${protocol.chain}.`);
+    }
+    if (row.network !== candidate.acceptanceNetwork) {
+      report.fail(`${key} is not qualified for the candidate acceptance network.`);
+    }
+    if (!ACCEPTANCE_RESULTS.has(row.result)) {
+      report.fail(`${key} carries acceptance ${JSON.stringify(row.result)}.`);
+    } else {
+      counts[row.result] += 1;
+      if (row.result !== descriptor.acceptance) {
+        report.fail(
+          `${key} records ${row.result}, but the manifest descriptor records ${descriptor.acceptance}.`,
+        );
+      }
+    }
+    if (row.codeRevision !== candidate.sourceSha) {
+      report.fail(`${key} does not bind the candidate source revision.`);
+    }
+    if (row.dependencyRevision !== candidate.dependencyRevision) {
+      report.fail(`${key} does not bind the candidate dependency revision.`);
+    }
+    if (row.configurationDigest !== candidate.configurationDigest) {
+      report.fail(`${key} does not bind the candidate configuration digest.`);
+    }
+    if (
+      typeof row.specificationRevision !== 'string' ||
+      !candidate.specificationRevisions?.includes(row.specificationRevision)
+    ) {
+      report.fail(`${key} does not bind a declared specification revision.`);
+    }
+    if (typeof row.ranAt !== 'string' || Number.isNaN(Date.parse(row.ranAt))) {
+      report.fail(`${key} carries no readable run time.`);
+    }
+    if (!Array.isArray(row.assertions) || !row.assertions.length) {
+      report.fail(`${key} carries no assertions.`);
+    }
+    if (!Array.isArray(row.authorityReadback) || !row.authorityReadback.length) {
+      report.fail(`${key} carries no authoritative readback assertions.`);
+    }
+    if (
+      !Array.isArray(row.consumerAssertions) ||
+      !row.consumerAssertions.length
+    ) {
+      report.fail(`${key} carries no consumer assertions.`);
+    }
+    verifyEvidenceFiles(row.evidence, context, report, `Acceptance row ${key}`);
+    if (row.result === 'PASS') {
+      const checkpoint = row.checkpoint;
+      const hasHeight =
+        (Number.isInteger(checkpoint?.height) && checkpoint.height >= 0) ||
+        (typeof checkpoint?.heightAtomic === 'string' && /^\d+$/.test(checkpoint.heightAtomic));
+      if (
+        typeof checkpoint !== 'object' ||
+        checkpoint === null ||
+        !hasHeight ||
+        typeof checkpoint.blockHash !== 'string' ||
+        !SHA256.test(checkpoint.blockHash)
+      ) {
+        report.fail(`${key} passes without a qualified height and block hash checkpoint.`);
+      }
+    }
+  }
+
+  for (const [key, expectedRow] of required) {
+    if (!seen.has(key)) {
+      report.fail(`${key} is missing from the acceptance evidence.`);
+    } else if (expectedRow.descriptor.acceptance === 'NOT APPLICABLE') {
+      const exclusions = Array.isArray(evidence.exclusions) ? evidence.exclusions : [];
+      if (!exclusions.some((exclusion) => exclusion?.operationKey === key && typeof exclusion.justification === 'string' && exclusion.justification.trim())) {
+        report.fail(`${key} is not applicable without a qualified exclusion justification.`);
+      }
+    }
+  }
+  if (!Array.isArray(evidence.exclusions)) {
+    report.fail('The acceptance evidence carries no exclusions list.');
+  } else {
+    const known = new Set(required.keys());
+    const exclusionKeys = new Set();
+    for (const exclusion of evidence.exclusions) {
+      if (typeof exclusion !== 'object' || exclusion === null) {
+        report.fail('The acceptance evidence carries a malformed exclusion.');
+        continue;
+      }
+      if (!known.has(exclusion.operationKey)) {
+        report.fail(`The acceptance evidence excludes an unrequired row ${exclusion.operationKey}.`);
+      }
+      if (exclusionKeys.has(exclusion.operationKey)) {
+        report.fail(`The acceptance evidence repeats exclusion ${exclusion.operationKey}.`);
+      }
+      exclusionKeys.add(exclusion.operationKey);
+      if (typeof exclusion.justification !== 'string' || !exclusion.justification.trim()) {
+        report.fail(`The acceptance evidence exclusion ${exclusion.operationKey} has no justification.`);
+      }
+    }
+  }
+
+  if (summary && typeof summary === 'object') {
+    const expectedCounts = {
+      declared: required.size,
+      passed: counts.PASS,
+      failed: counts.FAIL,
+      blocked: counts.BLOCKED,
+      notApplicable: counts['NOT APPLICABLE'],
+      notTested: counts['NOT TESTED'],
+    };
+    for (const [field, value] of Object.entries(expectedCounts)) {
+      if (summary[field] !== value) {
+        report.fail(
+          `The acceptance summary ${field} is ${summary[field]}, but qualified rows derive ${value}.`,
+        );
+      }
+    }
+  }
+}
+
 export function releaseGate(manifest, expected = {}, report = new Report()) {
   validateManifest(manifest, report);
   if (report.problems.length) return report;
@@ -763,6 +1220,18 @@ export function releaseGate(manifest, expected = {}, report = new Report()) {
       `The summary counts ${summary.passed} passing operations; ${passed.length} descriptors claim to pass.`,
     );
   }
+
+  // A descriptor is a declaration, not proof. The qualified envelope binds
+  // every required row to the revision, dependency set, configuration, spec,
+  // network, checkpoint, and hashed evidence that produced its result.
+  validateQualifiedAcceptanceEvidence(
+    manifest,
+    descriptors,
+    summary,
+    expected.acceptanceEvidence ?? manifest.acceptanceEvidence,
+    expected,
+    report,
+  );
 
   // Missing history. A complete coverage claim and a verified release label are
   // both statements about every operation, so neither survives an operation
@@ -930,7 +1399,19 @@ async function against(source) {
  */
 async function release(source, expected) {
   const manifest = await loadDocument(source);
-  releaseGate(manifest, expected).throwIfFailed(
+  const acceptanceEvidence = expected.acceptancePath
+    ? await loadDocument(expected.acceptancePath)
+    : expected.acceptanceEvidence;
+  const acceptanceRoot =
+    expected.acceptanceRoot ??
+    (expected.acceptancePath
+      ? path.dirname(path.resolve(expected.acceptancePath))
+      : undefined);
+  releaseGate(manifest, {
+    ...expected,
+    acceptanceEvidence,
+    acceptanceRoot,
+  }).throwIfFailed(
     `${source} is not releasable.`,
   );
   process.stdout.write(
@@ -948,7 +1429,7 @@ function usage(message) {
       '  protocol-contract.mjs --check                      the offline gate\n' +
       '  protocol-contract.mjs --against <url|file>         compare the pin against what is served\n' +
       '  protocol-contract.mjs --release <url|file>         the release gate, stricter than --check\n' +
-      '      [--expect-sha <sha>] [--network <name>]\n',
+      '      [--expect-sha <sha>] [--expect-artifact-commit <sha>] [--network <name>] [--acceptance <file>] [--acceptance-root <dir>]\n',
   );
   process.exit(2);
 }
@@ -961,7 +1442,10 @@ async function main() {
   const wantsCheck = argv.includes('--check');
   const releaseIndex = argv.indexOf('--release');
   const expectShaIndex = argv.indexOf('--expect-sha');
+  const artifactCommitIndex = argv.indexOf('--expect-artifact-commit');
   const networkIndex = argv.indexOf('--network');
+  const acceptanceIndex = argv.indexOf('--acceptance');
+  const acceptanceRootIndex = argv.indexOf('--acceptance-root');
 
   const modes = [
     wantsRecord,
@@ -974,9 +1458,26 @@ async function main() {
   }
   if (releaseIndex !== -1) {
     if (!argv[releaseIndex + 1]) usage('--release needs a url or file.');
+    if (artifactCommitIndex !== -1 && !argv[artifactCommitIndex + 1]) {
+      usage('--expect-artifact-commit needs a commit.');
+    }
+    if (acceptanceIndex !== -1 && !argv[acceptanceIndex + 1]) {
+      usage('--acceptance needs a JSON file.');
+    }
+    if (acceptanceRootIndex !== -1 && !argv[acceptanceRootIndex + 1]) {
+      usage('--acceptance-root needs a directory.');
+    }
     await release(argv[releaseIndex + 1], {
       sourceSha: expectShaIndex === -1 ? undefined : argv[expectShaIndex + 1],
+      artifactCommit:
+        artifactCommitIndex === -1
+          ? undefined
+          : argv[artifactCommitIndex + 1],
       network: networkIndex === -1 ? undefined : argv[networkIndex + 1],
+      acceptancePath:
+        acceptanceIndex === -1 ? undefined : argv[acceptanceIndex + 1],
+      acceptanceRoot:
+        acceptanceRootIndex === -1 ? undefined : argv[acceptanceRootIndex + 1],
     });
     return;
   }
