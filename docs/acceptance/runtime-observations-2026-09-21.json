@@ -287,6 +287,29 @@
               "memory": "5.0G",
               "peakMemory": "5.1G",
               "pidFileWarning": true
+            },
+            "latestReadOnlyRecheck": {
+              "observedAt": "2026-09-21T21:00:17Z",
+              "unitType": "forking",
+              "pidFile": "/var/lib/universe-ord-0.29/dogecoin/dogecoind.pid",
+              "restartPolicy": "on-failure",
+              "restartDelaySeconds": 15,
+              "activeState": "active",
+              "subState": "running",
+              "result": "success",
+              "mainPid": 633831,
+              "restartCounter": 30357,
+              "memoryBytes": 6004486144,
+              "memoryPeakBytes": 6004514816,
+              "chain": "main",
+              "blocks": 142746,
+              "headers": 3263999,
+              "initialBlockDownload": true,
+              "verificationProgress": 0.01471681478060675,
+              "bestBlockHash": "8d217c3c56c4fe6dbbb37060fba926193708215fedca0f5ba4c3bbf288118aec",
+              "boundedJournalFinding": "The retained short journal tail ends with the 22:35:16 CEST restart after status=6/ABRT and one status=1 failure; no later failure was observed in this recheck.",
+              "boundedDebugFinding": "debug.log was advancing through UpdateTip records at height 142746; no error, abort, assertion or corruption line appeared in the bounded tail.",
+              "interpretation": "Progressing historical sync is not a healthy or accepted authority while initial block download and the historical restart loop remain unresolved."
             }
           },
           {
