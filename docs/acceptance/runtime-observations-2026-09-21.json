@@ -278,7 +278,16 @@
             "mainPid": 633831,
             "activeState": "active",
             "subState": "running",
-            "fragmentPath": "/etc/systemd/system/universe-dogecoin.service"
+            "fragmentPath": "/etc/systemd/system/universe-dogecoin.service",
+            "recentStability": {
+              "restartCounter": 30357,
+              "recentFailure": "status=6/ABRT with core-dump",
+              "failureWindow": "2026-09-21T22:32:44+02:00 to 2026-09-21T22:35:16+02:00",
+              "currentProbe": "active/running",
+              "memory": "5.0G",
+              "peakMemory": "5.1G",
+              "pidFileWarning": true
+            }
           },
           {
             "id": "universe-explorer-electrs-signet.service",
