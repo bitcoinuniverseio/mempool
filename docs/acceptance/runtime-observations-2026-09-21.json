@@ -228,6 +228,14 @@
         "httpStatus": 404,
         "interpretation": "The running de4a8d137 gateway does not expose the candidate transaction asset-summary route; the isolated prepared overlay registered it on a separate port. This is deployment/version evidence, not a functional acceptance pass."
       },
+      "transportPreflight": {
+        "artifact": "docs/acceptance/local-signet-preflight-2026-09-21.json",
+        "apiAssertionsPassed": true,
+        "checkpointStable": true,
+        "uiVerified": false,
+        "go": false,
+        "interpretation": "Genesis, stable-tip and bounded transport assertions passed, but the preflight explicitly does not evaluate protocol authorities, databases, wallets, UI, or whole-product readiness."
+      },
       "interpretation": "The local Signet chain and core capability dependencies are now responsive through the authorized read-only tunnel. The prior unavailable statistics/address observation is historical; real asset-summary acceptance and candidate deployment remain unproven."
     }
   },
