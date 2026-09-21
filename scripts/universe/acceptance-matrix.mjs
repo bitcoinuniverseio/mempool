@@ -187,6 +187,20 @@ export function buildMatrix({ evidencePath } = {}) {
   const [inventory, controls] = inventories.map(json), protocolManifest = json(protocolFile);
   assert.deepEqual([inventory.navigation.length, inventory.protocols.length, inventory.operations.length, controls.operations.length, controls.apiOperations.length],
     [351, 39, 37, 304, 546], 'Pinned source candidate counts changed; reconcile the source inventories explicitly');
+  // These candidates are local Explorer routes whose handlers also make an
+  // outbound dependency read. Keep both identities: the local route belongs
+  // in the application denominator, while the dependency remains unverified
+  // until its configured owner is read back.
+  const outboundLocalRoutes = new Map([
+    ['API-c80b2b280c0b', { route: '/api/v1/assets/featured', source: 'backend/src/api/liquid/liquid.routes.ts:13' }],
+    ['API-1c3ef6ee2e7d', { route: '/api/v1/assets/group/:id', source: 'backend/src/api/liquid/liquid.routes.ts:15' }],
+    ['API-d00d50e4f44f', { route: '/api/v1/donations', source: 'backend/src/api/about.routes.ts:9' }],
+    ['API-c33c895f86c6', { route: '/api/v1/donations/images/:id', source: 'backend/src/api/about.routes.ts:17' }],
+    ['API-1e45edc7f3c9', { route: '/api/v1/contributors', source: 'backend/src/api/about.routes.ts:27' }],
+    ['API-73094bc9f9e2', { route: '/api/v1/contributors/images/:id', source: 'backend/src/api/about.routes.ts:35' }],
+    ['API-0e0f90d1e32d', { route: '/api/v1/translators', source: 'backend/src/api/about.routes.ts:45' }],
+    ['API-77083d9edd60', { route: '/api/v1/translators/images/:id', source: 'backend/src/api/about.routes.ts:53' }],
+  ]);
   for (const [group, rows, file, pointer] of [
     ['navigation', inventory.navigation, inventories[0], '/navigation'],
     ['protocol-identity', inventory.protocols, inventories[0], '/protocols'],
@@ -213,8 +227,15 @@ export function buildMatrix({ evidencePath } = {}) {
         row.candidateClassification = row.sourceCall === `axios.${original.method.toLowerCase()}` ? 'outbound-http-client-call' : row.sourceCall ? 'route-registration-candidate' : 'unresolved-current-source-call';
         row.routeConditions = calls.length === 1 ? conditions(calls[0]) : [];
         row.registrationConditions = matchingCalls('backend/src/index.ts', call => call.getText() === original.registration).flatMap(conditions);
-        row.route = row.candidateClassification === 'outbound-http-client-call' ? null : parseExpression(original.source, original.pathExpression) || null;
-        row.routeResolution = row.route ? 'source literal/default expression; runtime mounting/configuration unverified' : 'unresolved expression; no path guessed';
+        const localRoute = outboundLocalRoutes.get(original.id);
+        row.route = row.candidateClassification === 'outbound-http-client-call' ? localRoute?.route || null : parseExpression(original.source, original.pathExpression) || null;
+        if (localRoute) {
+          row.localRouteSource = localRoute.source;
+          row.dependencyExpression = original.pathExpression;
+          row.routeResolution = 'local route source literal resolved; outbound dependency configuration and readback remain unverified';
+        } else {
+          row.routeResolution = row.route ? 'source literal/default expression; runtime mounting/configuration unverified' : 'unresolved expression; no path guessed';
+        }
         if (!row.route) gaps.push({ id: original.id, kind: row.candidateClassification === 'outbound-http-client-call' ? 'outbound-call-in-source-inventory' : 'api-route-expression', expression: original.pathExpression, sourceCall: row.sourceCall });
       }
     });
