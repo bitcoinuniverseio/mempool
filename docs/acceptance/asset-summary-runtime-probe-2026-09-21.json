@@ -226,6 +226,37 @@
       "acceptanceResult": "BLOCKED: user-visible asset status remains partial with zero top-level assets and incomplete input history; not a functional PASS."
     }
   ],
+  "latestDirectApiRecheck": {
+    "observedAt": "2026-09-21T21:09:19Z",
+    "urlTemplate": "https://explorer.bitcoinuniverse.io/api/v1/universe/transactions/:txid/assets",
+    "responses": [
+      {
+        "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+        "httpStatus": 200,
+        "responseSha256": "a13b64dc1d107bee67775eaba670bd2fd866b32b5c8907f242112e3c911c7a52",
+        "assets": 10,
+        "sourceEvidence": 3,
+        "coverageCount": 31,
+        "coverageStates": ["complete", "unconfigured"],
+        "coverageReasons": ["no-transaction-reader", "reader-answered"],
+        "checkpointHeight": "964103",
+        "totalCount": null
+      },
+      {
+        "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
+        "httpStatus": 200,
+        "responseSha256": "ce770277f3212ac80e4cf7870233540684d588d77ca0907167d23865cebd5519",
+        "assets": 64,
+        "sourceEvidence": 2,
+        "coverageCount": 31,
+        "coverageStates": ["partial", "unconfigured"],
+        "coverageReasons": ["no-transaction-reader", "outpoint-inventory-not-retained"],
+        "checkpointHeight": "964103",
+        "totalCount": null
+      }
+    ],
+    "interpretation": "The direct public endpoint changed from the earlier zero/empty result and now reports assets, but its incomplete coverage and stale checkpoint remain. The browser panel continued to show zero top-level assets for the same transactions, so consumer/API coherence is not established."
+  },
   "acceptanceImpact": {
     "functionalPass": false,
     "reason": "Real consumer responses contain unconfigured and partial reader states, a checkpoint 3938 blocks behind the owned node tip, and null totalCount values.",
