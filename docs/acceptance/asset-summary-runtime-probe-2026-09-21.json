@@ -192,6 +192,40 @@
     "secondProbeResult": "HTTP 200 with checkpoint height 964103 and changing asset/source-evidence counts",
     "interpretation": "The route is live, but its result is not stable enough to qualify acceptance without reader-generation and checkpoint consistency proof."
   },
+  "browserConsumerObservations": [
+    {
+      "observedAt": "2026-09-21T21:03:21.698Z",
+      "url": "https://explorer.bitcoinuniverse.io/tx/bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+      "frontendRelease": "v3.3.1",
+      "frontendCommit": "7844c10dc",
+      "visibleAssetPanel": {
+        "status": "Partial",
+        "countText": "0 assets found so far",
+        "coverageHint": "Some sources could not answer, so this list may be incomplete."
+      },
+      "visibleFlowPanel": {
+        "status": "Complete evidence",
+        "summary": "This is the coinbase transaction that pays the miner. It has no inputs to spend.",
+        "visibleAssetRows": "9 ORDINALS rows and 1 RARE_SATS row"
+      },
+      "acceptanceResult": "BLOCKED: user-visible asset status is partial and disagrees with the separate flow evidence; not a functional PASS."
+    },
+    {
+      "observedAt": "2026-09-21T21:04:24.588Z",
+      "url": "https://explorer.bitcoinuniverse.io/tx/4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
+      "frontendRelease": "v3.3.1",
+      "frontendCommit": "7844c10dc",
+      "visibleAssetPanel": {
+        "status": "Partial",
+        "countText": "0 assets found so far",
+        "coverageHint": "Some sources could not answer, so this list may be incomplete.",
+        "authorityHint": "Outputs proven, inputs no longer retained by the authority",
+        "authoritySummary": "This transaction places assets on 64 of its outputs. The authority reported no named protocol action for them.",
+        "visibleOutputRows": "64 ORDINALS rows"
+      },
+      "acceptanceResult": "BLOCKED: user-visible asset status remains partial with zero top-level assets and incomplete input history; not a functional PASS."
+    }
+  ],
   "acceptanceImpact": {
     "functionalPass": false,
     "reason": "Real consumer responses contain unconfigured and partial reader states, a checkpoint 3938 blocks behind the owned node tip, and null totalCount values.",
