@@ -112,11 +112,30 @@
       "network": "mainnet",
       "nodeHost": "universe-production-and-backend",
       "nodeState": {
+        "observedAt": "2026-09-21T20:55:26.3185448Z",
+        "blocks": 113808,
+        "headers": 2589999,
+        "initialBlockDownload": true,
+        "verificationProgress": 0.01374440085274862,
+        "bestBlockHash": "816d6b63700ad3f5402152607a5b5cb78efb745b45dc2aa27a21821f1f4ca80d"
+      },
+      "nodeStateAtConsumerProbe": {
+        "observedAt": "2026-09-21T20:52:36Z",
         "blocks": 100362,
         "headers": 2303999,
         "initialBlockDownload": true,
         "verificationProgress": 0.01290129831078375,
         "bestBlockHash": "d2a4a0d49a28110b012c4bfb45ebf5903b5f66a1e851dc28bc5364cd640d5ea7"
+      },
+      "serviceStability": {
+        "observedAt": "2026-09-21T20:55:26.3185448Z",
+        "restartCounter": 30357,
+        "recentFailure": "status=6/ABRT with core-dump",
+        "failureWindow": "2026-09-21T22:32:44+02:00 to 2026-09-21T22:35:16+02:00",
+        "currentProbe": "active/running",
+        "memory": "5.0G",
+        "peakMemory": "5.1G",
+        "pidFileWarning": true
       },
       "consumerObservations": [
         {
