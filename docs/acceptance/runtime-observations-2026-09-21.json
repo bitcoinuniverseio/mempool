@@ -142,6 +142,93 @@
         "verificationProgress": 1,
         "observedAt": "2026-09-21T20:20:25.218Z"
       }
+    },
+    "latestSignetRecheck": {
+      "observedAt": "2026-09-21T21:30:59.669Z",
+      "captureMethod": "bounded local HTTP recheck after an agent-created read-only SSH tunnel",
+      "tunnel": {
+        "remoteTarget": "152.53.92.251",
+        "sshConfig": "C:\\Users\\ordinalking.SERVER\\.ssh\\config",
+        "localForwardedServices": [
+          "bitcoin Signet RPC",
+          "Signet Esplora HTTP",
+          "Signet MariaDB"
+        ],
+        "secretsCollected": false,
+        "remoteServicesRestarted": false
+      },
+      "gateway": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "chain": "bitcoin",
+        "network": "signet",
+        "height": 323134,
+        "headers": 323134,
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "checkpoint": {
+          "heightAtomic": "323134",
+          "blockHash": "00000001f4f140bb1bdc010416d799b34d0d2916ed8af6ef41ce72baf1d706b2",
+          "observedAt": "2026-09-21T21:30:59.634Z"
+        },
+        "capabilities": {
+          "httpStatus": 200,
+          "statistics": {
+            "state": "ready",
+            "rowCount": 7781,
+            "lagSeconds": 24,
+            "lastSuccessfulUpdate": "2026-09-21T21:30:36Z"
+          },
+          "addressLookup": {
+            "state": "ready",
+            "indexedTip": 323134,
+            "bitcoinCoreTip": 323134,
+            "lagBlocks": 0
+          },
+          "mempoolIntelligence": {
+            "state": "ready",
+            "rowCount": 60
+          }
+        },
+        "tipHeight": {
+          "url": "http://127.0.0.1:8099/signet/api/v1/blocks/tip/height",
+          "httpStatus": 200,
+          "body": "323134"
+        },
+        "fees": {
+          "url": "http://127.0.0.1:8099/signet/api/v1/fees/recommended",
+          "httpStatus": 200,
+          "body": {
+            "fastestFee": 1,
+            "halfHourFee": 1,
+            "hourFee": 1,
+            "economyFee": 1,
+            "minimumFee": 1
+          }
+        }
+      },
+      "backend": {
+        "url": "http://127.0.0.1:8997/api/v1/fees/recommended",
+        "httpStatus": 200,
+        "body": {
+          "fastestFee": 1,
+          "halfHourFee": 1,
+          "hourFee": 1,
+          "economyFee": 1,
+          "minimumFee": 1
+        }
+      },
+      "esplora": {
+        "tipHeight": 323134,
+        "tipHash": "00000001f4f140bb1bdc010416d799b34d0d2916ed8af6ef41ce72baf1d706b2"
+      },
+      "assetSummaryRoute": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/universe/transactions/6247a265f93680e3b65042e29d7c9594be5550b247ea9de9ba0ce2af5e527826/assets?chain=bitcoin&network=signet",
+        "httpStatus": 404,
+        "interpretation": "The running de4a8d137 gateway does not expose the candidate transaction asset-summary route; the isolated prepared overlay registered it on a separate port. This is deployment/version evidence, not a functional acceptance pass."
+      },
+      "interpretation": "The local Signet chain and core capability dependencies are now responsive through the authorized read-only tunnel. The prior unavailable statistics/address observation is historical; real asset-summary acceptance and candidate deployment remain unproven."
     }
   },
   "remote": {
@@ -430,7 +517,7 @@
     "mainnetFunctionalTests": "NOT PERFORMED",
     "blockedReasons": [
       "Public Signet routes return 503 network-unconfigured.",
-      "The local Signet statistics database and address index do not answer.",
+      "The initial local Signet observation found statistics and address dependencies unavailable; the latest recheck found them ready, but the running gateway still lacks the candidate asset-summary route.",
       "Private Zcash authority observations disagree: one endpoint has no node height and 0 of 13 capabilities, while another bridge is 3 blocks behind.",
       "The complete application operation denominator remains unresolved.",
       "This observation records identity and availability only; it is not operation acceptance evidence."

@@ -257,6 +257,59 @@
     ],
     "interpretation": "The direct public endpoint changed from the earlier zero/empty result and now reports assets, but its incomplete coverage and stale checkpoint remain. The browser panel continued to show zero top-level assets for the same transactions, so consumer/API coherence is not established."
   },
+  "candidateOverlayProbe": {
+    "observedAt": "2026-09-21T21:28:50Z",
+    "candidateBackendCommit": "d3937707",
+    "build": {
+      "command": "npm run build",
+      "exitCode": 0
+    },
+    "deployment": {
+      "mode": "isolated local process",
+      "host": "127.0.0.1",
+      "port": 43401,
+      "releaseIdentity": "d3937707",
+      "sourceOrigin": "https://explorer.bitcoinuniverse.io",
+      "sourceContext": "bitcoin:mainnet",
+      "secretsCollected": false,
+      "publicReleaseMutated": false
+    },
+    "httpRoute": {
+      "route": "/api/v1/universe/transactions/:txid/assets",
+      "registeredByCandidate": true,
+      "responses": [
+        {
+          "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+          "httpStatus": 502,
+          "body": {
+            "error": "bitcoin-authority-unavailable",
+            "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d"
+          }
+        },
+        {
+          "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
+          "httpStatus": 502,
+          "body": {
+            "error": "bitcoin-authority-unavailable",
+            "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5"
+          }
+        }
+      ],
+      "interpretation": "The isolated HTTP layer registered the route, but the public base-authority read did not complete the required transaction evidence within the HTTP path. This is a blocked candidate probe, not a PASS."
+    },
+    "serviceRead": {
+      "script": "scripts/universe-explorer/asset-summary-live-read.cjs",
+      "txids": [
+        "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+        "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5"
+      ],
+      "result": "LIVE READ PASS",
+      "coverage": "6 unconfigured authority readers and 25 no-transaction-reader entries per transaction",
+      "totalCount": null,
+      "checkpoint": null,
+      "interpretation": "The isolated service preserved an explicit incomplete result and passed its local invariants, but it did not establish protocol evidence, a checkpoint, HTTP success, browser coherence, or release acceptance."
+    }
+  },
   "acceptanceImpact": {
     "functionalPass": false,
     "reason": "Real consumer responses contain unconfigured and partial reader states, a checkpoint 3938 blocks behind the owned node tip, and null totalCount values.",
