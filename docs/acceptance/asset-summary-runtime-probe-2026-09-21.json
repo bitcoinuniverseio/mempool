@@ -431,6 +431,51 @@
         }
       }
     ],
+    "correctedBaseRouteProbe": {
+      "observedAt": "2026-09-21T22:05:30.479Z",
+      "sourceDescriptor": {
+        "authorityId": "mempool-backend",
+        "readyPath": "/api/v1/blocks/tip/height",
+        "blockHashPath": "/api/v1/blocks/tip/hash",
+        "checkpointPath": null
+      },
+      "sourcesHttpStatus": 200,
+      "selectedSources": [
+        {
+          "authorityId": "mempool-backend",
+          "ready": true,
+          "status": "ready",
+          "checkpointHeightAtomic": "968048",
+          "checkpointHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c",
+          "lagBlocks": null
+        },
+        {
+          "authorityId": "ord",
+          "ready": true,
+          "status": "ready",
+          "checkpointHeightAtomic": "968048",
+          "checkpointHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c",
+          "lagBlocks": "0"
+        }
+      ],
+      "transactionSummary": {
+        "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+        "httpStatus": 200,
+        "responseSha256": "915d7a1426f9c9ed3c7d284b3e4da7ae68235cf65390b75b28a22ddea1771d3f",
+        "assetCount": 10,
+        "knownCountAtomic": "10",
+        "totalCount": null,
+        "coverage": {
+          "ordinals": "complete:reader-answered",
+          "rare_sats": "complete:reader-answered",
+          "runes": "proven-empty:reader-answered"
+        },
+        "sourceEvidenceCount": 3,
+        "checkpointHeightAtomic": "968048",
+        "checkpointHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c"
+      },
+      "acceptanceResult": "SUPPLEMENTARY MAINNET EVIDENCE ONLY: the corrected source descriptor makes both base and Ord health ready and produces a coherent real read, but it does not qualify Signet or the remaining protocol and application denominator."
+    },
     "transactionSummaries": [
       {
         "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
