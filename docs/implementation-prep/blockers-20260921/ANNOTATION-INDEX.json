@@ -1,0 +1,159 @@
+[
+  {
+    "workPackage": "WP01",
+    "defects": [
+      "F001"
+    ],
+    "repository": "mempool",
+    "file": "scripts/universe/protocol-contract.mjs",
+    "symbol": "export function releaseGate(",
+    "marker": "IMPLEMENTATION-HANDOFF [WP01]",
+    "prerequisites": [
+      "WP03"
+    ],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "FAIL"
+  },
+  {
+    "workPackage": "WP02",
+    "defects": [
+      "F002"
+    ],
+    "repository": "mempool",
+    "file": "scripts/universe/release.sh",
+    "symbol": "cmd_preflight() {",
+    "marker": "IMPLEMENTATION-HANDOFF [WP02]",
+    "prerequisites": [
+      "WP01",
+      "WP04",
+      "WP05",
+      "WP06",
+      "WP08",
+      "WP09",
+      "WP10"
+    ],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "FAIL"
+  },
+  {
+    "workPackage": "WP02",
+    "defects": [
+      "F002"
+    ],
+    "repository": "mempool",
+    "file": ".github/workflows/universe-release-artifact.yml",
+    "symbol": "jobs:",
+    "marker": "IMPLEMENTATION-HANDOFF [WP02]",
+    "prerequisites": [
+      "WP01",
+      "WP04",
+      "WP05",
+      "WP06",
+      "WP08",
+      "WP09",
+      "WP10"
+    ],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "FAIL"
+  },
+  {
+    "workPackage": "WP03",
+    "defects": [
+      "F003",
+      "F004"
+    ],
+    "repository": "mempool",
+    "file": "scripts/universe/acceptance-matrix.mjs",
+    "symbol": "export function buildMatrix(",
+    "marker": "IMPLEMENTATION-HANDOFF [WP03]",
+    "prerequisites": [],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "FAIL"
+  },
+  {
+    "workPackage": "WP04",
+    "defects": [
+      "F005"
+    ],
+    "repository": "mempool",
+    "file": "scripts/universe/gateway.mjs",
+    "symbol": "function networkRouteFor(",
+    "marker": "IMPLEMENTATION-HANDOFF [WP04]",
+    "prerequisites": [
+      "WP03",
+      "WP09",
+      "WP10"
+    ],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "BLOCKED"
+  },
+  {
+    "workPackage": "WP06",
+    "defects": [
+      "F007"
+    ],
+    "repository": "mempool",
+    "file": "frontend/src/app/universe/transaction-assets/transaction-assets.component.ts",
+    "symbol": "export class TransactionAssetsComponent",
+    "marker": "IMPLEMENTATION-HANDOFF [WP06]",
+    "prerequisites": [
+      "WP01",
+      "WP03",
+      "WP04",
+      "WP05"
+    ],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "NOT TESTED"
+  },
+  {
+    "workPackage": "WP06",
+    "defects": [
+      "F007"
+    ],
+    "repository": "mempool",
+    "file": "frontend/src/app/universe/address-assets/address-assets.component.ts",
+    "symbol": "export class AddressAssetsComponent",
+    "marker": "IMPLEMENTATION-HANDOFF [WP06]",
+    "prerequisites": [
+      "WP01",
+      "WP03",
+      "WP04",
+      "WP05"
+    ],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "NOT TESTED"
+  },
+  {
+    "workPackage": "WP08",
+    "defects": [
+      "F008"
+    ],
+    "repository": "mempool",
+    "file": "scripts/universe/acceptance-matrix.mjs",
+    "symbol": "export function validateMatrix(",
+    "marker": "IMPLEMENTATION-HANDOFF [WP08]",
+    "prerequisites": [
+      "WP03",
+      "WP04",
+      "WP05",
+      "WP06",
+      "WP10"
+    ],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "NOT TESTED"
+  },
+  {
+    "workPackage": "WP09",
+    "defects": [
+      "B001",
+      "B002"
+    ],
+    "repository": "mempool",
+    "file": "scripts/universe/release.sh",
+    "symbol": "gate_private_listeners() {",
+    "marker": "IMPLEMENTATION-HANDOFF [WP09]",
+    "prerequisites": [],
+    "preparation": "ANNOTATED",
+    "functionalStatus": "BLOCKED"
+  }
+]

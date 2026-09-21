@@ -19,7 +19,13 @@ import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createServer as createTcpServer } from 'node:net';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,7 +40,9 @@ const artifactWorkflow = readFileSync(
 ).replaceAll('\r\n', '\n');
 
 function bash(source, env = {}) {
-  const result = spawnSync('bash', ['-c', source], {
+  const runSource = source;
+  const result = spawnSync('bash', ['-s'], {
+    input: runSource,
     encoding: 'utf8',
     env: { ...process.env, ...env },
     timeout: 60_000,
@@ -49,6 +57,13 @@ test('a changed backend lock can build an independent release dependency tree', 
   assert.match(artifactWorkflow, /cp -a backend\/vendor/);
   assert.match(artifactWorkflow, /cp -a backend\/rust-gbt/);
   assert.match(artifactWorkflow, /stage\/backend\/rust-gbt\/package\.json/);
+});
+
+test('the artifact workflow requires candidate-bound acceptance before packing', () => {
+  assert.match(artifactWorkflow, /Qualify the release acceptance envelope/);
+  assert.match(artifactWorkflow, /--expect-artifact-commit.*git rev-parse HEAD/);
+  assert.match(artifactWorkflow, /--acceptance docs\/acceptance\/qualified-release-evidence\.json/);
+  assert.match(artifactWorkflow, /cp -a docs\/acceptance\/qualified-release-evidence\.json/);
 });
 
 // Install the real function into a disposable release tree. Package download,
@@ -362,7 +377,7 @@ test('a service that accepts connections and never responds fails as hung, not a
 // The pointer is represented by a file so this also runs on Windows without
 // requiring symlink privileges; release directories and rename are real.
 function runCutoverFailure(failure, rollbackFailure = '') {
-  const functions = ['release_dir', 'rollback_failed_cutover', 'cmd_cutover', 'cmd_rollback']
+  const functions = ['release_dir', 'acquire_release_lock', 'rollback_failed_cutover', 'cmd_cutover', 'cmd_rollback']
     .map((name) => script.match(new RegExp(`^${name}\\(\\) \\{$[\\s\\S]*?^\\}$`, 'm'))?.[0]
       || script.match(new RegExp(`^${name}\\(\\) \\{[^\\n]+\\}$`, 'm'))?.[0] || '')
     .join('\n');
@@ -371,18 +386,22 @@ set -euo pipefail
 ROOT=$(mktemp -d)
 RELEASES="$ROOT/releases"
 CURRENT="$ROOT/current"
+RELEASE_LOCK_HELD=false
 GATEWAY=http://127.0.0.1:8099
 UNITS="universe-explorer-backend universe-explorer-overlay universe-explorer-gateway"
 mkdir -p "$RELEASES/mempool-old/scripts/universe" "$RELEASES/mempool-new/scripts/universe"
 printf 'inheritedListenerFd old' > "$RELEASES/mempool-old/scripts/universe/gateway.mjs"
 printf 'inheritedListenerFd new' > "$RELEASES/mempool-new/scripts/universe/gateway.mjs"
 printf '%s' "$RELEASES/mempool-old" > "$CURRENT"
-trap 'status=$?; printf "FINAL_CURRENT=%s\\n" "$(cat "$CURRENT")"; exit "$status"' EXIT
+trap 'status=$?; current_content=$(cat "$CURRENT"); printf "FINAL_CURRENT=%s\\n" "$current_content"; exit "$status"' EXIT
 log() { printf '%s\\n' "$*"; }
 fail() { printf 'FAILED: %s\\n' "$*" >&2; exit 1; }
 readlink() { cat "$2"; }
 ln() { printf '%s' "$2" > "$3"; }
+flock() { return 0; }
+QUALIFIED_ACCEPTANCE_IDENTITY=fixture-accepted
 cmd_preflight() { return 0; }
+gate_qualified_acceptance() { QUALIFIED_ACCEPTANCE_IDENTITY=fixture-accepted; }
 systemctl() {
   [ "$1" != is-active ] || return 1
   printf 'SERVICE %s CURRENT=%s\\n' "$*" "$(cat "$CURRENT")"
@@ -428,6 +447,97 @@ for (const [failure, status] of [['restart', 47], ['verification', 53]]) {
     assert.match(result.stdout + result.stderr, new RegExp(`rollback failed.*${status}`));
     assert.match(result.stdout + result.stderr, /gateway restart failed.*17/);
     assert.doesNotMatch(result.stdout, /rolled back to old|cutover to new complete/);
+  });
+}
+
+const qualifiedAcceptanceGate = script.match(
+  /^gate_qualified_acceptance\(\) \{$[\s\S]*?^\}$/m,
+)?.[0];
+const releaseLock = script.match(
+  /^acquire_release_lock\(\) \{$[\s\S]*?^\}$/m,
+)?.[0];
+const preflight = script.match(/^cmd_preflight\(\) \{$[\s\S]*?^\}$/m)?.[0];
+const cutover = script.match(/^cmd_cutover\(\) \{$[\s\S]*?^\}$/m)?.[0];
+const releaseDir = script.match(/^release_dir\(\) \{[^\n]+\}$/m)?.[0];
+assert.ok(
+  qualifiedAcceptanceGate && releaseLock && preflight && cutover && releaseDir,
+  'release.sh must run qualified acceptance from preflight before cutover',
+);
+
+function qualifiedCutoverFixture(mode) {
+  const root = mkdtempSync(join(workdir, `qualified-cutover-${mode}-`));
+  const candidate = join(root, 'releases', 'mempool-new');
+  mkdirSync(join(candidate, 'docs', 'protocols'), { recursive: true });
+  mkdirSync(join(candidate, 'docs', 'acceptance'), { recursive: true });
+  mkdirSync(join(candidate, 'scripts', 'universe'), { recursive: true });
+  mkdirSync(join(root, 'releases', 'mempool-old'), { recursive: true });
+
+  const repositoryRoot = join(here, '..', '..');
+  const manifestPath = join(repositoryRoot, 'docs', 'protocols', 'PROTOCOL-COVERAGE.json');
+  const manifest = readFileSync(manifestPath, 'utf8');
+  const sourceSha = JSON.parse(manifest).sourceSha;
+  writeFileSync(join(candidate, 'docs', 'protocols', 'PROTOCOL-COVERAGE.json'), manifest);
+  copyFileSync(
+    join(repositoryRoot, 'scripts', 'universe', 'protocol-contract.mjs'),
+    join(candidate, 'scripts', 'universe', 'protocol-contract.mjs'),
+  );
+  writeFileSync(
+    join(candidate, 'RELEASE-MANIFEST.json'),
+    JSON.stringify({ commit: sourceSha }),
+  );
+  if (mode === 'forged') {
+    writeFileSync(
+      join(candidate, 'docs', 'acceptance', 'qualified-release-evidence.json'),
+      JSON.stringify({
+        schemaVersion: 'universe-explorer-acceptance-v1',
+        candidate: {},
+        rows: [],
+        exclusions: [],
+      }),
+    );
+  }
+  writeFileSync(join(root, 'current'), join(root, 'releases', 'mempool-old'));
+  return root;
+}
+
+function runQualifiedCutover(mode) {
+  const root = qualifiedCutoverFixture(mode);
+  return bash(`
+set -euo pipefail
+ROOT="$RELEASE_ROOT"
+RELEASES="$ROOT/releases"
+CURRENT="$ROOT/current"
+RELEASE_LOCK_HELD=false
+UNIVERSE_RELEASE_NETWORK=mainnet
+trap 'status=$?; current_content=$(cat "$CURRENT"); printf "CURRENT_CONTENT=%s\\n" "$current_content"; exit "$status"' EXIT
+log() { printf '%s\\n' "$*"; }
+fail() { printf 'FAILED: %s\\n' "$*" >&2; exit 1; }
+readlink() { cat "$2"; }
+flock() { return 0; }
+${releaseDir}
+${releaseLock}
+${qualifiedAcceptanceGate}
+gate_release_present() { :; }
+gate_manifest_matches() { :; }
+gate_configuration() { :; }
+gate_database() { :; }
+gate_address_backend() { :; }
+gate_sources_parse() { :; }
+gate_private_listeners() { :; }
+gate_readable_protocols_have_authorities() { :; }
+${preflight}
+${cutover}
+cmd_cutover new
+`, { RELEASE_ROOT: root.replaceAll('\\', '/') });
+}
+
+for (const mode of ['missing', 'forged']) {
+  test(`cutover refuses ${mode} qualified evidence before changing the current release`, () => {
+    const result = runQualifiedCutover(mode);
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /CURRENT_CONTENT=.*mempool-old/);
+    assert.doesNotMatch(result.stdout, /current now points|restart|cutover to new complete/);
+    assert.match(result.stdout + result.stderr, /qualified acceptance|evidence artifact|not releasable/i);
   });
 }
 

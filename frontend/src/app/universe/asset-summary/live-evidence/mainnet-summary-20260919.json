@@ -1,0 +1,245 @@
+{
+  "schemaVersion": "universe-transaction-asset-summary-v1",
+  "chain": "bitcoin",
+  "network": "mainnet",
+  "txid": "5b63ff3a594995bb9890f7cc96449f9d95a4f35b3f98bf2a753831ee7906a347",
+  "status": "confirmed",
+  "checkpoint": {
+    "chain": "bitcoin",
+    "network": "mainnet",
+    "heightAtomic": "0",
+    "blockHash": "0000000000000000000048c5b08853cc2a5c2a8941830089fa5dcdcb4847fb9e",
+    "reorgEpoch": "0",
+    "observedAt": "2026-09-19T09:37:25.703Z"
+  },
+  "assets": [],
+  "perProtocolCoverage": [
+    {
+      "protocolId": "ordinals",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "rare_sats",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "names",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "bitmap",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "unat",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "runes",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "alkanes",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "mezcal",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "stamps",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "src20",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "src101",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "atomicals_nft",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "realms",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "subrealms",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "arc20",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "op_return",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "op_names",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "op_inscriptions",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "op_drop",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "drops",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "brc20",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "tap",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "dmt",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "dust20",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "block20",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "chainbloom",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "patina",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "witness_circles",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "tandem",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "ordex",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    },
+    {
+      "protocolId": "anima",
+      "chain": "bitcoin",
+      "network": "mainnet",
+      "state": "unconfigured",
+      "reason": "no-transaction-reader"
+    }
+  ],
+  "counts": {
+    "fungibleTypeCountAtomic": "0",
+    "collectibleItemCountAtomic": "0",
+    "otherAssetCountAtomic": "0",
+    "protocolCountAtomic": "0",
+    "knownCountAtomic": "0",
+    "totalCount": null
+  },
+  "retryAfterSeconds": 5,
+  "sourceEvidence": []
+}

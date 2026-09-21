@@ -1,0 +1,171 @@
+{
+  "checkedAt": "2026-09-21T21:33:24.075Z",
+  "origin": "http://127.0.0.1:8099",
+  "network": "signet",
+  "scope": "Read-only API genesis and stable-tip assertions; no independent Core, database, wallet, UI or whole-product readiness proof.",
+  "apiAssertionsPassed": true,
+  "checkpoint": {
+    "height": 323134,
+    "hash": "00000001f4f140bb1bdc010416d799b34d0d2916ed8af6ef41ce72baf1d706b2"
+  },
+  "plannedTransportProbes": [
+    "/__gateway/health",
+    "/signet/api/v1/__acceptance",
+    "/signet/api/v1/backend-info",
+    "/signet/api/v1/capabilities",
+    "/signet/api/v1/universe/status",
+    "/signet/api/v1/anima/status",
+    "/signet/api/v1/anima/events?from=0&limit=1",
+    "/signet/api/v1/anima/events/invalid-acceptance-identity",
+    "/signet/api/v1/anima/organisms?offset=0&limit=1",
+    "/signet/api/v1/anima/organisms/invalid-acceptance-identity",
+    "/signet/api/v1/anima/organisms/invalid-acceptance-identity/history?limit=1"
+  ],
+  "probes": [
+    {
+      "path": "/signet/api/blocks/tip/height",
+      "status": 200,
+      "bodySha256": "dc082e829e6192115b769d73e5f8d699472d90d222836fece9b68ff556e04b14",
+      "bytes": 6
+    },
+    {
+      "path": "/signet/api/blocks/tip/hash",
+      "status": 200,
+      "bodySha256": "f5f27d0ab9b29c53c6db00a24d037b7318121786a5a2730dcb000372adfdfd6c",
+      "bytes": 64
+    },
+    {
+      "path": "/signet/api/block-height/0",
+      "status": 200,
+      "bodySha256": "08ae7874247b6441180f638ca984ba225a55287d6d626e3f178e7551dc811286",
+      "bytes": 64
+    },
+    {
+      "path": "/signet/api/block/00000001f4f140bb1bdc010416d799b34d0d2916ed8af6ef41ce72baf1d706b2",
+      "status": 200,
+      "bodySha256": "661349c9cacfd620ac8279a93d3bd736c04d0410ca83966669e0420f6b8938f2",
+      "bytes": 436
+    },
+    {
+      "path": "/__gateway/health",
+      "status": 200,
+      "bodySha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "bytes": 15,
+      "contract": "JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/__acceptance",
+      "status": 404,
+      "bodySha256": "fb1da359c6f8eecf6cd9ffea2455b173112aaab8c63df8b3acfeb5000731145c",
+      "bytes": 158,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/backend-info",
+      "status": 200,
+      "bodySha256": "41b9c5c1e1674e55ee6c968d44c7cd05ba8fb1f6cf1ffc917611f6ead0af7a02",
+      "bytes": 505,
+      "contract": "JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/capabilities",
+      "status": 200,
+      "bodySha256": "7fedad5194c826d319ed92566ba50338c756b7c013698cc4ed8d0a64b215b74a",
+      "bytes": 3098,
+      "contract": "JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/universe/status",
+      "status": 404,
+      "bodySha256": "531f71e0955e645ae95745136065095740635ab076824e655814bc397aa736e2",
+      "bytes": 161,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/anima/status",
+      "status": 404,
+      "bodySha256": "015e203263a1b72c671b008c570a97909cedd710169a09036ff65c2ae6c68623",
+      "bytes": 158,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/anima/events?from=0&limit=1",
+      "status": 404,
+      "bodySha256": "1bf52805d3e69e346afd0b82bf1592bee2fd1bb7355e1326c8851d906e3e847f",
+      "bytes": 158,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/anima/events/invalid-acceptance-identity",
+      "status": 404,
+      "bodySha256": "6608bb4157f702252a7c9a3ca3acc522075dba656fab18a813ed46bb93983b6c",
+      "bytes": 186,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/anima/organisms?offset=0&limit=1",
+      "status": 404,
+      "bodySha256": "97a34e42a8a404011beed73a594fd6705d35a94cc616c59ab8f2e5d65456d5a4",
+      "bytes": 161,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/anima/organisms/invalid-acceptance-identity",
+      "status": 404,
+      "bodySha256": "62e2b9a2ecf457865f2c27256e4c98fae53c44e777d08c40a51b62ca19423312",
+      "bytes": 189,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/v1/anima/organisms/invalid-acceptance-identity/history?limit=1",
+      "status": 404,
+      "bodySha256": "0aafadc8bc29ae5dcb849fe25cece15facfea1791dc5586e73efecaa14fa0767",
+      "bytes": 197,
+      "contract": "FAIL_NON_JSON",
+      "acceptance": "TRANSPORT_ONLY_NOT_OPERATION_PASS"
+    },
+    {
+      "path": "/signet/api/blocks/tip/height",
+      "status": 200,
+      "bodySha256": "dc082e829e6192115b769d73e5f8d699472d90d222836fece9b68ff556e04b14",
+      "bytes": 6
+    },
+    {
+      "path": "/signet/api/blocks/tip/hash",
+      "status": 200,
+      "bodySha256": "f5f27d0ab9b29c53c6db00a24d037b7318121786a5a2730dcb000372adfdfd6c",
+      "bytes": 64
+    }
+  ],
+  "prerequisites": "NOT_EVALUATED",
+  "uiVerified": false,
+  "go": false,
+  "localSource": {
+    "revision": "8f7e3f016d167b1843c494b6e34ceeade055a8f3",
+    "binding": "Local file identity only; not an attestation of the remote process.",
+    "files": [
+      {
+        "path": "scripts/universe/acceptance-preflight.mjs",
+        "sha256": "20e85667be234d9ad91064b93c61f115cce09c87136b0c8e6b2535b6534914b8"
+      },
+      {
+        "path": "scripts/universe/acceptance-server.cjs",
+        "sha256": "2939df697121a122266c00daa1146025789fd7f047cc97de10b19704b2c09966"
+      },
+      {
+        "path": "scripts/universe/gateway.mjs",
+        "sha256": "529c116baa7e6702239ee2da9ac30b552e311d02eb388254a8087a79edf7815b"
+      }
+    ]
+  }
+}

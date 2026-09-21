@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
@@ -320,6 +322,14 @@ test('a served roster identical to the pin reports nothing', () => {
 
 /** The pin with every operation accepted, which is what a real release needs. */
 function releasable(manifest, overrides = {}) {
+  const sourceSha = 'a'.repeat(40);
+  const dependencyRevision = 'fixture-backend-dependencies-v1';
+  const configurationDigest = 'b'.repeat(64);
+  const specificationRevision = 'fixture-protocol-spec-v1';
+  const evidencePath = 'scripts/universe/protocol-contract.mjs';
+  const evidenceSha = createHash('sha256')
+    .update(readFileSync(new URL('./protocol-contract.mjs', import.meta.url)))
+    .digest('hex');
   const protocols = manifest.protocols.map((protocol) => ({
     ...protocol,
     networks: ['mainnet'],
@@ -333,9 +343,30 @@ function releasable(manifest, overrides = {}) {
     (total, protocol) => total + protocol.readOperationDescriptors.length,
     0,
   );
+  const rows = protocols.flatMap((protocol) =>
+    protocol.readOperationDescriptors.map((operation) => ({
+      protocol: protocol.id,
+      operation: operation.id,
+      variant: 'default',
+      role: 'read',
+      chain: protocol.chain,
+      network: 'mainnet',
+      result: 'PASS',
+      codeRevision: sourceSha,
+      dependencyRevision,
+      configurationDigest,
+      specificationRevision,
+      ranAt: '2026-09-21T17:00:00.000Z',
+      checkpoint: { height: 1, blockHash: 'c'.repeat(64) },
+      evidence: [{ path: evidencePath, sha256: evidenceSha }],
+      assertions: ['fixture evidence is bound to the qualified row'],
+      authorityReadback: ['fixture authority readback is present'],
+      consumerAssertions: ['fixture consumer assertion is present'],
+    })),
+  );
   return {
     ...manifest,
-    sourceSha: 'a'.repeat(40),
+    sourceSha,
     protocols,
     acceptance: {
       declared,
@@ -346,12 +377,148 @@ function releasable(manifest, overrides = {}) {
       notTested: 0,
       rejected: 0,
     },
+    acceptanceEvidence: {
+      schemaVersion: 'universe-explorer-acceptance-v1',
+      generatedAt: '2026-09-21T17:00:00.000Z',
+      provenance: {
+        producer: 'universe-acceptance-runner-v1',
+        executionEnvironment: 'controlled-offline-fixture',
+        command: 'fixture acceptance command',
+      },
+      candidate: {
+        sourceSha,
+        artifactCommit: 'd'.repeat(40),
+        dependencyRevision,
+        configurationDigest,
+        specificationRevisions: [specificationRevision],
+        acceptanceNetwork: 'mainnet',
+        deploymentNetwork: 'mainnet',
+      },
+      rows,
+      exclusions: [],
+    },
     ...overrides,
   };
 }
 
 test('a release with every operation accepted passes', () => {
   assert.deepEqual(releaseGate(releasable(pinned)).problems, []);
+});
+
+test('the acceptance envelope binds the separate mempool artifact revision', () => {
+  const manifest = releasable(pinned);
+  assert.deepEqual(
+    releaseGate(manifest, { artifactCommit: 'd'.repeat(40) }).problems,
+    [],
+  );
+  assert.match(
+    problems(releaseGate(manifest, { artifactCommit: 'e'.repeat(40) })),
+    /names artifact d{40}, not the intended artifact e{40}/,
+  );
+});
+
+test('descriptor labels and counters without an evidence envelope are refused', () => {
+  const forged = releasable(pinned);
+  delete forged.acceptanceEvidence;
+  assert.match(
+    problems(releaseGate(forged)),
+    /no qualified acceptance evidence artifact/,
+  );
+});
+
+test('missing evidence rows are refused', () => {
+  const manifest = releasable(pinned);
+  manifest.acceptanceEvidence = {
+    ...manifest.acceptanceEvidence,
+    rows: manifest.acceptanceEvidence.rows.slice(1),
+  };
+  assert.match(
+    problems(releaseGate(manifest)),
+    /is missing from the acceptance evidence/,
+  );
+});
+
+test('tampered evidence bytes are refused', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.acceptanceEvidence.rows;
+  manifest.acceptanceEvidence = {
+    ...manifest.acceptanceEvidence,
+    rows: [
+      {
+        ...first,
+        evidence: [{ ...first.evidence[0], sha256: '0'.repeat(64) }],
+      },
+      ...rest,
+    ],
+  };
+  assert.match(
+    problems(releaseGate(manifest)),
+    /has SHA-256 .* not the recorded/,
+  );
+});
+
+test('evidence paths that escape the rooted artifact are refused', () => {
+  const manifest = releasable(pinned);
+  const [first, ...rest] = manifest.acceptanceEvidence.rows;
+  manifest.acceptanceEvidence = {
+    ...manifest.acceptanceEvidence,
+    rows: [
+      {
+        ...first,
+        evidence: [
+          { ...first.evidence[0], path: '../outside-acceptance-evidence.json' },
+        ],
+      },
+      ...rest,
+    ],
+  };
+  assert.match(
+    problems(releaseGate(manifest)),
+    /escapes the evidence root/,
+  );
+});
+
+test('a Signet result without Mainnet configuration proof is refused', () => {
+  const manifest = releasable(pinned);
+  manifest.acceptanceEvidence = {
+    ...manifest.acceptanceEvidence,
+    candidate: {
+      ...manifest.acceptanceEvidence.candidate,
+      acceptanceNetwork: 'signet',
+    },
+    rows: manifest.acceptanceEvidence.rows.map((row) => ({
+      ...row,
+      network: 'signet',
+    })),
+  };
+  assert.match(
+    problems(releaseGate(manifest, { network: 'mainnet' })),
+    /no independent mainnet configuration proof/,
+  );
+});
+
+test('Signet acceptance needs and accepts independent Mainnet configuration proof', () => {
+  const manifest = releasable(pinned);
+  const candidate = manifest.acceptanceEvidence.candidate;
+  manifest.acceptanceEvidence = {
+    ...manifest.acceptanceEvidence,
+    candidate: {
+      ...candidate,
+      acceptanceNetwork: 'signet',
+      configurationProof: {
+        network: 'mainnet',
+        sourceRevision: manifest.sourceSha,
+        configurationDigest: candidate.configurationDigest,
+        assertions: ['the release configuration selects Mainnet'],
+        evidence: manifest.acceptanceEvidence.rows[0].evidence,
+      },
+    },
+    rows: manifest.acceptanceEvidence.rows.map((row) => ({
+      ...row,
+      network: 'signet',
+    })),
+  };
+  assert.deepEqual(releaseGate(manifest, { network: 'mainnet' }).problems, []);
 });
 
 test('the roster this repository pins today is not releasable', () => {

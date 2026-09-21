@@ -1,0 +1,561 @@
+{
+  "schemaVersion": "universe-runtime-observation-v1",
+  "capturedAt": "2026-09-21T20:38:47.754Z",
+  "scope": "read-only runtime and deployment-context observation",
+  "provenance": {
+    "captureMethod": "bounded HTTP, listener, process, and SSH-context probes",
+    "secretsCollected": false,
+    "credentialsChanged": false,
+    "servicesRestarted": false,
+    "deploymentsPerformed": false,
+    "logs": {
+      "mode": "bounded-redacted",
+      "entries": [
+        {
+          "source": "public-signet",
+          "status": 503,
+          "message": "network-unconfigured"
+        },
+        {
+          "source": "ssh-config",
+          "status": 255,
+          "message": "Can't open user config file D:\\\\universe\\\\.ssh\\\\config: Permission denied"
+        }
+      ]
+    }
+  },
+  "public": {
+    "mainnet": {
+      "backendInfo": {
+        "url": "https://explorer.bitcoinuniverse.io/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "537235052",
+        "version": "3.3.1",
+        "backend": "electrum",
+        "coreVersion": "/Satoshi:31.0.0/",
+        "chain": "bitcoin",
+        "network": "mainnet",
+        "height": 968040,
+        "blockHash": "00000000000000000000d54f1ef93ba80dedc3a35f6e263a20ddfe9c311a4386",
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "observedAt": "2026-09-21T20:20:24.597Z"
+      },
+      "capabilities": {
+        "url": "https://explorer.bitcoinuniverse.io/api/v1/capabilities",
+        "result": "TIMEOUT",
+        "timeoutSeconds": 12
+      }
+    },
+    "signet": {
+      "backendInfo": {
+        "url": "https://explorer.bitcoinuniverse.io/signet/api/v1/backend-info",
+        "httpStatus": 503,
+        "error": "network-unconfigured",
+        "network": "signet"
+      },
+      "capabilities": {
+        "url": "https://explorer.bitcoinuniverse.io/signet/api/v1/capabilities",
+        "httpStatus": 503,
+        "error": "network-unconfigured",
+        "network": "signet"
+      }
+    }
+  },
+  "local": {
+    "network": "signet",
+    "gateway": {
+      "baseUrl": "http://127.0.0.1:8099",
+      "health": {
+        "url": "http://127.0.0.1:8099/__gateway/health",
+        "httpStatus": 200,
+        "body": {
+          "status": "ok"
+        }
+      },
+      "listener": {
+        "address": "127.0.0.1",
+        "port": 8099,
+        "state": "LISTENING",
+        "processId": 35396
+      },
+      "process": {
+        "processId": 35396,
+        "executable": "C:\\Program Files\\nodejs\\node.exe",
+        "commandLine": "node scripts/universe/gateway.mjs",
+        "startedAt": "2026-09-17T17:51:30.0440471+00:00"
+      },
+      "backendInfo": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "version": "3.3.1",
+        "backend": "esplora",
+        "coreVersion": "/Satoshi:31.0.0/",
+        "chain": "bitcoin",
+        "network": "signet",
+        "height": 322778,
+        "blockHash": "00000001dc7ea9cf451fad7b209a45c6ad940e40b99c9f05788dcadec551f33a",
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "observedAt": "2026-09-21T20:20:25.192Z"
+      },
+      "capabilities": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/capabilities",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "network": "signet",
+        "statistics": "unavailable: database did not answer",
+        "addressLookup": "unavailable: address index did not answer",
+        "mining": "disabled",
+        "mempoolIntelligence": "ready",
+        "mempoolIntelligenceRowCount": 52,
+        "generatedAt": "2026-09-21T20:20:17.264Z"
+      }
+    },
+    "backend": {
+      "baseUrl": "http://127.0.0.1:8997",
+      "listener": {
+        "address": "127.0.0.1",
+        "port": 8997,
+        "state": "LISTENING",
+        "processId": 12016
+      },
+      "process": {
+        "processId": 12016,
+        "executable": "C:\\Program Files\\nodejs\\node.exe",
+        "commandLine": "node --max-old-space-size=2048 dist/index.js",
+        "startedAt": "2026-09-17T17:51:30.0337725+00:00"
+      },
+      "backendInfo": {
+        "url": "http://127.0.0.1:8997/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "version": "3.3.1",
+        "backend": "esplora",
+        "coreVersion": "/Satoshi:31.0.0/",
+        "chain": "bitcoin",
+        "network": "signet",
+        "height": 322778,
+        "blockHash": "00000001dc7ea9cf451fad7b209a45c6ad940e40b99c9f05788dcadec551f33a",
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "observedAt": "2026-09-21T20:20:25.218Z"
+      }
+    },
+    "latestSignetRecheck": {
+      "observedAt": "2026-09-21T21:30:59.669Z",
+      "captureMethod": "bounded local HTTP recheck after an agent-created read-only SSH tunnel",
+      "tunnel": {
+        "remoteTarget": "152.53.92.251",
+        "sshConfig": "C:\\Users\\ordinalking.SERVER\\.ssh\\config",
+        "localForwardedServices": [
+          "bitcoin Signet RPC",
+          "Signet Esplora HTTP",
+          "Signet MariaDB"
+        ],
+        "secretsCollected": false,
+        "remoteServicesRestarted": false
+      },
+      "gateway": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/backend-info",
+        "httpStatus": 200,
+        "releaseSha": "de4a8d137",
+        "chain": "bitcoin",
+        "network": "signet",
+        "height": 323134,
+        "headers": 323134,
+        "initialBlockDownload": false,
+        "verificationProgress": 1,
+        "checkpoint": {
+          "heightAtomic": "323134",
+          "blockHash": "00000001f4f140bb1bdc010416d799b34d0d2916ed8af6ef41ce72baf1d706b2",
+          "observedAt": "2026-09-21T21:30:59.634Z"
+        },
+        "capabilities": {
+          "httpStatus": 200,
+          "statistics": {
+            "state": "ready",
+            "rowCount": 7781,
+            "lagSeconds": 24,
+            "lastSuccessfulUpdate": "2026-09-21T21:30:36Z"
+          },
+          "addressLookup": {
+            "state": "ready",
+            "indexedTip": 323134,
+            "bitcoinCoreTip": 323134,
+            "lagBlocks": 0
+          },
+          "mempoolIntelligence": {
+            "state": "ready",
+            "rowCount": 60
+          }
+        },
+        "tipHeight": {
+          "url": "http://127.0.0.1:8099/signet/api/v1/blocks/tip/height",
+          "httpStatus": 200,
+          "body": "323134"
+        },
+        "fees": {
+          "url": "http://127.0.0.1:8099/signet/api/v1/fees/recommended",
+          "httpStatus": 200,
+          "body": {
+            "fastestFee": 1,
+            "halfHourFee": 1,
+            "hourFee": 1,
+            "economyFee": 1,
+            "minimumFee": 1
+          }
+        }
+      },
+      "backend": {
+        "url": "http://127.0.0.1:8997/api/v1/fees/recommended",
+        "httpStatus": 200,
+        "body": {
+          "fastestFee": 1,
+          "halfHourFee": 1,
+          "hourFee": 1,
+          "economyFee": 1,
+          "minimumFee": 1
+        }
+      },
+      "esplora": {
+        "tipHeight": 323134,
+        "tipHash": "00000001f4f140bb1bdc010416d799b34d0d2916ed8af6ef41ce72baf1d706b2"
+      },
+      "assetSummaryRoute": {
+        "url": "http://127.0.0.1:8099/signet/api/v1/universe/transactions/6247a265f93680e3b65042e29d7c9594be5550b247ea9de9ba0ce2af5e527826/assets?chain=bitcoin&network=signet",
+        "httpStatus": 404,
+        "interpretation": "The running de4a8d137 gateway does not expose the candidate transaction asset-summary route; the isolated prepared overlay registered it on a separate port. This is deployment/version evidence, not a functional acceptance pass."
+      },
+      "transportPreflight": {
+        "artifact": "docs/acceptance/local-signet-preflight-2026-09-21.json",
+        "apiAssertionsPassed": true,
+        "checkpointStable": true,
+        "uiVerified": false,
+        "go": false,
+        "interpretation": "Genesis, stable-tip and bounded transport assertions passed, but the preflight explicitly does not evaluate protocol authorities, databases, wallets, UI, or whole-product readiness."
+      },
+      "interpretation": "The local Signet chain and core capability dependencies are now responsive through the authorized read-only tunnel. The prior unavailable statistics/address observation is historical; real asset-summary acceptance and candidate deployment remain unproven."
+    }
+  },
+  "remote": {
+    "authorizedReadOnly": true,
+    "captureConfig": "C:\\Users\\ordinalking.SERVER\\.ssh\\config",
+    "hosts": [
+      {
+        "address": "159.195.109.76",
+        "hostname": "universe-indexers",
+        "observedAt": "2026-09-21T20:38:20Z",
+        "connectionExitCode": 0,
+        "listeners": "127.0.0.1 services observed; exact listener inventory retained in the bounded probe output",
+        "services": [
+          {
+            "id": "bitcoin.service",
+            "mainPid": 1925105,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/bitcoin.service",
+            "startedAt": "2026-09-12T05:14:07Z"
+          },
+          {
+            "id": "universe-explorer-electrs.service",
+            "mainPid": 1925107,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-explorer-electrs.service",
+            "startedAt": "2026-09-12T05:14:07Z"
+          },
+          {
+            "id": "universe-dogecoin-blockbook.service",
+            "mainPid": 1775868,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-dogecoin-blockbook.service",
+            "startedAt": "2026-09-16T09:42:00Z"
+          },
+          {
+            "id": "universe-index-doge-tap.service",
+            "mainPid": 3266347,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-index-doge-tap.service",
+            "startedAt": "2026-09-21T08:14:42Z"
+          },
+          {
+            "id": "universe-index-stamps.service",
+            "mainPid": 1886055,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-index-stamps.service",
+            "startedAt": "2026-09-12T04:58:26Z"
+          },
+          {
+            "id": "universe-zcash-metaprotocols-mainnet-read.service",
+            "mainPid": 0,
+            "activeState": "inactive",
+            "subState": "dead",
+            "fragmentPath": null,
+            "startedAt": null
+          },
+          {
+            "id": "universe-ord-authority.service",
+            "mainPid": 1925155,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-authority.service",
+            "startedAt": "2026-09-12T05:14:07Z"
+          },
+          {
+            "id": "universe-ord-dogecoin-full.service",
+            "mainPid": 3945259,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-dogecoin-full.service",
+            "startedAt": "2026-09-19T10:31:34Z"
+          },
+          {
+            "id": "universe-ordtap-writer.service",
+            "mainPid": 1927091,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ordtap-writer.service",
+            "startedAt": "2026-09-12T05:14:20Z"
+          }
+        ],
+        "backendInfo": {
+          "url": "http://127.0.0.1:8996/api/v1/backend-info",
+          "httpStatus": 200,
+          "releaseSha": "537235052",
+          "version": "3.3.1",
+          "backend": "electrum",
+          "chain": "bitcoin",
+          "network": "mainnet",
+          "blocks": 968040,
+          "headers": 968041,
+          "initialBlockDownload": false,
+          "verificationProgress": 0.9999977559608537,
+          "blockHash": "00000000000000000000d54f1ef93ba80dedc3a35f6e263a20ddfe9c311a4386",
+          "observedAt": "2026-09-21T20:38:47.754Z"
+        },
+        "authorityHealth": {
+          "url": "http://127.0.0.1:8793/status",
+          "httpStatus": 200,
+          "schemaVersion": "network-indexer-health-v1",
+          "network": "zcash:mainnet",
+          "checkpointHeight": "3491510",
+          "checkpointHash": "00000000000133a1b8d08001dd9ddaea8e17ffdb2af362ae8dbd6f204d7d28bf",
+          "nodeHeight": "3491510",
+          "networkHeight": "3491513",
+          "blocksBehindNetwork": "3",
+          "nodeSynced": true,
+          "capabilitiesAvailable": "13",
+          "capabilitiesRequired": "13",
+          "lastSuccessfulUpdate": "2026-09-21T20:38:36.000Z"
+        }
+      },
+      {
+        "address": "152.53.92.251",
+        "hostname": "universe-production-and-backend",
+        "observedAt": "2026-09-21T20:35:45Z",
+        "connectionExitCode": 0,
+        "services": [
+          {
+            "id": "universe-bitcoin-signet.service",
+            "mainPid": 1145668,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-bitcoin-signet.service",
+            "network": "signet"
+          },
+          {
+            "id": "universe-dogecoin.service",
+            "mainPid": 633831,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-dogecoin.service",
+            "recentStability": {
+              "restartCounter": 30357,
+              "recentFailure": "status=6/ABRT with core-dump",
+              "failureWindow": "2026-09-21T22:32:44+02:00 to 2026-09-21T22:35:16+02:00",
+              "currentProbe": "active/running",
+              "memory": "5.0G",
+              "peakMemory": "5.1G",
+              "pidFileWarning": true
+            },
+            "latestReadOnlyRecheck": {
+              "observedAt": "2026-09-21T21:00:17Z",
+              "unitType": "forking",
+              "pidFile": "/var/lib/universe-ord-0.29/dogecoin/dogecoind.pid",
+              "restartPolicy": "on-failure",
+              "restartDelaySeconds": 15,
+              "activeState": "active",
+              "subState": "running",
+              "result": "success",
+              "mainPid": 633831,
+              "restartCounter": 30357,
+              "memoryBytes": 6004486144,
+              "memoryPeakBytes": 6004514816,
+              "chain": "main",
+              "blocks": 142746,
+              "headers": 3263999,
+              "initialBlockDownload": true,
+              "verificationProgress": 0.01471681478060675,
+              "bestBlockHash": "8d217c3c56c4fe6dbbb37060fba926193708215fedca0f5ba4c3bbf288118aec",
+              "boundedJournalFinding": "The retained short journal tail ends with the 22:35:16 CEST restart after status=6/ABRT and one status=1 failure; no later failure was observed in this recheck.",
+              "boundedDebugFinding": "debug.log was advancing through UpdateTip records at height 142746; no error, abort, assertion or corruption line appeared in the bounded tail.",
+              "interpretation": "Progressing historical sync is not a healthy or accepted authority while initial block download and the historical restart loop remain unresolved."
+            }
+          },
+          {
+            "id": "universe-explorer-electrs-signet.service",
+            "mainPid": 1145670,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-explorer-electrs-signet.service",
+            "network": "signet"
+          },
+          {
+            "id": "universe-explorer-electrs-testnet3.service",
+            "mainPid": 1152196,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-explorer-electrs-testnet3.service",
+            "network": "testnet3"
+          },
+          {
+            "id": "universe-mempool.service",
+            "mainPid": 1152289,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-mempool.service",
+            "releasePath": "/opt/universe-mempool/releases/e95837a720ae8ffea31ca4bbc34c600f5bd6f642/universe-mempool-supervisor.mjs"
+          },
+          {
+            "id": "universe-ord-0.29.service",
+            "mainPid": 1449782,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-0.29.service"
+          },
+          {
+            "id": "universe-ord-dogecoin.service",
+            "mainPid": 2792600,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-ord-dogecoin.service"
+          },
+          {
+            "id": "universe-stamps-mysql.service",
+            "mainPid": 1146093,
+            "activeState": "active",
+            "subState": "running",
+            "fragmentPath": "/etc/systemd/system/universe-stamps-mysql.service"
+          }
+        ],
+        "authorityHealth": {
+          "url": "http://127.0.0.1:8790/status",
+          "httpStatus": 200,
+          "schemaVersion": "network-indexer-health-v1",
+          "network": "zcash:mainnet",
+          "checkpointHeight": "3491503",
+          "checkpointHash": "000000000037a92086f628f15578fae3e781c1c6fdab30fb6df3525bd5d812d4",
+          "nodeHeight": null,
+          "networkHeight": null,
+          "blocksBehindNetwork": null,
+          "nodeSynced": null,
+          "capabilitiesAvailable": "0",
+          "capabilitiesRequired": "13",
+          "lastSuccessfulUpdate": "2026-09-21T20:29:25.000Z",
+          "responseShapeOk": false
+        },
+        "routeObservations": [
+          {
+            "url": "https://127.0.0.1:8081/api/v1/backend-info",
+            "httpStatus": 404,
+            "message": "Not Found"
+          },
+          {
+            "url": "https://127.0.0.1:8081/api/v1/capabilities",
+            "httpStatus": 404,
+            "message": "Not Found"
+          }
+        ]
+      }
+    ]
+  },
+  "sshContext": {
+    "documentedConfigPath": "D:\\universe.ssh\\config",
+    "documentedConfigExists": false,
+    "actualConfigPath": "D:\\universe\\.ssh\\config",
+    "actualConfigExists": true,
+    "actualConfigRead": "DENIED",
+    "approvedAlternateConfigPath": "C:\\Users\\ordinalking.SERVER\\.ssh\\config",
+    "approvedAlternateConfigRead": true,
+    "resolvedTargets": [
+      {
+        "target": "hostinger-web",
+        "hostname": "srv747890.hstgr.cloud",
+        "exitCode": 0,
+        "observedAt": "2026-09-21T20:32:28Z"
+      },
+      {
+        "target": "159.195.109.76",
+        "hostname": "universe-indexers",
+        "exitCode": 0,
+        "observedAt": "2026-09-21T20:38:20Z"
+      },
+      {
+        "target": "152.53.92.251",
+        "hostname": "universe-production-and-backend",
+        "exitCode": 0,
+        "observedAt": "2026-09-21T20:35:45Z"
+      }
+    ],
+    "probe": {
+      "command": "ssh -F D:\\universe\\.ssh\\config -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1 -G universe",
+      "exitCode": 255,
+      "diagnostic": "Can't open user config file D:\\\\universe\\\\.ssh\\\\config: Permission denied"
+    },
+    "remediation": "No ACL bypass, credential export, secret reset, or deployment attempt was performed."
+  },
+  "latestReadOnlySignetOrdinalsProbe": {
+    "observedAt": "2026-09-21T22:01:05.892Z",
+    "remoteHost": "universe-production-and-backend",
+    "remoteAddress": "152.53.92.251",
+    "authorityId": "index-ordinals",
+    "servicePort": 3233,
+    "network": "bitcoin:signet",
+    "readyRoute": {
+      "path": "/ready",
+      "httpStatus": 200,
+      "ready": true,
+      "initialObservationComplete": true,
+      "deepReorg": false,
+      "stale": false,
+      "checkpointHeightAtomic": "323137",
+      "checkpointHash": "000000081b470919ba56ef717bb8135c1915c9ccdf4654b3136a80a57e9843d5"
+    },
+    "protectedRoutes": [
+      { "path": "/status", "httpStatus": 401, "reason": "authentication_required" },
+      { "path": "/blockhash", "httpStatus": 401, "reason": "authentication_required" },
+      { "path": "/api/v1/capabilities", "httpStatus": 401, "reason": "authentication_required" },
+      { "path": "/health", "httpStatus": 401, "reason": "authentication_required" }
+    ],
+    "tokenCollected": false,
+    "remoteServicesRestarted": false,
+    "acceptanceResult": "BLOCKED: the owned Signet Ordinals authority is ready and publishes a checkpoint, but its operational read routes require a bearer token that was not collected or exported. This establishes an authorized prerequisite gap, not protocol functional acceptance."
+  },
+  "acceptanceImpact": {
+    "qualifiedFunctionalEvidence": false,
+    "publicMainnetReleaseVerified": false,
+    "mainnetFunctionalTests": "NOT PERFORMED",
+    "blockedReasons": [
+      "Public Signet routes return 503 network-unconfigured.",
+      "The initial local Signet observation found statistics and address dependencies unavailable; the latest recheck found them ready, but the running gateway still lacks the candidate asset-summary route.",
+      "Private Zcash authority observations disagree: one endpoint has no node height and 0 of 13 capabilities, while another bridge is 3 blocks behind.",
+      "The complete application operation denominator remains unresolved.",
+      "This observation records identity and availability only; it is not operation acceptance evidence."
+    ]
+  }
+}

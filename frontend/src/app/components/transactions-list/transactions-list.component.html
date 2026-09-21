@@ -32,7 +32,7 @@
                 'sigged': selectedSig && selectedSig.txIndex === i && sigHighlights.vin[vindex],
               }">
                 <td class="arrow-td">
-                  <ng-template [ngIf]="vin.prevout === null && !vin.is_pegin" [ngIfElse]="hasPrevout">
+                  <ng-template [ngIf]="vin.is_coinbase || (vin.prevout === null && !vin.is_pegin)" [ngIfElse]="hasPrevout">
                     <span class="grey">
                       <fa-icon [icon]="['fas', 'arrow-alt-circle-right']" [fixedWidth]="true"></fa-icon>
                     </span>
