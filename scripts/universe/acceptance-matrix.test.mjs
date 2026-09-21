@@ -112,13 +112,15 @@ test('actual source matrix preserves named inventories and required distinct var
   const matrix = buildMatrix(), byId = new Map(matrix.rows.map(row => [row.id, row]));
   assert.deepEqual(matrix.sourceCounts, { navigation: 351, namedOperations: 37, protocolIdentities: 39,
     uiCandidates: 304, apiCandidates: 546, additionalRouteDeclarations: 55, components: 302, controls: 1569, handlerBindings: 344 });
-  assert.equal(matrix.sourceGroups['protocol-operation'].length, 119);
+  assert.equal(matrix.sourceGroups['protocol-operation'].length, 123);
+  assert.equal(matrix.sourceGroups['transaction-summary-variant'].length, 21);
   assert.equal(matrix.sourceGroups['health-verification'].length, 40);
   const chainstates = matrix.rows.filter(row => row.route === '/api/v1/intelligence/bootstrap/chainstates' && row.method === 'GET');
   assert.equal(chainstates.length, 1, 'The current all-node chainstates route must be retained exactly once');
   assert.equal(chainstates[0].kind, 'current-api-addition');
   assert.equal(byId.get('API-4dc9791028b6').role, 'public request at this route; no handler authorization guard');
-  assert.equal(matrix.healthHandoff.protocolOperationBindings, 119);
+  assert.equal(matrix.healthHandoff.protocolOperationBindings, 123);
+  assert.equal(matrix.healthHandoff.historicalProtocolOperationBindings, 119);
   assert.equal(byId.get('H-01').priorAssertion.status, 'FAIL');
   assert.equal(byId.get('H-01').status, 'NOT TESTED');
   assert.equal(byId.get('R-04-TX').route, '/api/v1/dogecoin/tx/:txid');
@@ -126,7 +128,10 @@ test('actual source matrix preserves named inventories and required distinct var
   assert.equal(byId.get('R-04-SPENT').entry, '/dogecoin/outpoint/:txid/:vout');
   assert.equal(byId.get('PRO-01/registry').handoffBinding.coverageId, 'PRO-01.registry');
   assert(!byId.has('PRO-01.registry'), 'A second handoff name must not duplicate the existing operation row');
-  assert.equal(byId.get('R-07').links.length, 119);
+  assert.equal(byId.get('R-07').links.length, 123);
+  assert.equal(byId.get('PRO-35/chain-list').status, 'NOT TESTED');
+  assert.equal(byId.get('SUMMARY/transaction-assets/bitcoin/success').status, 'NOT TESTED');
+  assert.equal(byId.get('SUMMARY/transaction-assets/zcash/reorg').network, 'unverified');
   for (let n = 1; n <= 36; n++) assert(byId.has(`Q05-P${String(n).padStart(2, '0')}`));
   for (let n = 1; n <= 12; n++) assert(byId.has(`Q07-A${String(n).padStart(2, '0')}`));
   assert.equal(matrix.sourceGroups['admin-resource-variant'].length, 14);
@@ -135,6 +140,22 @@ test('actual source matrix preserves named inventories and required distinct var
   assert(byId.has('Q07-A08/explorer.indexer.task.run/blocksPrices'));
   assert(byId.has('Q07-A08/explorer.indexer.task.run/coinStatsIndex'));
   assert(byId.has('Q05-P23/fromHeight-toTimestamp'));
+  const outboundRoutes = [
+    ['API-c80b2b280c0b', '/api/v1/assets/featured'],
+    ['API-1c3ef6ee2e7d', '/api/v1/assets/group/:id'],
+    ['API-d00d50e4f44f', '/api/v1/donations'],
+    ['API-c33c895f86c6', '/api/v1/donations/images/:id'],
+    ['API-1e45edc7f3c9', '/api/v1/contributors'],
+    ['API-73094bc9f9e2', '/api/v1/contributors/images/:id'],
+    ['API-0e0f90d1e32d', '/api/v1/translators'],
+    ['API-77083d9edd60', '/api/v1/translators/images/:id'],
+  ];
+  for (const [id, route] of outboundRoutes) {
+    assert.equal(byId.get(id)?.route, route);
+    assert.equal(byId.get(id)?.status, 'NOT TESTED');
+    assert.match(byId.get(id)?.routeResolution || '', /outbound dependency configuration/);
+  }
+  assert(!matrix.gaps.some(gap => outboundRoutes.some(([id]) => gap.id === id)));
   assert.equal(byId.get('PRO-32/status').route, '/api/v1/anima/status');
   assert.equal(byId.get('PRO-01/outpoints-batch').method, 'POST');
   assert.deepEqual(byId.get('PRO-01/outpoint').declaredNetworks, ['mainnet']);

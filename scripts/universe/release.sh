@@ -34,9 +34,21 @@ ADDRESS_PROBE=1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3
 # Mainnet block zero. An index pointed at another network answers everything,
 # and answers all of it wrong.
 GENESIS_HASH=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+RELEASE_LOCK_HELD=false
+QUALIFIED_ACCEPTANCE_IDENTITY=""
 
 log()  { printf '%s %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 fail() { printf '%s FAILED: %s\n' "$(date -u +%H:%M:%SZ)" "$*" >&2; exit 1; }
+
+acquire_release_lock() {
+  if [ "$RELEASE_LOCK_HELD" = true ]; then return; fi
+  local lock_file=${UNIVERSE_RELEASE_LOCK:-$ROOT/.release.lock}
+  command -v flock >/dev/null 2>&1 || fail "the release host has no flock deployment lock primitive"
+  mkdir -p "$(dirname "$lock_file")" || fail "could not create the release lock directory"
+  exec 9>"$lock_file" || fail "could not open the release deployment lock"
+  flock -n 9 || fail "another release operation is holding the deployment lock"
+  RELEASE_LOCK_HELD=true
+}
 
 # A release probe checks history as well as readiness. Alternate networks need
 # an operator-supplied address with real indexed history; an empty deterministic
@@ -449,6 +461,29 @@ PY
 PUBLIC_LISTENERS="22 8333 38333 50001 8115"
 NETBIRD_GATEWAY_INGRESS="100.124.130.242:8099"
 
+# IMPLEMENTATION-HANDOFF [WP09] | B001, B002 | preparation 2026-09-21
+# State: BLOCKED. The documented D:/universe.ssh/config path does not exist;
+# D:/universe/.ssh/config exists but direct reading returned EPERM, and OpenSSH BatchMode with
+# it exited 255 with no diagnostic output. Runtime service configuration, database state and
+# indexer logs were therefore not verified. Two Node release tests also failed because python3
+# was absent; this is a local test prerequisite, separate from the three real matrix failures.
+# Governing requirements: REQ-BASELINE, REQ-SAFETY;
+# docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+# research/source-register.json.
+# Prerequisites: none. 1. Verify listener/component checks on the actual authorized Linux
+# runtime; the Windows audit could only verify public operational endpoints because SSH exited
+# 255. 2. Record safe service/version/context evidence without dumping environment
+# credentials, and compare independently routed component SHAs. 3. Keep private-listener
+# enforcement and existing deployment lock intact; do not bypass permissions or weaken the
+# gate to obtain access. 4. Run release-gates.test.mjs with its real python3 prerequisite and
+# bash -n in the supported environment, preserving initial and remedied evidence separately.
+# Acceptance: Actual runtime identities/configuration/services can be verified through
+# authorized access, the isolated test helper runs its previously blocked cases, and no
+# credentials or private data appear in artifacts.
+# Rollback: Only audit-owned tooling may be removed. Do not change secret material, ACLs,
+# production runtimes, shared services or live data for this prerequisite repair.
+# ANNOTATED is not implemented, verified functionality or release. Preserve existing
+# executable behavior in this preparation.
 gate_private_listeners() {
   command -v ss >/dev/null 2>&1 || fail "ss is not available, so the listener gate cannot run"
 
@@ -489,12 +524,90 @@ gate_private_listeners() {
   log "no unexpected public listener; public ports$(printf ' %s' $PUBLIC_LISTENERS), firewall-protected adapter and declared NetBird ingress"
 }
 
+# The release candidate must carry a qualified acceptance envelope. This is
+# deliberately checked against the candidate directory before any cutover
+# command can move CURRENT or restart a service. The protocol contract gate
+# verifies the manifest revision, context-qualified rows, rooted evidence
+# paths, content hashes, and independent configuration proof where needed.
+gate_qualified_acceptance() {
+  local dir=$1
+  local manifest="$dir/docs/protocols/PROTOCOL-COVERAGE.json"
+  local evidence_root=${UNIVERSE_RELEASE_ACCEPTANCE_ROOT:-$dir}
+  local evidence=${UNIVERSE_RELEASE_ACCEPTANCE_EVIDENCE:-$evidence_root/docs/acceptance/qualified-release-evidence.json}
+  [ -f "$manifest" ] || fail "release carries no protocol coverage manifest for qualified acceptance"
+  [ -d "$evidence_root" ] || fail "qualified acceptance root does not exist: $evidence_root"
+  [ -f "$evidence" ] || fail "release carries no qualified acceptance evidence artifact: $evidence"
+
+  local dir_real root_real evidence_real
+  dir_real=$(realpath "$dir") || fail "release directory has no stable path"
+  root_real=$(realpath "$evidence_root") || fail "qualified acceptance root has no stable path"
+  evidence_real=$(realpath "$evidence") || fail "qualified acceptance artifact has no stable path"
+  case "$root_real" in
+    "$dir_real"|"$dir_real"/*) ;;
+    *) fail "qualified acceptance root escapes the release candidate" ;;
+  esac
+  case "$evidence_real" in
+    "$root_real"/*) ;;
+    *) fail "qualified acceptance artifact escapes its evidence root" ;;
+  esac
+
+  local candidate_sha
+  candidate_sha=$(node - "$dir/RELEASE-MANIFEST.json" <<'NODE'
+const fs = require('node:fs');
+const value = JSON.parse(fs.readFileSync(process.argv[2], 'utf8')).commit;
+if (typeof value !== 'string' || !value) process.exit(1);
+process.stdout.write(value);
+NODE
+  ) || fail "release manifest carries no full candidate commit for qualified acceptance"
+  case "$candidate_sha" in
+    *[!0-9a-fA-F]*|'') fail "release manifest candidate commit is not a hexadecimal revision" ;;
+  esac
+
+  node "$dir/scripts/universe/protocol-contract.mjs" \
+    --release "$manifest" \
+    --expect-artifact-commit "$candidate_sha" \
+    --network "${UNIVERSE_RELEASE_NETWORK:-mainnet}" \
+    --acceptance "$evidence" \
+    --acceptance-root "$root_real" \
+    || fail "qualified acceptance evidence did not qualify the release candidate"
+  local evidence_digest contract_digest
+  evidence_digest=$(sha256sum "$evidence" | awk '{print $1}') \
+    || fail "qualified acceptance evidence identity could not be recorded"
+  contract_digest=$(sha256sum "$dir/scripts/universe/protocol-contract.mjs" | awk '{print $1}') \
+    || fail "qualified acceptance contract identity could not be recorded"
+  QUALIFIED_ACCEPTANCE_IDENTITY="$candidate_sha:$evidence_digest:$contract_digest"
+  log "qualified acceptance passed for $candidate_sha"
+}
+
+# IMPLEMENTATION-HANDOFF [WP02] | F002 | preparation 2026-09-21
+# State: IMPLEMENTED LOCALLY. Candidate preflight and artifact packing now require
+# protocol-contract --release with a candidate-bound qualified evidence envelope before any
+# cutover mutation. External runtime identity and public release remain unverified.
+# Governing requirements: REQ-RELEASE, REQ-EVIDENCE;
+# docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+# research/source-register.json.
+# Prerequisites: WP01, WP04, WP05, WP06, WP08, WP09, WP10. 1. After WP01, add a fail-closed
+# qualified-evidence check before any cutover mutation and bind it to the candidate directory,
+# not the old live manifest. 2. Include all component/configuration/dependency identities and
+# verify the operator script revision. 3. Make cmd_cutover recheck the accepted identity under
+# the existing deployment lock. 4. Extend release-gates.test.mjs to assert missing/forged
+# evidence causes zero service/symlink writes; preserve emergency rollback to a previously
+# accepted artifact. Run bash -n and Node release tests in the documented Linux environment;
+# do not deploy in preparation.
+# Acceptance: No release path can promote an unqualified artifact. Final GO requires both full
+# functional acceptance and completed public Mainnet deployment receipts.
+# Rollback: Retain previous immutable release, component routing file, compatible
+# configuration and database backup. Exercise rollback in an isolated environment first;
+# rollback an unsafe rollout rather than leave it public.
+# Local fail-closed behavior is verified by the release gate suite; it is not a deployment
+# receipt or public release.
 cmd_preflight() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")
   [ -d "$dir" ] || fail "no release at $dir"
   gate_release_present "$dir"
   gate_manifest_matches "$dir" "$sha"
+  gate_qualified_acceptance "$dir"
   gate_configuration
   gate_database "$dir"
   gate_address_backend
@@ -781,7 +894,13 @@ rollback_failed_cutover() {
 cmd_cutover() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")
+  acquire_release_lock
   cmd_preflight "$sha"
+  local accepted_identity=${QUALIFIED_ACCEPTANCE_IDENTITY:-}
+  [ -n "$accepted_identity" ] || fail "preflight did not record a qualified acceptance identity"
+  gate_qualified_acceptance "$dir"
+  [ "$QUALIFIED_ACCEPTANCE_IDENTITY" = "$accepted_identity" ] \
+    || fail "qualified acceptance identity changed between preflight and cutover"
 
   local previous; previous=$(readlink -f "$CURRENT" 2>/dev/null || true)
   log "previous release: ${previous:-none}"
@@ -874,6 +993,7 @@ cmd_rollback() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")
   [ -d "$dir" ] || fail "no release at $dir to roll back to"
+  acquire_release_lock
 
   # A release from before the socket handover opens port 8099 itself. If
   # systemd is holding that port, such a gateway dies on bind with the address

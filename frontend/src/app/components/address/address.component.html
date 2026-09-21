@@ -3,9 +3,13 @@
     <h1 i18n="shared.address">Address</h1>
     <div class="tx-link">
       <app-truncate [text]="addressString" [lastChars]="8" [link]="['/address/' | relativeUrl, addressString]">
-        <span class="qrSpan" (mouseover)="showQR = true" (mouseout)="showQR = false" (pointerdown)="showQR = true">
-          <fa-icon [icon]="['fas', 'qrcode']" [fixedWidth]="true" [style.font-size]="isMobile ? '18px' : '12px'"></fa-icon>
-          <div class="qr-wrapper" [hidden]="!showQR">
+        <span class="qr-control" (mouseenter)="onQrEnter()" (mouseleave)="onQrLeave()"
+          (focusin)="showQR = true" (focusout)="showQR = false">
+          <button type="button" class="qrSpan" aria-label="Show address QR code" aria-controls="address-qr-code"
+            [attr.aria-expanded]="showQR" (click)="toggleQr()">
+            <fa-icon [icon]="['fas', 'qrcode']" [fixedWidth]="true" [style.font-size]="isMobile ? '18px' : '12px'" aria-hidden="true"></fa-icon>
+          </button>
+          <div id="address-qr-code" class="qr-wrapper" [hidden]="!showQR" role="img" aria-label="QR code for this address">
             <app-qrcode [size]="200" [data]="addressString"></app-qrcode>
           </div>
         </span>
@@ -139,8 +143,8 @@
     <div class="title-tx">
       <h2 class="text-left">
         <ng-template [ngIf]="!transactions?.length">&nbsp;</ng-template>
-        <ng-template i18n="X of X Address Transaction" [ngIf]="transactions?.length === 1">{{ (transactions?.length | number) || '?' }} of {{ mempoolStats.tx_count + chainStats.tx_count | number }} transaction</ng-template>
-        <ng-template i18n="X of X Address Transactions (Plural)" [ngIf]="transactions?.length > 1">{{ (transactions?.length | number) || '?' }} of {{ mempoolStats.tx_count + chainStats.tx_count | number }} transactions</ng-template>
+        <ng-template i18n="X of X Address Transaction" [ngIf]="mempoolStats.tx_count + chainStats.tx_count === 1">{{ (transactions?.length | number) || '?' }} of {{ mempoolStats.tx_count + chainStats.tx_count | number }} transaction</ng-template>
+        <ng-template i18n="X of X Address Transactions (Plural)" [ngIf]="mempoolStats.tx_count + chainStats.tx_count !== 1">{{ (transactions?.length | number) || '?' }} of {{ mempoolStats.tx_count + chainStats.tx_count | number }} transactions</ng-template>
       </h2>
     </div>
 

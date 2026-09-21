@@ -1,4 +1,24 @@
 @use '../universe-tokens' as u;
+@use '../asset-summary/asset-summary' as summary;
+
+/**
+ * The address asset holdings panel.
+ *
+ * Geometry comes from the shared asset-summary mixins, the same ones the
+ * transaction summary uses, so the two panels cannot drift into rendering the
+ * same fact two different ways. What is local here is the outpoint list and the
+ * panel's own notices.
+ *
+ * Two defects this replaces are worth naming. The quantity column was
+ * `max-content` at every width, so one arbitrary precision integer set the
+ * row's intrinsic width and pushed the panel past the page. And every output
+ * identifier was expanded by default, so an address with many outputs produced
+ * an unbounded wall of links above everything else on the page. The links are
+ * all still here, and none is clamped away: they moved into each row's own
+ * disclosure, which is where a reader opens the one holding they are checking.
+ *
+ * The global identifier mixin is used, never modified: other panels depend on it.
+ */
 
 :host {
   @include u.universe-protocol-tokens;
@@ -9,136 +29,198 @@
 }
 
 .panel {
-  @include u.universe-surface;
+  @include summary.asset-summary-panel;
+  @include summary.asset-summary-identity;
+  @include summary.asset-summary-quantity;
+  @include summary.asset-summary-controls;
+  @include summary.asset-summary-details;
+  @include summary.asset-summary-visually-hidden;
 
-  padding: 1rem;
+  margin-top: 0;
 
-  h2 {
-    font-size: 1rem;
-    margin: 0 0 0.6rem;
-  }
-
-  p {
-    margin: 0 0 0.5rem;
-    max-width: 72ch;
-  }
-
-  p:last-child {
-    margin-bottom: 0;
+  .universe-chip {
+    @include u.universe-chip;
   }
 
   &.unavailable {
     border-left: 3px solid var(--universe-state-unavailable);
   }
-}
 
-.identifier {
-  @include u.universe-identifier;
-}
-
-.coverage,
-.asof {
-  color: var(--u-text-muted);
-  font-size: 0.85rem;
-}
-
-.partial {
-  color: var(--universe-state-partial);
-  font-size: 0.85rem;
-}
-
-.empty {
-  color: var(--u-text-muted);
-}
-
-.holding-list {
-  list-style: none;
-  margin: 0 0 0.6rem;
-  padding: 0;
-
-  li {
-    display: grid;
-    grid-template-columns: minmax(6rem, max-content) minmax(8rem, 1fr) max-content;
-    grid-template-areas:
-      'protocol asset quantity'
-      'outputs outputs outputs';
-    align-items: baseline;
-    gap: 0.25rem 0.75rem;
-    padding: 0.45rem 0;
-    border-top: 1px solid var(--u-divider);
+  .summary-header {
+    @include summary.asset-summary-header;
   }
 
-  li:first-child {
-    border-top: 0;
+  .summary-badge {
+    margin-left: auto;
   }
-}
 
-.protocol {
-  grid-area: protocol;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.asset {
-  grid-area: asset;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.quantity {
-  grid-area: quantity;
-  font-variant-numeric: tabular-nums;
-}
-
-.outputs {
-  grid-area: outputs;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.6rem;
-}
-
-.skeleton-line {
-  height: 1rem;
-  width: 60%;
-  border-radius: 0.2rem;
-  background: var(--u-divider);
-}
-
-@media (max-width: 575px) {
-  .holding-list li {
-    grid-template-columns: 1fr max-content;
-    grid-template-areas:
-      'protocol quantity'
-      'asset asset'
-      'outputs outputs';
+  .summary-count {
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
   }
-}
 
-/* IMPLEMENTATION-HANDOFF [UI-WP05:ADDRESS-LAYOUT] 2026-09-19
- * Coverage C22-C32/C33-C44; defects F02/F04. Preparation only.
- * Verified: the quantity column is max-content on desktop AND below 575px;
- * an arbitrary-precision integer can therefore set the row's intrinsic width.
- * All output identifiers are expanded by default, creating unbounded height.
- * Sources R01 WCAG 2.2 reflow; existing global u-tokens; UI-WP03 shared layout.
- * 1. Import the proposed shared asset-summary mixin after UI-WP03. Use bounded
- *    Held/Positions columns and a minmax(0,1fr) identity area, min-width:0 on
- *    every flexible child. Eliminate the unconstrained max-content amount.
- * 2. Use container-driven cards at <=720px, with labelled Held/Positions boxes
- *    below identity; verify the panel inside the real address page container.
- * 3. Keep full quantity text in the explicit exact-value detail. Primary values
- *    use the same labelled compaction as transactions and never wrap digits.
- * 4. Keep output references in an expanded detail list with readable mono text
- *    and safe line wrapping; every link remains at least the u-touch-target
- *    floor. Do not clamp or omit actual outpoint links to reduce panel height.
- * 5. Reserve fixed logo and skeleton boxes, use existing state token pairs,
- *    and restore keyboard focus rings in both themes and forced-colors mode.
- *    No new global palette, external font, arbitrary animation or decorative
- *    chart is required. Keep this work limited to the requested asset panels.
- * Tests: C22-C32 crossed with the address route; 39 and 1000 digit stress
- * values, 320px width, 200/400 percent zoom, both themes, details and links.
- * Check document width and control bounds, not screenshots alone. Browser
- * application tests were NOT RUN; the separate HTML reference is not a pass.
- * Dependencies UI-WP03/04/05 markup. Revert paired local styles on rollback;
- * do not modify the global universe-identifier mixin to repair this panel.
- */
+  // Reserved geometry, so the answer arriving does not move the page.
+  .summary-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--u-space-2);
+    min-height: 3.5rem;
+
+    .skeleton-bar {
+      display: block;
+      height: 1.5rem;
+      border-radius: var(--u-radius-sm);
+      background: var(--u-surface-sunken);
+    }
+  }
+
+  .summary-notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--u-space-2) var(--u-space-3);
+    margin: 0;
+    max-width: 72ch;
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
+  }
+
+  .summary-retry {
+    background: var(--u-surface-raised);
+    border: 1px solid var(--u-border-strong);
+    border-radius: var(--u-radius-sm);
+    color: var(--u-text-primary);
+    cursor: pointer;
+    font: inherit;
+    font-weight: var(--u-weight-semibold);
+    padding: 0.25rem 0.85rem;
+
+    @include u.universe-touch-box;
+
+    &:hover {
+      background: var(--u-surface-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--u-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .summary-table {
+    @include summary.asset-summary-table;
+  }
+
+  .cell-label {
+    display: none;
+  }
+
+  .disclose-cell {
+    text-align: right;
+  }
+
+  .protocol-link {
+    font-size: var(--u-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    min-width: 0;
+
+    @include u.universe-touch-line;
+  }
+
+  // Every outpoint, readable and wrappable, each link at the touch target
+  // floor. Nothing is clamped or omitted to shorten the panel.
+  .outpoint-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+    min-width: 0;
+
+    li {
+      min-width: 0;
+    }
+
+    .identifier {
+      @include u.universe-identifier;
+      @include u.universe-touch-line;
+
+      overflow-wrap: anywhere;
+      min-width: 0;
+    }
+  }
+
+  .summary-coverage {
+    margin-top: var(--u-space-3);
+    font-size: var(--u-text-sm);
+    color: var(--u-text-secondary);
+
+    summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--u-space-2);
+      cursor: pointer;
+
+      @include u.universe-touch-line;
+
+      &:focus-visible {
+        outline: 2px solid var(--u-focus-ring);
+        outline-offset: 2px;
+      }
+    }
+
+    .coverage-list {
+      list-style: none;
+      margin: var(--u-space-2) 0;
+      padding: 0;
+      display: grid;
+      gap: 0.3rem;
+
+      li {
+        display: grid;
+        grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+        gap: 0.2rem var(--u-space-3);
+        align-items: baseline;
+      }
+    }
+
+    .coverage-name {
+      color: var(--u-text-primary);
+      min-width: 0;
+    }
+
+    .coverage-state {
+      color: var(--u-text-secondary);
+      font-variant-numeric: tabular-nums;
+      min-width: 0;
+    }
+
+    .coverage-reason {
+      color: var(--u-text-muted);
+      font-size: var(--u-text-xs);
+      min-width: 0;
+    }
+  }
+
+  // Driven by the panel's own width: the address page's container is narrower
+  // than the transaction page's, so a viewport query would stack one and not
+  // the other at the same reading width.
+  @container (max-width: 720px) {
+    @include summary.asset-summary-stacked;
+
+    padding: var(--u-space-3);
+
+    .summary-badge {
+      margin-left: 0;
+    }
+
+    .summary-coverage .coverage-list li {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @include summary.asset-summary-environment;
+}
