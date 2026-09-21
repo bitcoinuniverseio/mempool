@@ -470,6 +470,31 @@ const DOCUMENTATION_ALIAS = /^\/api(?:\/(?:faq|api(?:\/[^/]+)?))?\/?$/;
  * backend's own prefix otherwise. There is no overlay entry: the overlay is
  * addressed by query, `?chain=&network=`, never by path prefix.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [WP04] | F005 | preparation 2026-09-21
+ * State: BLOCKED. Read-only public probes returned HTTP 503 for /signet/api/v1/backend-info
+ * and /signet/api/v1/capabilities, and zero Bitcoin Signet sources. These establish an
+ * unavailable acceptance path, not a proven bug in the fail-closed 503 handler. Exact private
+ * deployment configuration is not accessible in this session.
+ * Governing requirements: REQ-NETWORK, BIP325;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: WP03, WP09, WP10. 1. Preserve the explicit unavailable-network failure
+ * behavior; public Signet routes currently return 503. 2. Wire the authorized Signet backend
+ * and Esplora origins through existing NETWORK_UPSTREAMS configuration, not Mainnet fallbacks.
+ * 3. Verify network-prefixed REST and websocket routing, original query context, cache
+ * separation and unsupported-network responses together. 4. Extend gateway.test.mjs and
+ * synthetic-context.test.mjs with mismatched upstream context and network-switch cases; then
+ * execute the actual Signet application path. BIP325 requires the correct Signet challenge as
+ * well as genesis.
+ * Acceptance: The real application routes to genuinely isolated supported test-network
+ * dependencies; all applicable operation variants have real persisted/authoritative/consumer
+ * evidence. No Mainnet testing is required.
+ * Rollback: Remove only newly introduced test-owned routing/configuration after preserving
+ * evidence; never delete shared data or change Mainnet defaults to obtain a pass.
+ * ANNOTATED is not implemented, verified functionality or release. Preserve existing
+ * executable behavior in this preparation.
+ */
 function networkRouteFor(network, pathname, originalUrl, acceptsHtml) {
   if (acceptsHtml && DOCUMENTATION_ALIAS.test(pathname)) {
     return null;

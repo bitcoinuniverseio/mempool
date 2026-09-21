@@ -140,6 +140,24 @@ export interface ExplorerAssetRef {
   displayName?: string;
   ticker?: string;
   assetKind: string;
+  /**
+   * The ruleset this asset's ledger is read under, for the protocols that
+   * define more than one reading of one ledger.
+   *
+   * Part of the identity, not decoration: two rulesets over one ledger are two
+   * assets, and a consumer that keys without it sums quantities no authority
+   * would agree belong together. Absent for protocols that define a single
+   * reading, which is what the producer sends.
+   */
+  ruleset?: string;
+  /**
+   * The divisibility the authority stated, when it stated one.
+   *
+   * Absent means unknown, which a consumer renders as smallest units. Treating
+   * absence as zero understates a quantity by up to thirty eight orders of
+   * magnitude, so it is never defaulted here.
+   */
+  decimals?: number;
 }
 
 export interface ExplorerEvidenceCheckpoint {

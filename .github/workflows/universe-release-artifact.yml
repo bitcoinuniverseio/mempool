@@ -21,6 +21,26 @@ on:
 permissions:
   contents: read
 
+# IMPLEMENTATION-HANDOFF [WP02] | F002 | preparation 2026-09-21
+# State: IMPLEMENTED LOCALLY. The artifact workflow now requires the candidate-bound qualified
+# evidence envelope before packing. External runtime identity and public release remain
+# unverified.
+# Governing requirements: REQ-RELEASE, REQ-EVIDENCE;
+# docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+# research/source-register.json.
+# Prerequisites: WP01, WP04, WP05, WP06, WP08, WP09, WP10. 1. Add an explicit
+# acceptance-envelope input and verifier after WP01, before publishing/promoting a release
+# artifact. 2. Bind artifact, source SHA, dependencies and production-configuration proof; a
+# roster --check or smoke --against is not a substitute. 3. Keep self-hosted runner policy and
+# prevent automatic deployment before acceptance. 4. Extend workflow/release tests with
+# missing evidence, source drift and valid Signet-qualified Mainnet artifact cases; retain
+# receipts and rollback artifact references.
+# Acceptance: No release path can promote an unqualified artifact. Final GO requires both full
+# functional acceptance and completed public Mainnet deployment receipts.
+# Rollback: Retain previous immutable release, component routing file, compatible
+# configuration and database backup. Exercise rollback in an isolated environment first;
+# rollback an unsafe rollout rather than leave it public.
+# The workflow wiring is source-checked; it is not a deployment receipt or public release.
 jobs:
   artifact:
     name: Build and pack
@@ -77,6 +97,21 @@ jobs:
       - name: The component identity check can still fail
         run: node --test scripts/universe/release-manifest.test.mjs
 
+      # A roster check or an HTTP smoke probe is not functional acceptance.
+      # Keep this before packing so an artifact cannot be published without
+      # the exact candidate-bound evidence that release.sh will require before
+      # install or cutover.
+      - name: Qualify the release acceptance envelope
+        run: |
+          test -f docs/protocols/PROTOCOL-COVERAGE.json
+          test -f docs/acceptance/qualified-release-evidence.json
+          node scripts/universe/protocol-contract.mjs \
+            --release docs/protocols/PROTOCOL-COVERAGE.json \
+            --expect-artifact-commit "$(git rev-parse HEAD)" \
+            --network mainnet \
+            --acceptance docs/acceptance/qualified-release-evidence.json \
+            --acceptance-root "$GITHUB_WORKSPACE"
+
       # release.sh reads the frontend from frontend/build, the backend from
       # backend/dist, and the gateway from scripts/universe. node_modules and
       # the compiled gbt module are not packed: install hard-links them from the
@@ -108,6 +143,9 @@ jobs:
           cp -a backend/rust-gbt "$stage/backend/rust-gbt"
           cp -a frontend/dist/mempool/browser "$stage/frontend/build"
           cp -a scripts/universe "$stage/scripts/universe"
+          mkdir -p "$stage/docs/protocols" "$stage/docs/acceptance"
+          cp -a docs/protocols/PROTOCOL-COVERAGE.json "$stage/docs/protocols/PROTOCOL-COVERAGE.json"
+          cp -a docs/acceptance/qualified-release-evidence.json "$stage/docs/acceptance/qualified-release-evidence.json"
           # The unit files travel with the release rather than being fetched
           # from a checkout that happens to be on the right commit. Adopting
           # socket activation needed both of these on the host, and taking
