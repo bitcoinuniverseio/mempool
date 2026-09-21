@@ -449,6 +449,29 @@ PY
 PUBLIC_LISTENERS="22 8333 38333 50001 8115"
 NETBIRD_GATEWAY_INGRESS="100.124.130.242:8099"
 
+# IMPLEMENTATION-HANDOFF [WP09] | B001, B002 | preparation 2026-09-21
+# State: BLOCKED. The documented D:/universe.ssh/config path does not exist;
+# D:/universe/.ssh/config exists but direct reading returned EPERM, and OpenSSH BatchMode with
+# it exited 255 with no diagnostic output. Runtime service configuration, database state and
+# indexer logs were therefore not verified. Two Node release tests also failed because python3
+# was absent; this is a local test prerequisite, separate from the three real matrix failures.
+# Governing requirements: REQ-BASELINE, REQ-SAFETY;
+# docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+# research/source-register.json.
+# Prerequisites: none. 1. Verify listener/component checks on the actual authorized Linux
+# runtime; the Windows audit could only verify public operational endpoints because SSH exited
+# 255. 2. Record safe service/version/context evidence without dumping environment
+# credentials, and compare independently routed component SHAs. 3. Keep private-listener
+# enforcement and existing deployment lock intact; do not bypass permissions or weaken the
+# gate to obtain access. 4. Run release-gates.test.mjs with its real python3 prerequisite and
+# bash -n in the supported environment, preserving initial and remedied evidence separately.
+# Acceptance: Actual runtime identities/configuration/services can be verified through
+# authorized access, the isolated test helper runs its previously blocked cases, and no
+# credentials or private data appear in artifacts.
+# Rollback: Only audit-owned tooling may be removed. Do not change secret material, ACLs,
+# production runtimes, shared services or live data for this prerequisite repair.
+# ANNOTATED is not implemented, verified functionality or release. Preserve existing
+# executable behavior in this preparation.
 gate_private_listeners() {
   command -v ss >/dev/null 2>&1 || fail "ss is not available, so the listener gate cannot run"
 
@@ -489,6 +512,29 @@ gate_private_listeners() {
   log "no unexpected public listener; public ports$(printf ' %s' $PUBLIC_LISTENERS), firewall-protected adapter and declared NetBird ingress"
 }
 
+# IMPLEMENTATION-HANDOFF [WP02] | F002 | preparation 2026-09-21
+# State: FAIL. The inspected release.sh and GitHub workflows contain no call to
+# protocol-contract --release. CI invokes --check and production smoke --against. Existing
+# authority preflight checks configured historical-readable protocols, which is not the
+# required complete functional gate.
+# Governing requirements: REQ-RELEASE, REQ-EVIDENCE;
+# docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+# research/source-register.json.
+# Prerequisites: WP01, WP04, WP05, WP06, WP08, WP09, WP10. 1. After WP01, add a fail-closed
+# qualified-evidence check before any cutover mutation and bind it to the candidate directory,
+# not the old live manifest. 2. Include all component/configuration/dependency identities and
+# verify the operator script revision. 3. Make cmd_cutover recheck the accepted identity under
+# the existing deployment lock. 4. Extend release-gates.test.mjs to assert missing/forged
+# evidence causes zero service/symlink writes; preserve emergency rollback to a previously
+# accepted artifact. Run bash -n and Node release tests in the documented Linux environment;
+# do not deploy in preparation.
+# Acceptance: No release path can promote an unqualified artifact. Final GO requires both full
+# functional acceptance and completed public Mainnet deployment receipts.
+# Rollback: Retain previous immutable release, component routing file, compatible
+# configuration and database backup. Exercise rollback in an isolated environment first;
+# rollback an unsafe rollout rather than leave it public.
+# ANNOTATED is not implemented, verified functionality or release. Preserve existing
+# executable behavior in this preparation.
 cmd_preflight() {
   local sha=$1
   local dir; dir=$(release_dir "$sha")

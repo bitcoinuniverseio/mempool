@@ -56,6 +56,33 @@ export function tableIds(cell) {
   return [...new Set(expanded.match(/\b(?:[A-Z][A-Z0-9]*-)+[A-Z0-9]+(?:-[A-Z0-9]+)*\b|\b[QPA]\d+\b/g) || [])];
 }
 
+/**
+ * IMPLEMENTATION-HANDOFF [WP03] | F003, F004 | preparation 2026-09-21
+ * State: FAIL. Three executed acceptance-matrix tests fail at buildMatrix because the
+ * historical health handoff has 119 operation rows while the current protocol manifest has
+ * 123. The existing GET transactions/:txid/assets handler also has no descriptor in the
+ * 123-operation roster. The older 1592-row application matrix explicitly says its denominator
+ * is not reconciled.
+ * Governing requirements: REQ-COVERAGE;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: none. 1. Reconcile healthHandoff.protocolOperationRows (119 at this baseline)
+ * against the current 123 descriptor keys before the length assertion; emit an explicit
+ * added/changed mapping instead of changing a literal or deleting rows. 2. Preserve reviewed
+ * prior evidence and create a versioned successor inventory. 3. Add the existing asset-summary
+ * route and every actual chain/UI/error variant to the full matrix, distinct from source
+ * candidates. 4. Repair the three reproduced acceptance-matrix tests and assert that old
+ * keys/evidence remain and new keys start NOT TESTED. Run node --test
+ * scripts/universe/acceptance-matrix.test.mjs.
+ * Acceptance: The three reproduced matrix failures are repaired without losing any existing
+ * key/evidence; summary routes and distinct context variants are represented; denominator
+ * reconciliation is demonstrated by a reviewed per-key diff, not a percentage.
+ * Rollback: Keep the original 2026-09-06 and health handoff files as historical evidence. Use
+ * versioned generated successors and retain reversible source/exporter changes; no application
+ * database migration follows from inventory bookkeeping.
+ * ANNOTATED is not implemented, verified functionality or release. Preserve existing
+ * executable behavior in this preparation.
+ */
 export function buildMatrix({ evidencePath } = {}) {
   const artifacts = new Map(), records = new Map(), parsed = new Map();
   const gaps = [], sourceGroups = {};
@@ -525,6 +552,32 @@ export function buildMatrix({ evidencePath } = {}) {
   return matrix;
 }
 
+/**
+ * IMPLEMENTATION-HANDOFF [WP08] | F008 | preparation 2026-09-21
+ * State: NOT TESTED. The retained application inventory has 1592 source candidates and
+ * explicitly unresolved denominator/entry/role/network variants. The 123 protocol descriptors
+ * and component test counts do not cover the whole product.
+ * Governing requirements: REQ-COVERAGE, REQ-UI, REQ-EVIDENCE;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: WP03, WP04, WP05, WP06, WP10. 1. Validate a reconciled operation inventory,
+ * not just its declared source rows: map current navigation, handlers, API methods, websocket
+ * and privileged paths with distinct roles/context/recovery variants. 2. Preserve the 1592
+ * recorded candidates and provenance until each maps to a real operation or an evidenced
+ * exclusion. 3. Require usable steps/assertions/dependencies and revision-bound outcomes;
+ * component counts, source declarations and fixture screenshots do not qualify E2E rows. 4.
+ * Extend acceptance-matrix.test.mjs for omitted variants, stale evidence, unsupported
+ * exclusions and preserved prior assertions; derive product/protocol totals from applicable
+ * rows only.
+ * Acceptance: Every independently testable applicable required operation has a complete
+ * outcome and evidence; all source candidates are mapped or individually excluded with proof;
+ * all changed shared dependencies have downstream regression evidence.
+ * Rollback: Keep prior inventory/evidence immutable and use versioned successors. Do not hide
+ * features, bypass business logic or change expected assertions to obtain a release
+ * percentage.
+ * ANNOTATED is not implemented, verified functionality or release. Preserve existing
+ * executable behavior in this preparation.
+ */
 export function validateMatrix(matrix) {
   const ids = new Set(uniqueIds(matrix.rows, 'matrix'));
   for (const [name, group] of Object.entries(matrix.sourceGroups)) {
