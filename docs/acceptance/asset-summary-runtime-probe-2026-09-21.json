@@ -640,7 +640,9 @@
       "observedAt": "2026-09-21T22:24:36.777Z",
       "httpStatus": 200,
       "summaryStatus": "confirmed",
-      "assetCount": null,
+      "knownCountAtomic": "10",
+      "totalCount": null,
+      "assetCountField": "not defined by universe-transaction-asset-summary-v1",
       "sourceEvidenceCount": 3,
       "checkpointHeightAtomic": "968049",
       "checkpointHash": "0000000000000000000072384f2ab25dd0f91a524b22ed829b6983b38f5c1ed7",
@@ -663,7 +665,7 @@
     "observedIntegrationWarnings": [
       "The local custom backend adapter did not expose backend-info, so the page status rail reported Status unknown and Offline.",
       "The page remained partial because 28 of 31 asset sources were not qualified, even though the selected Ord and base reads were coherent.",
-      "A later raw API recheck at the same owned gateway returned the confirmed transaction with a null assetCount, so the browser rendering was not treated as release acceptance."
+      "The summary-v1 contract exposes counts.knownCountAtomic and counts.totalCount rather than a top-level assetCount; the observed known count was 10 and totalCount remained null under partial coverage."
     ],
     "acceptanceResult": "SUPPLEMENTARY REAL CONSUMER EVIDENCE ONLY: the browser reached the candidate gateway, owned Mainnet sources and rebuilt frontend, and the malformed coinbase previous-output link was removed. This is not Signet acceptance, full denominator acceptance or release GO."
   },
