@@ -389,6 +389,192 @@
     ],
     "acceptanceResult": "BLOCKED: the candidate HTTP layer successfully read the owned Mainnet base authority and preserved explicit incomplete coverage, but no protocol authority was configured, no protocol asset evidence was produced, and no total or checkpoint could qualify a functional asset-summary result."
   },
+  "ownedAuthorityOrdOverlayProbe": {
+    "observedAt": "2026-09-21T21:57:31.097Z",
+    "candidateBackendCommit": "d3937707",
+    "authority": {
+      "remoteHost": "universe-production-and-backend",
+      "remoteAddress": "152.53.92.251",
+      "servicePorts": {
+        "base": 8381,
+        "ord": 8382
+      },
+      "localForwardPorts": {
+        "base": 18381,
+        "ord": 18382
+      },
+      "network": "bitcoin:mainnet",
+      "tipCheckpoint": {
+        "heightAtomic": "968048",
+        "blockHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c"
+      },
+      "readOnly": true,
+      "remoteServicesRestarted": false,
+      "secretsCollected": false
+    },
+    "sourceConfiguration": [
+      {
+        "authorityId": "mempool-backend",
+        "protocols": ["bitcoin"],
+        "network": "bitcoin:mainnet",
+        "ready": false,
+        "observedState": "degraded"
+      },
+      {
+        "authorityId": "ord",
+        "protocols": ["ordinals", "runes", "rare_sats"],
+        "network": "bitcoin:mainnet",
+        "ready": true,
+        "checkpoint": {
+          "heightAtomic": "968048",
+          "blockHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c"
+        }
+      }
+    ],
+    "transactionSummaries": [
+      {
+        "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
+        "httpStatus": 200,
+        "responseSha256": "71f3ff5d9348327322078f9e66daa8aaecd937a77ab804ae294ecffcf81a7382",
+        "schemaVersion": "universe-transaction-asset-summary-v1",
+        "summaryStatus": "confirmed",
+        "assetCount": 64,
+        "counts": {
+          "fungibleTypeCountAtomic": "0",
+          "collectibleItemCountAtomic": "64",
+          "otherAssetCountAtomic": "0",
+          "protocolCountAtomic": "1",
+          "knownCountAtomic": "64",
+          "totalCount": null
+        },
+        "coverage": {
+          "ordinals": "partial:outpoint-inventory-not-retained",
+          "rare_sats": "partial:outpoint-inventory-not-retained",
+          "runes": "partial:outpoint-inventory-not-retained"
+        },
+        "sourceEvidence": ["ord:ordinals:complete", "mempool-backend:bitcoin:complete"],
+        "checkpoint": {
+          "heightAtomic": "968048",
+          "blockHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c"
+        }
+      },
+      {
+        "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+        "httpStatus": 200,
+        "responseSha256": "698ee4fefd63a7d5cbe45ad01646f5060788fc1454384d53c75f546bef06798a",
+        "schemaVersion": "universe-transaction-asset-summary-v1",
+        "summaryStatus": "confirmed",
+        "assetCount": 10,
+        "counts": {
+          "fungibleTypeCountAtomic": "0",
+          "collectibleItemCountAtomic": "9",
+          "otherAssetCountAtomic": "1",
+          "protocolCountAtomic": "2",
+          "knownCountAtomic": "10",
+          "totalCount": null
+        },
+        "coverage": {
+          "ordinals": "complete:reader-answered",
+          "rare_sats": "complete:reader-answered",
+          "runes": "proven-empty:reader-answered"
+        },
+        "sourceEvidence": [
+          "ord:ordinals:complete",
+          "ord:rare_sats:complete",
+          "mempool-backend:bitcoin:complete"
+        ],
+        "checkpoint": {
+          "heightAtomic": "968048",
+          "blockHash": "000000000000000000008894c6fb667233486c7c11d4ddf178d48f1a1757ed0c"
+        }
+      }
+    ],
+    "transactionFlows": [
+      {
+        "txid": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5",
+        "httpStatus": 200,
+        "responseSha256": "6e11f8bad3b542142d6b2ec186960c4209721757c3a2fe61cdddc331a7e99e19",
+        "schemaVersion": "universe-transaction-asset-flow-v1",
+        "outputs": 64,
+        "unknownAttachmentCount": 0,
+        "outOfCoverageCount": 1,
+        "complete": false,
+        "sourceEvidenceCount": 2
+      },
+      {
+        "txid": "bd71fba6643c1d43b5ea3ae8e1e2f77914801b66c042e4b41ac08d25e796963d",
+        "httpStatus": 200,
+        "responseSha256": "5bc5e0949110d09b749fc9c0ec4cf682123a5041804bf2dacae104eb3d79bc05",
+        "schemaVersion": "universe-transaction-asset-flow-v1",
+        "outputs": 10,
+        "unknownAttachmentCount": 0,
+        "outOfCoverageCount": 0,
+        "complete": true,
+        "sourceEvidenceCount": 3
+      }
+    ],
+    "outpoints": [
+      {
+        "outpoint": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5:0",
+        "httpStatus": 200,
+        "responseSha256": "2ef54220168e46939180d8f48ca969159e67d1ea998da9eca1692a890e6a2453",
+        "status": "ok",
+        "positions": 0,
+        "coveredProtocolIds": ["ordinals", "runes", "rare_sats"],
+        "unknownAttachments": false
+      },
+      {
+        "outpoint": "4ad96e053a77b29a18316c17984dfec3d4a0a8cbbfe768c59e90c278b233e0f5:1",
+        "httpStatus": 200,
+        "responseSha256": "1c273e895fe78c53509f00328f428207a9968dfdd41b715194b86fdd6cac5f04",
+        "status": "ok",
+        "positions": 64,
+        "coveredProtocolIds": ["ordinals", "runes", "rare_sats"],
+        "unknownAttachments": false
+      }
+    ],
+    "addressHoldings": [
+      {
+        "address": "bc1p0vkpt8ka4wjqve7n34nsk4s34949tf9zrllw79nkd89l26nkjlsqhmvk4p",
+        "httpStatus": 200,
+        "responseSha256": "8c4d262fb901dc928b5b8c36246539a4b4bd53718cca7f3d47bc6b371007e118",
+        "schemaVersion": "universe-address-holdings-v1",
+        "utxos": 1,
+        "aggregateHoldings": 0,
+        "complete": true,
+        "sourceEvidenceCount": 0
+      },
+      {
+        "address": "bc1qx6ckdzfrx0r3fymgkfz3s7r6klm9z4ptwdttu2",
+        "httpStatus": 200,
+        "responseSha256": "cf79ad39c6db519a4c6be1549386a80ee52b12ae485f652644e202d77a8b92eb",
+        "schemaVersion": "universe-address-holdings-v1",
+        "utxos": 1,
+        "aggregateHoldings": 64,
+        "complete": true,
+        "sourceEvidenceCount": 1
+      }
+    ],
+    "assetReads": [
+      {
+        "path": "/api/v1/universe/inscriptions/f09937537656860895dce1fee21b778a29b6cff995bcffa16c22de6b6fa54604i0",
+        "httpStatus": 200,
+        "responseSha256": "5172be807c39df465047fb8b521d033b4e6c14890d8b99157580b6710f100e0e",
+        "schemaVersion": "universe-explorer-asset-v1",
+        "status": "ok",
+        "authorityId": "ord"
+      },
+      {
+        "path": "/api/v1/universe/sats/2008762812500000",
+        "httpStatus": 200,
+        "responseSha256": "59d4228a1d5358af0dd715bf0acab52bafc82a98a31556b67c551ad51c154a24",
+        "schemaVersion": "universe-explorer-asset-v1",
+        "status": "ok",
+        "authorityId": "ord"
+      }
+    ],
+    "acceptanceResult": "SUPPLEMENTARY MAINNET EVIDENCE ONLY: the candidate exercised real owned base and Ord authorities for Bitcoin and preserved both complete and partial states. This does not qualify Signet or another accepted test network, the remaining protocol readers, the full application denominator or the release gate."
+  },
   "acceptanceImpact": {
     "functionalPass": false,
     "reason": "Real consumer responses contain unconfigured and partial reader states, a checkpoint 3938 blocks behind the owned node tip, and null totalCount values.",
