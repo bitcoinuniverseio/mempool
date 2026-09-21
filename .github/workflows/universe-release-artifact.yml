@@ -21,6 +21,28 @@ on:
 permissions:
   contents: read
 
+# IMPLEMENTATION-HANDOFF [WP02] | F002 | preparation 2026-09-21
+# State: FAIL. The inspected release.sh and GitHub workflows contain no call to
+# protocol-contract --release. CI invokes --check and production smoke --against. Existing
+# authority preflight checks configured historical-readable protocols, which is not the
+# required complete functional gate.
+# Governing requirements: REQ-RELEASE, REQ-EVIDENCE;
+# docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+# research/source-register.json.
+# Prerequisites: WP01, WP04, WP05, WP06, WP08, WP09, WP10. 1. Add an explicit
+# acceptance-envelope input and verifier after WP01, before publishing/promoting a release
+# artifact. 2. Bind artifact, source SHA, dependencies and production-configuration proof; a
+# roster --check or smoke --against is not a substitute. 3. Keep self-hosted runner policy and
+# prevent automatic deployment before acceptance. 4. Extend workflow/release tests with
+# missing evidence, source drift and valid Signet-qualified Mainnet artifact cases; retain
+# receipts and rollback artifact references.
+# Acceptance: No release path can promote an unqualified artifact. Final GO requires both full
+# functional acceptance and completed public Mainnet deployment receipts.
+# Rollback: Retain previous immutable release, component routing file, compatible
+# configuration and database backup. Exercise rollback in an isolated environment first;
+# rollback an unsafe rollout rather than leave it public.
+# ANNOTATED is not implemented, verified functionality or release. Preserve existing
+# executable behavior in this preparation.
 jobs:
   artifact:
     name: Build and pack

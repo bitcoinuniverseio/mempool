@@ -205,6 +205,33 @@ const RETRYABLE_STATES: ReadonlySet<SummaryCoverageState> = new Set<SummaryCover
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
+/**
+ * IMPLEMENTATION-HANDOFF [WP06] | F007 | preparation 2026-09-21
+ * State: NOT TESTED. PR135 is legitimate unmerged consumer work and backend PR204 is already
+ * merged. Public backend-info reports mempool 537235052 and chain status reports overlay
+ * fcdc2e2f3bd226bead63cdf0b81fad1ef1ad45bd, not the selected candidates. Passing isolated
+ * component tests do not establish real test-network user journeys or deployment.
+ * Governing requirements: REQ-EVIDENCE, REQ-UI, REQ-NETWORK;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: WP01, WP03, WP04, WP05. 1. Preserve the PR135 exact-value, strict-decoder and
+ * coverage-state implementation; it has component evidence but no accepted real-network
+ * journey in this preparation. 2. Exercise Bitcoin, Dogecoin and Zcash consumers against the
+ * actual producer, not visual fixtures or a service-worker cached response. 3. Verify
+ * pending/confirmed/reorg, partial/empty/unavailable, conflict decimals, exact copy, retry
+ * cooldown and bounded logo failures through reload/reconnect and network switching. 4. Run
+ * the frontend Vitest suite and production AOT build; record real requests, authority readback
+ * and usable mobile/keyboard outcomes for WP03 rows. Do not merge or release before WP01/WP02
+ * gates.
+ * Acceptance: All distinct transaction/address asset consumer paths and failure/recovery
+ * variants pass against real supported-network authorities and the accepted candidate,
+ * preserving exact amounts, source identity and truthful state across refresh/reconnect.
+ * Rollback: Producer additions are additive in PR204; retain compatibility while switching
+ * consumer artifacts. Revert only the failed candidate and preserve accepted source/evidence
+ * versions; do not roll back unrelated merged backend work.
+ * ANNOTATED is not implemented, verified functionality or release. Preserve existing
+ * executable behavior in this preparation.
+ */
 export class TransactionAssetsComponent implements OnChanges, OnDestroy {
   @Input() txid: string;
   @Input() chain = 'bitcoin';

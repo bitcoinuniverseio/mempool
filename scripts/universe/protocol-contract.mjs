@@ -183,6 +183,10 @@ export function assertRosterResolvesUniquely(protocols, report = new Report()) {
  */
 /**
  * IMPLEMENTATION-HANDOFF [FE-GATE-04] | all 39 protocols and operation IDs.
+ * Reconciled 2026-09-21: --release and releaseGate now exist. Do not create
+ * a parallel gate. WP01 completes evidence qualification; WP02 wires it into
+ * release; WP03 reconciles the denominator. The requirements below are
+ * historical and must be applied to the existing implementation.
  * Verified: this validates shape/status vocabulary; it does not require passing
  * operation evidence. A roster gate PASS is not the requested release GO.
  * Prerequisites: BE acceptance schema plus complete operation inventory.
@@ -658,6 +662,33 @@ const ACCEPTANCE_RESULTS = new Set([
  * Splitting them matters because the roster check is the one that runs
  * constantly, and a gate that runs constantly is a gate people learn to make
  * green. Nothing here can be satisfied by editing a label.
+ */
+/**
+ * IMPLEMENTATION-HANDOFF [WP01] | F001 | preparation 2026-09-21
+ * State: FAIL. A controlled local clone of the 123-operation manifest with only descriptor
+ * PASS labels and matching counters, and zero evidence records, returns an empty releaseGate
+ * problems list. releaseGate checks declarations and counts, not the evidence that produced
+ * them. This is a release-integrity defect, not proof of an externally exploitable application
+ * endpoint.
+ * Governing requirements: REQ-EVIDENCE, REQ-NETWORK, REQ-COVERAGE;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: WP03. 1. Replace label-only qualification in releaseGate with the
+ * qualified-envelope verifier described above; retain offline roster mode. 2. Load safe rooted
+ * evidence paths, verify hashes and candidate/dependency/config bindings, then derive counters
+ * from required rows. 3. Separate Signet acceptance from Mainnet configuration evidence and
+ * qualify exclusions. 4. Extend protocol-contract.test.mjs with missing/tampered/wrong-network
+ * evidence and the saved 123-label forgery. Run node --test
+ * scripts/universe/protocol-contract.test.mjs; source-only gate success is not release
+ * acceptance.
+ * Acceptance: The saved forgery is rejected; real complete qualified Signet or justified
+ * Testnet evidence is accepted for a Mainnet candidate only with its independent configuration
+ * proof; every applicable operation and required variant is accounted for.
+ * Rollback: No database migration is justified by this finding. Version evidence readers
+ * additively; retain previously accepted artifacts for emergency rollback. Never disable the
+ * gate to release.
+ * ANNOTATED is not implemented, verified functionality or release. Preserve existing
+ * executable behavior in this preparation.
  */
 export function releaseGate(manifest, expected = {}, report = new Report()) {
   validateManifest(manifest, report);

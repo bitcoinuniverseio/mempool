@@ -133,6 +133,32 @@ export interface AddressAssetsState {
   styleUrls: ['./address-assets.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+/**
+ * IMPLEMENTATION-HANDOFF [WP06] | F007 | preparation 2026-09-21
+ * State: NOT TESTED. PR135 is legitimate unmerged consumer work and backend PR204 is already
+ * merged. Public backend-info reports mempool 537235052 and chain status reports overlay
+ * fcdc2e2f3bd226bead63cdf0b81fad1ef1ad45bd, not the selected candidates. Passing isolated
+ * component tests do not establish real test-network user journeys or deployment.
+ * Governing requirements: REQ-EVIDENCE, REQ-UI, REQ-NETWORK;
+ * docs/implementation-prep/blockers-20260921/WORK-PACKAGES.json and bundled
+ * research/source-register.json.
+ * Prerequisites: WP01, WP03, WP04, WP05. 1. Keep holdingKey, summarise and addPosition
+ * identity/precision protections while integrating the accepted producer. 2. Verify separate
+ * assets with the same symbol, conflicting divisibility, partial source coverage, pagination
+ * and direct links on each actual network. 3. Prove exact quantities and holdings after
+ * confirmation/indexing, refresh, reconnect and a network switch; do not accept fixture
+ * screenshots as that proof. 4. Run address-assets component tests and dependent frontend
+ * suite, then collect actual authority/API/UI evidence and keyboard/mobile checks. No invented
+ * transaction is required for a read-only holding journey.
+ * Acceptance: All distinct transaction/address asset consumer paths and failure/recovery
+ * variants pass against real supported-network authorities and the accepted candidate,
+ * preserving exact amounts, source identity and truthful state across refresh/reconnect.
+ * Rollback: Producer additions are additive in PR204; retain compatibility while switching
+ * consumer artifacts. Revert only the failed candidate and preserve accepted source/evidence
+ * versions; do not roll back unrelated merged backend work.
+ * ANNOTATED is not implemented, verified functionality or release. Preserve existing
+ * executable behavior in this preparation.
+ */
 export class AddressAssetsComponent implements OnChanges {
   @Input() utxos: Utxo[] | null = null;
   @Input() sourceState:
