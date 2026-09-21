@@ -4320,9 +4320,9 @@
     },
     {
       "path": "scripts/universe/acceptance-matrix.mjs",
-      "sha256": "b219fcd70661fe5affd42ce459b45b4c128b1642394d8ea5eb0743895429eba8",
+      "sha256": "c70cf8262bc7381f6fec97a2e4c20a7daaf37306d20cb947e40f6507a0acffec",
       "sha256Encoding": "utf8-lf",
-      "bytes": 54595
+      "bytes": 56212
     }
   ],
   "sourceCandidates": {
@@ -25200,54 +25200,6 @@
     ]
   },
   "gaps": [
-    {
-      "id": "API-c80b2b280c0b",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.LIQUID_API}/assets/featured`",
-      "sourceCall": "axios.get"
-    },
-    {
-      "id": "API-1c3ef6ee2e7d",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.LIQUID_API}/assets/group/${parseInt(req.params.id, 10)}`",
-      "sourceCall": "axios.get"
-    },
-    {
-      "id": "API-d00d50e4f44f",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/donations`",
-      "sourceCall": "axios.get"
-    },
-    {
-      "id": "API-c33c895f86c6",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/donations/images/${req.params.id}`",
-      "sourceCall": "axios.get"
-    },
-    {
-      "id": "API-1e45edc7f3c9",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/contributors`",
-      "sourceCall": "axios.get"
-    },
-    {
-      "id": "API-73094bc9f9e2",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/contributors/images/${req.params.id}`",
-      "sourceCall": "axios.get"
-    },
-    {
-      "id": "API-0e0f90d1e32d",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/translators`",
-      "sourceCall": "axios.get"
-    },
-    {
-      "id": "API-77083d9edd60",
-      "kind": "outbound-call-in-source-inventory",
-      "expression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/translators/images/${req.params.id}`",
-      "sourceCall": "axios.get"
-    },
     {
       "id": "G-COVERAGE-01",
       "kind": "missing-handoff-bundle",
@@ -94385,7 +94337,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-1c3ef6ee2e7d",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -94519,7 +94476,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-c80b2b280c0b",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -95810,7 +95772,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-bab3bd5b7d0e",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -95861,8 +95828,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/assets/featured",
+      "localRouteSource": "backend/src/api/liquid/liquid.routes.ts:13",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.LIQUID_API}/assets/featured`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-1c3ef6ee2e7d",
@@ -95877,7 +95846,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-49c4092ee0a8",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -95928,8 +95902,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/assets/group/:id",
+      "localRouteSource": "backend/src/api/liquid/liquid.routes.ts:15",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.LIQUID_API}/assets/group/${parseInt(req.params.id, 10)}`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-752fd982c4d0",
@@ -101110,7 +101086,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-77083d9edd60",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101177,7 +101158,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-0e0f90d1e32d",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101244,7 +101230,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-73094bc9f9e2",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101311,7 +101302,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-1e45edc7f3c9",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101378,7 +101374,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-c33c895f86c6",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101445,7 +101446,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-d00d50e4f44f",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101512,7 +101518,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-f2caf24a5fed",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101563,8 +101574,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/donations",
+      "localRouteSource": "backend/src/api/about.routes.ts:9",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/donations`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-c33c895f86c6",
@@ -101579,7 +101592,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-58a8cfbd3fb7",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101630,8 +101648,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/donations/images/:id",
+      "localRouteSource": "backend/src/api/about.routes.ts:17",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/donations/images/${req.params.id}`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-1e45edc7f3c9",
@@ -101646,7 +101666,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-d94fbc8bdcb1",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101697,8 +101722,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/contributors",
+      "localRouteSource": "backend/src/api/about.routes.ts:27",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/contributors`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-73094bc9f9e2",
@@ -101713,7 +101740,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-d0dc32ad3692",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101764,8 +101796,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/contributors/images/:id",
+      "localRouteSource": "backend/src/api/about.routes.ts:35",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/contributors/images/${req.params.id}`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-0e0f90d1e32d",
@@ -101780,7 +101814,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-923929e8993f",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101831,8 +101870,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/translators",
+      "localRouteSource": "backend/src/api/about.routes.ts:45",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/translators`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-77083d9edd60",
@@ -101847,7 +101888,12 @@
       "actual": null,
       "evidence": [],
       "blockers": [],
-      "links": [],
+      "links": [
+        {
+          "id": "API-2818c9c20939",
+          "reason": "exact method and route expression"
+        }
+      ],
       "sources": [
         {
           "artifact": "docs/acceptance/2026-09-05-controls.json",
@@ -101898,8 +101944,10 @@
           "branch": "then"
         }
       ],
-      "route": null,
-      "routeResolution": "unresolved expression; no path guessed"
+      "route": "/api/v1/translators/images/:id",
+      "localRouteSource": "backend/src/api/about.routes.ts:53",
+      "dependencyExpression": "`${config.EXTERNAL_DATA_SERVER.MEMPOOL_API}/translators/images/${req.params.id}`",
+      "routeResolution": "local route source literal resolved; outbound dependency configuration and readback remain unverified"
     },
     {
       "id": "API-0e65cca3e760",
