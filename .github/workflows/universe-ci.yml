@@ -54,6 +54,13 @@ jobs:
       - name: The pinned protocol roster holds
         run: node scripts/universe/protocol-contract.mjs --check
 
+      # The operation matrix is a generated, hash-bound inventory. Keep its
+      # committed source lineage fresh whenever a reconciliation artifact
+      # changes; otherwise a stale matrix can pass review while the generator
+      # would correctly reject it.
+      - name: The committed operation matrix is current
+        run: node scripts/universe/acceptance-matrix.mjs --check
+
       - name: The protocol roster gate fires on the states it exists for
         run: node --test scripts/universe/protocol-contract.test.mjs
 

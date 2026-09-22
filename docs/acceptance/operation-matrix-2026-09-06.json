@@ -9,7 +9,7 @@
     "artifact": "docs/acceptance/explorer-health-handoff-2026-09-06.json",
     "sha256": "98ed8c95130a94dd30d8d998f4f3a4f84c2b6bfe4aefa084817783600f4805b7",
     "reconciliationArtifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-    "reconciliationSha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+    "reconciliationSha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
     "healthRows": 40,
     "protocolOperationBindings": 123,
     "historicalProtocolOperationBindings": 119,
@@ -2370,9 +2370,9 @@
     },
     {
       "path": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-      "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+      "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
       "sha256Encoding": "raw-bytes",
-      "bytes": 2578
+      "bytes": 2661
     },
     {
       "path": "docs/acceptance/handoff-repair-2026-09-07.md",
@@ -145807,7 +145807,7 @@
         },
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/added/0"
         }
@@ -145873,7 +145873,7 @@
         },
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/added/1"
         }
@@ -145939,7 +145939,7 @@
         },
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/added/2"
         }
@@ -146005,7 +146005,7 @@
         },
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/added/3"
         }
@@ -147271,7 +147271,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/0/variants/success"
         }
@@ -147318,7 +147318,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/0/variants/proven-empty"
         }
@@ -147365,7 +147365,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/0/variants/incomplete-authority"
         }
@@ -147412,7 +147412,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/0/variants/timeout"
         }
@@ -147459,7 +147459,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/0/variants/precision-conflict"
         }
@@ -147506,7 +147506,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/0/variants/confirmation"
         }
@@ -147553,7 +147553,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/0/variants/reorg"
         }
@@ -147600,7 +147600,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/1/variants/success"
         }
@@ -147647,7 +147647,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/1/variants/proven-empty"
         }
@@ -147694,7 +147694,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/1/variants/incomplete-authority"
         }
@@ -147741,7 +147741,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/1/variants/timeout"
         }
@@ -147788,7 +147788,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/1/variants/precision-conflict"
         }
@@ -147835,7 +147835,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/1/variants/confirmation"
         }
@@ -147882,7 +147882,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/1/variants/reorg"
         }
@@ -147929,7 +147929,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/2/variants/success"
         }
@@ -147976,7 +147976,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/2/variants/proven-empty"
         }
@@ -148023,7 +148023,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/2/variants/incomplete-authority"
         }
@@ -148070,7 +148070,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/2/variants/timeout"
         }
@@ -148117,7 +148117,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/2/variants/precision-conflict"
         }
@@ -148164,7 +148164,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/2/variants/confirmation"
         }
@@ -148211,7 +148211,7 @@
       "sources": [
         {
           "artifact": "docs/acceptance/explorer-health-reconciliation-2026-09-21.json",
-          "sha256": "b7c8baa37427611dbc09c8566c3319cd3168bcc2f9aaddcdad84a9e7dd4e730e",
+          "sha256": "2f2025c243314a38fe5430ec5d6bfd8e90ed2c7da5a5800b8b43e1e593c7fcd9",
           "sha256Encoding": "raw-bytes",
           "pointer": "/summaryContexts/2/variants/reorg"
         }
