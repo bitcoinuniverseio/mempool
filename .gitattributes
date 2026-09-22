@@ -1,3 +1,13 @@
 # ignore all differences in line endings
 package.json eol=crlf -crlf
 */package.json eol=crlf -crlf
+
+# Acceptance evidence hashes are byte identities. Keep their JSON bytes stable
+# across Windows and Linux checkouts so the generated matrix is portable.
+docs/acceptance/2026-09-05-controls.json -text
+docs/acceptance/2026-09-05-inventory.json -text
+docs/acceptance/ci-repair-2026-09-06.json -text
+docs/acceptance/current-execution-evidence.json -text
+docs/acceptance/explorer-health-reconciliation-2026-09-21.json -text
+docs/acceptance/wp07-repair-2026-09-06.json -text
+docs/protocols/PROTOCOL-COVERAGE.json -text
