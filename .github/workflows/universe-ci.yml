@@ -44,6 +44,14 @@ jobs:
         with:
           node-version: '24.19.0'
 
+      # The acceptance matrix parses the frontend and backend source with the
+      # pinned TypeScript package. This job does not share the frontend build
+      # job's dependency tree, so install the parser inputs before the first
+      # source check instead of relying on a runner workspace residue.
+      - name: Install frontend parser dependencies
+        working-directory: frontend
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
       # The roster is owned by backend-apis. This holds the pinned copy to its
       # schema and its provenance, holds this repository's own surfaces to the
       # pinned roster, and refuses a roster that lost an entry. The gate it
