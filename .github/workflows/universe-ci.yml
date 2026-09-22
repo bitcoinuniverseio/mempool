@@ -143,6 +143,11 @@ jobs:
   backend:
     name: Backend build and test
     runs-on: [self-hosted, linux, x64, universe-super]
+    # Native engines and Jest workers compete for the same host memory. Keep
+    # the two release refs from running this job on top of each other.
+    concurrency:
+      group: universe-ci-backend
+      cancel-in-progress: false
     timeout-minutes: 45
     env:
       COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
@@ -250,7 +255,10 @@ jobs:
 
       - name: Unit tests
         working-directory: backend
-        run: npm run test:ci
+        # Several suites launch native engines and local HTTP processes. Jest's
+        # default worker count makes those tests time out when the shared
+        # runner is busy, while the same suites pass in one process.
+        run: npm run test:ci -- --runInBand --forceExit
 
       # The failure that shipped was a configuration one: the migrations never
       # ran against the engine production uses, so nothing caught the syntax it
@@ -272,6 +280,12 @@ jobs:
     # jobs below are pinned for the same reason; the backend job is not,
     # because nothing it runs measures a glyph.
     runs-on: [self-hosted, linux, x64, universe-super]
+    # Angular's production build is the largest single memory consumer in this
+    # workflow. Do not run the main and develop builds simultaneously on a
+    # multi-runner host.
+    concurrency:
+      group: universe-ci-frontend
+      cancel-in-progress: false
     # This builds, gates the bundle, and walks every route once at a phone and
     # a desktop width. The deep pass that used to follow it now runs beside it,
     # sharded, because it stopped fitting: 71 minutes of a 100 minute cap on
@@ -307,8 +321,8 @@ jobs:
       - name: Production build
         working-directory: frontend
         env:
-          NG_BUILD_MAX_WORKERS: '2'
-          NODE_OPTIONS: --max-old-space-size=4096
+          NG_BUILD_MAX_WORKERS: '1'
+          NODE_OPTIONS: --max-old-space-size=3072
         run: npm run build:universe
 
       - name: Built bundle carries no upstream marks
@@ -484,6 +498,9 @@ jobs:
     # a shard can only ever pick up the build made from its own source, and a
     # miss falls back to building rather than failing.
     needs: frontend
+    concurrency:
+      group: universe-ci-visual-${{ matrix.shard }}
+      cancel-in-progress: false
     # The old Ultra group is empty and its replacement is restricted to other
     # repositories. Use this repository's authorized browser-capable pool,
     # which already runs the frontend, mobile and cross-browser checks.
@@ -644,6 +661,9 @@ jobs:
     # so the run is as long as the longest shard either way, and a run now
     # makes exactly one build.
     needs: frontend
+    concurrency:
+      group: universe-ci-mobile
+      cancel-in-progress: false
     runs-on: [self-hosted, linux, x64, universe-super]
     timeout-minutes: 45
     steps:
@@ -791,6 +811,10 @@ jobs:
   # nothing about the platform half this work was written for.
   mobile-engines:
     name: WebKit and Firefox
+    needs: frontend
+    concurrency:
+      group: universe-ci-mobile-engines
+      cancel-in-progress: false
     runs-on: [self-hosted, linux, x64, universe-super]
     container:
       image: mcr.microsoft.com/playwright:v1.49.0-noble
@@ -814,19 +838,26 @@ jobs:
         with:
           node-version: '24.19.0'
 
-      - name: Install
-        working-directory: frontend
-        run: npm ci
+      - name: Take the build the frontend job made
+        id: dist
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/dist
+          key: universe-dist-${{ github.sha }}
 
-      # Same bounds as the frontend job's build: a bounded worker pool and a
-      # bounded heap, so the build survives a host that shares memory with
-      # everything else it holds.
-      - name: Production build
+      # A cache miss is survivable, but still uses the same memory bounds as
+      # the owning frontend job. The normal path performs one production build
+      # per commit, then all browser engines consume that exact output.
+      - name: Build it here if the cache did not have it
+        if: steps.dist.outputs.cache-hit != 'true'
         working-directory: frontend
         env:
-          NG_BUILD_MAX_WORKERS: '2'
-          NODE_OPTIONS: --max-old-space-size=4096
-        run: npm run build:universe
+          NG_BUILD_MAX_WORKERS: '1'
+          NODE_OPTIONS: --max-old-space-size=3072
+        run: |
+          echo "no build cached for ${{ github.sha }}; building one here"
+          npm ci
+          npm run build:universe
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
