@@ -37,6 +37,12 @@ import { parseDATUMTemplateCreator } from '../utils/bitcoin-script';
 import database from '../database';
 import { getBlockFirstSeenFromLogs, getOldestLogTimestampFromLogs, scanLogsForBlocksFirstSeen } from '../utils/file-read';
 
+/**
+ * More transactions than this missing from the mempool, and a Core-backed
+ * block read fetches the whole block once instead of one transaction at a time.
+ */
+export const CORE_BULK_BLOCK_READ_THRESHOLD = 50;
+
 class Blocks {
   private blocks: BlockExtended[] = [];
   private blockSummaries: BlockSummary[] = [];
@@ -161,6 +167,24 @@ class Blocks {
         }
       } catch (e) {
         logger.err(`Cannot fetch bulk txs for block ${blockHash}. Reason: ` + (e instanceof Error ? e.message : e));
+      }
+    }
+
+    // Against Core (electrum or none), a block the mempool no longer holds is
+    // read in one verbose request rather than two round trips per transaction.
+    const missingFromMempool = txIds.length - totalFound;
+    if (!isEsplora && !stale && !onlyCoinbase && missingFromMempool > CORE_BULK_BLOCK_READ_THRESHOLD
+      && bitcoinApi.$getTxsForBlockWithoutPrevouts) {
+      try {
+        const rawTransactions = await bitcoinApi.$getTxsForBlockWithoutPrevouts(blockHash);
+        for (const tx of rawTransactions) {
+          if (!transactionMap[tx.txid]) {
+            transactionMap[tx.txid] = addMempoolData ? transactionUtils.extendMempoolTransaction(tx) : transactionUtils.extendTransaction(tx);
+            totalFound++;
+          }
+        }
+      } catch (e) {
+        logger.err(`Cannot read block ${blockHash} in one request, falling back to one read per transaction. Reason: ` + (e instanceof Error ? e.message : e));
       }
     }
 
