@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
-import { chainNetwork } from '@app/universe/chain-network';
+import { resolveChainNetwork } from '@app/universe/chain-network';
 
 /**
  * Local personalization for the explorer.
@@ -107,8 +107,10 @@ export class UniverseLocalService {
 
   private newEntry(entry: UniverseEntryInput): UniverseEntry | null {
     // Only new writes use current navigation state. Historical entries use their own path/provenance.
-    const network = entry.network ?? chainNetwork(entry.chain ?? 'bitcoin', this.currentNetwork(), this.stateService.env);
-    return this.sanitizeEntry({ ...entry, network, at: Date.now() });
+    if (entry.network) {return this.sanitizeEntry({ ...entry, at: Date.now() });}
+    // An entry is never filed under a network nothing was read from.
+    const resolved = resolveChainNetwork(entry.chain ?? 'bitcoin', this.currentNetwork(), this.stateService.env);
+    return resolved.available ? this.sanitizeEntry({ ...entry, network: resolved.network, at: Date.now() }) : null;
   }
 
   private read(key: string): unknown {
@@ -233,8 +235,13 @@ export class UniverseLocalService {
     kind: UniverseEntryKind,
     value: string,
     chain: ExplorerChain = 'bitcoin',
-    network: ExplorerNetwork = chainNetwork(chain, this.currentNetwork(), this.stateService.env),
+    network?: ExplorerNetwork,
   ): boolean {
+    if (!network) {
+      const resolved = resolveChainNetwork(chain, this.currentNetwork(), this.stateService.env);
+      if (!resolved.available) {return false;}
+      network = resolved.network;
+    }
     const id = entryKey({ chain, network, kind, value });
     return this.bookmarkSubject.value.some((item) => entryKey(item) === id);
   }

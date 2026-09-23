@@ -4,7 +4,7 @@ import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, def
 import { TransactionAssetSummary, decodeTransactionAssetSummary } from './transaction-assets/transaction-assets.types';
 import { StateService } from '@app/services/state.service';
 import { ProtocolPageKind, readProtocolFailure, readProtocolPage } from './universe-protocol-contract';
-import { chainNetwork } from './chain-network';
+import { chainNetwork, resolveChainNetwork } from './chain-network';
 import {
   BackendInfo,
   ExplorerTransactionAssetFlow,
@@ -177,17 +177,39 @@ export class UniverseApiService {
    * and the configured UNIVERSE_CHAIN_NETWORKS entry (mainnet when unlisted)
    * for every other chain. The Bitcoin selector never implies another chain's
    * network, so a Signet reader still reads Dogecoin from its configured network.
+   * Throws a ChainNetworkUnavailableError when the chain's entry is invalid;
+   * use {@link chainNetworkLabel} where a page only names the network.
    */
   chainNetwork(chain: ExplorerChain | string): ExplorerNetwork {
     return chainNetwork(chain, this.network, this.stateService.env);
   }
 
-  /** {@link chainNetwork} as a stream: re-emits only when the Bitcoin selection matters. */
+  /** The network a page names for a chain, or null when its configuration is invalid. */
+  chainNetworkLabel(chain: ExplorerChain | string): ExplorerNetwork | null {
+    const resolved = resolveChainNetwork(chain, this.network, this.stateService.env);
+    return resolved.available ? resolved.network : null;
+  }
+
+  /**
+   * {@link chainNetwork} as a stream: re-emits only when the Bitcoin selection
+   * matters, and errors with a ChainNetworkUnavailableError, before any
+   * request, when the chain's configured network is invalid.
+   */
   chainNetwork$(chain: ExplorerChain | string): Observable<ExplorerNetwork> {
     return this.selectedNetwork$().pipe(
       map((network) => chainNetwork(chain, network, this.stateService.env)),
       distinctUntilChanged(),
     );
+  }
+
+  /**
+   * One read of a non-Bitcoin chain route under that chain's configured
+   * network. Deferred so the network is resolved at subscription: an invalid
+   * configuration fails as a ChainNetworkUnavailableError and sends nothing,
+   * and a retry resolves again rather than reusing an earlier network.
+   */
+  private chainRead<T>(chain: Exclude<ExplorerChain, 'bitcoin'>, path: (network: ExplorerNetwork) => string): Observable<T> {
+    return defer(() => this.httpClient.get<T>(this.apiBaseUrl + '/api/v1/' + chain + path(this.chainNetwork(chain))));
   }
 
   private requestForNetwork<T>(url: string, network: ExplorerNetwork, body?: unknown, chain = 'bitcoin'): Observable<T> {
@@ -383,16 +405,20 @@ export class UniverseApiService {
    * unavailable record under that network, never a mainnet one.
    */
   getChains$(): Observable<ChainCapabilityEnvelope[]> {
-    return this.selectedNetwork$().pipe(switchMap(network => forkJoin(EXPLORER_CHAINS.map(chain => {
-      const expected = chainNetwork(chain, network, this.stateService.env);
-      return this.httpClient.get<ChainCapabilityEnvelope>(
+    return this.selectedNetwork$().pipe(switchMap(network => forkJoin(EXPLORER_CHAINS.flatMap(chain => {
+      const resolved = resolveChainNetwork(chain, network, this.stateService.env);
+      // An invalid configuration is named by the picker itself; asking the
+      // overlay under a substitute network would show another network's health.
+      if (!resolved.available) {return [];}
+      const expected = resolved.network;
+      return [this.httpClient.get<ChainCapabilityEnvelope>(
         this.apiBaseUrl + '/api/v1/chains/' + chain + '?network=' + expected,
       ).pipe(map(row => {
         if (!row || row.chain !== chain) {throw new Error('invalid-chain-capabilities');}
         if (row.network !== expected) {throw new Error('authority-network-mismatch');}
         this.assertResponseContext(row, expected, chain);
         return row;
-      }));
+      }))];
     }))));
   }
 
@@ -430,78 +456,56 @@ export class UniverseApiService {
   }
 
   getChainMempool$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 100): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mempool?network=' + this.chainNetwork(chain) + '&limit='
-        + Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain])
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/mempool?network=' + network + '&limit='
+      + Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain]));
   }
 
   getChainCandidateBuckets$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/candidate-buckets?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/candidate-buckets?network=' + network);
   }
 
   /** The one-call dashboard aggregate: blocks, buckets, fees, mempool, mining. */
   getChainDashboard$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainDashboardView> {
-    return this.httpClient.get<ChainDashboardView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/dashboard?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainDashboardView>(chain, (network) => '/dashboard?network=' + network);
   }
 
   getChainRecentBlocks$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 15): Observable<RecentBlocksView> {
-    return this.httpClient.get<RecentBlocksView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/blocks/recent?network=' + this.chainNetwork(chain) + '&limit=' + limit
-    );
+    return this.chainRead<RecentBlocksView>(chain, (network) => '/blocks/recent?network=' + network + '&limit=' + limit);
   }
 
   getChainFees$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<FeeRecommendationsView> {
-    return this.httpClient.get<FeeRecommendationsView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/fees?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<FeeRecommendationsView>(chain, (network) => '/fees?network=' + network);
   }
 
   getChainMining$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<MiningSummaryView> {
-    return this.httpClient.get<MiningSummaryView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mining?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<MiningSummaryView>(chain, (network) => '/mining?network=' + network);
   }
 
   getChainMiningPools$(chain: Exclude<ExplorerChain, 'bitcoin'>, window = '1w'): Observable<MiningPoolsView> {
-    return this.httpClient.get<MiningPoolsView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mining/pools?network=' + this.chainNetwork(chain) + '&window=' + encodeURIComponent(window)
-    );
+    return this.chainRead<MiningPoolsView>(chain, (network) => '/mining/pools?network=' + network + '&window=' + encodeURIComponent(window));
   }
 
   getChainChartSeries$(chain: Exclude<ExplorerChain, 'bitcoin'>, seriesId: string, range = '1w'): Observable<ChartSeriesView> {
-    return this.httpClient.get<ChartSeriesView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/charts/' + encodeURIComponent(seriesId)
-        + '?network=' + this.chainNetwork(chain) + '&range=' + encodeURIComponent(range)
-    );
+    return this.chainRead<ChartSeriesView>(chain, (network) => '/charts/' + encodeURIComponent(seriesId)
+      + '?network=' + network + '&range=' + encodeURIComponent(range));
   }
 
   getChainTransaction$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/tx/' + encodeURIComponent(txid) + '?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/tx/' + encodeURIComponent(txid) + '?network=' + network);
   }
 
   getChainBlock$(chain: Exclude<ExplorerChain, 'bitcoin'>, reference: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
     const paging = chain === 'dogecoin'
       ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
       : '&limit=' + limit + '&offset=' + offset;
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/block/' + encodeURIComponent(reference) + '?network=' + this.chainNetwork(chain) + paging
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/block/' + encodeURIComponent(reference) + '?network=' + network + paging);
   }
 
   getChainAddress$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
     const paging = chain === 'dogecoin'
       ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
       : '&limit=' + limit + '&offset=' + offset;
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '?network=' + this.chainNetwork(chain) + paging
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/address/' + encodeURIComponent(address) + '?network=' + network + paging);
   }
 
   /**
@@ -511,9 +515,8 @@ export class UniverseApiService {
    * degrades the asset sections without taking the address page down.
    */
   getChainAddressHoldings$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 50, offset = 0): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '/holdings?network=' + this.chainNetwork(chain) + '&limit=' + limit + '&offset=' + offset
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/address/' + encodeURIComponent(address) + '/holdings?network=' + network
+      + '&limit=' + limit + '&offset=' + offset);
   }
 
   /** The Bitcoin address asset-holdings view from the universe overlay. */
@@ -524,38 +527,30 @@ export class UniverseApiService {
   }
 
   getChainOutpoint$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string, vout: string): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/outpoint/' + encodeURIComponent(txid) + '/' + encodeURIComponent(vout) + '?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/outpoint/' + encodeURIComponent(txid) + '/' + encodeURIComponent(vout)
+      + '?network=' + network);
   }
 
   getChainProtocols$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols?network=' + network);
   }
 
   getChainProtocolList$(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string, limit = 100, offset = 0, ruleset?: string): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
-    let query = '?network=' + this.chainNetwork(chain) + '&limit=' + limit;
+    let paging = '&limit=' + limit;
     if (chain === 'dogecoin' && protocol !== 'doge-tap') {
-      query += '&cursor=' + offset;
+      paging += '&cursor=' + offset;
     } else if (chain === 'dogecoin') {
-      query += '&offset=' + offset;
+      paging += '&offset=' + offset;
     }
-    if (ruleset) {query += '&ruleset=' + encodeURIComponent(ruleset);}
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + query
-    );
+    if (ruleset) {paging += '&ruleset=' + encodeURIComponent(ruleset);}
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols/' + path + '?network=' + network + paging);
   }
 
   getChainProtocolDetail$(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string, reference: string, ruleset?: string): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
-    let query = '?network=' + this.chainNetwork(chain);
-    if (ruleset) {query += '&ruleset=' + encodeURIComponent(ruleset);}
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + '/' + encodeURIComponent(reference) + query
-    );
+    const extra = ruleset ? '&ruleset=' + encodeURIComponent(ruleset) : '';
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols/' + path + '/' + encodeURIComponent(reference) + '?network=' + network + extra);
   }
 
   getChainProtocolSection$(chain: 'dogecoin', protocol: string, reference: string, section: 'holders' | 'events', limit = 100, offset = 0): Observable<ChainExplorerPayload> {
@@ -563,9 +558,8 @@ export class UniverseApiService {
     const paging = protocol === 'drc20'
       ? '&cursor=' + offset
       : '&offset=' + offset;
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + '/' + encodeURIComponent(reference) + '/' + section + '?network=' + this.chainNetwork(chain) + '&limit=' + limit + paging
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols/' + path + '/' + encodeURIComponent(reference) + '/' + section
+      + '?network=' + network + '&limit=' + limit + paging);
   }
 
 
