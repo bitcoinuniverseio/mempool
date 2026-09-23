@@ -63,7 +63,9 @@ test('the artifact workflow requires candidate-bound acceptance before packing',
   assert.match(artifactWorkflow, /Qualify the release acceptance envelope/);
   assert.match(artifactWorkflow, /--expect-artifact-commit.*git rev-parse HEAD/);
   assert.match(artifactWorkflow, /--acceptance docs\/acceptance\/qualified-release-evidence\.json/);
-  assert.match(artifactWorkflow, /cp -a docs\/acceptance\/qualified-release-evidence\.json/);
+  // The envelope and its evidence closure are staged by the contract script;
+  // release-artifact.test.mjs proves the packed archive qualifies on its own.
+  assert.match(artifactWorkflow, /--stage-acceptance "\$stage"/);
 });
 
 // Install the real function into a disposable release tree. Package download,
