@@ -47,6 +47,7 @@ the default from `config.ts`.
 | `CPFP_INDEXING` | `false` | Index child-pays-for-parent clusters |
 | `AUDIT` | `false` | Block template auditing, which compares mined blocks against what the node expected |
 | `RUST_GBT` | `true` | Use the Rust block template builder in `rust/gbt`. Turning it off falls back to the TypeScript implementation |
+| `MINING_MAX_BEHIND_TIP` | `3` | How many blocks the mining index may trail a fresh Core reading of the same network and still be reported `ready` in `/api/v1/capabilities`. Beyond it mining reads `degraded`; a missing, stale (over 120 s) or other-network Core reading reads `unknown` |
 | `AUTOMATIC_POOLS_UPDATE` | `false` | **Leave off.** Turning it on makes the backend fetch mining pool metadata over the network at runtime, from `POOLS_JSON_URL`. The bundled `backend/src/tasks/pools/pools-v2.json` is used instead |
 | `MAX_PUSH_TX_SIZE_WEIGHT` | `400000` | Largest transaction the broadcast route accepts, in weight units |
 | `MAX_TRACKED_ADDRESSES` | `1` | How many addresses one WebSocket client may subscribe to |
@@ -254,11 +255,19 @@ defaults.
 
 `UNIVERSE_CHAIN_NETWORKS` (Docker frontend: `UNIVERSE_CHAIN_NETWORKS`, a JSON string)
 names which network each non-Bitcoin chain is read from, for example
-`{"dogecoin":"testnet"}`. Values are `mainnet`, `testnet` or `regtest` per
-chain; the default `{}` reads every chain from mainnet. Bitcoin is never listed:
-it follows the network selector, and the selector never implies a Dogecoin or
-Zcash network. An entry the frontend cannot use is ignored with a console
-warning and that chain reads mainnet. The overlay must serve the named scope
+`{"dogecoin":"testnet"}`. Keys are `dogecoin`, `zcash` and `fractal`; values are
+the networks the overlay serves for that chain (`mainnet`, `testnet` or `regtest`
+for Dogecoin and Zcash, `mainnet` or `testnet` for Fractal). The default `{}`,
+and any chain the map does not name, reads mainnet. Bitcoin is never listed: it
+follows the network selector, and the selector never implies a Dogecoin or
+Zcash network.
+
+A value that is present but wrong never falls back to mainnet. Unreadable JSON,
+a non-object, a Bitcoin entry or an unknown key (a typo such as `doge`) makes
+every listed chain unavailable; an unsupported network makes that one chain
+unavailable. An unavailable chain sends no request and opens no live socket,
+its pages say the setting is invalid and why, and the chain picker names it
+"Network setting invalid". Correct the value and reload. The overlay must serve the named scope
 (`UNIVERSE_DOGECOIN_NETWORKS` for Dogecoin, the indexer's declared network for
 Zcash); a scope it does not serve is shown as unavailable under that network,
 never as mainnet data.

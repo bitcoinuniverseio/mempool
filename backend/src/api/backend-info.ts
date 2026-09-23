@@ -78,6 +78,7 @@ class BackendInfo {
         initialBlockDownload: !!info.initialblockdownload,
         verificationProgress: info.verificationprogress,
         checkedAt: new Date().toISOString(),
+        chain: typeof (info as { chain?: unknown }).chain === 'string' ? String(info.chain) : null,
       };
     } catch (e) {
       logger.debug(`Could not read chain sync state. Reason: ${(e instanceof Error ? e.message : e)}`);

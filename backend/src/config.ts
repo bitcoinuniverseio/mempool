@@ -35,6 +35,7 @@ interface IConfig {
     POOLS_JSON_TREE_URL: string,
     POOLS_JSON_FILE: string,
     POOLS_UPDATE_DELAY: number,
+    MINING_MAX_BEHIND_TIP: number,
     AUDIT: boolean;
     RUST_GBT: boolean;
     LIMIT_GBT: boolean;
@@ -211,6 +212,7 @@ const defaults: IConfig = {
     'POOLS_JSON_TREE_URL': 'https://api.github.com/repos/mempool/mining-pools/git/trees/master',
     'POOLS_JSON_FILE': 'tasks/pools/pools-v2.json',
     'POOLS_UPDATE_DELAY': 604800, // in seconds, default is one week
+    'MINING_MAX_BEHIND_TIP': 3, // blocks the mining index may trail Core and still be ready
     'AUDIT': false,
     'RUST_GBT': true,
     'LIMIT_GBT': false,

@@ -5,6 +5,7 @@ import backendInfo from './backend-info';
 import { Common } from './common';
 import { preflightFailures, type PreflightFailure, type PreflightInput } from './capabilities.preflight';
 import { $optionalCapabilityReports } from './capabilities.optional';
+import { miningIndexVerdict } from './capabilities.mining';
 import {
   $probeAddressIndex,
   addressBackendKind,
@@ -29,8 +30,13 @@ export type { PreflightFailure, PreflightInput };
  * not finished yet is not the same as one that is broken, and a reader who is
  * told "unavailable" about an index that will answer in an hour has been told
  * the wrong thing.
+ *
+ * `unknown` exists because a verdict needs a reference. When the reading a
+ * feature is judged against is missing, too old or from another network, the
+ * honest report is that its currency cannot be established, not that it is
+ * ready because its tables have rows.
  */
-export type CapabilityState = 'ready' | 'syncing' | 'degraded' | 'unavailable' | 'disabled';
+export type CapabilityState = 'ready' | 'syncing' | 'degraded' | 'unavailable' | 'disabled' | 'unknown';
 
 export interface CapabilityDependency {
   readonly name: string;
@@ -435,22 +441,41 @@ class Capabilities {
         detail: poolCount > 0 ? null : 'No mining pool metadata has been imported.',
       });
 
-      const indexed = total > 0 && poolCount > 0;
+      // Rows prove the index ran once, not that it is running. Readiness is
+      // the highest indexed block against a fresh Core reading of the same
+      // network; see capabilities.mining.ts for every branch.
+      const chainSync = backendInfo.getBackendInfo().chainSync;
+      const verdict = miningIndexVerdict({
+        blockRows: total,
+        highestHeight: highest,
+        poolRows: poolCount,
+        core: chainSync ? {
+          blocks: chainSync.blocks,
+          chain: chainSync.chain ?? null,
+          initialBlockDownload: chainSync.initialBlockDownload,
+          checkedAt: chainSync.checkedAt,
+        } : null,
+        network: config.MEMPOOL.NETWORK,
+        maxBehindTip: config.MEMPOOL.MINING_MAX_BEHIND_TIP,
+        now: Date.now(),
+      });
       return {
         enabled, routesRegistered, dependencies,
-        state: indexed ? 'ready' : 'degraded',
+        state: verdict.state,
         coverage: {
           from: lowest === null ? null : String(lowest),
           to: highest === null ? null : String(highest),
         },
         rowCount: total,
         lastSuccessfulUpdate: newest ? newest.toISOString() : null,
+        // Age of the newest indexed block's own timestamp. Reported for
+        // context only: block intervals vary by hours, so it decides nothing.
         lagSeconds: newest ? Math.max(0, Math.round((Date.now() - newest.getTime()) / 1000)) : null,
-        degradedReason: total === 0
-          ? 'Block indexing is running but no block has been indexed yet.'
-          : poolCount === 0
-            ? 'Mining pool metadata has not been imported yet.'
-            : null,
+        degradedReason: verdict.degradedReason,
+        indexedTip: verdict.indexedTip,
+        bitcoinCoreTip: verdict.bitcoinCoreTip,
+        lagBlocks: verdict.lagBlocks,
+        maxLagBlocks: verdict.maxLagBlocks,
       };
     } catch (e) {
       logger.debug('Capability probe could not read the mining index: ' + (e instanceof Error ? e.message : e));
