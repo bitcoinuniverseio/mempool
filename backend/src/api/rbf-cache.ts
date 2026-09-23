@@ -6,6 +6,9 @@ import { IEsploraApi } from './bitcoin/esplora-api.interface';
 import { Common } from './common';
 import redisCache from './redis-cache';
 
+/** Concurrent RPC reads when a restored RBF cache is checked against the node. */
+export const RBF_CHECK_CONCURRENCY = 8;
+
 export interface RbfTransaction extends TransactionStripped {
   rbf?: boolean;
   mined?: boolean;
@@ -580,14 +583,27 @@ class RbfCache {
         }
       }
     } else {
+      // Read with a small fixed pool rather than one at a time. This runs
+      // before the HTTP server listens, and on 2026-09-23 a cache of 8,044
+      // unexpired transactions read sequentially through the Core RPC tunnel
+      // held the whole API down for about half an hour on every restart. The
+      // pool stays well inside the shared RPC budget.
       const txs: IEsploraApi.Transaction[] = [];
-      for (const txid of txids) {
-        try {
-          const tx = await bitcoinApi.$getRawTransaction(txid, true, false);
-          txs.push(tx);
-        } catch (err) {
-          // some 404s are expected, so continue quietly
+      let next = 0;
+      const worker = async (): Promise<void> => {
+        while (next < txids.length) {
+          const txid = txids[next++];
+          try {
+            txs.push(await bitcoinApi.$getRawTransaction(txid, true, false));
+          } catch (err) {
+            // some 404s are expected, so continue quietly
+          }
         }
+      };
+      try {
+        await Promise.all(Array.from({ length: Math.min(RBF_CHECK_CONCURRENCY, txids.length) }, () => worker()));
+      } catch (err) {
+        logger.err('failed to check cached rbf transactions: ' + (err instanceof Error ? err.message : err));
       }
       processTxs(txs);
     }
