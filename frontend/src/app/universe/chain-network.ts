@@ -36,6 +36,42 @@ export function configuredChainNetworks(env: Env): ChainNetworkConfig {
   return lastParsed;
 }
 
+/**
+ * IMPLEMENTATION-HANDOFF [M23-NET] | defect F-M23-02 | coverage C-NET-EXPLICIT
+ * Preparation only, 2026-09-23. Dependency: M23-BASE; coordinate all callers
+ * of configuredChainNetworks and chainNetwork before changing their contract.
+ * Verified at 079dc0d79755bc986bfae3288ffe0e479da3e1f6: malformed JSON or an
+ * explicit unsupported network is dropped here, then chainNetwork defaults
+ * to mainnet. chain-network.spec.ts deliberately asserts this for Dogecoin
+ * signet/testnet3. This violates the requested separation of test and mainnet
+ * contexts; it is not evidence of a transaction having been sent incorrectly.
+ * Governing requirement: user brief network isolation (lines 41-49), with
+ * Bitcoin Signet specified by BIP 325; do not infer Signet support for other
+ * chains from Bitcoin's selector or from a generic list of network names.
+ * 1. Preserve missing configuration and omitted-chain mainnet defaults, but
+ * represent an explicitly invalid map/entry as a typed unavailable result
+ * with a reason. Do not erase the error into an absent entry or substitute a
+ * different network. Preserve valid entries independently where safe.
+ * 2. Validate keys against the actual Explorer chain registry and each
+ * authority's declared supported networks. Pin that registry contract first;
+ * do not derive support from CHAIN_NETWORK_VALUES alone or invent new chains.
+ * 3. Update callers to stop affected API requests, clear prior-context data,
+ * and render a recoverable configuration error. Keep request/cache/query
+ * identities chain-and-network bound; retry only after valid configuration.
+ * 4. Extend chain-network.spec.ts with invalid JSON, invalid explicit network,
+ * unknown chain, valid object/string, omitted defaults, and configuration
+ * correction. Add consumer tests proving zero wrong-network requests and no
+ * stale mainnet data after an invalid test-network selection or reconnect.
+ * Commands (declared, not executed on SERVER in this preparation):
+ * cd frontend; npm run test:ci -- src/app/universe/chain-network.spec.ts
+ * npm run lint; npm run build:universe
+ * Acceptance: explicit invalid input never becomes a mainnet request; absent
+ * defaults stay mainnet; valid chain-specific testnet reads survive Bitcoin
+ * selector changes, refresh and reconnect. Record actual supported-network
+ * consumer evidence separately from unit tests. No mainnet test transactions.
+ * Rollback: revert the coordinated parser/caller change together; preserve
+ * production defaults and network-scoped caches. No database migration here.
+ */
 function parse(raw: unknown): ChainNetworkConfig {
   if (raw === undefined || raw === null || raw === '') {return {};}
   let value: unknown = raw;
