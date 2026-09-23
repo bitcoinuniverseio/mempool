@@ -10,6 +10,23 @@ The SERVER checkout is `D:\universe\mempool\mempool`, whose HEAD file names main
 
 The created SERVER handoff directory is `D:\universe\mempool\audits\implementation-prep-20260923-1745\mempool_HANDOFF_2026-09-23`. Directory creation alone does not prove a prompt or ZIP was saved; consult the final handoff delivery receipt. Workspace AGENTS.md was read but is not redistributed because it contains credentials. Treat secrets as credentials, never as report content.
 
+## Implementation status, 2026-09-23 evening
+
+Implemented on `implement/mainnet-20260923` (PR #136) from the prepared revision `161b7bdd0`. Unit, integration-style and archive tests pass as listed in the PR. **None of this is functional acceptance, and nothing was released.**
+
+| ID | Disposition | Functional status |
+|---|---|---|
+| M23-NET | IMPLEMENTED. Typed unavailable result, owning-contract keys and networks, every caller updated; the source marker is replaced by rationale | Unit and consumer tests PASS; supported-network journey NOT TESTED |
+| M23-HEALTH | IMPLEMENTED in `capabilities.mining.ts` (lag bound `MEMPOOL.MINING_MAX_BEHIND_TIP`, fresh same-network Core reading, `unknown` state). The live outage cause is verified and repaired (below); an outstanding note replaces the marker | Unit and report tests PASS; Signet API-to-UI NOT TESTED |
+| M23-PACK | IMPLEMENTED. `--stage-acceptance`, `docs` in the archive, `qualify-artifact.mjs` before upload; the marker is replaced by rationale | Real-archive tests PASS; a real workflow run needs a qualified envelope, which does not exist |
+| M23-BASE | DONE. Worktree `D:\universe\mempool\.worktrees\mainnet-execution-20260923`, Node 24.19.0, npm 11.17.0; running backend 537235052, overlay fcdc2e2f | n/a |
+| M23-AUTHORITY | NOT STARTED in owning repositories | BLOCKED: the production overlay reports every Bitcoin protocol unavailable on Signet and Testnet and every Dogecoin and Zcash protocol unavailable on Testnet |
+| M23-COVERAGE | Matrix regenerated for changed sources; still `operationDenominatorReconciled: false` | NOT TESTED |
+| M23-ACCEPT | NOT EXECUTED | BLOCKED on M23-AUTHORITY |
+| M23-RELEASE | NOT EXECUTED; `gate_qualified_acceptance` correctly refuses without a qualified envelope | BLOCKED |
+
+**F-M23-04 cause, verified and repaired.** Fulcrum (`universe-fulcrum`, 127.0.0.1:50001), the explorer's electrum address index, stopped cleanly at 2026-09-22T13:05Z. The Bitcoin Core migration to the OVH node stopped `bitcoin.service`, and Fulcrum and its dependents went down in the same cascade. Nothing restarted them. `bitcoin.service` is now the RPC bridge to the migrated node, so starting Fulcrum was safe. It was restarted at 2026-09-23T20:55Z, caught up 175 blocks, and `addressLookup` reports ready at 968318. The explorer checkpoint stayed at 968172, the migration's frozen height, because the block loop was waiting on the dead index.
+
 ## Source annotation index
 
 | ID | Actual source anchor | Dependencies | Preparation | Functional status |
