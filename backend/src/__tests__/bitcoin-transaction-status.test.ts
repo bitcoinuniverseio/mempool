@@ -97,4 +97,31 @@ describe('Bitcoin Core transaction confirmation identity', () => {
     expect(transaction.status).toEqual({ confirmed: true, block_height: 0, block_hash: HASH, block_time: BLOCK.time });
     expect(client.getBlockHeader).not.toHaveBeenCalled();
   });
+  it('reads a whole block for ingestion in one request, with block status and Core fees, and no per-transaction reads', async () => {
+    const { api, client } = fixture();
+    const spend = { ...RAW, txid: 'a'.repeat(64), vin: [{ txid: TXID, vout: 0, scriptSig: { hex: '' }, sequence: 1 }], fee: 0.00000321 };
+    client.getBlock.mockResolvedValue({ ...BLOCK, tx: [RAW, spend] });
+    const transactions = await api.$getTxsForBlockWithoutPrevouts(HASH);
+    expect(transactions.map(tx => tx.txid)).toEqual([TXID, 'a'.repeat(64)]);
+    for (const transaction of transactions) {
+      expect(transaction.status).toEqual({ confirmed: true, block_height: BLOCK.height, block_hash: HASH, block_time: BLOCK.time });
+    }
+    expect(transactions[1].fee).toBe(321);
+    expect(transactions[1].vin[0].prevout).toBeNull();
+    expect(client.getBlock).toHaveBeenCalledTimes(1);
+    expect(client.getBlock).toHaveBeenCalledWith(HASH, 2);
+    expect(client.getRawTransaction).not.toHaveBeenCalled();
+    expect(client.getBlockHeader).not.toHaveBeenCalled();
+    expect(client.getMempoolEntry).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { ...BLOCK, confirmations: -1, tx: [RAW] },
+    { ...BLOCK, hash: 'f'.repeat(64), tx: [RAW] },
+    { ...BLOCK, tx: undefined },
+  ])('refuses a stale, mismatched or transactionless block for the one-request read: %j', async block => {
+    const { api, client } = fixture();
+    client.getBlock.mockResolvedValue(block);
+    await expect(api.$getTxsForBlockWithoutPrevouts(HASH)).rejects.toThrow('not an active-chain block');
+  });
 });
