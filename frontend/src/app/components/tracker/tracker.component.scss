@@ -22,6 +22,22 @@
   }
 }
 
+// Transaction enrichment can arrive after the tracker shell. Keep the
+// status/footer controls in the viewport while the details above them grow;
+// the details become the one scroll region instead of pushing the controls
+// away from a phone user's thumb.
+.tracker-content {
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-shrink: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mobile-container > .tracker-content {
+  flex-shrink: 1;
+}
+
 .heading {
   display: flex;
   flex-direction: row;
@@ -230,7 +246,8 @@
 }
 
 .bottom-panel {
-  flex-grow: 1;
+  flex: 0 0 auto;
+  min-height: 180px;
   display: flex;
   flex-direction: column;
   align-items: center;
