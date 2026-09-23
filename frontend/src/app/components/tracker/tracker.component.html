@@ -1,6 +1,7 @@
 <div class="mobile-wrapper">
   <div class="mobile-container">
-    <div class="panel">
+    <div class="tracker-content">
+      <div class="panel">
       <div class="nav-header">
         @if (enterpriseInfo) {
           <a [routerLink]="['/' | relativeUrl]">
@@ -119,8 +120,9 @@
       </div>
     </div>
 
-    <app-universe-transaction-assets *ngIf="txId && tx && !waitingForTransaction" [txid]="txId" chain="bitcoin"
-      [statusRevision]="tx?.status?.block_hash || replaced || null"></app-universe-transaction-assets>
+      <app-universe-transaction-assets *ngIf="txId && tx && !waitingForTransaction" [txid]="txId" chain="bitcoin"
+        [statusRevision]="tx?.status?.block_hash || replaced || null"></app-universe-transaction-assets>
+    </div>
 
     <div class="bottom-panel" *ngIf="!error || waitingForTransaction">
       @if (isLoading) {
