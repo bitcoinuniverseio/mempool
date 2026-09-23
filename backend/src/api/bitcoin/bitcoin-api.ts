@@ -128,6 +128,35 @@ class BitcoinApi implements AbstractBitcoinApi {
     return transactions;
   }
 
+  /**
+   * Every transaction of a block from one verbose block read, without
+   * prevouts: the same documents the per-transaction path builds with
+   * addPrevout off, with the status taken from the block and the fee from
+   * Core's own per-transaction field. The per-transaction path costs two RPC
+   * round trips per transaction (the transaction and its block header); with
+   * Core behind a 115 ms tunnel that was about thirty minutes for a block the
+   * mempool no longer held, the whole of the main loop watchdog's budget.
+   *
+   * @asyncUnsafe
+   */
+  async $getTxsForBlockWithoutPrevouts(hash: string): Promise<IEsploraApi.Transaction[]> {
+    const verboseBlock: IBitcoinApi.VerboseBlock = await this.bitcoindClient.getBlock(hash, 2);
+    if (!verboseBlock || verboseBlock.hash !== hash || !Array.isArray(verboseBlock.tx) || verboseBlock.confirmations === -1) {
+      throw new Error('Block ' + hash + ' is not an active-chain block with transactions');
+    }
+    const status = { confirmed: true, block_height: verboseBlock.height, block_hash: hash, block_time: verboseBlock.time };
+    const transactions: IEsploraApi.Transaction[] = [];
+    for (const tx of verboseBlock.tx) {
+      const converted = await this.$convertTransaction(tx, false, false, false, status);
+      const fee = (tx as { fee?: unknown }).fee;
+      if (typeof fee === 'number' && Number.isFinite(fee)) {
+        converted.fee = Math.round(fee * 100_000_000);
+      }
+      transactions.push(converted);
+    }
+    return transactions;
+  }
+
   $getRawBlock(hash: string): Promise<Buffer> {
     return this.bitcoindClient.getBlock(hash, 0)
       .then((raw: string) => Buffer.from(raw, 'hex'));

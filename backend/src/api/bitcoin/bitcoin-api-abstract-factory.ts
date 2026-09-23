@@ -13,6 +13,8 @@ export interface AbstractBitcoinApi {
   $getBlockHashTip(): Promise<string>;
   $getTxIdsForBlock(hash: string, fallbackToCore?: boolean): Promise<string[]>;
   $getTxsForBlock(hash: string, fallbackToCore?: boolean): Promise<IEsploraApi.Transaction[]>;
+  /** Core-backed APIs only: a block's transactions from one verbose read, without prevouts. */
+  $getTxsForBlockWithoutPrevouts?(hash: string): Promise<IEsploraApi.Transaction[]>;
   $getBlockHash(height: number): Promise<string>;
   $getBlockHeader(hash: string): Promise<string>;
   $getBlock(hash: string): Promise<IEsploraApi.Block>;
