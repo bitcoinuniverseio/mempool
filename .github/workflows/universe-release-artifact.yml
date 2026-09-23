@@ -120,6 +120,43 @@ jobs:
       # compare it against the running release and refuse the hard link when it
       # differs. That check belongs there, where both trees are visible; here
       # only one of them is.
+      # IMPLEMENTATION-HANDOFF [M23-PACK] | F-M23-01 | C-RELEASE-ARCHIVE
+      # Preparation only, 2026-09-23. Prerequisites: M23-BASE and the existing
+      # qualified acceptance work; this is not permission to bypass that gate.
+      # Verified at 079dc0d79755bc986bfae3288ffe0e479da3e1f6: this step copies
+      # two files into stage/docs, but tar below names only backend/frontend/
+      # scripts/production/RELEASE-MANIFEST.json. docs is therefore absent.
+      # release.sh:gate_qualified_acceptance requires the candidate's protocol
+      # manifest and rooted evidence before cutover. A successful checkout-side
+      # qualification does not make the extracted archive self-contained.
+      # Governing sources: scripts/universe/release.sh:gate_qualified_acceptance;
+      # protocol-contract.mjs:verifyEvidence; user release/evidence requirements.
+      # 1. Stage the protocol manifest, acceptance envelope and every evidence
+      # file referenced by that envelope under a candidate-contained root.
+      # Enumerate and validate the exact reference closure using the existing
+      # verifier's schema/path rules. Reject missing files, hash mismatches,
+      # absolute/traversal paths and symlinks escaping the candidate. Do not
+      # copy credentials, whole workspaces, or unsupported success assertions.
+      # 2. Include those staged paths in the archive member list. Keep the
+      # production artifact and evidence bound to the accepted full source SHA
+      # and production configuration; do not use a mutable external evidence root.
+      # 3. Extract the actual archive into a new directory, with the checkout
+      # unavailable, and run the same protocol-contract --release invocation
+      # with --acceptance-root set to the extracted candidate. Assert all
+      # referenced evidence members exist with their expected hashes before
+      # upload. Keep all existing branding, identity and release gates.
+      # 4. Extend scripts/universe/release-gates.test.mjs with actual tar member
+      # and extracted-candidate qualification cases, not regex presence alone.
+      # Cover missing docs, missing nested evidence, tampered bytes, escaped
+      # symlinks, stale revision and a valid Signet-qualified mainnet envelope.
+      # Commands declared, not executed on SERVER in this preparation:
+      # node --test scripts/universe/release-gates.test.mjs
+      # node --test scripts/universe/protocol-contract.test.mjs
+      # bash -n scripts/universe/release.sh
+      # Acceptance: the exact uploaded archive qualifies after extraction with
+      # no checkout dependency; failed qualification prevents publication/cutover.
+      # Rollback: retain the previous immutable artifact, routing and compatible
+      # configuration. No database migration or live transaction is needed here.
       - name: Pack
         id: pack
         run: |
