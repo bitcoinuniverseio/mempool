@@ -16,7 +16,7 @@ import {
   docsSectionsFor,
 } from '@app/universe/chain-docs/chain-docs-content';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
-import { chainNetwork } from '@app/universe/chain-network';
+import { resolveChainNetwork } from '@app/universe/chain-network';
 import { StateService } from '@app/services/state.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -37,7 +37,7 @@ export class ChainDocsComponent implements OnInit {
   readonly chain: Exclude<ExplorerChain, 'bitcoin'>;
   readonly profile: ChainProfile;
   /** The network this deployment reads the chain from; the examples below name it. */
-  readonly network: ExplorerNetwork;
+  readonly network: ExplorerNetwork | 'unavailable';
   readonly sections: readonly DocsSection[];
 
   /** The section the URL names, or null on the plain /docs route. */
@@ -56,7 +56,10 @@ export class ChainDocsComponent implements OnInit {
         ? 'dogecoin'
         : 'zcash';
     this.profile = chainProfile(this.chain);
-    this.network = chainNetwork(this.chain, 'mainnet', state.env);
+    // The docs name the configured network in their examples; an invalid
+    // setting is named as such rather than documented as mainnet.
+    const resolved = resolveChainNetwork(this.chain, 'mainnet', state.env);
+    this.network = resolved.network ?? 'unavailable';
     this.sections = docsSectionsFor(this.chain);
   }
 

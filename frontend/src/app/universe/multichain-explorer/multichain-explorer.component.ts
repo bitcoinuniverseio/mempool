@@ -17,6 +17,7 @@ import {
 } from '@angular/router';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { isChainNetworkUnavailable } from '@app/universe/chain-network';
 import { UniverseWebsocketService } from '@app/universe/universe-websocket.service';
 import {
   UniverseEntryKind,
@@ -96,6 +97,7 @@ import {
   Subject,
   catchError,
   combineLatest,
+  defer,
   map,
   of,
   switchMap,
@@ -453,9 +455,13 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     if (!kind || !this.reference) {
       return;
     }
+    const network = this.api.chainNetworkLabel(this.chain);
+    if (!network) {
+      return;
+    }
     this.saved = this.local.toggleBookmark({
       chain: this.chain,
-      network: this.api.chainNetwork(this.chain),
+      network,
       kind,
       value: this.reference,
       path: this.router.url.split('?')[0],
@@ -727,12 +733,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
               reference,
               'holders'
             )
-          : of({
+          : defer(() => of({
               chain: this.chain,
               network: this.api.chainNetwork(this.chain),
               state: 'unavailable',
               reason: 'section-not-supported',
-            });
+            }));
       case 'protocol-events':
         return this.chain === 'dogecoin'
           ? this.api.getChainProtocolSection$(
@@ -741,12 +747,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
               reference,
               'events'
             )
-          : of({
+          : defer(() => of({
               chain: this.chain,
               network: this.api.chainNetwork(this.chain),
               state: 'unavailable',
               reason: 'section-not-supported',
-            });
+            }));
     }
   }
 
@@ -759,12 +765,13 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   private recordVisit(context: RequestContext): void {
     const kind = PAGE_KINDS[context.page];
-    if (!kind || !this.reference) {
+    const network = this.api.chainNetworkLabel(this.chain);
+    if (!kind || !this.reference || !network) {
       return;
     }
     this.local.recordVisit({
       chain: this.chain,
-      network: this.api.chainNetwork(this.chain),
+      network,
       kind,
       value: this.reference,
       path: this.router.url.split('?')[0],
@@ -774,10 +781,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   private isSaved(context: RequestContext): boolean {
     const kind = PAGE_KINDS[context.page];
+    const network = this.api.chainNetworkLabel(this.chain);
     return (
       !!kind &&
       !!this.reference &&
-      this.local.isBookmarked(kind, this.reference, this.chain, this.api.chainNetwork(this.chain))
+      !!network &&
+      this.local.isBookmarked(kind, this.reference, this.chain, network)
     );
   }
 
@@ -821,6 +830,9 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
   }
 
   private errorMessage(error: unknown): string {
+    if (isChainNetworkUnavailable(error)) {
+      return $localize`:@@universe.chain.error-network-config:${this.chainName}:CHAIN: is not being read because its network setting is invalid: ${error.reason}:REASON: Nothing from another network is shown. Correct the setting, then reload.`;
+    }
     const status =
       typeof error === 'object' && error !== null && 'status' in error
         ? String((error as { status: unknown }).status)
