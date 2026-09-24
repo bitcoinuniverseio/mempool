@@ -538,6 +538,11 @@ export interface IChainSyncState {
   /** Fraction of the chain verified, 0 to 1, as the node reports it. */
   verificationProgress: number;
   checkedAt: string;
+  /**
+   * The chain Core says it is on (main, test, testnet4, signet, regtest), so a
+   * reading can be matched to the network it is compared against.
+   */
+  chain?: string | null;
 }
 
 export interface INetworkInfo {

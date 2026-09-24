@@ -8,6 +8,12 @@
     <h1 i18n="universe.dash.heading">{{ profile.name }} dashboard</h1>
   </header>
 
+  <!-- An invalid network setting stops every read of this chain. Say so
+       plainly rather than show another network's data under its name. -->
+  <p class="notice failure" role="alert" *ngIf="networkConfigError" i18n="universe.dash.network-config-invalid">
+    {{ profile.name }} is not being read because its network setting is invalid: {{ networkConfigError }} Nothing from another network is shown. Correct the setting, then reload.
+  </p>
+
   <!-- The trust anchor keeps its place, compact, above everything. -->
   <section
     class="status-rail"
@@ -76,7 +82,7 @@
   <p
     class="notice failure"
     role="alert"
-    *ngIf="vm.viewError && vm.viewError !== 'network-not-offered' && !vm.timeline"
+    *ngIf="vm.viewError && vm.viewError !== 'network-not-offered' && vm.viewError !== 'network-config-invalid' && !vm.timeline"
     i18n="universe.dash.view-error"
   >
     The {{ profile.name }} dashboard data cannot be read right now. Each panel

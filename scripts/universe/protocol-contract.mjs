@@ -36,7 +36,9 @@
 
 import { createHash } from 'node:crypto';
 import {
+  copyFileSync,
   lstatSync,
+  mkdirSync,
   readFileSync,
   realpathSync,
 } from 'node:fs';
@@ -812,6 +814,112 @@ function verifyEvidenceFiles(entries, context, report, owner) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// The evidence a release artifact carries
+// ---------------------------------------------------------------------------
+
+/** Where a release artifact carries its protocol manifest and acceptance envelope. */
+export const STAGED_MANIFEST_PATH = 'docs/protocols/PROTOCOL-COVERAGE.json';
+export const STAGED_ACCEPTANCE_PATH = 'docs/acceptance/qualified-release-evidence.json';
+
+/**
+ * Every evidence file an acceptance envelope names: the configuration proof's
+ * and every row's. This is the set an artifact must carry for the release gate
+ * to qualify it with nothing but the artifact. Repeated references to one
+ * path are kept once; a path named with two different digests is kept twice,
+ * so the digest check refuses one of them rather than one silently winning.
+ */
+export function acceptanceEvidenceClosure(evidence) {
+  const lists = [evidence?.candidate?.configurationProof?.evidence];
+  for (const row of Array.isArray(evidence?.rows) ? evidence.rows : []) {
+    lists.push(row?.evidence);
+  }
+  const seen = new Set();
+  const closure = [];
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue;
+    for (const entry of list) {
+      const key = JSON.stringify([entry?.path, typeof entry?.sha256 === 'string' ? entry.sha256.toLowerCase() : entry?.sha256]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      closure.push(entry);
+    }
+  }
+  return closure;
+}
+
+function regularFile(file, label, report) {
+  try {
+    const stat = lstatSync(file);
+    if (stat.isSymbolicLink()) {
+      report.fail(`The ${label} ${file} is a symlink, not a file.`);
+      return false;
+    }
+    if (!stat.isFile()) {
+      report.fail(`The ${label} ${file} is not a file.`);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    report.fail(`The ${label} ${file} could not be read: ${error instanceof Error ? error.message : error}.`);
+    return false;
+  }
+}
+
+/**
+ * Copies the protocol manifest, the acceptance envelope and the complete
+ * evidence closure the envelope names into a release staging directory.
+ *
+ * The artifact used to carry the two documents without the files the
+ * envelope points at, and then not even the documents: the workflow staged
+ * docs/ but left it out of the archive, so a candidate qualified in the
+ * checkout could never qualify on the host. Every evidence file is checked
+ * with the release gate's own rules before and after the copy: a relative
+ * path under docs/, inside the evidence root, a regular file rather than a
+ * symlink, and the recorded SHA-256. Nothing is copied when any check fails.
+ */
+export function stageAcceptance({ manifestPath, acceptancePath, acceptanceRoot, stageRoot }, report = new Report()) {
+  const manifestOk = regularFile(manifestPath, 'protocol manifest', report);
+  const envelopeOk = regularFile(acceptancePath, 'acceptance envelope', report);
+  if (!manifestOk || !envelopeOk) return report;
+
+  let evidence;
+  try {
+    evidence = JSON.parse(readFileSync(acceptancePath, 'utf8'));
+  } catch (error) {
+    report.fail(`The acceptance envelope is not readable JSON: ${error instanceof Error ? error.message : error}.`);
+    return report;
+  }
+  const closure = acceptanceEvidenceClosure(evidence);
+  if (!closure.length) {
+    report.fail('The acceptance envelope names no evidence files to carry.');
+    return report;
+  }
+  for (const entry of closure) {
+    const name = typeof entry?.path === 'string' ? entry.path.replaceAll('\\', '/') : '';
+    if (!name.startsWith('docs/') || path.posix.normalize(name) !== name) {
+      report.fail(`Evidence ${JSON.stringify(entry?.path)} is not a plain path under docs/, where the artifact carries evidence.`);
+    }
+  }
+  const source = evidenceRoot(acceptanceRoot, report);
+  verifyEvidenceFiles(closure, source, report, 'The acceptance closure');
+  if (report.problems.length) return report;
+
+  const place = (from, relative) => {
+    const target = path.join(stageRoot, relative);
+    mkdirSync(path.dirname(target), { recursive: true });
+    copyFileSync(from, target);
+  };
+  place(manifestPath, STAGED_MANIFEST_PATH);
+  place(acceptancePath, STAGED_ACCEPTANCE_PATH);
+  for (const entry of closure) {
+    place(realpathSync(path.resolve(source.rootPath, entry.path)), entry.path);
+  }
+  // Staged copies are what ship, so they are what get checked last.
+  verifyEvidenceFiles(closure, evidenceRoot(stageRoot, report), report, 'The staged acceptance closure');
+  return report;
+}
+
 function validateQualifiedAcceptanceEvidence(
   manifest,
   descriptors,
@@ -1429,7 +1537,9 @@ function usage(message) {
       '  protocol-contract.mjs --check                      the offline gate\n' +
       '  protocol-contract.mjs --against <url|file>         compare the pin against what is served\n' +
       '  protocol-contract.mjs --release <url|file>         the release gate, stricter than --check\n' +
-      '      [--expect-sha <sha>] [--expect-artifact-commit <sha>] [--network <name>] [--acceptance <file>] [--acceptance-root <dir>]\n',
+      '      [--expect-sha <sha>] [--expect-artifact-commit <sha>] [--network <name>] [--acceptance <file>] [--acceptance-root <dir>]\n' +
+      '  protocol-contract.mjs --stage-acceptance <dir>     copy the manifest, envelope and evidence closure into a release stage\n' +
+      '      --manifest <file> --acceptance <file> --acceptance-root <dir>\n',
   );
   process.exit(2);
 }
@@ -1446,15 +1556,33 @@ async function main() {
   const networkIndex = argv.indexOf('--network');
   const acceptanceIndex = argv.indexOf('--acceptance');
   const acceptanceRootIndex = argv.indexOf('--acceptance-root');
+  const stageIndex = argv.indexOf('--stage-acceptance');
+  const manifestIndex = argv.indexOf('--manifest');
 
   const modes = [
     wantsRecord,
     wantsCheck,
     againstIndex !== -1,
     releaseIndex !== -1,
+    stageIndex !== -1,
   ].filter(Boolean);
   if (modes.length !== 1) {
-    usage('Pass exactly one of --record, --check, --against, --release.');
+    usage('Pass exactly one of --record, --check, --against, --release, --stage-acceptance.');
+  }
+  if (stageIndex !== -1) {
+    const value = (index, flag) => {
+      if (index === -1 || !argv[index + 1]) usage(`--stage-acceptance needs ${flag}.`);
+      return argv[index + 1];
+    };
+    const stageRoot = value(stageIndex, 'a staging directory');
+    stageAcceptance({
+      manifestPath: value(manifestIndex, '--manifest <file>'),
+      acceptancePath: value(acceptanceIndex, '--acceptance <file>'),
+      acceptanceRoot: value(acceptanceRootIndex, '--acceptance-root <dir>'),
+      stageRoot,
+    }).throwIfFailed('The acceptance evidence could not be staged for the release artifact.');
+    process.stdout.write(`Staged the protocol manifest, acceptance envelope and evidence closure into ${stageRoot}.\n`);
+    return;
   }
   if (releaseIndex !== -1) {
     if (!argv[releaseIndex + 1]) usage('--release needs a url or file.');

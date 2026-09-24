@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { StateService } from '@app/services/state.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
-import { configuredChainNetworks } from '@app/universe/chain-network';
+import { ChainNetworkUnavailableError, configuredChainNetworks } from '@app/universe/chain-network';
 
 // Owner-scoped calls read a bearer header from this; the specs here make none.
 const ownerKeyStub = { headers: () => ({}), key: null };
@@ -267,14 +267,53 @@ describe('UniverseApiService chain network context', () => {
   });
 
   it.each([
-    { dogecoin: 'signet' }, { dogecoin: 'Testnet' }, { dogecoin: 7 }, 'not json', ['testnet'], { bitcoin: 'testnet' },
-  ])('ignores an invalid configuration %j with a warning and reads mainnet', (value) => {
+    { dogecoin: 'signet' }, { dogecoin: 'Testnet' }, { dogecoin: 7 }, 'not json', ['testnet'], { bitcoin: 'testnet' }, { doge: 'testnet' },
+  ])('sends no Dogecoin request for the invalid configuration %j and fails with the typed reason', (value) => {
     const { service, urls } = build(true, undefined, value);
-    service.getChainDashboard$('dogecoin').subscribe();
-    expect(urls).toEqual(['/api/v1/dogecoin/dashboard?network=mainnet']);
+    const failures: unknown[] = [];
+    const reads = [
+      service.getChainDashboard$('dogecoin'), service.getChainMempool$('dogecoin', 10), service.getChainCandidateBuckets$('dogecoin'),
+      service.getChainRecentBlocks$('dogecoin'), service.getChainFees$('dogecoin'), service.getChainMining$('dogecoin'),
+      service.getChainMiningPools$('dogecoin'), service.getChainChartSeries$('dogecoin', 'block-fees'),
+      service.getChainTransaction$('dogecoin', 'a'.repeat(64)), service.getChainBlock$('dogecoin', '1'),
+      service.getChainAddress$('dogecoin', 'D'), service.getChainAddressHoldings$('dogecoin', 'D'),
+      service.getChainOutpoint$('dogecoin', 'a'.repeat(64), '0'), service.getChainProtocols$('dogecoin'),
+      service.getChainProtocolList$('dogecoin', 'drc20'), service.getChainProtocolDetail$('dogecoin', 'drc20', 'tick'),
+      service.getChainProtocolSection$('dogecoin', 'drc20', 'tick', 'holders'), service.getChainStatus$('dogecoin'),
+      service.getSources$('dogecoin'), service.search$('abc', 'dogecoin'),
+    ];
+    for (const read of reads) {read.subscribe({ error: (error) => failures.push(error) });}
+    expect(urls).toEqual([]);
+    expect(failures).toHaveLength(reads.length);
+    for (const failure of failures) {
+      expect(failure).toBeInstanceOf(ChainNetworkUnavailableError);
+      expect((failure as ChainNetworkUnavailableError).reason).toContain('UNIVERSE_CHAIN_NETWORKS');
+    }
+    expect(service.chainNetworkLabel('dogecoin')).toBeNull();
     expect(service.chainNetwork('bitcoin')).toBe('mainnet');
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(String(warn.mock.calls[0][0])).toContain('UNIVERSE_CHAIN_NETWORKS');
+  });
+
+  it('leaves an invalid chain out of the picker read and keeps the other chains on their own network', () => {
+    const { service, urls } = build(true, undefined, { dogecoin: 'signet' });
+    let rows: unknown[] = [];
+    service.getChains$().subscribe(value => rows = value);
+    expect(urls).toEqual(['/api/v1/chains/bitcoin?network=mainnet', '/api/v1/chains/zcash?network=mainnet']);
+    expect(rows).toEqual([{ chain: 'bitcoin', network: 'mainnet' }, { chain: 'zcash', network: 'mainnet' }]);
+  });
+
+  it('resolves the network again on retry, so a corrected setting is read without a stale substitute', () => {
+    const state = { isBrowser: true, network: '', env: { UNIVERSE_CHAIN_NETWORKS: '{"dogecoin":' } } as unknown as StateService;
+    const urls: string[] = [];
+    const service = new UniverseApiService({ get: (url: string) => { urls.push(url); return of({}); } } as unknown as HttpClient, state, ownerKeyStub as never);
+    const read = service.getChainFees$('dogecoin');
+    let failure: unknown;
+    read.subscribe({ error: (error) => failure = error });
+    expect(failure).toBeInstanceOf(ChainNetworkUnavailableError);
+    expect(urls).toEqual([]);
+    (state.env as Record<string, unknown>).UNIVERSE_CHAIN_NETWORKS = '{"dogecoin":"testnet"}';
+    read.subscribe();
+    expect(urls).toEqual(['/api/v1/dogecoin/fees?network=testnet']);
   });
 
   it('never lets a mainnet capability record stand in for a configured testnet scope', () => {
