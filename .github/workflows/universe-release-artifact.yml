@@ -120,6 +120,12 @@ jobs:
       # compare it against the running release and refuse the hard link when it
       # differs. That check belongs there, where both trees are visible; here
       # only one of them is.
+      # The artifact carries its own acceptance: the protocol manifest, the
+      # acceptance envelope and every evidence file the envelope names, staged
+      # under docs/ with the release gate's own path and digest rules, and
+      # docs is in the member list. Before 2026-09-23 docs/ was staged but not
+      # packed, so a candidate that qualified here could never qualify on the
+      # host. The step after this one proves it on the packed archive.
       - name: Pack
         id: pack
         run: |
@@ -143,9 +149,10 @@ jobs:
           cp -a backend/rust-gbt "$stage/backend/rust-gbt"
           cp -a frontend/dist/mempool/browser "$stage/frontend/build"
           cp -a scripts/universe "$stage/scripts/universe"
-          mkdir -p "$stage/docs/protocols" "$stage/docs/acceptance"
-          cp -a docs/protocols/PROTOCOL-COVERAGE.json "$stage/docs/protocols/PROTOCOL-COVERAGE.json"
-          cp -a docs/acceptance/qualified-release-evidence.json "$stage/docs/acceptance/qualified-release-evidence.json"
+          node scripts/universe/protocol-contract.mjs --stage-acceptance "$stage" \
+            --manifest docs/protocols/PROTOCOL-COVERAGE.json \
+            --acceptance docs/acceptance/qualified-release-evidence.json \
+            --acceptance-root "$GITHUB_WORKSPACE"
           # The unit files travel with the release rather than being fetched
           # from a checkout that happens to be on the right commit. Adopting
           # socket activation needed both of these on the host, and taking
@@ -168,9 +175,23 @@ jobs:
           test -f "$stage/frontend/build/index.html"
           test -f "$stage/scripts/universe/gateway.mjs"
           out="$PWD/mempool-$sha.tar.gz"
-          tar -czf "$out" -C "$stage" backend frontend scripts production RELEASE-MANIFEST.json
+          tar -czf "$out" -C "$stage" backend frontend scripts production docs RELEASE-MANIFEST.json
           sha256sum "$out" | tee "$out.sha256"
           printf 'name=mempool-%s\n' "$sha" >> "$GITHUB_OUTPUT"
+
+      # The exact archive about to be uploaded, extracted into an empty
+      # directory and qualified by the gate it carries, with that directory
+      # as the evidence root. Nothing from the checkout is read, so an archive
+      # that needs the checkout to pass fails here and is never published.
+      - name: Qualify the packed archive on its own
+        run: |
+          set -euo pipefail
+          archive="$PWD/mempool-${{ steps.sha.outputs.short }}.tar.gz"
+          work=$(mktemp -d)
+          cp "$archive" "$work/"
+          cd "$work"
+          node "$GITHUB_WORKSPACE/scripts/universe/qualify-artifact.mjs" "$work/$(basename "$archive")" \
+            --commit '${{ steps.sha.outputs.sha }}' --network mainnet
 
       - name: Upload
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

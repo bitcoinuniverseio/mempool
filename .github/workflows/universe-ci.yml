@@ -132,7 +132,7 @@ jobs:
       # the allowlist, green the whole time. These run the script's own text
       # against healthy and unhealthy fixtures.
       - name: The release gates fail on the faults they exist for
-        run: node --test scripts/universe/release-gates.test.mjs
+        run: node --test scripts/universe/release-gates.test.mjs scripts/universe/release-artifact.test.mjs
 
       - name: Workflow inputs remain data and builds preserve the runner host
         run: node --test scripts/universe/workflow-safety.test.mjs scripts/universe/backend-startup-check.test.mjs

@@ -13,6 +13,7 @@ import {
   timer,
 } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { isChainNetworkUnavailable } from '@app/universe/chain-network';
 import { UniverseWebsocketService } from '@app/universe/universe-websocket.service';
 import {
   ChainCapabilityEnvelope,
@@ -28,7 +29,7 @@ import {
  * frontend is bound to another network of the chain. The two must never be
  * rendered as the same thing: the second is not an outage.
  */
-export type ChainDashboardError = 'dashboard-unavailable' | 'network-not-offered';
+export type ChainDashboardError = 'dashboard-unavailable' | 'network-not-offered' | 'network-config-invalid';
 
 export interface ChainDashboardState {
   readonly view: ChainDashboardView | null;
@@ -82,7 +83,8 @@ export class ChainDashboardService {
           catchError((failure: unknown) =>
             of<ChainDashboardState>({
               view: null,
-              error: isNetworkNotOffered(failure) ? 'network-not-offered' : 'dashboard-unavailable',
+              error: isChainNetworkUnavailable(failure) ? 'network-config-invalid'
+                : isNetworkNotOffered(failure) ? 'network-not-offered' : 'dashboard-unavailable',
               stale: true,
             })
           )

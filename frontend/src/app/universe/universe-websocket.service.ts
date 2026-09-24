@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { StateService } from '@app/services/state.service';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
-import { chainNetwork } from '@app/universe/chain-network';
+import { resolveChainNetwork } from '@app/universe/chain-network';
 import { EMPTY, Observable } from 'rxjs';
 
 export interface UniverseLiveEnvelope {
@@ -72,7 +72,15 @@ export class UniverseWebsocketService {
     }
     // Bitcoin live frames stay on mainnet as before; every other chain
     // subscribes to and accepts only its configured network.
-    const network = chainNetwork(chain, 'mainnet', this.stateService.env);
+    const resolved = resolveChainNetwork(chain, 'mainnet', this.stateService.env);
+    // No socket is opened for a chain whose configured network is invalid:
+    // subscribing under a substitute network would stream another network.
+    // The stream stays silent rather than failing, so a page polling beside it
+    // keeps running and shows the configuration error its own reads raise.
+    if (!resolved.available) {
+      return EMPTY;
+    }
+    const network = resolved.network;
     return new Observable<UniverseLiveEnvelope>((observer) => {
       const cursors = new Map<string, ResumeCursor>();
       let socket: WebSocket | null = null;
