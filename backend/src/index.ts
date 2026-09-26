@@ -309,6 +309,8 @@ class Server {
       // Every processed block is progress: a catch-up that keeps advancing is
       // not a stuck run, however long it takes.
       blocks.setNewBlockCallback(() => { this.mainLoopWatchdog.progress(); });
+      // So is each slice of a mempool sync after a restart or an outage.
+      memPool.setSyncProgressCallback(() => { this.mainLoopWatchdog.progress(); });
       void this.runMainUpdateLoop();
       setInterval(() => { this.mainLoopWatchdog.check(); }, 30_000);
     }
