@@ -60,6 +60,43 @@ describe('main loop watchdog', () => {
     expect(stalls).toEqual([1500, 1100]);
   });
 
+  it('never kills a run that keeps making progress', () => {
+    const clock = { now: 0 };
+    const { subject, stalls, exits } = watchdog(clock);
+    subject.begin();
+    for (let t = 900; t <= 9000; t += 900) {
+      clock.now = t;
+      subject.progress();
+      expect(subject.check()).toBe('running');
+    }
+    expect(stalls).toEqual([]);
+    expect(exits).toEqual([]);
+  });
+
+  it('measures stall and exit from the last progress, then clears the stall record', () => {
+    const clock = { now: 0 };
+    const { subject, stalls, exits } = watchdog(clock);
+    subject.begin();
+    clock.now = 1200;
+    expect(subject.check()).toBe('stalled');
+    subject.progress();
+    clock.now = 2000;
+    expect(subject.check()).toBe('running');
+    clock.now = 2200;
+    expect(subject.check()).toBe('stalled');
+    clock.now = 4200;
+    expect(subject.check()).toBe('exit');
+    expect(stalls).toEqual([1200, 1000]);
+    expect(exits).toEqual([3000]);
+  });
+
+  it('ignores progress outside a run', () => {
+    const clock = { now: 0 };
+    const { subject } = watchdog(clock);
+    subject.progress();
+    expect(subject.check()).toBe('idle');
+  });
+
   it('refuses limits that could never report anything', () => {
     expect(() => new MainLoopWatchdog({
       stallAfterMs: 0, exitAfterMs: 10, onStall: () => undefined, onExit: () => undefined,
