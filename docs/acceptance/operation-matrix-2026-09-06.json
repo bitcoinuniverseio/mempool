@@ -2316,9 +2316,9 @@
     },
     {
       "path": "backend/src/index.ts",
-      "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+      "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
       "sha256Encoding": "utf8-lf",
-      "bytes": 33168
+      "bytes": 33533
     },
     {
       "path": "docs/acceptance/2026-09-05-controls.json",
@@ -117037,7 +117037,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117136,7 +117136,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117235,7 +117235,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117334,7 +117334,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117433,7 +117433,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117532,7 +117532,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117631,7 +117631,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117730,7 +117730,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117829,7 +117829,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -118104,7 +118104,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -118209,7 +118209,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118376,7 +118376,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118543,7 +118543,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118710,7 +118710,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118877,7 +118877,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -119044,7 +119044,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -119215,7 +119215,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -123302,7 +123302,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123422,7 +123422,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123542,7 +123542,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123662,7 +123662,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123782,7 +123782,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123902,7 +123902,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124022,7 +124022,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124142,7 +124142,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124262,7 +124262,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124382,7 +124382,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124502,7 +124502,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124622,7 +124622,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124748,7 +124748,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -124915,7 +124915,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125082,7 +125082,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125249,7 +125249,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125416,7 +125416,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125583,7 +125583,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125754,7 +125754,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125951,7 +125951,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -127780,7 +127780,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "0d6e4bc9a2bddb6bad0f2fc01550c4020eae6ba1c1d377f3e242dc8eb7988ba2",
+          "sha256": "014bd55b3d18e17faae6b6f669c33da11a03da6295776571d0fc8880e8d57707",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },

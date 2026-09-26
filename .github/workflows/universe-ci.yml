@@ -33,8 +33,8 @@ jobs:
     # it competed for the six runners that are the only ones able to run the
     # visual matrix, while eight runners carrying `universe-ci` sat idle, and a
     # three minute job held a slot the fifty minute one was queued for.
-    runs-on: [self-hosted, linux, x64, universe-super]
-    timeout-minutes: 10
+    runs-on: [self-hosted, linux, x64, universe-ci]
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -142,7 +142,7 @@ jobs:
 
   backend:
     name: Backend build and test
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     # Native engines and Jest workers compete for the same host memory. Keep
     # the two release refs from running this job on top of each other.
     concurrency:
@@ -279,7 +279,7 @@ jobs:
     # floor depending on which machine measured it. The mobile and visual
     # jobs below are pinned for the same reason; the backend job is not,
     # because nothing it runs measures a glyph.
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     # Angular's production build is the largest single memory consumer in this
     # workflow. Do not run the main and develop builds simultaneously on a
     # multi-runner host.
@@ -504,7 +504,7 @@ jobs:
     # The old Ultra group is empty and its replacement is restricted to other
     # repositories. Use this repository's authorized browser-capable pool,
     # which already runs the frontend, mobile and cross-browser checks.
-    runs-on: [self-hosted, linux, x64, universe-super, browser-heavy]
+    runs-on: [self-hosted, linux, x64, universe-ci, browser-heavy]
     timeout-minutes: 60
     strategy:
       # One shard failing says nothing about the others, and finding out that
@@ -664,7 +664,7 @@ jobs:
     concurrency:
       group: universe-ci-mobile
       cancel-in-progress: false
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -815,7 +815,7 @@ jobs:
     concurrency:
       group: universe-ci-mobile-engines
       cancel-in-progress: false
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     container:
       image: mcr.microsoft.com/playwright:v1.49.0-noble
       # WebKit launched inside the image and then lost its browser process
