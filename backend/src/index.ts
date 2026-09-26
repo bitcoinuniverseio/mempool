@@ -306,6 +306,9 @@ class Server {
     this.setUpHttpApiRoutes();
 
     if (config.MEMPOOL.ENABLED) {
+      // Every processed block is progress: a catch-up that keeps advancing is
+      // not a stuck run, however long it takes.
+      blocks.setNewBlockCallback(() => { this.mainLoopWatchdog.progress(); });
       void this.runMainUpdateLoop();
       setInterval(() => { this.mainLoopWatchdog.check(); }, 30_000);
     }
