@@ -33,7 +33,7 @@ jobs:
     # it competed for the six runners that are the only ones able to run the
     # visual matrix, while eight runners carrying `universe-ci` sat idle, and a
     # three minute job held a slot the fifty minute one was queued for.
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -123,7 +123,7 @@ jobs:
 
   backend:
     name: Backend build and test
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     timeout-minutes: 45
     env:
       COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
@@ -252,7 +252,7 @@ jobs:
     # floor depending on which machine measured it. The mobile and visual
     # jobs below are pinned for the same reason; the backend job is not,
     # because nothing it runs measures a glyph.
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     # This builds, gates the bundle, and walks every route once at a phone and
     # a desktop width. The deep pass that used to follow it now runs beside it,
     # sharded, because it stopped fitting: 71 minutes of a 100 minute cap on
@@ -468,7 +468,7 @@ jobs:
     # The old Ultra group is empty and its replacement is restricted to other
     # repositories. Use this repository's authorized browser-capable pool,
     # which already runs the frontend, mobile and cross-browser checks.
-    runs-on: [self-hosted, linux, x64, universe-super, browser-heavy]
+    runs-on: [self-hosted, linux, x64, universe-ci, browser-heavy]
     timeout-minutes: 60
     strategy:
       # One shard failing says nothing about the others, and finding out that
@@ -625,7 +625,7 @@ jobs:
     # so the run is as long as the longest shard either way, and a run now
     # makes exactly one build.
     needs: frontend
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -772,7 +772,7 @@ jobs:
   # nothing about the platform half this work was written for.
   mobile-engines:
     name: WebKit and Firefox
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, linux, x64, universe-ci]
     container:
       image: mcr.microsoft.com/playwright:v1.49.0-noble
       # WebKit launched inside the image and then lost its browser process
