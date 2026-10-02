@@ -22,7 +22,7 @@ permissions:
 jobs:
   cache:
     name: "Cache assets for builds"
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, universe-runners-1]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -113,7 +113,7 @@ jobs:
           key: promo-video-assets-cache
 
   e2e:
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: [self-hosted, universe-runners-1]
     needs: [cache]
     strategy:
       fail-fast: false
