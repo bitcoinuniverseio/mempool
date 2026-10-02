@@ -22,7 +22,7 @@ permissions:
 jobs:
   cache:
     name: "Cache assets for builds"
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -113,7 +113,7 @@ jobs:
           key: promo-video-assets-cache
 
   e2e:
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
     needs: [cache]
     strategy:
       fail-fast: false
