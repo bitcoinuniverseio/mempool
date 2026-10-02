@@ -36,6 +36,8 @@ jobs:
     runs-on: [self-hosted, universe-runners-1]
     timeout-minutes: 30
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -154,6 +156,8 @@ jobs:
       MEMPOOL_TEST_BASE_CONFIG_FILE: ${{ github.workspace }}/backend/mempool-config.test.json
       MEMPOOL_TEST_RUNTIME_CONFIG_FILE: ${{ github.workspace }}/backend/.mempool-config.integration.json
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -293,6 +297,8 @@ jobs:
     # a timeout. Budget here is for the work that is left, with room to grow.
     timeout-minutes: 90
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -522,6 +528,8 @@ jobs:
             routes: blocks,tx,address
             chainStates: 'yes'
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -667,6 +675,8 @@ jobs:
     runs-on: [self-hosted, universe-runners-1]
     timeout-minutes: 45
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
