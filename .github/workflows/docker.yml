@@ -54,7 +54,7 @@ jobs:
     env:
       COMPOSE_PROJECT_NAME: mempool-images-${{ github.run_id }}-${{ github.run_attempt }}
     # Build-only: runs for every pull request in scope and every dispatch.
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     name: Test built Docker images
     steps:
@@ -274,7 +274,7 @@ jobs:
         service:
           - frontend
           - backend
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     name: Build and push to DockerHub
     outputs:
@@ -362,7 +362,7 @@ jobs:
     needs: [build]
     # Only when the same dispatch asked for it.
     if: ${{ needs.build.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true' && github.event.inputs.latest == 'true' }}
-    runs-on: [self-hosted, linux, x64, universe-super]
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     name: Tag release build as latest
     strategy:
