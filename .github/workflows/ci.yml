@@ -20,6 +20,8 @@ jobs:
 
     name: Backend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -101,6 +103,8 @@ jobs:
         node: ["24.13.0"]
     runs-on: [self-hosted, universe-runners-1]
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -212,6 +216,8 @@ jobs:
 
     name: Frontend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -313,6 +319,8 @@ jobs:
 
     name: E2E tests for ${{ matrix.module }}
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -449,6 +457,8 @@ jobs:
     name: Validate generated backend Docker JSON
 
     steps: 
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@b11554bde3a933e23a7651654a930ad21ca8b369
       - name: Checkout
         uses: actions/checkout@v3
         with:
