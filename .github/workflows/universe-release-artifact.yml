@@ -44,7 +44,7 @@ permissions:
 jobs:
   artifact:
     name: Build and pack
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
     timeout-minutes: 90
     steps:
       - name: Provide universe host tools
