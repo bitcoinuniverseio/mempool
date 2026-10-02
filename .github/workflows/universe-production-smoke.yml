@@ -33,7 +33,7 @@ jobs:
     # interface mid-run on 9 September 2026 (Chromium: net::ERR_NETWORK_CHANGED)
     # on super-20, super-23, super-46 and super-185 within one afternoon, and a
     # browser step cannot tell that from an origin that stopped answering.
-    runs-on: [self-hosted, linux, x64, universe-linux-ultra]
+    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
     # Ten was for a job that only read the API. It now installs the browser
     # harness and loads two pages in a real browser, which is the only way to
     # see what the origin renders.
