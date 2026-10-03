@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ApiService } from '@app/services/api.service';
 import { StateService } from '@app/services/state.service';
@@ -7,6 +7,7 @@ import { OpenGraphService } from '@app/services/opengraph.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { firstValueFrom, Subject, Subscription, takeUntil } from 'rxjs';
 import { TxResult } from '@interfaces/node-api.interface';
 
 @Component({
@@ -15,7 +16,11 @@ import { TxResult } from '@interfaces/node-api.interface';
   styleUrls: ['./push-transaction.component.scss'],
   standalone: false,
 })
-export class PushTransactionComponent implements OnInit {
+export class PushTransactionComponent implements OnInit, OnDestroy {
+  private readonly cancelled$ = new Subject<void>();
+  private readonly subscriptions = new Subscription();
+  private destroyed = false;
+  private revision = 0;
   pushTxForm: UntypedFormGroup;
   error: string = '';
   txId: string = '';
@@ -53,47 +58,65 @@ export class PushTransactionComponent implements OnInit {
       maxburnamount: ['', Validators.min(0)],
     });
 
-    this.stateService.networkChanged$.subscribe((network) => this.network = network);
+    this.subscriptions.add(this.stateService.networkChanged$.subscribe((network) => {
+      if (network !== this.network) { this.cancelRequests(); this.error = ''; this.errorPackage = ''; this.txId = ''; this.results = []; this.packageMessage = ''; }
+      this.network = network;
+    }));
 
     this.seoService.setTitle($localize`:@@f13cbfe8cfc955918e9f64466d2cafddb4760d9a:Broadcast Transaction`);
     this.seoService.setDescription($localize`:@@meta.description.push-tx:Broadcast a transaction to the ${this.stateService.network==='liquid'||this.stateService.network==='liquidtestnet'?'Liquid':'Bitcoin'}${seoDescriptionNetwork(this.stateService.network)} network using the transaction's hash.`);
 
-    this.route.fragment.subscribe(async (fragment) => {
+    this.subscriptions.add(this.route.fragment.subscribe(async (fragment) => {
       const fragmentParams = new URLSearchParams(fragment || '');
       return this.handleColdcardPushTx(fragmentParams);
-    });
+    }));
   }
 
-  async postTx(hex?: string): Promise<string> {
-    this.isLoading = true;
-    this.error = '';
-    this.txId = '';
-    return new Promise((resolve, reject) => {
-      this.apiService.postTransaction$(hex || this.pushTxForm.get('txHash').value)
-      .subscribe((result) => {
-        this.isLoading = false;
-        this.txId = result;
-        this.pushTxForm.reset();
-        resolve(this.txId);
-      },
-      (error) => {
-        if (typeof error.error === 'string') {
-          const matchText = error.error.replace(/\\/g, '').match('"message":"(.*?)"');
-          this.error = 'Failed to broadcast transaction, reason: ' + (matchText && matchText[1] || error.error);
-        } else if (error.message) {
-          this.error = 'Failed to broadcast transaction, reason: ' + error.message;
-        }
-        this.isLoading = false;
-        reject(this.error);
-      });
-    });
+  private cancelRequests(): void {
+    this.revision++; this.cancelled$.next(); this.isLoading = false; this.isLoadingPackage = false;
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true; this.cancelRequests(); this.subscriptions.unsubscribe(); this.cancelled$.complete();
+  }
+
+  async postTx(hex?: string): Promise<string | null> {
+    if (this.destroyed || this.isLoading || this.isLoadingPackage) { return null; }
+    const revision = this.revision;
+    this.isLoading = true; this.error = ''; this.txId = '';
+    try {
+      const txid = await firstValueFrom(this.apiService.postTransaction$(hex || this.pushTxForm.get('txHash').value).pipe(takeUntil(this.cancelled$)));
+      if (this.destroyed || revision !== this.revision) { return null; }
+      this.txId = txid; this.pushTxForm.reset(); return txid;
+    } catch (error) {
+      if (!this.destroyed && revision === this.revision) {
+        const raw = typeof error.error === 'string' ? error.error : error.message;
+        const message = raw?.replace(/\\/g, '').match('"message":"(.*?)"')?.[1] || raw || 'Request unavailable';
+        this.error = 'Failed to broadcast transaction, reason: ' + message;
+      }
+      return null;
+    } finally { if (revision === this.revision) { this.isLoading = false; } }
+  }
+
+  private amount(value: unknown, precision: number): number | null {
+    if (value == null || value === '') { return null; }
+    const text = String(value).trim();
+    if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(text)) { throw new Error('Use a nonnegative decimal amount'); }
+    const [whole, fraction = ''] = text.split('.');
+    if (fraction.length > precision) { throw new Error('Amount has unsupported fractional precision'); }
+    const atomic = BigInt(whole) * 10n ** BigInt(precision) + BigInt(fraction.padEnd(precision, '0') || '0');
+    if (atomic > BigInt(Number.MAX_SAFE_INTEGER)) { throw new Error('Amount exceeds exact supported range'); }
+    return Number(atomic) / 100_000_000;
   }
 
   submitTxs() {
+    if (this.destroyed || this.isLoading || this.isLoadingPackage) { return; }
     let txs: string[] = [];
     try {
       txs = (this.submitTxsForm.get('txs')?.value as string).split(',').map(hex => hex.trim());
-      if (txs?.length === 1) {
+      if (!txs.length || txs.some(tx => !tx || !/^(?:[a-fA-F0-9]{2})+$/.test(tx))) { this.errorPackage = 'Enter complete transaction hex values'; return; }
+      if (txs.length > 25) { this.errorPackage = 'Exceeded maximum of 25 transactions'; return; }
+      if (txs?.length === 1 && [this.submitTxsForm.get('maxfeerate')?.value, this.submitTxsForm.get('maxburnamount')?.value].every(value => value == null || value === '')) {
         this.pushTxForm.get('txHash').setValue(txs[0]);
         this.submitTxsForm.get('txs').setValue('');
         this.postTx();
@@ -104,32 +127,19 @@ export class PushTransactionComponent implements OnInit {
       return;
     }
 
-    let maxfeerate;
-    let maxburnamount;
-    this.invalidMaxfeerate = false;
-    this.invalidMaxburnamount = false;
-    try {
-      const maxfeerateVal = this.submitTxsForm.get('maxfeerate')?.value;
-      if (maxfeerateVal != null && maxfeerateVal !== '') {
-        maxfeerate = parseFloat(maxfeerateVal) / 100_000;
-      }
-    } catch (e) {
-      this.invalidMaxfeerate = true;
-    }
-    try {
-      const maxburnamountVal = this.submitTxsForm.get('maxburnamount')?.value;
-      if (maxburnamountVal != null && maxburnamountVal !== '') {
-        maxburnamount = parseInt(maxburnamountVal) / 100_000_000;
-      }
-    } catch (e) {
-      this.invalidMaxburnamount = true;
-    }
-
+    let maxfeerate: number | null, maxburnamount: number | null;
+    this.invalidMaxfeerate = false; this.invalidMaxburnamount = false;
+    try { maxfeerate = this.amount(this.submitTxsForm.get('maxfeerate')?.value, 3); }
+    catch (error) { this.invalidMaxfeerate = true; this.errorPackage = 'Maximum fee rate: ' + error.message; return; }
+    try { maxburnamount = this.amount(this.submitTxsForm.get('maxburnamount')?.value, 0); }
+    catch (error) { this.invalidMaxburnamount = true; this.errorPackage = 'Maximum burn amount: ' + error.message; return; }
+    const revision = this.revision;
     this.isLoadingPackage = true;
     this.errorPackage = '';
     this.results = [];
-    this.apiService.submitPackage$(txs, maxfeerate === 0.1 ? null : maxfeerate, maxburnamount === 0 ? null : maxburnamount)
+    this.apiService.submitPackage$(txs, maxfeerate, maxburnamount).pipe(takeUntil(this.cancelled$))
       .subscribe((result) => {
+        if (this.destroyed || revision !== this.revision) { return; }
         this.isLoadingPackage = false;
 
         this.packageMessage = result['package_msg'];
@@ -140,6 +150,7 @@ export class PushTransactionComponent implements OnInit {
         this.submitTxsForm.reset();
       },
       (error) => {
+        if (this.destroyed || revision !== this.revision) { return; }
         if (typeof error.error?.error === 'string') {
           const matchText = error.error.error.replace(/\\/g, '').match('"message":"(.*?)"');
           this.errorPackage = matchText && matchText[1] || error.error.error;
@@ -153,6 +164,7 @@ export class PushTransactionComponent implements OnInit {
   private async handleColdcardPushTx(fragmentParams: URLSearchParams): Promise<boolean> {
     // maybe conforms to Coldcard nfc-pushtx spec
     if (fragmentParams && fragmentParams.get('t')) {
+      const revision = this.revision;
       try {
         const pushNetwork = fragmentParams.get('n');
 
@@ -181,6 +193,7 @@ export class PushTransactionComponent implements OnInit {
 
         // check checksum
         const hashTx = await crypto.subtle.digest('SHA-256', rawTx);
+        if (this.destroyed || revision !== this.revision) { return false; }
         if (this.u8ArrayToHex(new Uint8Array(hashTx.slice(24))) !== this.u8ArrayToHex(rawCheck)) {
           this.error = 'Bad checksum, URL is probably truncated';
           return false;
@@ -191,6 +204,7 @@ export class PushTransactionComponent implements OnInit {
 
         try {
           const txid = await this.postTx(hexTx);
+          if (!txid || this.destroyed) { return false; }
           this.router.navigate([this.relativeUrlPipe.transform('/tx'), txid]);
         } catch (e) {
           // error already handled
