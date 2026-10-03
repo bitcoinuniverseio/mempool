@@ -1,5 +1,17 @@
 <app-indexing-progress *ngIf="!widget"></app-indexing-progress>
 
+<div class="small text-secondary mb-2" aria-live="polite">
+  Loaded {{ loadedCount }}<ng-container *ngIf="expectedCount !== null"> of {{ expectedCount }}</ng-container> confirmed transactions.
+  {{ historyComplete ? 'Complete at observed index checkpoint.' : 'Partial history; ranges show loaded transactions only.' }}
+  <span *ngIf="checkpoint" [title]="checkpoint">Checkpoint {{ checkpoint.slice(0, 12) }}…</span>
+  <span *ngIf="addressSummary$">Aggregate coverage and source checkpoint unavailable.</span>
+  <span *ngIf="canLoadEarlier"> Each earlier page is limited to 5,000 transactions and 20 seconds.</span>
+  <button *ngIf="canLoadEarlier" type="button" class="btn btn-sm btn-outline-secondary ms-2" [disabled]="isLoading" (click)="loadEarlier()">{{ historyError ? 'Retry earlier history' : 'Load earlier' }}</button>
+  <button *ngIf="!addressSummary$" type="button" class="btn btn-sm btn-outline-secondary ms-2" [disabled]="isLoading" (click)="reloadHistory()">Reload history</button>
+  <p *ngIf="historyError" class="text-warning" role="status">{{ historyError }}</p>
+  <p *ngIf="isPricing">Loading historical USD estimates…</p>
+  <p *ngIf="fiatError" class="text-warning" role="status">{{ fiatError }} <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isPricing" (click)="retryFiat()">Retry USD prices</button></p>
+</div>
 <div [class.full-container]="!widget">
   <ng-container *ngIf="!error">
     <div [class]="!widget ? 'chart' : 'chart-widget'" *browserOnly [style]="{ height: widget ? ((height + 20) + 'px') : null, paddingBottom: !widget && !allowZoom ? '10px' : null}" echarts [initOpts]="chartInitOptions" [options]="chartOptions"

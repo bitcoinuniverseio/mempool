@@ -4,6 +4,12 @@ vi.mock('@app/bitcoin.utils', () => ({ calcScriptHash$: vi.fn(async () => 'hash'
 import { ElectrsApiService } from './electrs-api.service';
 
 describe('Electrs request identity', () => {
+  it('reads the text index tip from the selected network partition', () => {
+    const networkChanged$ = new Subject<string>(); const http = { get: vi.fn(() => of('a'.repeat(64))) };
+    const service = new ElectrsApiService(http as any, {isBrowser:true,env:{ROOT_NETWORK:'mainnet'},networkChanged$} as any);
+    networkChanged$.next('signet'); service.getBlockTipHash$().subscribe();
+    expect(http.get).toHaveBeenCalledWith('/signet/api/blocks/tip/hash',{responseType:'text'});
+  });
   it('preserves height zero', () => {
     const http = { get: vi.fn(() => of([])) };
     const service = new ElectrsApiService(http as any, { isBrowser: true, env: {}, networkChanged$: new Subject() } as any);
