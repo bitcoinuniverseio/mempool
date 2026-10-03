@@ -12,6 +12,7 @@ describe('native timeline momentum teardown', () => {
     const component = Object.create(StartComponent.prototype);
     Object.assign(component, {
       velocity: 1, scrollLeft: 100, stateService: { setBlockScrollingInProgress: vi.fn() },
+      destroyed: false, momentumRevision: 0, momentumFrame: null,
       applyScrollLeft: vi.fn(), setScrollLeft: vi.fn(),
       timeLtrSubscription: { unsubscribe: vi.fn() }, chainTipSubscription: { unsubscribe: vi.fn() },
       markBlockSubscription: { unsubscribe: vi.fn() }, blockCounterSubscription: { unsubscribe: vi.fn() },
@@ -25,11 +26,15 @@ describe('native timeline momentum teardown', () => {
   });
 
   it('replaces a queued momentum frame when a fresh drag starts', () => {
-    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 23));
+    let frame: FrameRequestCallback;
+    const request = vi.fn((callback: FrameRequestCallback) => { frame = callback; return 23; });
+    vi.stubGlobal('requestAnimationFrame', request);
     const cancel = vi.fn(); vi.stubGlobal('cancelAnimationFrame', cancel);
     const component = Object.create(StartComponent.prototype);
-    Object.assign(component, { velocity: 1, stateService: { setBlockScrollingInProgress: vi.fn() } });
+    Object.assign(component, { velocity: 1, destroyed: false, momentumRevision: 0, momentumFrame: null,
+      applyScrollLeft: vi.fn(), stateService: { setBlockScrollingInProgress: vi.fn() } });
     component.animateMomentum(); component.resetMomentum(10);
     expect(cancel).toHaveBeenCalledWith(23); expect(component.velocity).toBe(0);
+    frame(1000); expect(component.applyScrollLeft).not.toHaveBeenCalled(); expect(request).toHaveBeenCalledOnce();
   });
 });
