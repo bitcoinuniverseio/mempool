@@ -18,4 +18,17 @@ describe('address source checkpoint identity',()=>{
   });  it('bounds the complete checkpoint operation even when an injected source never replies', async()=>{
     await expect(verifyAddressSource(100,()=>new Promise(()=>{}),core,20)).rejects.toThrow('deadline');
   });
+  it('does not start more source work when an uncooperative index replies after the deadline', async()=>{
+    let finish!: (value:string)=>void;
+    const pending=new Promise<string>(resolve=>{finish=resolve;});
+    const reads=jest.fn(()=>pending);
+    const measuredCore={getBlockchainInfo:jest.fn(core.getBlockchainInfo),getBlockHash:jest.fn(core.getBlockHash)};
+    await expect(verifyAddressSource(100,reads,measuredCore,20)).rejects.toThrow('deadline');
+    const calls={info:measuredCore.getBlockchainInfo.mock.calls.length,hash:measuredCore.getBlockHash.mock.calls.length};
+    finish(hash(0));
+    await new Promise<void>(resolve=>setImmediate(resolve));
+    expect(reads).toHaveBeenCalledTimes(1);
+    expect(measuredCore.getBlockchainInfo).toHaveBeenCalledTimes(calls.info);
+    expect(measuredCore.getBlockHash).toHaveBeenCalledTimes(calls.hash);
+  });
 });
