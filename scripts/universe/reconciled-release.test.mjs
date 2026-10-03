@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { fixture } from './reconciled-release-fixture.mjs';
 const encode = value => Buffer.from(JSON.stringify(value));
 
@@ -38,6 +39,20 @@ test('missing observations, assertion readbacks or lifecycle recovery fail close
   const f = fixture(); f.receipt.phases.refreshRecovery.result = 'NOT TESTED'; f.updateReceipt();
   assert.throws(() => f.run(), /Unaccepted lifecycle/);
   const g = fixture(); g.receipt.assertions = []; g.updateReceipt(); assert.throws(() => g.run(), /Unproved functional/);
+});
+
+test('release retains current source candidate mappings and refuses omitted or invalid additions', () => {
+  const f = fixture();
+  const mapping = f.roster.mappings[0];
+  f.roster.currentSourceCandidates = [{ id: 'current:additional-dispatcher', reason: 'Current actual dispatcher absent in historical inventory', sources: mapping.sources }];
+  f.roster.mappings.push({ ...mapping, candidateId: 'current:additional-dispatcher' });
+  const rosterBytes = encode(f.roster);
+  f.acceptance.rosterSha256 = createHash('sha256').update(rosterBytes).digest('hex');
+  assert.equal(f.run(rosterBytes).operationCount, 1);
+  f.roster.mappings.pop();
+  assert.throws(() => f.run(encode(f.roster)), /candidates were lost/);
+  f.roster.currentSourceCandidates[0].id = 'historic';
+  assert.throws(() => f.run(encode(f.roster)), /current source lineage/);
 });
 
 test('another supported chain cannot qualify a Bitcoin operation', () => {
