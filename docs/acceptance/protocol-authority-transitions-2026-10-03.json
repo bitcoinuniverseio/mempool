@@ -7,9 +7,9 @@
       "fromAuthority": "index-op20",
       "toAuthority": "index-op20-op-names",
       "sourceRepository": "bitcoinuniverseio/backend-apis",
-      "registrySourceRevision": "2822a72f6c7a94a5f01beed58e69d6d433df1d5e",
+      "registrySourceRevision": "16298d7d8574f9cbe621a519b6f35847131e1b41",
       "producerRepository": "bitcoinuniverseio/index-op20",
-      "producerSourceRevision": "8cdb0bd5d1c177126eda55316e2533cb722d0619",
+      "producerSourceRevision": "7c0305a38deb968460a668484b2febf57e099add",
       "producerPath": "/token-explorer/op-names",
       "reason": "Dedicated projection over the existing OP Names event journal replaces the incorrect OP20 feed identity; original authority and evidence remain historical.",
       "functionalAcceptance": false
