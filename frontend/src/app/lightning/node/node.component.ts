@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, ParamMap } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { catchError, map, switchMap, tap, share } from 'rxjs/operators';
+import { combineLatest, defer, Observable, of, Subject } from 'rxjs';
+import { catchError, map, switchMap, tap, takeUntil, startWith } from 'rxjs/operators';
 import { SeoService } from '@app/services/seo.service';
 import { ApiService } from '@app/services/api.service';
 import { LightningApiService } from '@app/lightning/lightning-api.service';
@@ -9,6 +9,7 @@ import { GeolocationData } from '@app/shared/components/geolocation/geolocation.
 import { ILiquidityAd, parseLiquidityAdHex } from '@app/lightning/node/liquidity-ad';
 import { haversineDistance, kmToMiles } from '@app/shared/common.utils';
 import { ServicesApiServices } from '@app/services/services-api.service';
+import { StateService } from '@app/services/state.service';
 
 interface CustomRecord {
   type: string;
@@ -22,7 +23,8 @@ interface CustomRecord {
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodeComponent implements OnInit {
+export class NodeComponent implements OnInit, OnDestroy {
+  private readonly destroyed$ = new Subject<void>();
   node$: Observable<any>;
   statistics$: Observable<any>;
   publicKey$: Observable<string>;
@@ -49,17 +51,28 @@ export class NodeComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private seoService: SeoService,
     private cd: ChangeDetectorRef,
+    private stateService: StateService,
   ) { }
 
   ngOnInit(): void {
-    this.node$ = this.activatedRoute.paramMap
+    const scope$ = combineLatest([this.activatedRoute.paramMap, this.stateService.networkChanged$]);
+    this.node$ = scope$
       .pipe(
-        switchMap((params: ParamMap) => {
+        switchMap(([params]: [ParamMap, string]) => {
           this.publicKey = params.get('public_key');
+          this.error = null;
+          this.selectedSocketIndex = 0;
+          this.qrCodeVisible = false;
+          this.showDetails = false;
+          this.showFeatures = false;
+          this.channelsListStatus = undefined;
+          this.channelListLoading = false;
+          this.hasDetails = false;
+          this.clearnetSocketCount = 0;
+          this.torSocketCount = 0;
           this.tlvRecords = [];
           this.liquidityAd = null;
-          return this.lightningApiService.getNode$(params.get('public_key'));
-        }),
+          return defer(() => this.lightningApiService.getNode$(params.get('public_key'))).pipe(
         map((node) => {
           this.seoService.setTitle($localize`Node: ${node.alias}`);
           this.seoService.setDescription($localize`:@@meta.description.lightning.node:Overview for the Lightning network node named ${node.alias}. See channels, capacity, location, fee stats, and more.`);
@@ -131,14 +144,15 @@ export class NodeComponent implements OnInit {
             alias: this.publicKey,
             public_key: this.publicKey,
           }];
-        })
+        }), startWith(null));
+        }),
+        takeUntil(this.destroyed$),
       );
 
-    this.avgChannelDistance$ = this.activatedRoute.paramMap
+    this.avgChannelDistance$ = scope$
     .pipe(
-      switchMap((params: ParamMap) => {
-        return this.apiService.getChannelsGeo$(params.get('public_key'), 'nodepage');
-      }),
+      switchMap(([params]: [ParamMap, string]) => {
+        return defer(() => this.apiService.getChannelsGeo$(params.get('public_key'), 'nodepage')).pipe(
       map((channelsGeo) => {
         if (channelsGeo?.length) {
           const totalDistance = channelsGeo.reduce((sum, chan) => {
@@ -150,9 +164,16 @@ export class NodeComponent implements OnInit {
         }
       }),
       catchError(() => {
-        return null;
-      })
+        return of(null);
+      }), startWith(null));
+      }),
+      takeUntil(this.destroyed$),
     ) as Observable<number | null>;
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   toggleShowDetails(): void {
