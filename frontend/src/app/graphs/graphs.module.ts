@@ -37,6 +37,7 @@ import { HashrateChartPoolsComponent } from '@components/hashrates-chart-pools/h
 import { BlockHealthGraphComponent } from '@components/block-health-graph/block-health-graph.component';
 import { AddressComponent } from '@components/address/address.component';
 import { AddressAssetsComponent } from '@app/universe/address-assets/address-assets.component';
+import { UtxoReconstructionComponent } from '@components/address/utxo-reconstruction.component';
 import { ProtocolStripComponent } from '@app/universe/protocol-strip/protocol-strip.component';
 import { WalletComponent } from '@components/wallet/wallet.component';
 import { WalletPreviewComponent } from '@components/wallet/wallet-preview.component';
@@ -105,6 +106,7 @@ import { AsmStylerPipe } from '@app/shared/pipes/asm-styler/asm-styler.pipe';
     SharedModule,
     GraphsRoutingModule,
     AddressAssetsComponent,
+    UtxoReconstructionComponent,
     ProtocolStripComponent,
     NgxEchartsModule.forRoot({
       echarts: () => import('@app/graphs/echarts').then(m => m.echarts),
