@@ -7,6 +7,12 @@ import { IEsploraApi } from './esplora-api.interface';
 import { ReconstructionError, ReconstructionOutput, ReconstructionSnapshot, ReconstructionSource } from './utxo-reconstruction.service';
 
 const hash = (value: string): string => createHash('sha256').update(value).digest('hex');
+export type ConfirmedReconstructionSnapshot = Omit<ReconstructionSnapshot, 'mempoolIdentity'> & { mempoolIdentity: null };
+export class ReconstructionAcquisitionError extends ReconstructionError {
+  constructor(public readonly phase: string, public readonly upstreamStatus: number | undefined, public readonly causeCode: string) {
+    super(causeCode === 'DEADLINE' ? 504 : 503, 'Bounded reconstruction source acquisition failed');
+  }
+}
 const active = (signal: AbortSignal): void => { if (signal.aborted) throw new ReconstructionError(499, 'Reconstruction cancelled or exceeded its deadline'); };
 const txids = (data: unknown): string[] => {
   if (!Array.isArray(data) || data.length > 50000 || data.some(id => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id)) || new Set(data).size !== data.length) {
@@ -32,14 +38,37 @@ export class EsploraReconstructionSource implements ReconstructionSource {
   }
   /** @asyncUnsafe */
   private async get<T>(path: string, signal: AbortSignal): Promise<T> {
-    active(signal); const response = await this.http.get<T>(this.origin + path, { signal, socketPath: this.socketPath }); active(signal); return response.data;
+    active(signal);
+    try {
+      const response = await this.http.get<T>(this.origin + path, { signal, socketPath: this.socketPath }); active(signal); return response.data;
+    } catch (error) {
+      active(signal);
+      const phase = path.includes('/txs/chain') ? 'confirmed-history' : path.includes('/txs/mempool') ? 'address-mempool'
+        : path === '/mempool/txids' ? 'index-mempool-identity' : path.startsWith('/address/') ? 'address-statistics' : 'index-chain-checkpoint';
+      throw new ReconstructionAcquisitionError(phase, axios.isAxiosError(error) ? error.response?.status : undefined,
+        axios.isAxiosError(error) && ['ECONNABORTED', 'ETIMEDOUT'].includes(error.code || '') ? 'DEADLINE' : 'UPSTREAM_UNAVAILABLE');
+    }
   }
   /** @asyncUnsafe */
   private async rpc(method: string, params: unknown[], signal: AbortSignal): Promise<any> {
-    active(signal); const result = await bitcoinClient.rpc.call(method, params, { signal }); active(signal); return result;
+    active(signal);
+    try { const result = await bitcoinClient.rpc.call(method, params, { signal }); active(signal); return result; }
+    catch (error) {
+      active(signal);
+      throw new ReconstructionAcquisitionError('core-' + method, undefined,
+        error instanceof Error && /deadline|timeout|timed out/i.test(error.message) ? 'DEADLINE' : 'UPSTREAM_UNAVAILABLE');
+    }
   }
   /** @asyncUnsafe */
   async snapshot(address: string, signal: AbortSignal): Promise<ReconstructionSnapshot> {
+    return this.acquire(address, signal, true) as Promise<ReconstructionSnapshot>;
+  }
+  /** Chain-bound progress deliberately excludes global mempool acquisition. */
+  async confirmedSnapshot(address: string, signal: AbortSignal): Promise<ConfirmedReconstructionSnapshot> {
+    return this.acquire(address, signal, false) as Promise<ConfirmedReconstructionSnapshot>;
+  }
+  /** @asyncUnsafe */
+  private async acquire(address: string, signal: AbortSignal, exactMempool: boolean): Promise<ReconstructionSnapshot | ConfirmedReconstructionSnapshot> {
     active(signal);
     const before = await this.rpc('getblockchaininfo', [], signal);
     if (before.initialblockdownload !== false) throw new ReconstructionError(503, 'Owned Core is not ready for exact reconstruction');
@@ -64,23 +93,23 @@ export class EsploraReconstructionSource implements ReconstructionSource {
     active(signal);
     const [summary, indexMempool, coreMempool, addressInfo] = await Promise.all([
       this.get<IEsploraApi.Address>('/address/' + encodeURIComponent(address), signal),
-      this.get<unknown>('/mempool/txids', signal),
-      this.rpc('getrawmempool', [false, true], signal),
+      exactMempool ? this.get<unknown>('/mempool/txids', signal) : Promise.resolve(null),
+      exactMempool ? this.rpc('getrawmempool', [false, true], signal) : Promise.resolve(null),
       this.rpc('validateaddress', [address], signal),
     ]);
     if (addressInfo?.isvalid !== true || typeof addressInfo.scriptPubKey !== 'string' || !/^(?:[0-9a-f]{2})+$/.test(addressInfo.scriptPubKey)) throw new ReconstructionError(400, 'Address is invalid for the configured Core source');
-    if (!coreMempool || !Number.isSafeInteger(coreMempool.mempool_sequence) || coreMempool.mempool_sequence < 0) throw new ReconstructionError(503, 'Core did not provide an exact mempool sequence');
-    const indexIds = txids(indexMempool), coreIds = txids(coreMempool.txids);
+    if (exactMempool && (!coreMempool || !Number.isSafeInteger(coreMempool.mempool_sequence) || coreMempool.mempool_sequence < 0)) throw new ReconstructionError(503, 'Core did not provide an exact mempool sequence');
+    const indexIds = exactMempool ? txids(indexMempool) : [], coreIds = exactMempool ? txids(coreMempool.txids) : [];
     if (JSON.stringify(indexIds) !== JSON.stringify(coreIds)) throw new ReconstructionError(409, 'Index and Core mempool identities differ');
     const [after, afterMempool, afterTip] = await Promise.all([
-      this.rpc('getblockchaininfo', [], signal), this.rpc('getrawmempool', [false, true], signal), this.get('/blocks/tip/hash', signal),
+      this.rpc('getblockchaininfo', [], signal), exactMempool ? this.rpc('getrawmempool', [false, true], signal) : Promise.resolve(null), this.get('/blocks/tip/hash', signal),
     ]);
     if (after.initialblockdownload !== false || after.bestblockhash !== before.bestblockhash || after.blocks !== before.blocks ||
         after.signet_challenge !== before.signet_challenge || afterTip !== checkpoint.blockHash ||
-        afterMempool.mempool_sequence !== coreMempool.mempool_sequence || JSON.stringify(txids(afterMempool.txids)) !== JSON.stringify(coreIds)) {
-      throw new ReconstructionError(409, 'Active chain or exact mempool identity moved during source acquisition');
+        exactMempool && (afterMempool.mempool_sequence !== coreMempool.mempool_sequence || JSON.stringify(txids(afterMempool.txids)) !== JSON.stringify(coreIds))) {
+      throw new ReconstructionError(409, exactMempool ? 'Active chain or exact mempool identity moved during source acquisition' : 'Active chain moved during confirmed source acquisition');
     }
-    return { checkpoint, sourceId: this.sourceId, mempoolIdentity: hash(JSON.stringify({ ids: coreIds, sequence: coreMempool.mempool_sequence })), scriptPubKey: addressInfo.scriptPubKey, summary };
+    return { checkpoint, sourceId: this.sourceId, mempoolIdentity: exactMempool ? hash(JSON.stringify({ ids: coreIds, sequence: coreMempool.mempool_sequence })) : null, scriptPubKey: addressInfo.scriptPubKey, summary };
   }
   history(address: string, after: string | undefined, limit: number, signal: AbortSignal): Promise<IEsploraApi.Transaction[]> {
     if (after && !/^[0-9a-f]{64}$/.test(after)) throw new ReconstructionError(400, 'Invalid native history cursor');
@@ -94,7 +123,14 @@ export class EsploraReconstructionSource implements ReconstructionSource {
     if (outputs.length > 100) throw new ReconstructionError(400, 'Independent output verification batch exceeds 100');
     if (!outputs.length) return;
     active(signal);
-    const response = await this.http.post<IEsploraApi.Outspend[]>(this.origin + '/internal/txs/outspends/by-outpoint', outputs.map(output => `${output.txid}:${output.vout}`), { signal, socketPath: this.socketPath });
+    let response;
+    try {
+      response = await this.http.post<IEsploraApi.Outspend[]>(this.origin + '/internal/txs/outspends/by-outpoint', outputs.map(output => `${output.txid}:${output.vout}`), { signal, socketPath: this.socketPath });
+    } catch (error) {
+      active(signal);
+      throw new ReconstructionAcquisitionError('index-outspends', axios.isAxiosError(error) ? error.response?.status : undefined,
+        axios.isAxiosError(error) && ['ECONNABORTED', 'ETIMEDOUT'].includes(error.code || '') ? 'DEADLINE' : 'UPSTREAM_UNAVAILABLE');
+    }
     active(signal);
     if (!Array.isArray(response.data) || response.data.length !== outputs.length || response.data.some(row => row?.spent !== false || row.txid != null || row.vin != null || row.status != null)) throw new ReconstructionError(409, 'Index outspend readback does not confirm every candidate output is unspent');
     // Four live Core reads at a time: no scan, broadcast or unbounded RPC batch.

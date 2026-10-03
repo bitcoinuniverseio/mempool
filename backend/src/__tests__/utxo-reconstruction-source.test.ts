@@ -1,7 +1,7 @@
 import { EsploraReconstructionSource } from '../api/bitcoin/utxo-reconstruction.source';
 
 const get = jest.fn(), post = jest.fn(), rpc = jest.fn();
-jest.mock('axios', () => ({ __esModule: true, default: { create: () => ({ get: (...args) => get(...args), post: (...args) => post(...args) }) } }));
+jest.mock('axios', () => ({ __esModule: true, default: { isAxiosError: error => error?.isAxiosError === true, create: () => ({ get: (...args) => get(...args), post: (...args) => post(...args) }) } }));
 jest.mock('../config', () => ({ __esModule: true, default: {
   MEMPOOL: { NETWORK: 'signet', BACKEND: 'esplora' }, ESPLORA: { REST_API_URL: 'http://127.0.0.1:38300', UNIX_SOCKET_PATH: '' },
 } }));
@@ -26,6 +26,18 @@ it('pins the configured origin and compares exact Core/index mempool identities'
   expect(snapshot.checkpoint.blockHash).toBe(id(20)); expect(snapshot.scriptPubKey).toBe(script);
   expect(snapshot.mempoolIdentity).toMatch(/^[0-9a-f]{64}$/);
   expect(get.mock.calls.every(([url]) => url.startsWith('http://127.0.0.1:38300/'))).toBe(true);
+});
+it('acquires a chain-only anchor without asserting global mempool stability', async () => {
+  const snapshot = await new EsploraReconstructionSource().confirmedSnapshot('address', new AbortController().signal);
+  expect(snapshot.mempoolIdentity).toBeNull(); expect(snapshot.checkpoint.blockHash).toBe(id(20));
+  expect(rpc.mock.calls.some(([method]) => method === 'getrawmempool')).toBe(false);
+  expect(get.mock.calls.some(([url]) => url.endsWith('/mempool/txids'))).toBe(false);
+});
+it('captures the actual history acquisition phase and timeout without leaking raw diagnostics', async () => {
+  get.mockRejectedValueOnce(Object.assign(new Error('private configured origin diagnostic'), { isAxiosError: true, code: 'ECONNABORTED', response: { status: 429 } }));
+  await expect(new EsploraReconstructionSource().history('address', id(1), 100, new AbortController().signal)).rejects.toMatchObject({
+    status: 504, phase: 'confirmed-history', causeCode: 'DEADLINE', upstreamStatus: 429, message: 'Bounded reconstruction source acquisition failed',
+  });
 });
 it('rejects missing IBD and a mismatched configured Signet challenge', async () => {
   rpc.mockResolvedValueOnce({ ...info, initialblockdownload: undefined });
