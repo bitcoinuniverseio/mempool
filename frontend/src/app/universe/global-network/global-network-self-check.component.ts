@@ -1,9 +1,11 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GlobalNetworkApiService, GlobalNetworkSelfCheckResult } from './global-network.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { StateService } from '@app/services/state.service';
+import { defer, finalize, Subject, Subscription, takeUntil, timeout } from 'rxjs';
 
 @Component({
   selector: 'app-global-network-self-check',
@@ -44,6 +46,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 class="form-control font-monospace"
                 placeholder="e.g. 95.217.163.42"
                 [(ngModel)]="endpointAddress"
+                (ngModelChange)="clearResult()"
                 name="endpointAddress"
                 required
                 [disabled]="probing"
@@ -57,6 +60,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 class="form-control font-monospace"
                 placeholder="8333"
                 [(ngModel)]="port"
+                (ngModelChange)="clearResult()"
                 name="port"
                 min="1"
                 max="65535"
@@ -90,8 +94,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <!-- Diagnostic Results Card -->
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border-bottom pb-2">
-          <h2 class="h5 m-0 text-success" *ngIf="result.reachable">&check; Node Reachable</h2>
-          <h2 class="h5 m-0 text-danger" *ngIf="!result.reachable">&cross; Connection Refused</h2>
+          <h2 class="h5 m-0" [class.text-success]="result.reachable" [class.text-danger]="!result.reachable">{{ resultLabel }}</h2>
           <span class="text-muted small">Check ID: <code>{{ result.check_id }}</code></span>
         </div>
 
@@ -145,7 +148,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     }
   `],
 })
-export class GlobalNetworkSelfCheckComponent {
+export class GlobalNetworkSelfCheckComponent implements OnInit, OnDestroy {
+  private readonly cancelled$ = new Subject<void>();
+  private readonly subscriptions = new Subscription();
+  private destroyed = false;
+  private revision = 0;
+  private network: string;
   endpointAddress = '';
   port = 8333;
   probing = false;
@@ -154,22 +162,63 @@ export class GlobalNetworkSelfCheckComponent {
 
   constructor(
     private api: GlobalNetworkApiService,
-    private cd: ChangeDetectorRef
-  ) {}
+    private cd: ChangeDetectorRef,
+    private state: StateService
+  ) { this.network = state.network; }
+
+  get resultLabel(): string { return this.result?.reachable ? 'TCP endpoint reachable' : 'Endpoint not reachable'; }
+
+  ngOnInit(): void {
+    this.subscriptions.add(this.state.networkChanged$.subscribe(network => {
+      if (network !== this.network) { this.clearResult(); }
+      this.network = network;
+    }));
+  }
+
+  clearResult(): void {
+    this.revision++; this.cancelled$.next(); this.probing = false;
+    this.result = null; this.errorMessage = null; this.cd.markForCheck();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true; this.clearResult(); this.subscriptions.unsubscribe(); this.cancelled$.complete();
+  }
+
+  private validReceipt(res: GlobalNetworkSelfCheckResult, endpoint: string, port: number): boolean {
+    const text = (value: unknown, limit: number): boolean => typeof value === 'string' && value.length > 0 && value.length <= limit;
+    return !!res && text(res.check_id, 128) && res.endpoint_address === endpoint && res.port === port &&
+      text(res.resolved_address, 128) && text(res.probed_from_region, 128) && typeof res.reachable === 'boolean' &&
+      res.bip324_handshake === null && !res.user_agent && res.services == null &&
+      text(res.probed_at, 64) && Number.isFinite(Date.parse(res.probed_at)) &&
+      (res.reachable ? Number.isFinite(res.latency_ms) && res.latency_ms >= 0 && res.error === null :
+        res.latency_ms === null && text(res.error, 1024));
+  }
 
   runSelfCheck(): void {
-    if (!this.endpointAddress) return;
+    if (this.destroyed || this.probing) { return; }
+    const endpoint = this.endpointAddress.trim();
+    const port = this.port;
+    if (!endpoint || endpoint.length > 255 || !Number.isInteger(port) || port < 1 || port > 65535) {
+      this.errorMessage = 'Enter a public endpoint and an integer port from 1 to 65535.'; return;
+    }
+    const revision = this.revision;
     this.probing = true;
     this.errorMessage = null;
     this.result = null;
 
-    this.api.performSelfCheck$(this.endpointAddress.trim(), this.port).subscribe({
+    defer(() => this.api.performSelfCheck$(endpoint, port)).pipe(timeout(15000), takeUntil(this.cancelled$),
+      finalize(() => { if (revision === this.revision) { this.probing = false; this.cd.markForCheck(); } })).subscribe({
       next: res => {
-        this.result = res;
+        if (this.destroyed || revision !== this.revision) { return; }
+        if (!this.validReceipt(res, endpoint, port)) {
+          this.errorMessage = 'The source response is not a valid TCP-only receipt for this endpoint and port.';
+          this.result = null;
+        } else { this.result = res; }
         this.probing = false;
         this.cd.markForCheck();
       },
       error: err => {
+        if (this.destroyed || revision !== this.revision) { return; }
         this.errorMessage = err?.error?.error || err?.message || 'Failed to complete node self check';
         this.probing = false;
         this.cd.markForCheck();
