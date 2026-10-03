@@ -6,6 +6,8 @@ The artifact workflow, packed-archive verifier and `release.sh` cutover require 
 
 The application gate reads these files from the candidate:
 
+New offered paths absent from the original inventory use explicit `current:` source candidate IDs with raw source digests and provenance rationale. Reconciliation retains them in `currentSourceCandidates` beside the untouched historical ledger. Every historical and current candidate needs a reviewed mapping or justified exclusion; added operations require the same functional receipts as historical paths. An unmapped current candidate keeps the denominator unresolved.
+
 - `docs/acceptance/reconciled-operations.json`: a versioned semantic successor preserving every historical candidate, its evidence and its reviewed mapping or justified exclusion. Its denominator must be reconciled and have no unresolved candidates. A partial review belongs in private working evidence and cannot qualify this file.
 - `docs/acceptance/qualified-application-evidence.json`: an `universe-application-acceptance-v1` envelope binding the raw roster and protocol acceptance digests, exact candidate identity and frontend/backend/gateway/overlay artifact and configuration identities. The first three source revisions must equal the release commit; the overlay revision must equal the pinned protocol source revision.
 - Every envelope-named receipt under a plain `docs/` path. These raw bytes are checked, staged and verified again after archive extraction. Conflicting existing stage bytes are refused.

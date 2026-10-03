@@ -29,6 +29,15 @@ export function reconcileOperations(historical, review, readProof) {
       assert.equal(sha256(readProof(ref.path)), ref.sha256, `Source proof drift: ${ref.path}`);
     }
   };
+  const currentSourceCandidates = review.currentSourceCandidates ?? [];
+  assert(Array.isArray(currentSourceCandidates), 'Current source candidates must be a list');
+  for (const candidate of currentSourceCandidates) {
+    assert(nonempty(candidate.id) && candidate.id.startsWith('current:'), 'Current candidate needs a distinct current: ID');
+    assert(!candidateIds.has(candidate.id), 'Duplicate or historical current candidate ID');
+    assert(nonempty(candidate.reason), 'Current candidate needs source provenance rationale');
+    proof(candidate.sources);
+    candidateIds.add(candidate.id);
+  }
   for (const operation of review.operations) {
     for (const field of ['id', 'entryPoint', 'method', 'role', 'chain', 'network', 'inputContract', 'outputContract',
       'lifecycle', 'specificationRevision', 'owner', 'expectedResult']) assert(nonempty(operation[field]), `Missing operation ${field}`);
@@ -47,7 +56,7 @@ export function reconcileOperations(historical, review, readProof) {
   }
   const mappings = new Map();
   for (const mapping of review.mappings) {
-    assert(candidateIds.has(mapping.candidateId), 'Mapping names an unknown historical candidate');
+    assert(candidateIds.has(mapping.candidateId), 'Mapping names an unknown source candidate');
     assert(!mappings.has(mapping.candidateId), 'Duplicate candidate mapping');
     assert(nonempty(mapping.reason), 'Mapping has no semantic rationale');
     proof(mapping.sources);
@@ -77,6 +86,7 @@ export function reconcileOperations(historical, review, readProof) {
     historicalSha256: sha256(Buffer.from(JSON.stringify(historical))),
     historicalHashEncoding: 'UTF-8 JSON.stringify parsed document; CLI separately binds original file bytes',
     historical: structuredClone(historical),
+    currentSourceCandidates: structuredClone(currentSourceCandidates),
     countingPolicy: 'Reviewed semantic operations only; source candidates and component checks are separate. No percentage while unresolved.',
     operationDenominatorReconciled: reconciled,
     operationDenominator: reconciled ? operations.size : null,

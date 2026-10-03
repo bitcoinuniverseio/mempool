@@ -24,7 +24,17 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
   assert(roster.operations.length > 0 && roster.operationDenominator === roster.operations.length);
   assert.equal(new Set(roster.operations.map(row => row.id)).size, roster.operations.length);
   assert.equal(roster.historicalSha256, digest(Buffer.from(JSON.stringify(roster.historical))), 'Historical lineage drift');
-  assert.deepEqual(roster.mappings.map(row => row.candidateId).sort(), roster.historical.rows.map(row => row.id).sort(),
+  const currentCandidates = roster.currentSourceCandidates ?? [];
+  assert(Array.isArray(currentCandidates), 'Invalid current source lineage');
+  const candidateIds = new Set(roster.historical.rows.map(row => row.id));
+  assert.equal(candidateIds.size, roster.historical.rows.length, 'Duplicate historical lineage');
+  for (const row of currentCandidates) {
+    assert(text(row.id) && row.id.startsWith('current:') && !candidateIds.has(row.id) && text(row.reason) &&
+      Array.isArray(row.sources) && row.sources.length > 0 && row.sources.every(source => text(source.path) && hash(source.sha256)),
+    'Invalid current source lineage');
+    candidateIds.add(row.id);
+  }
+  assert.deepEqual(roster.mappings.map(row => row.candidateId).sort(), [...candidateIds].sort(),
     'Application candidates were lost or duplicated');
   const operationIds = new Set(roster.operations.map(row => row.id));
   const mapped = new Set();
@@ -37,7 +47,7 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
       for (const id of mapping.operationIds) { assert(operationIds.has(id), 'Unknown mapped operation'); mapped.add(id); }
     }
   }
-  assert.equal(mapped.size, operationIds.size, 'Application operation lacks historical lineage');
+  assert.equal(mapped.size, operationIds.size, 'Application operation lacks source lineage');
   assert.equal(acceptance.schemaVersion, 'universe-application-acceptance-v1');
   assert.equal(acceptance.rosterSha256, digest(rosterBytes), 'Acceptance roster drift');
   assert.equal(acceptance.protocolAcceptanceSha256, digest(protocolBytes), 'Protocol evidence drift');

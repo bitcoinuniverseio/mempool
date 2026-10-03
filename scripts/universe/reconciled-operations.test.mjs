@@ -74,3 +74,29 @@ test('complete historical joins cannot hide additional current-source scope', ()
   assert.equal(result.blockers[0].kind, 'current-source-inventory-expansion');
   assert.deepEqual(result.historical, historical);
 });
+
+test('new source lineage includes reviewed current operations without inventing historical evidence', () => {
+  const r = review(); r.mappings.push({ ...r.mappings[0], candidateId: 'old-B' });
+  r.currentSourceCandidates = [{ id: 'current:delivery-worker', reason: 'Actual new worker has no historical inventory row', sources: proof }];
+  const unjoined = reconcile(r);
+  assert.equal(unjoined.operationDenominator, null);
+  assert.equal(unjoined.blockers[0].candidateId, 'current:delivery-worker');
+  r.operations.push({ ...operation, id: 'delivery-worker', method: 'WORKER', entryPoint: 'delivery.claim', lifecycle: 'claim effect acknowledgement and restart' });
+  r.mappings.push({ candidateId: 'current:delivery-worker', operationIds: ['delivery-worker'], reason: 'Current worker dispatcher and durable store define this operation', sources: proof });
+  const result = reconcile(r);
+  assert.equal(result.operationDenominator, 2);
+  assert.deepEqual(result.historical, historical);
+  assert.deepEqual(result.currentSourceCandidates, r.currentSourceCandidates);
+  assert.equal(result.operations[1].status, 'NOT TESTED');
+  assert.equal(result.functionalAcceptance, false);
+});
+
+test('current source additions reject duplicate IDs, absent rationale and stale source bytes', () => {
+  const candidate = { id: 'current:worker', reason: 'Reviewed actual dispatcher', sources: proof };
+  for (const candidates of [[candidate, candidate], [{ ...candidate, id: 'old-A' }], [{ ...candidate, reason: '' }]]) {
+    const r = review(); r.currentSourceCandidates = candidates;
+    assert.throws(() => reconcile(r), /current|Current/);
+  }
+  const r = review(); r.currentSourceCandidates = [{ ...candidate, sources: [{ ...proof[0], sha256: '0'.repeat(64) }] }];
+  assert.throws(() => reconcile(r), /Source proof drift/);
+});
