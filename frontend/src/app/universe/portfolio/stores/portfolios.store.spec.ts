@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PortfoliosStore } from './portfolios.store';
 import { PortfolioVaultService } from './vault.service';
 import { emptyPortfolio } from './portfolio-model';
+import { Subject } from 'rxjs';
 
 async function fixture(deletePortfolioRecords: (...args: unknown[]) => Promise<void>) {
   const portfolios = [emptyPortfolio('a', 'Delete A', '2026-10-03'), emptyPortfolio('b', 'Keep B', '2026-10-03')];
@@ -105,5 +106,48 @@ describe('locked reload projection', () => {
     await expect(store.reload()).rejects.toThrow('locked');
     expect(store.portfolios()).toEqual([]);
     expect(store.migrated()).toBe(false);
+  });
+});
+
+describe('late writes after a vault lock', () => {
+  it('does not republish a newly committed private portfolio after locking', async () => {
+    let finish!: () => void;
+    const writing = new Promise<void>(resolve => {finish = resolve;});
+    const {store, vault} = await fixture(async () => undefined);
+    Object.assign(vault, {put: vi.fn(() => writing), lock: vi.fn()});
+    const creating = store.createPortfolio('Private pending name');
+    store.lock(); finish();
+    await expect(creating).rejects.toThrow('locked');
+    expect(store.portfolios()).toEqual([]); expect(store.activePortfolioId()).toBeNull();
+  });
+  it('withdraws projected private data on an underlying auto/visibility lock notification', async () => {
+    const locks = new Subject<void>();
+    const portfolios = [emptyPortfolio('private', 'Sensitive', '2026-10-04')];
+    const vault = {locked$: locks, isUnlocked: () => true, probe: async () => ({kind:'unlocked'}), listByType: async () => portfolios.map(value => ({value})), get: async () => null};
+    const store = new PortfoliosStore(vault as unknown as PortfolioVaultService);
+    await store.initialize(); expect(store.portfolios()).toHaveLength(1);
+    locks.next(); expect(store.portfolios()).toEqual([]); expect(store.activePortfolioId()).toBeNull(); expect(store.vaultKind()).toBe('locked');
+  });
+  it('rejects an old reload even if the vault has unlocked again before its last read resolves', async () => {
+    let finish!: () => void;
+    const waiting = new Promise<null>(resolve => {finish = () => resolve(null);});
+    const {store, vault} = await fixture(async () => undefined);
+    Object.assign(vault, {get: vi.fn().mockResolvedValueOnce(null).mockReturnValueOnce(waiting), lock: vi.fn()});
+    const reloading = store.reload();
+    await Promise.resolve(); await Promise.resolve();
+    store.lock(); finish();
+    await expect(reloading).rejects.toThrow('locked');
+    expect(store.portfolios()).toEqual([]);
+  });
+  it('does not overwrite a fresh unlocked projection with a late prior-session update', async () => {
+    let finish!: () => void;
+    const writing = new Promise<void>(resolve => {finish = resolve;});
+    const {store, vault} = await fixture(async () => undefined);
+    Object.assign(vault, {put: vi.fn(() => writing), lock: vi.fn()});
+    const updating = store.updatePortfolio('a', portfolio => ({...portfolio, name:'Old pending update'}));
+    store.lock(); await store.initialize();
+    expect(store.activePortfolio()?.name).toBe('Delete A');
+    finish(); await expect(updating).rejects.toThrow('locked');
+    expect(store.activePortfolio()?.name).toBe('Delete A');
   });
 });

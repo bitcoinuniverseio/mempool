@@ -5,7 +5,8 @@
  * accepted the write.
  */
 
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, OnDestroy, computed, signal } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { PortfolioVaultService } from './vault.service';
 import { buildMigratedPortfolio, type MigrationPreview } from '../shared/migration';
 import {
@@ -27,7 +28,9 @@ export interface VaultPreferences {
 }
 
 @Injectable({ providedIn: 'root' })
-export class PortfoliosStore {
+export class PortfoliosStore implements OnDestroy {
+  private projectionVersion = 0;
+  private readonly lockSubscription?: Subscription;
   private readonly _portfolios = signal<LocalPortfolio[]>([]);
   private readonly _activePortfolioId = signal<string | null>(null);
   private readonly _vaultKind = signal<'absent' | 'locked' | 'unlocked'>('absent');
@@ -42,23 +45,44 @@ export class PortfoliosStore {
   );
   readonly livePortfolios = computed(() => this._portfolios().filter((p) => !p.archived));
 
-  constructor(private readonly vault: PortfolioVaultService) {}
+  constructor(private readonly vault: PortfolioVaultService) {
+    this.lockSubscription = this.vault.locked$?.subscribe(() => this.clearLockedProjection());
+  }
+
+  ngOnDestroy(): void {this.lockSubscription?.unsubscribe(); this.clearLockedProjection();}
+  private clearLockedProjection(): void {
+    this.projectionVersion++;
+    this._portfolios.set([]);
+    this._activePortfolioId.set(null);
+    this._vaultKind.set('locked');
+    this._migrated.set(false);
+    this.sessionOnlyIds.clear();
+  }
+  private assertCurrentProjection(version: number): void {
+    if (version !== this.projectionVersion || !this.vault.isUnlocked()) throw new Error('The vault was locked while updating portfolios.');
+  }
 
   async initialize(): Promise<'absent' | 'locked' | 'unlocked'> {
+    const version = this.projectionVersion;
     const state = await this.vault.probe();
+    if (version !== this.projectionVersion) throw new Error('The vault was locked during initialization.');
     this._vaultKind.set(state.kind);
     if (state.kind === 'unlocked') await this.reload();
     return state.kind;
   }
 
   async createVault(passphrase: string): Promise<void> {
+    const version = this.projectionVersion;
     await this.vault.create(passphrase);
+    this.assertCurrentProjection(version);
     this._vaultKind.set('unlocked');
   }
 
   async unlock(passphrase: string): Promise<boolean> {
+    const version = this.projectionVersion;
     const ok = await this.vault.unlock(passphrase);
     if (ok) {
+      this.assertCurrentProjection(version);
       this._vaultKind.set('unlocked');
       await this.reload();
     }
@@ -66,10 +90,9 @@ export class PortfoliosStore {
   }
 
   lock(): void {
+    const version = this.projectionVersion;
     this.vault.lock();
-    this._portfolios.set([]);
-    this._activePortfolioId.set(null);
-    this._vaultKind.set('locked');
+    if (version === this.projectionVersion) this.clearLockedProjection();
   }
 
   isUnlocked(): boolean {
@@ -77,13 +100,14 @@ export class PortfoliosStore {
   }
 
   async reload(): Promise<void> {
+    const version = this.projectionVersion;
     const entries = await this.vault.listByType(PORTFOLIO_RECORD);
     const portfolios = entries
       .map((entry) => entry.value as LocalPortfolio)
       .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
     const preferences = await this.readPreferences();
     const migrated = (await this.vault.get<{ done: boolean }>(MIGRATION_RECORD))?.done === true;
-    if (!this.vault.isUnlocked()) throw new Error('The vault was locked while loading portfolios.');
+    this.assertCurrentProjection(version);
     this._portfolios.set(portfolios);
     const active = preferences?.activePortfolioId ?? null;
     this._activePortfolioId.set(
@@ -98,6 +122,7 @@ export class PortfoliosStore {
     name: string,
     options: { sessionOnly?: boolean } = {},
   ): Promise<LocalPortfolio> {
+    const version = this.projectionVersion;
     const portfolio = emptyPortfolio(newLocalId(), name, new Date().toISOString());
     if (options.sessionOnly === true) {
       this.sessionOnlyIds.add(portfolio.id);
@@ -106,6 +131,7 @@ export class PortfoliosStore {
       return portfolio;
     }
     await this.vault.put(PORTFOLIO_RECORD, portfolio.id, portfolio);
+    this.assertCurrentProjection(version);
     this._portfolios.update((all) => [...all, portfolio]);
     this._activePortfolioId.set(portfolio.id);
     await this.setActivePortfolio(portfolio.id);
@@ -116,6 +142,7 @@ export class PortfoliosStore {
     id: string,
     mutate: (portfolio: LocalPortfolio) => LocalPortfolio,
   ): Promise<void> {
+    const version = this.projectionVersion;
     const current = this._portfolios().find((p) => p.id === id);
     if (current === undefined) throw new Error('The portfolio no longer exists.');
     const next = mutate({ ...current, updatedAt: new Date().toISOString() });
@@ -124,6 +151,7 @@ export class PortfoliosStore {
       return;
     }
     await this.vault.put(PORTFOLIO_RECORD, next.id, next);
+    this.assertCurrentProjection(version);
     this._portfolios.update((all) => all.map((p) => (p.id === id ? next : p)));
   }
 
@@ -141,12 +169,13 @@ export class PortfoliosStore {
   }
 
   async deletePortfolio(id: string): Promise<void> {
+    const version = this.projectionVersion;
     if (!this._portfolios().some(portfolio => portfolio.id === id)) {
       throw new Error('The portfolio no longer exists.');
     }
     const replacement = this._portfolios().find(portfolio => portfolio.id !== id && !portfolio.archived)?.id ?? null;
     if (this.isSessionOnly(id)) { this.sessionOnlyIds.delete(id); }
-    else { await this.vault.deletePortfolioRecords(id, replacement); }
+    else { await this.vault.deletePortfolioRecords(id, replacement); this.assertCurrentProjection(version); }
     this._portfolios.update((all) => all.filter((p) => p.id !== id));
     if (this._activePortfolioId() === id) {
       this._activePortfolioId.set(replacement);
@@ -188,14 +217,17 @@ export class PortfoliosStore {
   async writePreferences(
     mutate: (current: VaultPreferences) => VaultPreferences,
   ): Promise<void> {
+    const version = this.projectionVersion;
     const current = (await this.readPreferences()) ?? { autoLockMinutes: 15, relockWhenHidden: false };
+    this.assertCurrentProjection(version);
     await this.vault.put(PREFERENCE_RECORD, PREFERENCE_RECORD, mutate(current));
   }
 
   async migrateWorkspace(name: string, preview: MigrationPreview): Promise<void> {
+    const version = this.projectionVersion;
     const portfolio = buildMigratedPortfolio(emptyPortfolio(newLocalId(), name, new Date().toISOString()), preview);
     const committed = await this.vault.commitWorkspaceMigration(portfolio, preview.contentHash);
-    if (!this.vault.isUnlocked()) throw new Error('The vault was locked during migration.');
+    this.assertCurrentProjection(version);
     if (!committed) { await this.reload(); return; }
     this._portfolios.update(all => [...all, portfolio]);
     this._activePortfolioId.set(portfolio.id);
@@ -203,7 +235,9 @@ export class PortfoliosStore {
   }
 
   async markMigrated(): Promise<void> {
+    const version = this.projectionVersion;
     await this.vault.put(MIGRATION_RECORD, MIGRATION_RECORD, { done: true, at: new Date().toISOString() });
+    this.assertCurrentProjection(version);
     this._migrated.set(true);
   }
 }
