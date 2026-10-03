@@ -399,6 +399,28 @@ export class FailoverRouter {
 class ElectrsApi implements AbstractBitcoinApi {
   private failoverRouter = new FailoverRouter();
 
+  /** Freeze the selected index for one identity observation; do not fail over mid-proof. */
+  $getIdentityReader() {
+    const host = this.failoverRouter.activeHost;
+    const read = /** @asyncUnsafe */ async (resource: string, signal: AbortSignal): Promise<unknown> => {
+      const response = await this.failoverRouter.pollConnection.get(
+        (host.socket ? 'http://api' : host.host) + resource,
+        { signal, timeout: 15000, ...(host.socket ? { socketPath: host.host } : {}) },
+      );
+      return response.data;
+    };
+    return {
+      selector: { backend: 'esplora', origin: host.host, socket: !!host.socket },
+      tip: /** @asyncUnsafe */ async (signal: AbortSignal) => {
+        const value = await read('/blocks/tip/height', signal);
+        if (!(typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
+          && !(typeof value === 'string' && /^(0|[1-9][0-9]*)$/.test(value))) throw new Error('Invalid indexed height');
+        return Number(value);
+      },
+      hash: (height: number, signal: AbortSignal) => read('/block-height/' + height, signal),
+    };
+  }
+
   $getRawMempool(): Promise<IEsploraApi.Transaction['txid'][]> {
     return this.failoverRouter.$get<IEsploraApi.Transaction['txid'][]>('/mempool/txids');
   }

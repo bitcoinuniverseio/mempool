@@ -28,6 +28,7 @@ class BackendInfo {
       hostname: os.hostname(),
       version: versionInfo.version,
       gitCommit: versionInfo.gitCommit,
+      releaseSha: versionInfo.releaseSha ?? null,
       lightning: config.LIGHTNING.ENABLED,
       backend: config.MEMPOOL.BACKEND,
       coreVersion: '?',
