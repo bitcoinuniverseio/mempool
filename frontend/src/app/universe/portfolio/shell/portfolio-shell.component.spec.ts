@@ -19,6 +19,11 @@ import { PORTFOLIO_ROUTES } from '../portfolio.routes';
 import { OverviewComponent } from '../home/overview.component';
 import { NgxEchartsDirective, NGX_ECHARTS_CONFIG } from 'ngx-echarts';
 import { By } from '@angular/platform-browser';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { StateService } from '@app/services/state.service';
+import { BehaviorSubject } from 'rxjs';
+import { WatchOnlyDiscoveryComponent } from '../accounts/watch-only-discovery.component';
 
 @Component({ standalone: true, template: '<span>Portfolio child</span>' })
 class ChildComponent {}
@@ -42,6 +47,8 @@ describe('portfolio shell route ownership', () => {
     if (initialize) await store.initialize();
     const data = { state: signal<PortfolioDataState>({ loading: false, accounts: [], aggregation: null, completedAt: null }), reset: vi.fn(), loadPortfolio: vi.fn(async () => undefined) };
     TestBed.configureTestingModule({ providers: [
+      provideHttpClient(), provideHttpClientTesting(),
+      { provide: StateService, useValue: { isBrowser: true, network: '', env: { ROOT_NETWORK: 'mainnet' }, networkChanged$: new BehaviorSubject('') } },
       provideRouter(actualOverview ? [{ path: 'portfolio', children: PORTFOLIO_ROUTES }] : [
         { path: 'portfolio', component: PortfolioHomeComponent },
         { path: 'portfolio/p/:portfolioId', component: PortfolioShellComponent, children: [{ path: 'overview', component: ChildComponent }] },
@@ -140,6 +147,10 @@ describe('portfolio shell route ownership', () => {
     const state = harness.routeNativeElement?.querySelector('.state-chip');
     expect(state?.textContent).toContain('pending');
     expect(state?.textContent).not.toContain('Local only');
+    if (kind === 'xpub' || kind === 'descriptor') {
+      expect(harness.routeNativeElement?.textContent).toContain('Check next address batch');
+      expect(harness.routeNativeElement?.textContent).toContain('Discovery partial or not started');
+    }
     data.state.set({ loading: false, accounts: [], aggregation: { ...aggregatePortfolio([]), state: 'unavailable' }, completedAt: '2026-09-06' });
     harness.detectChanges();
     expect(state?.textContent).toContain('unavailable');
@@ -158,5 +169,15 @@ describe('portfolio shell route ownership', () => {
     const state = harness.routeNativeElement?.querySelector('.state-chip');
     expect(state?.textContent).toContain('proven');
     expect(state?.textContent).not.toContain('Local only');
+  });
+  it('destroys and cancels the real discovery scope when its local vault locks', async () => {
+    const { harness, store } = await fixture(true, false, { accounts: [{ id: 'watch', name: 'Private watch account', kind: 'xpub',
+      chain: 'bitcoin', network: 'mainnet', tags: [], createdAt: '2026-09-06' }] });
+    await harness.navigateByUrl('/portfolio/p/two/overview', PortfolioShellComponent); harness.detectChanges();
+    const child = harness.routeDebugElement!.query(By.directive(WatchOnlyDiscoveryComponent)).componentInstance as WatchOnlyDiscoveryComponent;
+    const cancel = vi.spyOn(child.discovery, 'cancel'); child.discovery.busy.set(true);
+    store.lock(); harness.detectChanges();
+    expect(cancel).toHaveBeenCalled(); expect(child.discovery.busy()).toBe(false);
+    expect(harness.routeNativeElement?.textContent).not.toContain('Private watch account');
   });
 });

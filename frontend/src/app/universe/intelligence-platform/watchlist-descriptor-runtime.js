@@ -6,3 +6,7 @@ import { Output, networks } from '@bitcoinerlab/descriptors';
 export function derivePublicScript(descriptor, index, testnet) {
   return new Output({ descriptor, index, checksumRequired: true, network: testnet ? networks.testnet : networks.bitcoin }).getScriptPubKey();
 }
+
+export function derivePublicAddress(descriptor, index, testnet) {
+  return new Output({ descriptor, index, checksumRequired: true, network: testnet ? networks.testnet : networks.bitcoin }).getAddress();
+}
