@@ -7,6 +7,7 @@ async function fixture(deletePortfolioRecords: (...args: unknown[]) => Promise<v
   const portfolios = [emptyPortfolio('a', 'Delete A', '2026-10-03'), emptyPortfolio('b', 'Keep B', '2026-10-03')];
   const vault = {
     probe: async () => ({ kind: 'unlocked' }),
+    isUnlocked: () => true,
     listByType: async () => portfolios.map(value => ({ id: value.id, value })),
     get: async () => ({ activePortfolioId: 'a' }),
     deletePortfolioRecords: vi.fn(deletePortfolioRecords),
@@ -76,6 +77,32 @@ describe('workspace migration projection', () => {
     const vault = { isUnlocked: () => false, commitWorkspaceMigration: async () => true };
     const store = new PortfoliosStore(vault as unknown as PortfolioVaultService);
     await expect(store.migrateWorkspace('Migrated', preview)).rejects.toThrow('locked');
+    expect(store.portfolios()).toEqual([]);
+    expect(store.migrated()).toBe(false);
+  });
+});
+
+
+describe('locked reload projection', () => {
+  it('does not expose decrypted portfolios when a later read fails after locking', async () => {
+    const vault = {
+      listByType: async () => [{ id: 'private', value: emptyPortfolio('private', 'Private', '2026-10-03') }],
+      get: async () => { throw new Error('locked during preferences read'); },
+      isUnlocked: () => false,
+    };
+    const store = new PortfoliosStore(vault as unknown as PortfolioVaultService);
+    await expect(store.reload()).rejects.toThrow('locked');
+    expect(store.portfolios()).toEqual([]);
+    expect(store.activePortfolioId()).toBeNull();
+  });
+  it('checks unlock state after all reads before publishing the projection', async () => {
+    const vault = {
+      listByType: async () => [{ id: 'private', value: emptyPortfolio('private', 'Private', '2026-10-03') }],
+      get: async () => null,
+      isUnlocked: () => false,
+    };
+    const store = new PortfoliosStore(vault as unknown as PortfolioVaultService);
+    await expect(store.reload()).rejects.toThrow('locked');
     expect(store.portfolios()).toEqual([]);
     expect(store.migrated()).toBe(false);
   });

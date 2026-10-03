@@ -81,15 +81,17 @@ export class PortfoliosStore {
     const portfolios = entries
       .map((entry) => entry.value as LocalPortfolio)
       .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
-    this._portfolios.set(portfolios);
     const preferences = await this.readPreferences();
+    const migrated = (await this.vault.get<{ done: boolean }>(MIGRATION_RECORD))?.done === true;
+    if (!this.vault.isUnlocked()) throw new Error('The vault was locked while loading portfolios.');
+    this._portfolios.set(portfolios);
     const active = preferences?.activePortfolioId ?? null;
     this._activePortfolioId.set(
       active !== null && portfolios.some((p) => p.id === active && !p.archived)
         ? active
         : portfolios.find((p) => !p.archived)?.id ?? null,
     );
-    this._migrated.set((await this.vault.get<{ done: boolean }>(MIGRATION_RECORD))?.done === true);
+    this._migrated.set(migrated);
   }
 
   async createPortfolio(
