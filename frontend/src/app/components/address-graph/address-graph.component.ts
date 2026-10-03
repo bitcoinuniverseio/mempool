@@ -111,6 +111,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
           this.priceSubscription?.unsubscribe();
           this.rows = []; this.pricedRows = null; this.checkpoint = null;
           this.data = []; this.fiatData = []; this.hoverData = []; this.chartOptions = {};
+          this.chartInstance?.clear();
           this.observedStats = undefined; this.historyError = null; this.fiatError = null;
           this.historyComplete = false; this.isLoading = false; this.isPricing = false;
           this.error = 'Network changed; reload address history';
@@ -137,8 +138,9 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
       this.subscription = this.addressSummary$.subscribe({
         next: rows => {
           try {
-            this.rows = validatedSummaryRows(rows, Infinity); exactSummaryBalance(this.rows, this.stats);
-            this.priceSubscription?.unsubscribe(); this.isPricing = false; this.pricedRows = null; this.error = null; this.isLoading = false; this.renderHistory();
+            const validated = validatedSummaryRows(rows, Infinity); exactSummaryBalance(validated, this.stats);
+            this.rows = validated;
+            this.priceSubscription?.unsubscribe(); this.isPricing = false; this.pricedRows = null; this.fiatError = null; this.historyError = null; this.error = null; this.isLoading = false; this.renderHistory();
           } catch (error) { this.failHistory(error); }
         }, error: error => this.failHistory(error),
       });
@@ -158,7 +160,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
           if (rows.length > page.stats.tx_count) {throw Error('Summary exceeds confirmed address transaction count');}
           exactSummaryBalance(rows, page.stats);
           this.rows = rows; this.observedStats = page.stats; this.checkpoint = page.anchor;
-          this.priceSubscription?.unsubscribe(); this.isPricing = false; this.pricedRows = null;
+          this.priceSubscription?.unsubscribe(); this.isPricing = false; this.pricedRows = null; this.fiatError = null;
           this.historyComplete = page.rows.length < SUMMARY_PAGE_LIMIT && rows.length === page.stats.tx_count;
           if (page.rows.length < SUMMARY_PAGE_LIMIT && !this.historyComplete) {this.historyError = 'Index returned fewer transactions than its statistics; reload or retry earlier history';}
           this.error = null; this.isLoading = false; this.renderHistory();
