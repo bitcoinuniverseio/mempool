@@ -42,7 +42,9 @@ export class AppComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvents(event: KeyboardEvent) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+    const target = event.target;
+    // Focused controls and scroll regions own their keyboard interaction.
+    if (target instanceof Element && target.closest('input, textarea, select, button, a, [contenteditable]:not([contenteditable="false"]), [tabindex]')) {
       return;
     }
     // prevent arrow key horizontal scrolling

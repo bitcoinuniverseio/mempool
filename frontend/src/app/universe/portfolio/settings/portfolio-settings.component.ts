@@ -123,12 +123,16 @@ export class PortfolioSettingsComponent {
   protected async exportBackup(): Promise<void> {
     this.clearDownload();
     const version = this.exportVersion;
-    const backup = await this.vault.exportEncrypted();
-    if (version !== this.exportVersion || this.destroyRef.destroyed || this.store.vaultKind() !== 'unlocked') return;
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-    this.downloadUrlSignal.set(URL.createObjectURL(blob));
-    this.downloadNameValue = `universe-portfolio-${new Date().toISOString().slice(0, 10)}.universe-portfolio`;
-    this.messageSignal.set($localize`:@@universe.portfolio.settings.export-ready:Backup ready - download it and store it somewhere safe.`);
+    try {
+      const backup = await this.vault.exportEncrypted();
+      if (version !== this.exportVersion || this.destroyRef.destroyed || this.store.vaultKind() !== 'unlocked') return;
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      this.downloadUrlSignal.set(URL.createObjectURL(blob));
+      this.downloadNameValue = `universe-portfolio-${new Date().toISOString().slice(0, 10)}.universe-portfolio`;
+      this.messageSignal.set($localize`:@@universe.portfolio.settings.export-ready:Backup ready - download it and store it somewhere safe.`);
+    } catch {
+      if (version === this.exportVersion && !this.destroyRef.destroyed) this.messageSignal.set('The encrypted backup could not be prepared. Unlock the vault, check browser storage, and retry.');
+    }
   }
 
   protected async importFile(event: Event): Promise<void> {
