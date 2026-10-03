@@ -9,14 +9,10 @@ import {
  * 503, so an absent integration is reported as an absent integration rather
  * than as an answer.
  */
-export class ZcashPrivacyEvidenceError extends Error {
-  constructor(public readonly code: string, message: string, public readonly status = 503) {
-    super(message);
-  }
-}
-
-const zcashNodeUnavailable =
-  'Zcash privacy observations are unavailable. Pool balances, shielded supply, the chain tip and recent pool flows require the owned Zcash node (zcashd getblockchaininfo valuePools, UNIVERSE_ZCASH_RPC_ORIGIN), which is not connected on this deployment.';
+export { ZcashPrivacyEvidenceError } from './zcash-source-error';
+import { ZcashPrivacyEvidenceError } from './zcash-source-error';
+import { ownedZcashReader, ZcashPublicReader } from './zcash-owned-reader';
+import { observeZcashPools } from './zcash-pool-observation';
 
 /** Activation facts from the Zcash protocol specification; a reference, not an observation. */
 const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
@@ -79,18 +75,23 @@ const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
     features: ['Ironwood shielded pool', 'Orchard inbound transfer restrictions'],
     source: 'https://zips.z.cash/zip-0258', referenceStatus: 'draft-specification-settled-upgrade',
   },
+  {
+    name: 'NU7', activationHeight: null, branchId: '0x77190ad9', activatedAt: '',
+    features: ['25-second target spacing', 'Network Sustainability Mechanism', 'Version 4 transaction removal'],
+    source: 'https://zips.z.cash/zip-0259', referenceStatus: 'draft-upcoming',
+  },
 ];
 
 /**
  * Zcash privacy evidence.
  *
- * The summary and the pools used to answer from constants: a tip height, a
- * circulating supply and five pool balances that no node reported, and two
- * recent flows with invented block hashes. No owned Zcash node is connected,
- * so those reads report the source they would need. The network upgrade
- * catalogue is protocol reference and stays answerable.
+ * Observations require the operator-owned node, explicit readiness and a
+ * stable, network-specific checkpoint. Exact amounts are node accounting;
+ * historical flows and transaction counts remain unavailable until a durable
+ * reversible ledger exists. Upgrade entries are independent references.
  */
 export class ZcashPrivacyService {
+  constructor(private readonly reader: ZcashPublicReader = ownedZcashReader) {}
   /* IMPLEMENTATION-HANDOFF [WP-BE-014]
    * Defect BE-014; COV-BE-014 privacy summary, value pools, upgrade reference.
    * Summary/pools always throw, although zcash-block-source supplies a
@@ -119,21 +120,22 @@ export class ZcashPrivacyService {
    *    adapters; never downgrade node consensus support to match old UI data.
    * Preparation only; current returned data and unavailable states remain.
    */
-  /** @asyncSafe */
-  public async $getSummary(): Promise<ZcashPrivacySummary> {
-    throw new ZcashPrivacyEvidenceError('unavailable-zcash-node', zcashNodeUnavailable);
+  /** @asyncUnsafe Propagates typed evidence failures to the mounted route handler. */
+  public async $getSummary(network = 'mainnet'): Promise<ZcashPrivacySummary> {
+    const observation = await observeZcashPools(this.reader, network);
+    return {...observation, upgrades: await this.$getUpgrades(network)};
   }
 
-  /** @asyncSafe */
-  public async $getPools(): Promise<ZcashValuePool[]> {
-    throw new ZcashPrivacyEvidenceError('unavailable-zcash-node', zcashNodeUnavailable);
+  /** @asyncUnsafe Propagates typed evidence failures to the mounted route handler. */
+  public async $getPools(network = 'mainnet'): Promise<ZcashValuePool[]> {
+    return (await observeZcashPools(this.reader, network)).pools.slice();
   }
 
   /** @asyncSafe */
   public async $getUpgrades(network = 'mainnet'): Promise<ZcashNetworkUpgrade[]> {
     if (!['mainnet', 'testnet'].includes(network)) throw new ZcashPrivacyEvidenceError('invalid-network', 'Choose mainnet or testnet.', 400);
-    // zcashd v6.20.0 chainparams.cpp through NU6.2; ZIP258 for NU6.3.
-    const heights = [207500, 280000, 584000, 903800, 1028500, 1842420, 2976000, 3536500, 4052000, 4134000];
+    // Zebra 6d1e414d6f55e4180d0e47baaa934bf97d5b4fec constants; NU7 mainnet remains unassigned in ZIP259.
+    const heights = [207500, 280000, 584000, 903800, 1028500, 1842420, 2976000, 3536500, 4052000, 4134000, 4465026];
     return NETWORK_UPGRADES.map((upgrade, index) => ({...upgrade, network, observation: false,
       activationHeight: network === 'testnet' ? heights[index] : upgrade.activationHeight,
       activatedAt: network === 'testnet' ? '' : upgrade.activatedAt}));

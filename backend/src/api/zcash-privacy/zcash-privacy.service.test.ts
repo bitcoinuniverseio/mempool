@@ -18,7 +18,7 @@ describe('ZcashPrivacyService', () => {
 
   it('still answers the network upgrade catalogue, which is protocol reference', /** @asyncUnsafe */ async () => {
     const upgrades = await zcashPrivacyService.$getUpgrades();
-    expect(upgrades.length).toBe(10);
+    expect(upgrades.length).toBe(11);
     const nu5 = upgrades.find((u) => u.name === 'NU5');
     expect(nu5?.branchId).toBe('0xc2d6d0b4');
     expect(nu5?.activationHeight).toBe(1687104);
@@ -61,7 +61,7 @@ describe('Zcash privacy HTTP responses', () => {
       await handler({query: {network:'mainnet',start:'415000',end:'415000'}} as unknown as Request, res as unknown as Response);
       if (path.endsWith('upgrades')) {
         expect(res.status).not.toHaveBeenCalled();
-        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ total: 10 }));
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ total: 11 }));
         continue;
       }
       expect(res.status).toHaveBeenCalledWith(503);
