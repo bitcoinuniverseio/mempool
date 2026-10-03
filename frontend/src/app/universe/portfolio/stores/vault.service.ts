@@ -121,6 +121,8 @@ export class PortfolioVaultService implements OnDestroy {
   isUnlocked(): boolean {
     return this.key !== null;
   }
+  /** Changes on every lock, including automatic locks and vault replacement. */
+  get sessionRevision(): number {return this.lockVersion;}
 
   /** True when a vault exists on this device. */
   async exists(): Promise<boolean> {
