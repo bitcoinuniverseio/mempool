@@ -14,11 +14,12 @@ import { PortfolioDataService } from '../data/portfolio-data.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { isLocalOnlyPortfolio } from '../shared/local-source-state';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { WatchOnlyDiscoveryComponent } from '../accounts/watch-only-discovery.component';
 
 @Component({
   selector: 'app-portfolio-shell',
   standalone: true,
-  imports: [RelativeUrlPipe, RouterOutlet, RouterLink, PortfolioDataStateComponent],
+  imports: [RelativeUrlPipe, RouterOutlet, RouterLink, PortfolioDataStateComponent, WatchOnlyDiscoveryComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="shell" [class.privacy]="session.valuesHidden()">
@@ -106,6 +107,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
       <main class="shell-main">
         @if (selectedPortfolio()) {
+          @if (hasWatchOnlyAccounts()) { <app-watch-only-discovery [portfolio]="selectedPortfolio()" /> }
           <router-outlet />
         } @else {
           <p role="status">{{ store.vaultKind() === 'unlocked' ? 'This portfolio is not available in this vault.' : 'Unlock the portfolio vault to open this portfolio.' }}</p>
@@ -183,6 +185,7 @@ export class PortfolioShellComponent {
   readonly portfolioId = toSignal(combineLatest(this.route.pathFromRoot.map((route) => route.paramMap))
     .pipe(map((params) => params.map((value) => value.get('portfolioId')).find(Boolean) ?? '')), { initialValue: '' });
   readonly selectedPortfolio = computed(() => this.store.livePortfolios().find((portfolio) => portfolio.id === this.portfolioId()) ?? null);
+  readonly hasWatchOnlyAccounts = computed(() => this.selectedPortfolio()?.accounts.some(account => account.kind === 'xpub' || account.kind === 'descriptor') ?? false);
   readonly localOnly = computed(() => isLocalOnlyPortfolio(this.store.activePortfolio()));
   readonly data = this.dataService.state;
   readonly completedAtLabel = computed(() => {
