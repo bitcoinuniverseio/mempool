@@ -21,9 +21,16 @@ export async function verifyAddressSource(
   const networks = {mainnet:'main',testnet:'test',testnet4:'testnet4',signet:'signet',regtest:'regtest',liquid:'liquidv1',liquidtestnet:'liquidtestnet'};
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout>;
-  const readCore = (method: string, params: unknown[]) => core.rpc?.call
-    ? core.rpc.call(method, params, {signal: controller.signal})
-    : method === 'getblockchaininfo' ? core.getBlockchainInfo() : core.getBlockHash(params[0]);
+  const ensureActive = (): void => {
+    if (controller.signal.aborted) throw new Error('Address source verification exceeded its deadline');
+  };
+  const readCore = (method: string, params: unknown[]) => {
+    ensureActive();
+    return core.rpc?.call
+      ? core.rpc.call(method, params, {signal: controller.signal})
+      : method === 'getblockchaininfo' ? core.getBlockchainInfo() : core.getBlockHash(params[0]);
+  };
+  const readIndex = (height: number) => { ensureActive(); return readHash(height, controller.signal); };
   const verify = /** @asyncUnsafe */ async (): Promise<AddressSourceCheckpoint> => {  for (let attempt = 0; attempt < 2; attempt++) {
     const before = await readCore('getblockchaininfo', []);
     if (before.chain !== networks[config.MEMPOOL.NETWORK] || !Number.isSafeInteger(before.blocks) || before.blocks < 0 || !isHash(before.bestblockhash)) throw new Error('Owned node network checkpoint is invalid');
@@ -34,8 +41,8 @@ export async function verifyAddressSource(
     if (config.MEMPOOL.NETWORK === 'signet' && height < 1) throw new Error('Signet identity requires a non-genesis checkpoint');
     const genesis = await readCore('getblockhash', [0]);
     const expected = await readCore('getblockhash', [height]);
-    const sourceGenesis = await readHash(0, controller.signal);
-    const observed = await readHash(height, controller.signal);
+    const sourceGenesis = await readIndex(0);
+    const observed = await readIndex(height);
     const after = await readCore('getblockchaininfo', []);
     if (after.chain !== before.chain || after.signet_challenge !== before.signet_challenge || after.bestblockhash !== before.bestblockhash || after.blocks !== before.blocks) continue;
     if (!isHash(genesis) || !isHash(expected) || sourceGenesis !== genesis || observed !== expected) throw new Error('Address source differs from the owned active chain');
