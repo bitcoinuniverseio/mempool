@@ -74,4 +74,12 @@ describe('Native Lightning node route recovery', () => {
     s.component.ngOnDestroy(); expect(pendingNode.observed).toBe(false); expect(pendingGeo.observed).toBe(false);
     nodeSub.unsubscribe(); geoSub.unsubscribe();
   });
+  it('distinguishes a missing node from unavailable and guards pending retry', () => {
+    const s = setup(); s.lightning.getNode$.mockReturnValueOnce(throwError(()=>({status:404})));
+    const sub = s.component.node$.subscribe(); expect(s.component.nodeMissing).toBe(true);
+    s.lightning.getNode$.mockReturnValueOnce(throwError(()=>({status:503}))); s.component.retry(); expect(s.component.nodeMissing).toBe(false);
+    const pending = new Subject(); s.lightning.getNode$.mockReturnValueOnce(pending); s.component.retry(); s.component.retry();
+    expect(s.lightning.getNode$).toHaveBeenCalledTimes(3); s.component.ngOnDestroy(); expect(pending.observed).toBe(false);
+    s.component.retry(); expect(s.lightning.getNode$).toHaveBeenCalledTimes(3); sub.unsubscribe();
+  });
 });
