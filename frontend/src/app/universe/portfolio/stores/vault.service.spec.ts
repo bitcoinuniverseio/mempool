@@ -4,6 +4,8 @@ import { createHash, webcrypto } from 'node:crypto';
 import { NgZone } from '@angular/core';
 import { PortfolioVaultService, VaultMeta, VaultRecord } from './vault.service';
 import type { KdfRequest, KdfOk } from '../workers/vault-kdf.worker';
+import { PortfoliosStore } from './portfolios.store';
+import { emptyPortfolio } from './portfolio-model';
 
 class WorkerFixture {
   static instances: WorkerFixture[] = [];
@@ -49,6 +51,19 @@ describe('vault worker failure recovery and KDF identity', () => {
     service.ngOnDestroy(); lock.mockClear();
     document.dispatchEvent(new Event('visibilitychange'));
     expect(lock).not.toHaveBeenCalled();
+  });
+  it('immediately clears the portfolio projection through a genuine visibility lock event', async () => {
+    vi.spyOn(service, 'probe').mockResolvedValue({kind:'unlocked'});
+    vi.spyOn(service, 'isUnlocked').mockReturnValue(true);
+    vi.spyOn(service, 'listByType').mockResolvedValue([{id:'test-owned', value:emptyPortfolio('test-owned','Private fixture','2026-10-04')}]);
+    vi.spyOn(service, 'get').mockResolvedValue(null);
+    const store = new PortfoliosStore(service); await store.initialize();
+    expect(store.portfolios()).toHaveLength(1);
+    service.configureAutoLock(15, true);
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(store.portfolios()).toEqual([]); expect(store.activePortfolioId()).toBeNull(); expect(store.vaultKind()).toBe('locked');
+    store.ngOnDestroy();
   });
 
   it.each(['error', 'messageerror'])('rejects pending derivation on %s and starts a fresh worker for retry', async (event) => {

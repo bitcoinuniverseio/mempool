@@ -15,6 +15,7 @@
  */
 
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
 import type {
   KdfError,
   KdfOk,
@@ -83,6 +84,8 @@ export type VaultState =
 
 @Injectable({ providedIn: 'root' })
 export class PortfolioVaultService implements OnDestroy {
+  private readonly lockEvents = new Subject<void>();
+  readonly locked$ = this.lockEvents.asObservable();
   private worker: Worker | null = null;
   private workerRequests = new Map<number, { resolve: (value: KdfOk) => void; reject: (error: Error) => void; timeout: ReturnType<typeof setTimeout> }>();
   private workerNextId = 1;
@@ -200,6 +203,7 @@ export class PortfolioVaultService implements OnDestroy {
   lock(): void {
     this.lockVersion++;
     this.key = null;
+    this.lockEvents.next();
     for (const transaction of this.activeWrites) {
       try { transaction.abort(); }
       catch { /* A completed transaction can be waiting for its terminal event. */ }
@@ -601,8 +605,9 @@ export class PortfolioVaultService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.lock();
+    this.lockEvents.complete();
     this.failWorker(new Error('The vault key derivation was closed.'));
-    document.removeEventListener('visibilitychange', this.visibilityListener);
+    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.visibilityListener);
     if (this.lockTimer !== null) clearTimeout(this.lockTimer);
   }
 
