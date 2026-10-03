@@ -506,6 +506,8 @@ export interface ILoadingIndicators { [name: string]: number; }
 export interface IBackendInfo {
   hostname: string;
   gitCommit: string;
+  /** Full Git revision observed while generating this artifact's resources. */
+  releaseSha?: string | null;
   version: string;
   lightning: boolean;
   coreVersion: string;
