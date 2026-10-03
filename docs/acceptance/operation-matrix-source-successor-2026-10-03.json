@@ -2562,9 +2562,9 @@
     },
     {
       "path": "frontend/src/app/components/rbf-list/rbf-list.component.ts",
-      "sha256": "2091692eea68f836381e1b3e2b6185b95e0114233627f5b2d7e83aa8f59c3dea",
+      "sha256": "e561d3106c1bd31f540bc7cfc510f211821481e5d94811dcd4fbc1cbcfdb08c8",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2507
+      "bytes": 3061
     },
     {
       "path": "frontend/src/app/components/server-health/server-health.component.ts",
@@ -3894,9 +3894,9 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-      "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
+      "sha256": "bf4fd2f5cbf7e69efc190665d5fe0cf74453484d34d995562f486e26a6a832ec",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5097
+      "bytes": 5140
     },
     {
       "path": "frontend/src/app/universe/portfolio/insights/insights.component.ts",
@@ -5533,7 +5533,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/rbf-list/rbf-list.component.ts",
-          "sha256": "2091692eea68f836381e1b3e2b6185b95e0114233627f5b2d7e83aa8f59c3dea",
+          "sha256": "e561d3106c1bd31f540bc7cfc510f211821481e5d94811dcd4fbc1cbcfdb08c8",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -21711,7 +21711,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-          "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
+          "sha256": "bf4fd2f5cbf7e69efc190665d5fe0cf74453484d34d995562f486e26a6a832ec",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -76365,7 +76365,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-          "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
+          "sha256": "bf4fd2f5cbf7e69efc190665d5fe0cf74453484d34d995562f486e26a6a832ec",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -76466,7 +76466,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-          "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
+          "sha256": "bf4fd2f5cbf7e69efc190665d5fe0cf74453484d34d995562f486e26a6a832ec",
           "sha256Encoding": "utf8-lf"
         }
       ],
