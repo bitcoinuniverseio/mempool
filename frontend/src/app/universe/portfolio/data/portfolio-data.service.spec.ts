@@ -37,6 +37,13 @@ describe('portfolio data identity and pending response isolation', () => {
     await service.loadPortfolio(portfolio('failed'));
     expect(service.state().aggregation).toMatchObject({ state: 'unavailable', pricedTotal: null, unknownValueBucket: 'present' });
   });
+  it('exposes actual retained provider state under exact network contexts and withdraws it on reset', async () => {
+    const {service,api}=fixture();
+    api.getSummary$.mockImplementation((_chain, network) => of({...summary(network),envelope:{...summary(network).envelope,sources:[{authorityId:'owned-index',state:network === 'signet' ? 'unavailable' : 'proven'}]}} as any));
+    await service.loadPortfolio(portfolio('source', ['testnet','signet']));
+    expect(service.sourceStates()).toEqual(expect.arrayContaining([{authorityId:'owned-index',state:'proven',context:'bitcoin:testnet'},{authorityId:'owned-index',state:'unavailable',context:'bitcoin:signet'}]));
+    service.reset(); expect(service.sourceStates()).toEqual([]);
+  });
 
   it('retains successful targets while retrying a failed network target', async () => {
     const { service, api } = fixture();

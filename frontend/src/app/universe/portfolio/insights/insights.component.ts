@@ -17,10 +17,10 @@ import { deriveInsights, type PortfolioInsight } from '../shared/insights';
     <div class="insights">
       @if (insights().length === 0) {
         <p class="soft" i18n="@@universe.portfolio.insights.empty">
-          Nothing needs attention. Insights appear when the measured state of the
-          portfolio crosses a stated, explainable rule - never from a score.
+          No insight rule is triggered by the currently loaded evidence.
         </p>
       }
+      <p class="soft">Checks use loaded holdings and provider observations. UTXO health, backup history, snapshot history and vault duration are unavailable here.</p>
       <ul>
         @for (insight of insights(); track insight.insightId) {
           <li [attr.data-severity]="insight.severity" [class.dismissed]="dismissed().includes(insight.insightId)">
@@ -58,27 +58,30 @@ import { deriveInsights, type PortfolioInsight } from '../shared/insights';
   ],
 })
 export class InsightsComponent {
-  readonly data = inject(PortfolioDataService).state;
+  private readonly dataService = inject(PortfolioDataService);
+  readonly data = this.dataService.state;
   readonly store = inject(PortfoliosStore);
   readonly portfolioId = input<string>('');
+  private readonly openedAt = new Date().toISOString();
 
   private readonly dismissedSignal = signal<string[]>([]);
   readonly dismissed = this.dismissedSignal.asReadonly();
 
   readonly insights = computed<readonly PortfolioInsight[]>(() => {
-    const aggregation = this.data().aggregation;
-    if (aggregation === null) return [];
+    const state = this.data();
+    const aggregation = state.aggregation;
+    if (aggregation === null || state.loading) return [];
     return deriveInsights(
       {
         aggregation,
         utxos: [],
         duplicateAddresses: aggregation.duplicateAddresses,
-        sourceStates: [],
+        sourceStates: this.dataService.sourceStates?.() ?? [],
         vaultUnlockedHours: null,
-        lastBackupAt: null,
+        lastBackupAt: undefined,
         lastSnapshotAt: null,
       },
-      '2026-09-02T00:00:00.000Z',
+      state.completedAt || this.openedAt,
     );
   });
 

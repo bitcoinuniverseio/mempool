@@ -14,7 +14,7 @@ describe('offered insight dismissal and restoration', () => {
 
   it('keeps dismissed state visible with a reachable restore control in the actual template', () => {
     const aggregation = { holdings: [], byAccount: [], quoteCurrency: 'USD', pricedTotal: null, unpricedCount: 0,
-      state: 'partial', unknownValueBucket: 'present', duplicateAddresses: [], internalTransfers: [],
+      state: 'partial', unknownValueBucket: 'present', duplicateAddresses: ['test-owned-duplicate'], internalTransfers: [],
       externalInflowAtomic: null, externalOutflowAtomic: null };
     TestBed.configureTestingModule({ imports: [InsightsComponent], providers: [
       { provide: PortfolioDataService, useValue: { state: signal({ aggregation }) } },
@@ -38,5 +38,17 @@ describe('offered insight dismissal and restoration', () => {
     expect(row.textContent).not.toContain('Dismissed on this page');
     expect(row.querySelector('button')?.textContent).toContain('Dismiss');
     expect(fixture.componentInstance.dismissed()).toEqual([]);
+  });
+  it('uses the actual completed observation and source contexts without fabricating backup absence', () => {
+    const aggregation = {holdings:[],byAccount:[],quoteCurrency:'USD',pricedTotal:null,unpricedCount:0,state:'partial',unknownValueBucket:'present',duplicateAddresses:[],internalTransfers:[],externalInflowAtomic:null,externalOutflowAtomic:null};
+    TestBed.configureTestingModule({imports:[InsightsComponent], providers:[
+      {provide:PortfolioDataService,useValue:{state:signal({aggregation,loading:false,completedAt:'2026-10-04T00:00:00Z'}),sourceStates:signal([{authorityId:'owned-index',context:'bitcoin:signet',state:'unavailable'}])}},
+      {provide:PortfoliosStore,useValue:{}},
+    ]});
+    const fixture=TestBed.createComponent(InsightsComponent); fixture.detectChanges();
+    const insights=fixture.componentInstance.insights();
+    expect(insights).toHaveLength(1); expect(insights[0]).toMatchObject({ruleId:'sources.degraded',createdAt:'2026-10-04T00:00:00Z',evidenceRefs:['authority:bitcoin:signet:owned-index']});
+    expect(fixture.nativeElement.textContent).not.toContain('No encrypted backup exists');
+    expect(fixture.nativeElement.textContent).toContain('backup history');
   });
 });
