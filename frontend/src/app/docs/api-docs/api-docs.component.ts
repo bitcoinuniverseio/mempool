@@ -14,6 +14,7 @@ import { FaqTemplateDirective } from '@app/docs/faq-template/faq-template.compon
 })
 export class ApiDocsComponent implements OnInit, AfterViewInit {
   private destroy$: Subject<any> = new Subject<any>();
+  private viewInitTimer: ReturnType<typeof setTimeout>;
   plainHostname = document.location.hostname;
   electrsPort = 0;
   hostname = document.location.hostname;
@@ -56,7 +57,7 @@ export class ApiDocsComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     const that = this;
-    setTimeout( () => {
+    this.viewInitTimer = setTimeout( () => {
       if( this.route.snapshot.fragment ) {
         this.openEndpointContainer( this.route.snapshot.fragment );
         if (document.getElementById( this.route.snapshot.fragment )) {
@@ -77,8 +78,9 @@ export class ApiDocsComponent implements OnInit, AfterViewInit {
       this.runningElectrs = !!(backend == 'esplora');
     });
     this.auditEnabled = this.env.AUDIT;
-    this.network$ = merge(of(''), this.stateService.networkChanged$).pipe(
+    this.network$ = merge(of(this.stateService.network), this.stateService.networkChanged$).pipe(
       tap((network: string) => {
+        this.baseNetworkUrl = '';
         if (this.env.BASE_MODULE === 'mempool' && network !== '' && this.env.ROOT_NETWORK === '') {
           this.baseNetworkUrl = `/${network}`;
         } else if (this.env.BASE_MODULE === 'liquid') {
@@ -127,15 +129,16 @@ export class ApiDocsComponent implements OnInit, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    clearTimeout(this.viewInitTimer);
     this.destroy$.next(true);
     this.destroy$.complete();
     window.removeEventListener('scroll', this.onDocScroll);
     this.timeLtrSubscription.unsubscribe();
   }
 
-  onDocScroll() {
+  onDocScroll = () => {
     this.desktopDocsNavPosition = ( window.pageYOffset > 115 ) ? 'fixed' : 'relative';
-  }
+  };
 
   anchorLinkClick( e ) {
     const targetId = e.fragment;
