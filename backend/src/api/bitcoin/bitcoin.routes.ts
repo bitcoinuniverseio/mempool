@@ -26,6 +26,7 @@ import { classifyAddressError, sendAddressError } from './address-errors';
 import poolsUpdater from '../../tasks/pools-updater';
 import chainTips from '../chain-tips';
 import { readUnsignedInteger, sourceNotFound } from './route-input';
+import { initUtxoReconstructionRoutes } from './utxo-reconstruction.routes';
 
 const TXID_REGEX = /^[a-f0-9]{64}$/i;
 const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
@@ -34,6 +35,7 @@ const SCRIPT_HASH_REGEX = /^[a-f0-9]{64}$/i;
 
 class BitcoinRoutes {
   public initRoutes(app: Application) {
+    initUtxoReconstructionRoutes(app);
     app
       .get(config.MEMPOOL.API_URL_PREFIX + 'transaction-times', this.getTransactionTimes)
       .get(config.MEMPOOL.API_URL_PREFIX + 'cpfp/:txId', this.$getCpfpInfo)
