@@ -27,9 +27,15 @@ describe('balance history paging consumer lifecycle',()=>{
   expect(c.fiatError).toContain('BTC history remains available');expect(c.data.length).toBe(5002);expect(c.fiatData).toEqual([]);
   prices.getPriceByBulk$.mockReturnValue(of(Array.from({length:5001},()=>({price:{USD:100}}))) as any);
   c.retryFiat();expect(c.fiatError).toBeNull();expect(c.fiatData.length).toBe(5001);
-  network.next('signet');
+  c.chartInstance={clear:vi.fn()};network.next('signet');expect(c.chartInstance.clear).toHaveBeenCalledOnce();
   expect(c.data).toEqual([]);expect(c.fiatData).toEqual([]);expect(c.chartOptions).toEqual({});expect(c.expectedCount).toBeNull();expect(c.checkpoint).toBeNull();expect(c.historyComplete).toBe(false);expect(c.fiatError).toBeNull();
   c.ngOnDestroy();
+ });
+ it('retains last valid aggregate on unsafe replacement then clears failure on valid recovery',()=>{
+  const {c}=setup();const aggregate=new Subject<any>();c.addressSummary$=aggregate;c.stats=undefined;c.ngOnChanges({addressSummary$:{} as any});
+  aggregate.next([row(1)]);expect(c.loadedCount).toBe(1);
+  aggregate.next([{...row(2),value:0.5}]);expect(c.loadedCount).toBe(1);expect(c.historyError).toContain('unavailable');
+  aggregate.next([row(2)]);expect(c.loadedCount).toBe(1);expect(c.historyError).toBeNull();expect(c.checkpoint).toBeNull();expect(c.historyComplete).toBe(false);c.ngOnDestroy();expect(aggregate.observed).toBe(false);
  });
  it('guards duplicate pending pages and cancels pending source reads on network change and destroy',()=>{
   const {c,api,network}=setup();const pending=new Subject();api.getAddressSummary$.mockReturnValue(pending);
