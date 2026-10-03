@@ -1375,8 +1375,8 @@
     "schemaVersion": "universe-explorer-protocol-manifest-v1",
     "registryVersion": "1.1.0",
     "sourceRepository": "bitcoinuniverseio/backend-apis",
-    "sourceSha": "7ec4602e7a5dcd6495268ae64698280657cc9c73",
-    "sha256": "55a01a52c6b42e537c4603baf9ece8467eef56707e86dcc939cad4cbef61720a",
+    "sourceSha": "2822a72f6c7a94a5f01beed58e69d6d433df1d5e",
+    "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
     "protocols": [
       {
         "id": "ordinals",
@@ -2037,7 +2037,7 @@
             "id": "activity",
             "method": "GET",
             "route": "/api/v1/universe/protocols/op_names/activity",
-            "authorityPath": "/token-explorer/op20",
+            "authorityPath": "/token-explorer/op-names",
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
           }
@@ -4808,7 +4808,7 @@
             "id": "activity",
             "method": "GET",
             "route": "/api/v1/universe/protocols/op_names/activity",
-            "authorityPath": "/token-explorer/op20",
+            "authorityPath": "/token-explorer/op-names",
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
           },
