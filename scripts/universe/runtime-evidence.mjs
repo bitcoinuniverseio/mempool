@@ -14,7 +14,7 @@ const digest = value => createHash('sha256').update(value).digest('hex');
  * Provider errors and arbitrary responses are deliberately never returned or logged.
  */
 export async function collectRuntimeEvidence(config, providers, { now = () => new Date(), timeoutMs = 12000 } = {}) {
-  const observedAt = now().toISOString();
+  const startedAt = now().toISOString();
   const failures = [];
   const fail = code => { if (!failures.includes(code)) failures.push(code); };
   if (!config || !IDENTIFIER.test(config.chain) || !IDENTIFIER.test(config.network) ||
@@ -29,7 +29,7 @@ export async function collectRuntimeEvidence(config, providers, { now = () => ne
       (config.network === 'signet' && !HASH.test(config.signetChallengeSha256))) throw Error('Invalid runtime evidence configuration');
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30000) throw Error('Invalid runtime evidence deadline');
   const fresh = raw => {
-    const age = Date.parse(observedAt) - Date.parse(raw?.observedAt);
+    const age = now().getTime() - Date.parse(raw?.observedAt);
     return Number.isFinite(age) && age >= -5000 && age <= config.maxIdentityAgeMs;
   };
   async function call(provider, method, ...args) {
@@ -51,7 +51,7 @@ export async function collectRuntimeEvidence(config, providers, { now = () => ne
          digest(Buffer.from(raw.signetChallenge, 'hex')) !== config.signetChallengeSha256)) {
       fail(`${id}:signet-challenge`); return null;
     }
-    const age = Date.parse(observedAt) - Date.parse(raw.observedAt);
+    const age = now().getTime() - Date.parse(raw.observedAt);
     if (!Number.isFinite(age) || age < -5000 || age > config.maxIdentityAgeMs ||
         (expectedRevision && raw.revision !== expectedRevision) || !REVISION.test(raw.revision) ||
         typeof raw.version !== 'string' || !/^[a-zA-Z0-9._+-]{1,80}$/.test(raw.version) ||
@@ -110,7 +110,7 @@ export async function collectRuntimeEvidence(config, providers, { now = () => ne
     if (!commonCheckpoint && !failures.length) fail('checkpoint:unstable');
   } catch { fail('provider:permission-transport-or-deadline'); }
   return Object.freeze({ schemaVersion: 'universe-runtime-evidence-v1', evidenceKind: 'runtime-identity',
-    observedAt, status: failures.length ? 'BLOCKED' : 'IDENTITY VERIFIED', functionalAcceptance: false,
+    startedAt, observedAt: now().toISOString(), status: failures.length ? 'BLOCKED' : 'IDENTITY VERIFIED', functionalAcceptance: false,
     chain: config.chain, network: config.network, backend, database, components, commonCheckpoint, failures });
 }
 
