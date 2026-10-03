@@ -47,3 +47,36 @@ describe('portfolio deletion projection commit', () => {
     expect(store.sessionOnlyIds.has(temporary.id)).toBe(false);
   });
 });
+
+
+describe('workspace migration projection', () => {
+  const preview = { watched: [], watchedCount: 0, labelCount: 0, groupCount: 0, contentHash: 'empty' };
+  it('publishes the complete portfolio only after the atomic vault commit', async () => {
+    let finish!: () => void;
+    const committed = new Promise<void>(resolve => { finish = resolve; });
+    const vault = { isUnlocked: () => true, commitWorkspaceMigration: vi.fn(async () => { await committed; return true; }) };
+    const store = new PortfoliosStore(vault as unknown as PortfolioVaultService);
+    const migrating = store.migrateWorkspace('Migrated', preview);
+    expect(store.portfolios()).toEqual([]);
+    expect(store.migrated()).toBe(false);
+    finish(); await migrating;
+    expect(store.portfolios()).toHaveLength(1);
+    expect(store.activePortfolio()?.name).toBe('Migrated');
+    expect(store.migrated()).toBe(true);
+  });
+  it('keeps the projection empty after a failed migration commit', async () => {
+    const vault = { commitWorkspaceMigration: async () => { throw new Error('storage aborted'); } };
+    const store = new PortfoliosStore(vault as unknown as PortfolioVaultService);
+    await expect(store.migrateWorkspace('Migrated', preview)).rejects.toThrow('storage aborted');
+    expect(store.portfolios()).toEqual([]);
+    expect(store.activePortfolioId()).toBeNull();
+    expect(store.migrated()).toBe(false);
+  });
+  it('does not repopulate private signals when the vault locks after commit', async () => {
+    const vault = { isUnlocked: () => false, commitWorkspaceMigration: async () => true };
+    const store = new PortfoliosStore(vault as unknown as PortfolioVaultService);
+    await expect(store.migrateWorkspace('Migrated', preview)).rejects.toThrow('locked');
+    expect(store.portfolios()).toEqual([]);
+    expect(store.migrated()).toBe(false);
+  });
+});

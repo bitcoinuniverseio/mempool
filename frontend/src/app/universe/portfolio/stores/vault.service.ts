@@ -321,6 +321,64 @@ export class PortfolioVaultService implements OnDestroy {
     });
   }
 
+  /** Commit the complete legacy migration, selection and marker in one transaction.
+   * Crypto finishes before opening the write transaction. The encrypted snapshot
+   * comparison also fences another tab changing preferences or completing migration.
+   */
+  async commitWorkspaceMigration(portfolio: { id: string }, contentHash: string): Promise<boolean> {
+    return this.serialize(async version => {
+      const key = this.requireKey();
+      const records = await this.readAllRecords();
+      const marker = records.find(record => record.id === 'migration.v1');
+      if (marker) {
+        const bytes = await this.decryptBytes(key, marker.envelope);
+        try {
+          if (marker.type !== 'migration.v1' || JSON.parse(new TextDecoder().decode(bytes))?.done !== true) {
+            throw new Error('The existing migration marker is invalid.');
+          }
+        } finally { bytes.fill(0); }
+        this.assertLockVersion(version);
+        return false;
+      }
+      const preference = records.find(record => record.id === 'preferences');
+      let preferences: Record<string, unknown> = { autoLockMinutes: 15, relockWhenHidden: false };
+      if (preference) {
+        const bytes = await this.decryptBytes(key, preference.envelope);
+        try {
+          const value = JSON.parse(new TextDecoder().decode(bytes));
+          if (preference.type !== 'preferences' || !value || typeof value !== 'object' || Array.isArray(value)) {
+            throw new Error('The existing preferences are invalid.');
+          }
+          preferences = value;
+        } finally { bytes.fill(0); }
+      }
+      const now = new Date().toISOString();
+      const prepared: VaultRecord[] = [];
+      for (const [id, type, value] of [
+        [portfolio.id, 'portfolio', portfolio],
+        ['preferences', 'preferences', { ...preferences, activePortfolioId: portfolio.id }],
+        ['migration.v1', 'migration.v1', { done: true, at: now, portfolioId: portfolio.id, contentHash }],
+      ] as const) {
+        const bytes = new TextEncoder().encode(JSON.stringify(value));
+        try { prepared.push({ id, type, envelope: await this.encryptBytes(key, bytes), updatedAt: now }); }
+        finally { bytes.fill(0); }
+      }
+      const db = await this.open();
+      this.assertLockVersion(version);
+      await this.transaction(db, ['records'], 'readwrite', async stores => {
+        const current = await this.requestAsPromise(stores['records'].getAll()) as VaultRecord[];
+        this.assertLockVersion(version);
+        if (current.some(record => record.id === 'migration.v1' || record.id === portfolio.id)
+          || JSON.stringify(current.find(record => record.id === 'preferences')) !== JSON.stringify(preference)) {
+          throw new Error('The vault changed during migration. Reload before retrying.');
+        }
+        for (const record of prepared) { stores['records'].put(record); }
+      });
+      this.assertLockVersion(version);
+      return true;
+    });
+  }
+
   private async removeRecord(id: string, version: number): Promise<void> {
     this.requireKey();
     const db = await this.open();
