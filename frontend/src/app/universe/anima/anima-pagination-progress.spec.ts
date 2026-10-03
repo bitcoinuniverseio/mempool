@@ -27,14 +27,14 @@ for (const [Component, method, key, idKey] of [
         expect(read.mock.calls.at(-1)?.[0]).toBe(1);
       });
     }
-    it('rejects a shrinking total before appending or claiming completion', async () => {
+    for (const total of [0, 1, 4]) it(`rejects changed total ${total} before appending or claiming completion`, async () => {
       const page = new Subject<any>();
       const read = vi.fn().mockReturnValueOnce(of({ total: 3, [key]: [{ [idKey]: 'first' }] })).mockReturnValue(page);
       const component = new Component({ getAnimaStatus$: () => of({ state: 'served' }), [method]: read } as any,
         { setTitle: () => undefined } as any, { onDestroy: () => () => undefined } as any,
         { network: '', networkChanged$: new Subject<string>() } as any);
       component.ngOnInit(); component.more();
-      page.next({ total: 0, [key]: [{ [idKey]: 'second' }] });
+      page.next({ total, [key]: total === 1 ? [] : [{ [idKey]: 'second' }] });
       const vm: any = await firstValueFrom(component.vm$);
       expect(vm.pageFailure).toEqual({ kind: 'malformed' });
       expect(vm.total).toBe(3);
