@@ -2,8 +2,8 @@
   "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.1.0",
   "sourceRepository": "bitcoinuniverseio/backend-apis",
-  "sourceSha": "ffe7e691d34b306f686dfbfd1651ffd3f89eeba6",
-  "generatedAt": "2026-10-03T12:49:15.049Z",
+  "sourceSha": "af47cca342d503ae6b310b297670bc514b995028",
+  "generatedAt": "2026-10-03T14:50:41.512Z",
   "primaryStrip": [
     "ORDINALS",
     "RUNES",

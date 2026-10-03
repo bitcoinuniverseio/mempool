@@ -81,3 +81,15 @@ test('unavailable backend and database do not erase separately observed node and
   assert.deepEqual(report.commonCheckpoint, { heightAtomic: '10', blockHash: HASH });
   assert.doesNotMatch(JSON.stringify(report), /secret-must-never-escape/);
 });
+
+test('freshness uses the observation time rather than an earlier acquisition start', async () => {
+  const f = fixture(); const later = '2026-10-03T12:00:10Z';
+  f.nodeState.observedAt = later; f.authorityState.observedAt = later;
+  let calls = 0;
+  const report = await collectRuntimeEvidence(f.config, f.providers, {
+    now: () => new Date(calls++ === 0 ? NOW : later), timeoutMs: 100,
+  });
+  assert.equal(report.status, 'IDENTITY VERIFIED');
+  assert.equal(report.startedAt, new Date(NOW).toISOString());
+  assert.equal(report.observedAt, new Date(later).toISOString());
+});

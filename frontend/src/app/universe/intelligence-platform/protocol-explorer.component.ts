@@ -160,6 +160,9 @@ export class ProtocolExplorerComponent implements OnInit, OnDestroy {
   loadError: string | null = null;
 
   private subs: Subscription[] = [];
+  private decodeSubscription?: Subscription;
+  private decodeVersion = 0;
+  private destroyed = false;
 
   constructor(
     private api: IntelligenceApiService,
@@ -185,6 +188,7 @@ export class ProtocolExplorerComponent implements OnInit, OnDestroy {
   }
 
   loadSamplePayload(): void {
+    if (this.destroyed || this.decoding) return;
     // Example runestone: OP_RETURN OP_13, one edict of 10000 units of rune
     // 840000:1 to output 1 (Body tag, then LEB128 840000, 1, 10000, 1).
     this.decodeInput = '6a5d0800c0a23301904e01';
@@ -198,6 +202,10 @@ export class ProtocolExplorerComponent implements OnInit, OnDestroy {
   }
 
   resetDecode(): void {
+    ++this.decodeVersion;
+    this.decodeSubscription?.unsubscribe();
+    this.decodeSubscription = undefined;
+    this.decoding = false;
     this.decodeInput = '';
     this.decodedResults = [];
     this.decoded = false;
@@ -206,29 +214,34 @@ export class ProtocolExplorerComponent implements OnInit, OnDestroy {
   }
 
   decodePayload(): void {
-    if (!this.decodeInput.trim()) return;
+    if (this.destroyed || this.decoding || !this.decodeInput.trim()) return;
+    const input = this.decodeInput.trim();
+    const version = ++this.decodeVersion;
     this.decoding = true;
     this.decodeError = null;
     this.cdr.markForCheck();
 
-    this.subs.push(
-      this.api.decodeProtocolPayload$(this.decodeInput.trim()).subscribe({
+    this.decodeSubscription = this.api.decodeProtocolPayload$(input).subscribe({
         next: (res) => {
+          if (this.destroyed || version !== this.decodeVersion) return;
           this.decodedResults = res?.decoded || [];
           this.decoded = true;
           this.decoding = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
+          if (this.destroyed || version !== this.decodeVersion) return;
           this.decodeError = err?.error?.error || err?.message || 'Protocol decoding failed';
           this.decoding = false;
           this.cdr.markForCheck();
         },
-      })
-    );
+      });
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
+    ++this.decodeVersion;
+    this.decodeSubscription?.unsubscribe();
     for (const sub of this.subs) {
       sub.unsubscribe();
     }
