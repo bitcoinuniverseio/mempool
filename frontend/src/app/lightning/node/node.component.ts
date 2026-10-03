@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, ParamMap } from '@angular/router';
-import { combineLatest, defer, Observable, of, Subject } from 'rxjs';
+import { BehaviorSubject, combineLatest, defer, Observable, of, Subject } from 'rxjs';
 import { catchError, map, switchMap, tap, takeUntil, startWith } from 'rxjs/operators';
 import { SeoService } from '@app/services/seo.service';
 import { ApiService } from '@app/services/api.service';
@@ -25,6 +25,8 @@ interface CustomRecord {
 })
 export class NodeComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
+  private readonly retry$ = new BehaviorSubject(0);
+  private destroyed = false;
   node$: Observable<any>;
   statistics$: Observable<any>;
   publicKey$: Observable<string>;
@@ -55,10 +57,10 @@ export class NodeComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    const scope$ = combineLatest([this.activatedRoute.paramMap, this.stateService.networkChanged$]);
+    const scope$ = combineLatest([this.activatedRoute.paramMap, this.stateService.networkChanged$, this.retry$]);
     this.node$ = scope$
       .pipe(
-        switchMap(([params]: [ParamMap, string]) => {
+        switchMap(([params]: [ParamMap, string, number]) => {
           this.publicKey = params.get('public_key');
           this.error = null;
           this.selectedSocketIndex = 0;
@@ -151,7 +153,7 @@ export class NodeComponent implements OnInit, OnDestroy {
 
     this.avgChannelDistance$ = scope$
     .pipe(
-      switchMap(([params]: [ParamMap, string]) => {
+      switchMap(([params]: [ParamMap, string, number]) => {
         return defer(() => this.apiService.getChannelsGeo$(params.get('public_key'), 'nodepage')).pipe(
       map((channelsGeo) => {
         if (channelsGeo?.length) {
@@ -172,9 +174,13 @@ export class NodeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.destroyed$.next();
     this.destroyed$.complete();
   }
+
+  get nodeMissing(): boolean { return (this.error as { status?: number })?.status === 404; }
+  retry(): void { if (!this.destroyed && this.error) { this.retry$.next(this.retry$.value + 1); } }
 
   toggleShowDetails(): void {
     this.showDetails = !this.showDetails;

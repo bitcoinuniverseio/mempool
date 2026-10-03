@@ -20,7 +20,9 @@
   <div class="clearfix"></div>
 
   <div *ngIf="error" class="d-flex flex-column justify-content-around align-items-center mt-5 w-100" style="min-height: 100px">
-    <span class="text-center">No channel found for ID "{{ channel.short_id }}"</span>
+    <span *ngIf="channelMissing" class="text-center">No channel found for ID "{{ channel.short_id }}"</span>
+    <span *ngIf="!channelMissing" class="text-center" role="alert">Lightning channel data is unavailable. Retry when the selected provider is ready.</span>
+    <button class="btn btn-primary mt-2" type="button" (click)="retry()">Retry channel</button>
   </div>
 
   <app-nodes-channels-map *ngIf="!error && (channelGeo$ | async) as channelGeo" [style]="'channelpage'"
