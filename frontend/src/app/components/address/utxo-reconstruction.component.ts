@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { defer, finalize, Subscription, timeout } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { atomicBtc, checkedReconstruction, UtxoReconstructionView } from './utxo-reconstruction-view';
+import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-reconstruction-v2-view';
 
 @Component({
   selector: 'app-utxo-reconstruction', standalone: true, imports: [CommonModule, RouterModule],
@@ -14,6 +15,11 @@ import { atomicBtc, checkedReconstruction, UtxoReconstructionView } from './utxo
       <h2 class="h5">Reconstruct unspent outputs</h2>
       <p>The native output list is unavailable. Start an independent read from confirmed history, mempool and outspend checks.
         Each Continue reads one bounded page. Outputs become eligible only after every closure check succeeds.</p>
+      <label for="reconstruction-version">Reconstruction contract</label>
+      <select id="reconstruction-version" class="form-select mb-2" [value]="version" (change)="selectVersion($any($event.target).value)" [disabled]="pending || view?.status === 'PARTIAL'">
+        <option value="v1">V1: single confirmed and mempool anchor</option>
+        <option value="v2">V2: confirmed anchor, then independently acquired mempool epoch</option>
+      </select>
       <button class="btn btn-primary me-2" (click)="start()" [disabled]="pending || view?.status === 'PARTIAL'">{{ view ? 'Start new reconstruction' : 'Start reconstruction' }}</button>
       <button *ngIf="view?.status === 'PARTIAL'" class="btn btn-primary me-2" (click)="advance()" [disabled]="pending">{{ error ? 'Retry page' : 'Continue reconstruction' }}</button>
       <button *ngIf="view || pending" class="btn btn-outline-secondary" (click)="cancel()">Cancel reconstruction</button>
@@ -22,14 +28,16 @@ import { atomicBtc, checkedReconstruction, UtxoReconstructionView } from './utxo
       <div *ngIf="view">
         <p><strong>{{ view.status }}</strong> {{ view.reason }}</p>
         <p>Phase: {{ view.progress.phase }}. Confirmed transactions: {{ view.progress.confirmedTransactionsProcessed | number }} / {{ view.progress.confirmedTransactionsExpected | number }}.
-          Mempool transactions: {{ view.progress.mempoolTransactionsProcessed | number }} / {{ view.progress.mempoolTransactionsExpected | number }}.
+          Mempool transactions: {{ view.progress.mempoolTransactionsProcessed | number }} / {{ view.progress.mempoolTransactionsExpected === null ? 'not acquired' : (view.progress.mempoolTransactionsExpected | number) }}.
           Verified outputs: {{ view.progress.verifiedOutputs | number }} / {{ view.progress.candidateOutputs | number }}.</p>
-        <p class="small text-break">Selected network: {{ view.network }}. Observed block {{ view.source.blockHeight }}: <code>{{ view.source.blockHash }}</code>.
-          Source: <code>{{ view.source.sourceId }}</code>. Mempool identity: <code>{{ view.source.mempoolIdentity }}</code>.
+        <p *ngIf="v2View">V2 page limit: {{ v2View.progress.pageLimit }} transactions. Mempool epoch: {{ v2View.progress.mempoolEpoch }}.</p>
+        <p *ngIf="view.reason === 'MEMPOOL_CHANGED'">Mempool changed. Confirmed progress is retained; mempool verification and eligible outputs were cleared. Continue explicitly to acquire a new mempool anchor.</p>
+        <p class="small text-break">Selected network: {{ view.network }}. Observed block {{ confirmedSource.blockHeight }}: <code>{{ confirmedSource.blockHash }}</code>.
+          Source: <code>{{ confirmedSource.sourceId }}</code>. Mempool identity: <code>{{ mempoolIdentity }}</code>.
           Observed {{ view.observedAt }}; session expires {{ view.expiresAt }}.</p>
         <details class="small text-break mb-3"><summary>Source identity</summary>
-          <p>Genesis: <code>{{ view.source.genesisHash }}</code>. Script: <code>{{ view.source.scriptPubKey }}</code>.
-            Verified {{ view.source.verifiedAt }}.</p><p *ngIf="view.source.signetChallenge">Signet challenge: <code>{{ view.source.signetChallenge }}</code>.</p>
+          <p>Genesis: <code>{{ confirmedSource.genesisHash }}</code>. Script: <code>{{ confirmedSource.scriptPubKey }}</code>.
+            Verified {{ confirmedSource.verifiedAt }}.</p><p *ngIf="confirmedSource.signetChallenge">Signet challenge: <code>{{ confirmedSource.signetChallenge }}</code>.</p>
         </details>
         <p *ngIf="view.status === 'PARTIAL'">Partial reconstruction. No eligible output list or complete balance has been established.</p>
         <p *ngIf="view.status === 'INVALIDATED' || view.status === 'BLOCKED'">Restart explicitly after the source is stable and available. Prior progress does not establish eligible outputs.</p>
@@ -50,7 +58,8 @@ import { atomicBtc, checkedReconstruction, UtxoReconstructionView } from './utxo
 })
 export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() address = '';
-  view: UtxoReconstructionView | null = null;
+  view: UtxoReconstructionView | UtxoReconstructionV2View | null = null;
+  version: 'v1' | 'v2' = 'v1';
   pending = false;
   error: string | null = null;
   private network: string;
@@ -62,6 +71,13 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
   readonly btc = atomicBtc;
 
   constructor(private http: HttpClient, private state: StateService, private cd: ChangeDetectorRef) { this.network = state.network || 'mainnet'; }
+  get v2View(): UtxoReconstructionV2View | null { return this.view?.schema === 'universe-address-utxo-reconstruction-v2' ? this.view : null; }
+  get confirmedSource(): UtxoReconstructionView['source'] | UtxoReconstructionV2View['confirmedAnchor'] { return this.v2View?.confirmedAnchor || (this.view as UtxoReconstructionView)?.source; }
+  get mempoolIdentity(): string { return this.v2View ? this.v2View.mempoolAnchor?.identity || 'not acquired' : (this.view as UtxoReconstructionView)?.source.mempoolIdentity; }
+  selectVersion(value: string): void {
+    if (this.destroyed || this.pending || this.view?.status === 'PARTIAL' || !['v1', 'v2'].includes(value)) { return; }
+    this.abandon(); this.version = value as 'v1' | 'v2';
+  }
   get visibleOutputs(): NonNullable<UtxoReconstructionView['result']>['items'] { return this.view?.result?.items.slice(0, this.shown) || []; }
   private prefix(network = this.network): string { return network === 'mainnet' || network === this.state.env.ROOT_NETWORK ? '' : '/' + network; }
   txPath(txid: string): string { return `${this.prefix()}/tx/${txid}`; }
@@ -75,8 +91,8 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
   ngOnChanges(): void { this.abandon(); }
   ngOnDestroy(): void { this.destroyed = true; this.abandon(); this.subscriptions.unsubscribe(); }
 
-  private base(address = this.address, network = this.network): string {
-    return `${this.prefix(network)}/api/v1/address/${encodeURIComponent(address)}/utxo-reconstruction`;
+  private base(address = this.address, network = this.network, version = this.version): string {
+    return `${this.prefix(network)}/api/v1/address/${encodeURIComponent(address)}/utxo-reconstruction${version === 'v2' ? '/v2' : ''}`;
   }
   private abandon(): void {
     const old = this.view;
@@ -84,7 +100,7 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
     this.pending = false; this.view = null; this.error = null; this.shown = 100;
     if (old && old.status !== 'CANCELLED') {
       // Cleanup is bound to the old address/network; it never writes the next scope's UI.
-      this.http.delete(this.base(old.address, old.network) + '/' + old.sessionId).pipe(timeout(5000)).subscribe({ error: () => {} });
+      this.http.delete(this.base(old.address, old.network, old.schema === 'universe-address-utxo-reconstruction-v2' ? 'v2' : 'v1') + '/' + old.sessionId).pipe(timeout(5000)).subscribe({ error: () => {} });
     }
     if (!this.destroyed) { this.cd.markForCheck(); }
   }
@@ -109,20 +125,25 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
   private read(action: 'create' | 'next' | 'cancel', previous = this.view): void {
     const revision = this.revision, address = this.address, network = this.network;
     this.pending = true; this.error = null;
-    const path = this.base(address, network);
+    const version = previous ? previous.schema === 'universe-address-utxo-reconstruction-v2' ? 'v2' : 'v1' : this.version;
+    const path = this.base(address, network, version);
     this.request = defer(() => action === 'create' ? this.http.post(path, {}) : action === 'next'
       ? this.http.post(`${path}/${previous.sessionId}/next`, { cursor: previous.cursor })
       : this.http.delete(`${path}/${previous.sessionId}`)).pipe(timeout(25000), finalize(() => {
         if (!this.destroyed && revision === this.revision) { this.pending = false; this.cd.markForCheck(); }
       })).subscribe({ next: value => {
         if (this.destroyed || revision !== this.revision) { return; }
-        try { this.view = checkedReconstruction(value, address, network, previous || undefined, action); }
+        try { this.view = version === 'v2' ? checkedReconstructionV2(value, address, network, previous as UtxoReconstructionV2View || undefined, action)
+          : checkedReconstruction(value, address, network, previous as UtxoReconstructionView || undefined, action); }
         catch (error) { this.error = error.message; }
         this.cd.markForCheck();
       }, error: error => {
         if (this.destroyed || revision !== this.revision) { return; }
         this.error = action === 'cancel' ? 'Abandoned locally; server cleanup was not confirmed. No eligible outputs are retained. The server session expires at ' + previous.expiresAt + '.' :
           typeof error?.error?.error === 'string' ? error.error.error : 'Reconstruction source unavailable or page deadline exceeded. Retry the same page or cancel and restart.';
+        if (action !== 'cancel' && ['confirmed', 'acquire-mempool', 'mempool', 'outspends', 'complete'].includes(error?.error?.phase)) {
+          this.error += ' Failed phase: ' + error.error.phase + '. Accepted progress is retained; retry the same cursor.';
+        }
         this.cd.markForCheck();
       } });
   }

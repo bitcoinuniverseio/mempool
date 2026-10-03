@@ -73,7 +73,13 @@ export function checkedReconstruction(value: unknown, address: string, network: 
     if (view.result !== undefined) { throw new Error('Partial or invalidated reconstruction cannot publish eligible outputs.'); }
     return view;
   }
-  const result = view.result;
+  checkedReconstructionOutputs(view.result, progress, source.blockHeight);
+  return view;
+}
+
+/** Shared exact final-output closure; callers separately validate their schema and anchors. */
+export function checkedReconstructionOutputs(result: UtxoReconstructionView['result'],
+  progress: Omit<UtxoReconstructionView['progress'], 'phase' | 'mempoolTransactionsExpected'> & { phase: string; mempoolTransactionsExpected: number | null }, blockHeight: number): void {
   if (progress.phase !== 'complete' || progress.confirmedTransactionsProcessed !== progress.confirmedTransactionsExpected ||
     progress.mempoolTransactionsProcessed !== progress.mempoolTransactionsExpected || progress.verifiedOutputs !== progress.candidateOutputs ||
     !result || !count(result.outputCount) || !Array.isArray(result.items) || result.items.length > 100000 ||
@@ -83,7 +89,7 @@ export function checkedReconstruction(value: unknown, address: string, network: 
   const points = new Set<string>(); let total = 0n;
   for (const item of result.items) {
     if (!item || !hash(item.txid) || !count(item.vout) || item.vout > 0xffffffff || !item.status || typeof item.status.confirmed !== 'boolean' ||
-      item.status.confirmed && (!count(item.status.block_height) || item.status.block_height > source.blockHeight ||
+      item.status.confirmed && (!count(item.status.block_height) || item.status.block_height > blockHeight ||
         !hash(item.status.block_hash) || !count(item.status.block_time)) || !item.status.confirmed &&
       [item.status.block_height, item.status.block_hash, item.status.block_time].some(value => value != null)) { throw new Error('Reconstruction output identity or status is invalid.'); }
     const point = `${item.txid}:${item.vout}`;
@@ -91,7 +97,6 @@ export function checkedReconstruction(value: unknown, address: string, network: 
     total += atomic(item.valueAtomic);
   }
   if (total !== atomic(result.balanceAtomic)) { throw new Error('Reconstruction balance does not match its exact output sum.'); }
-  return view;
 }
 
 export function atomicBtc(value: string): string {
