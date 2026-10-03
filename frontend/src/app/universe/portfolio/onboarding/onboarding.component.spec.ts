@@ -423,4 +423,38 @@ describe('address portfolio save lifecycle', () => {
     f.button.click(); await vi.waitFor(() => expect(f.router.navigate).toHaveBeenCalledOnce());
     expect(f.store.createPortfolio).toHaveBeenCalledOnce(); expect(f.store.updatePortfolio.mock.calls.every(call => call[0] === definition.id)).toBe(true);
   });
+  it('discloses saved data when navigation fails and retries only opening', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition));
+    f.router.navigate.mockResolvedValueOnce(false);
+    await (f.view.componentInstance as any).save(); f.view.detectChanges();
+    expect(f.view.componentInstance.step()).toBe('done');
+    expect(f.view.nativeElement.querySelector('[role=alert]')?.textContent).toContain('saved');
+    const retry = Array.from(f.view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(b => b.textContent?.includes('Open portfolio'))!;
+    expect(retry).toBeTruthy(); retry.click();
+    await vi.waitFor(() => expect(f.router.navigate).toHaveBeenCalledTimes(2));
+    expect(f.store.createPortfolio).toHaveBeenCalledOnce(); expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
+  });
+  it('retains pending protection until navigation settles', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition));
+    let finish!: (value: boolean) => void;
+    f.router.navigate.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const save = (f.view.componentInstance as any).save();
+    await vi.waitFor(() => expect(f.router.navigate).toHaveBeenCalledOnce());
+    expect(f.view.componentInstance.saving()).toBe(true);
+    await (f.view.componentInstance as any).save();
+    expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
+    finish(true); await save; expect(f.view.componentInstance.saving()).toBe(false);
+  });
+  it('handles rejected navigation without retrying saved account writes', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition));
+    f.router.navigate.mockRejectedValueOnce(Error('private navigation failure'));
+    await (f.view.componentInstance as any).save(); f.view.detectChanges();
+    expect(f.view.nativeElement.querySelector('[role=alert]')?.textContent).toContain('was saved');
+    expect(f.view.nativeElement.textContent).not.toContain('private navigation');
+    await (f.view.componentInstance as any).save();
+    expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
+    await (f.view.componentInstance as any).openSaved();
+    expect(f.router.navigate).toHaveBeenCalledTimes(2);
+    expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
+  });
 });

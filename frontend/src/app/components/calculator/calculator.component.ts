@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { combineLatest, Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { combineLatest, Observable, Subject } from 'rxjs';
+import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
 import { WebsocketService } from '@app/services/websocket.service';
 
@@ -15,7 +15,8 @@ const MAX_SATOSHI_SUPPLY = MAX_BTC_SUPPLY * 100_000_000;
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CalculatorComponent implements OnInit {
+export class CalculatorComponent implements OnInit, OnDestroy {
+  private readonly destroyed$ = new Subject<void>();
   satoshis = 10000;
   form: FormGroup;
   currentPrice = 0;
@@ -57,7 +58,7 @@ export class CalculatorComponent implements OnInit {
     combineLatest([
       this.price$,
       this.form.get('fiat').valueChanges
-    ]).subscribe(([price, value]) => {
+    ]).pipe(takeUntil(this.destroyed$)).subscribe(([price, value]) => {
       this.currentPrice = price;
       const maxFiat = price * MAX_BTC_SUPPLY;
       const isMaxSupply = value >= maxFiat;
@@ -81,7 +82,7 @@ export class CalculatorComponent implements OnInit {
     combineLatest([
       this.price$,
       this.form.get('bitcoin').valueChanges
-    ]).subscribe(([price, value]) => {
+    ]).pipe(takeUntil(this.destroyed$)).subscribe(([price, value]) => {
       this.currentPrice = price;
       const isMaxSupply = parseFloat(value) >= MAX_BTC_SUPPLY;
       this.isMaxSupply = isMaxSupply;
@@ -96,7 +97,7 @@ export class CalculatorComponent implements OnInit {
     combineLatest([
       this.price$,
       this.form.get('satoshis').valueChanges
-    ]).subscribe(([price, value]) => {
+    ]).pipe(takeUntil(this.destroyed$)).subscribe(([price, value]) => {
       this.currentPrice = price;
       let bitcoinValue = value / 100_000_000;
       const isMaxSupply = bitcoinValue >= MAX_BTC_SUPPLY;
@@ -117,6 +118,11 @@ export class CalculatorComponent implements OnInit {
 
     // Default form with 1 BTC
     this.form.get('bitcoin').setValue(1, { emitEvent: true });
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   transformInput(name: string): void {

@@ -175,7 +175,12 @@ function addressContext(address: string): { chain: string; network: string } | n
         @case ('done') {
           <section class="panel" role="status">
             <h2 i18n="@@universe.portfolio.onboarding.created">Portfolio created</h2>
-            <p class="soft" i18n="@@universe.portfolio.onboarding.created-copy">Opening the overview…</p>
+            @if (error(); as message) {
+              <p class="error" role="alert">{{ message }}</p>
+              <button type="button" [disabled]="saving() || preparingManual()" (click)="openSaved()">Open portfolio</button>
+            } @else {
+              <p class="soft" i18n="@@universe.portfolio.onboarding.created-copy">Opening the overview…</p>
+            }
           </section>
         }
       }
@@ -421,7 +426,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   protected async save(): Promise<void> {
-    if (this.saving()) return;
+    if (this.saving() || this.step() === 'done') return;
     this.saving.set(true);
     this.error.set('');
     try {
@@ -432,7 +437,7 @@ export class OnboardingComponent implements OnInit {
         this.validateMaterial(this.material);
         if (!this.valid()) {return;}
         const [chain, network] = ephemeralContext.split(':');
-        await this.router.navigate(['/portfolio', chain, network, material.trim()]);
+        if (!await this.router.navigate(['/portfolio', chain, network, material.trim()])) throw Error('Navigation unavailable');
         return;
       }
       const portfolio =
@@ -486,10 +491,27 @@ export class OnboardingComponent implements OnInit {
       }
       await this.store.updatePortfolio(portfolio.id, (current) => ({ ...current, accounts }));
       this.step.set('done');
-      void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
+      await this.openPrepared();
     } catch {
-      this.error.set('The local portfolio could not be saved. Check that the vault is unlocked and browser storage is available, then retry. Any prepared definition will be reused.');
+      this.error.set(this.stepChoice() === 'ephemeral'
+        ? 'The public address could not be opened. No portfolio was saved. Retry opening the address.'
+        : 'The local portfolio could not be saved. Check that the vault is unlocked and browser storage is available, then retry. Any prepared definition will be reused.');
     } finally { this.saving.set(false); }
+  }
+
+  protected async openSaved(): Promise<void> {
+    if (this.saving() || this.preparingManual() || this.step() !== 'done' || !this.portfolio) return;
+    this.saving.set(true);
+    try { await this.openPrepared(); } finally { this.saving.set(false); }
+  }
+
+  private async openPrepared(): Promise<void> {
+    this.error.set('');
+    try {
+      if (!this.portfolio || !await this.router.navigate(['/portfolio/p', this.portfolio.id, 'overview'])) throw Error('Navigation unavailable');
+    } catch {
+      this.error.set('The portfolio was saved, but its overview could not be opened. Retry opening it; the saved accounts will not be written again.');
+    }
   }
 
   private async prepareEntry(): Promise<void> {
@@ -518,7 +540,7 @@ export class OnboardingComponent implements OnInit {
       const portfolio = this.portfolio ?? await this.store.createPortfolio($localize`:@@universe.portfolio.onboarding.manual-name:Manual portfolio`);
       this.portfolio = portfolio;
       this.step.set('done');
-      void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
+      await this.openPrepared();
     } catch {
       this.error.set($localize`:@@universe.portfolio.onboarding.manual-save-error:The manual portfolio could not be saved. Check browser storage availability and retry.`);
       this.step.set('choose');
