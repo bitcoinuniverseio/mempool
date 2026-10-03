@@ -33,7 +33,8 @@ class ZcashPrivacyRoutes {
 
   private async $getSummary(req: Request, res: Response): Promise<void> {
     try {
-      const summary = await zcashPrivacyService.$getSummary();
+      const summary = await zcashPrivacyService.$getSummary(req.query.network === undefined ? 'mainnet' : String(req.query.network));
+      res.setHeader('Cache-Control', 'no-store');
       res.json(summary);
     } catch (e) {
       fail(req, res, e);
@@ -42,8 +43,10 @@ class ZcashPrivacyRoutes {
 
   private async $getPools(req: Request, res: Response): Promise<void> {
     try {
-      const pools = await zcashPrivacyService.$getPools();
-      res.json({ pools, total: pools.length });
+      const summary = await zcashPrivacyService.$getSummary(req.query.network === undefined ? 'mainnet' : String(req.query.network));
+      const pools = summary.pools;
+      res.setHeader('Cache-Control', 'no-store');
+      res.json({ pools, total: pools.length, network: summary.network, source: summary.source, tipHeight: summary.tipHeight });
     } catch (e) {
       fail(req, res, e);
     }

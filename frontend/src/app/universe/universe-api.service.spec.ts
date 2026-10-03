@@ -48,6 +48,16 @@ function capabilityRows(url: string): Observable<unknown> {
 }
 
 describe('UniverseApiService addressing', () => {
+  it.each([
+    ['getZcashPrivacySummary$', 'summary'], ['getZcashPools$', 'pools'], ['getZcashUpgrades$', 'upgrades'],
+  ] as const)('binds %s to configured Zcash testnet and rejects foreign responses', (method, path) => {
+    const {service, urls} = build(true, () => of({network:'mainnet'}), {zcash:'testnet'});
+    const failures: unknown[] = [];
+    service[method]().subscribe({error: error => failures.push(error)});
+    expect(urls).toEqual(['/api/v1/zcash/privacy/' + path + '?network=testnet']);
+    expect(failures).toHaveLength(1);
+    expect(String(failures[0])).toContain('authority-network-mismatch');
+  });
   it('rejects an explicit wrong-network multichain read response', () => {
     const { service } = build(true, () => of({ chain: 'dogecoin', network: 'mainnet' }), { dogecoin: 'testnet' });
     const failures: unknown[] = [];

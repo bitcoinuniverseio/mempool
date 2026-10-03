@@ -856,21 +856,15 @@ export class UniverseApiService {
    *    anchor; preserve local scanner data and never invent unknown pool totals.
    */
   getZcashPrivacySummary$(): Observable<ZcashPrivacySummary> {
-    return this.httpClient.get<ZcashPrivacySummary>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/summary'
-    );
+    return this.chainRead<ZcashPrivacySummary>('zcash', network => '/privacy/summary?network=' + network);
   }
 
   getZcashPools$(): Observable<{ pools: ZcashValuePool[]; total: number }> {
-    return this.httpClient.get<{ pools: ZcashValuePool[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/pools'
-    );
+    return this.chainRead<{ pools: ZcashValuePool[]; total: number }>('zcash', network => '/privacy/pools?network=' + network);
   }
 
   getZcashUpgrades$(): Observable<{ upgrades: ZcashNetworkUpgrade[]; total: number }> {
-    return this.httpClient.get<{ upgrades: ZcashNetworkUpgrade[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/upgrades'
-    );
+    return this.chainRead<{ upgrades: ZcashNetworkUpgrade[]; total: number }>('zcash', network => '/privacy/upgrades?network=' + network);
   }
 
   getLiquidNode$(network: string): Observable<import('./liquid-observatory/liquid-node-view').LiquidNodeView> {
