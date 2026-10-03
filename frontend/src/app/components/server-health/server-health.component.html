@@ -1,7 +1,7 @@
 <div class="tomahawk">
   <div class="links">
     <span>Monitoring</span>
-    <a [routerLink]='"/nodes"'>Nodes</a>
+    <a [routerLink]='"/nodes" | relativeUrl'>Nodes</a>
   </div>
 
   <app-start [showLoadingIndicator]="true"></app-start>
