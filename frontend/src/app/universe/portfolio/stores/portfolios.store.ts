@@ -7,6 +7,7 @@
 
 import { Injectable, computed, signal } from '@angular/core';
 import { PortfolioVaultService } from './vault.service';
+import { buildMigratedPortfolio, type MigrationPreview } from '../shared/migration';
 import {
   emptyPortfolio,
   newLocalId,
@@ -187,6 +188,16 @@ export class PortfoliosStore {
   ): Promise<void> {
     const current = (await this.readPreferences()) ?? { autoLockMinutes: 15, relockWhenHidden: false };
     await this.vault.put(PREFERENCE_RECORD, PREFERENCE_RECORD, mutate(current));
+  }
+
+  async migrateWorkspace(name: string, preview: MigrationPreview): Promise<void> {
+    const portfolio = buildMigratedPortfolio(emptyPortfolio(newLocalId(), name, new Date().toISOString()), preview);
+    const committed = await this.vault.commitWorkspaceMigration(portfolio, preview.contentHash);
+    if (!this.vault.isUnlocked()) throw new Error('The vault was locked during migration.');
+    if (!committed) { await this.reload(); return; }
+    this._portfolios.update(all => [...all, portfolio]);
+    this._activePortfolioId.set(portfolio.id);
+    this._migrated.set(true);
   }
 
   async markMigrated(): Promise<void> {

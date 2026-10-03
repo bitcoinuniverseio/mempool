@@ -195,6 +195,50 @@ describe('vault replacement persistence and malformed backups', () => {
     return { release, started };
   }
 
+  it('commits migration once and preserves the complete portfolio and preferences after reopening', async () => {
+    const portfolio = { id: 'migration-portfolio', accounts: [{ address: 'test' }] };
+    expect(await service.commitWorkspaceMigration(portfolio, 'content-1')).toBe(true);
+    service.lock();
+    expect(await service.unlock('original-test-passphrase')).toBe(true);
+    expect(await service.get('migration-portfolio')).toEqual(portfolio);
+    expect(await service.get('preferences')).toEqual({ activePortfolioId: 'migration-portfolio' });
+    expect(await service.get('migration.v1')).toMatchObject({ done: true, portfolioId: 'migration-portfolio', contentHash: 'content-1' });
+    expect(await service.commitWorkspaceMigration({ id: 'duplicate' }, 'content-1')).toBe(false);
+    expect(await service.get('duplicate')).toBeNull();
+  });
+  it('rolls back every migration write on later quota failure and permits one complete retry', async () => {
+    const before = JSON.stringify([...rows]);
+    failRecordWrite = true;
+    await expect(service.commitWorkspaceMigration({ id: 'migrated' }, 'content-1')).rejects.toThrow('controlled quota failure');
+    expect(JSON.stringify([...rows])).toBe(before);
+    failRecordWrite = false;
+    expect(await service.commitWorkspaceMigration({ id: 'migrated' }, 'content-1')).toBe(true);
+    expect(await service.listByType('portfolio')).toHaveLength(2);
+  });
+  it('rolls back the migration when locking interrupts its writes', async () => {
+    const before = JSON.stringify([...rows]);
+    onRecordWrite = () => service.lock();
+    await expect(service.commitWorkspaceMigration({ id: 'migrated' }, 'content-1')).rejects.toThrow();
+    expect(JSON.stringify([...rows])).toBe(before);
+    expect(service.isUnlocked()).toBe(false);
+  });
+  it('fences another tab changing preferences during migration preparation', async () => {
+    const original = internals.encryptBytes.bind(internals);
+    let first = true;
+    vi.spyOn(internals, 'encryptBytes').mockImplementation(async (...args) => {
+      const envelope = await original(...args);
+      if (first) {
+        first = false;
+        rows.set('preferences', { ...(rows.get('preferences') as object), updatedAt: 'other-tab' });
+      }
+      return envelope;
+    });
+    await expect(service.commitWorkspaceMigration({ id: 'migrated' }, 'content-1')).rejects.toThrow('vault changed');
+    expect((rows.get('preferences') as { updatedAt: string }).updatedAt).toBe('other-tab');
+    expect(rows.has('migrated')).toBe(false);
+    expect(rows.has('migration.v1')).toBe(false);
+  });
+
   it('atomically removes a portfolio and explicitly owned records while preserving another portfolio and global data', async () => {
     await service.put('portfolio', 'portfolio-A', { id: 'portfolio-A', accounts: [{ id: 'embedded-A' }], name: 'Delete A' });
     await service.put('portfolio', 'portfolio-B', { id: 'portfolio-B', accounts: [{ id: 'embedded-B' }], name: 'Keep B' });
