@@ -102,6 +102,17 @@ export class AnimaItemsComponent implements OnInit {
       .subscribe({
         next: (page) => {
           this.loadingMore = false;
+          const seen = new Set(this.organisms.map(row => row.id));
+          const validRows = Array.isArray(page.organisms)
+            && page.organisms.every(row => row && typeof row.id === 'string' && row.id.length > 0);
+          const added = validRows ? page.organisms.filter(row => !seen.has(row.id)) : [];
+          if (!validRows || !Number.isSafeInteger(page.total)
+            || page.total < this.organisms.length + new Set(added.map(row => row.id)).size
+            || (added.length === 0 && this.organisms.length < page.total)) {
+            this.pageFailure = {kind: 'malformed'};
+            this.publish();
+            return;
+          }
           this.append(page.organisms);
           this.total = page.total;
           this.publish();
