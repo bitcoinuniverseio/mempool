@@ -680,6 +680,36 @@ export function buildMatrix({ evidencePath } = {}) {
  * ANNOTATED is not implemented, verified functionality or release. Preserve existing
  * executable behavior in this preparation.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-COV-001] | G-COVERAGE-01 | COV-INVENTORY
+ * Verified baseline 62dec4617 contains 1,617 overlapping candidate records,
+ * 123 protocol read descriptors and 39 protocol identities. This validator
+ * deliberately requires an unreconciled denominator; those records cannot
+ * establish whole-application acceptance. Historical PASS LOCAL assertions
+ * remain evidence of their bounded scope, not current network journeys.
+ * Governing source: the user's operation-level acceptance contract and the
+ * pinned protocol manifest; see the dated handoff COVERAGE-MATRIX.json.
+ * Dependencies: WP-OPS-000 and the frontend/backend/overlay repair packages.
+ * 1. Preserve every old ID, source/evidence hash and assertion in this output.
+ * 2. Add PROPOSED NEW scripts/universe/reconciled-operations.mjs to join actual
+ * route registrations, dispatcher selectors and consumer calls by method,
+ * chain, network, role, input/output contract and lifecycle transition. Give
+ * each distinct variant its own stable ID and map all candidates to it.
+ * 3. Emit unresolved mappings as blockers; require a reason plus source proof
+ * for exclusions. Do not make validateMatrix accept a fabricated denominator.
+ * 4. Extend the release evidence producer to bind those exact IDs, component
+ * revisions, configuration hashes, test network and evidence files; separate
+ * local component verification from complete application outcomes.
+ * 5. Add omission/duplicate/role/network/recovery cases to acceptance-matrix
+ * tests and an actual successor-ledger integration test. From repository root
+ * use node --test scripts/universe/acceptance-matrix.test.mjs
+ * scripts/universe/protocol-contract.test.mjs. Preserve all 1,617 prior IDs.
+ * Acceptance: every candidate is mapped or evidenced as excluded, every
+ * required variant has executable steps and a truthful outcome, and no
+ * required FAIL/BLOCKED/NOT TESTED row can qualify a release. Rollback by
+ * reverting the successor generator; retain all historical ledger versions.
+ * Preparation only: no runtime logic or historical status is changed here.
+ */
 export function validateMatrix(matrix) {
   const ids = new Set(uniqueIds(matrix.rows, 'matrix'));
   for (const [name, group] of Object.entries(matrix.sourceGroups)) {

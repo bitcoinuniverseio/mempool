@@ -7,6 +7,26 @@ const OVERVIEW_TEMPLATES = 24;
 
 class TemplatesRoutes {
   public initRoutes(app: Application): void {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-005] DEF-BI-005; COV-BI-005E.
+     * Verified: :templateId is registered before literal stream, so GET /stream
+     * hits $getTemplate; even if reordered, btc.*.template.* is unsupported by the
+     * current bus and TemplateCollectorService.remember never publishes an event.
+     * 1. Register literal stream before :templateId and validate template IDs. Keep
+     *    overview/sources/fingerprints/diff/comparison routes reachable unchanged.
+     * 2. After the provider and collector changes, subscribe to the selected network's
+     *    template subject and emit SSE id/event/data. Support bounded Last-Event-ID
+     *    replay and truthful gap/reset state; bound slow-client buffers and close/
+     *    unsubscribe on disconnect, write failure, shutdown and provider failure.
+     * 3. Add a real Express route test in templates.test.ts: /stream responds with
+     *    text/event-stream, a collected template appears, reconnect resumes, unknown
+     *    template remains 404 and all named routes still use their intended handler.
+     * Dependencies: WP-BI-005 event provider/wildcards and collector publication;
+     *    source: actual registered routes, NATS subject semantics and SSE consumer contract.
+     * Command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/templates/templates.test.ts
+     * Network stream acceptance is NOT TESTED. Rollback preserves event cursors and
+     *    distinguishes a replay gap from an empty stream; do not fake keepalive success.
+     */
     const prefix = '/api/v1/intelligence/templates/';
 
     app

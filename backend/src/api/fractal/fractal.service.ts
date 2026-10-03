@@ -35,6 +35,34 @@ const cat20Unavailable =
  * that no indexer had observed.
  */
 export class FractalService {
+  /* IMPLEMENTATION-HANDOFF [WP-BE-007]
+   * Defect BE-007; COV-BE-007 tip, mempool, block, transaction, CAT20 token
+   * list/detail/holders. All seven methods always throw; production environment
+   * variables cannot complete an adapter that does not exist. See the current
+   * source reproducer and frontend Fractal/CAT20 consumers for offered scope.
+   * 1. Pin the operated Fractal release/genesis/network and CAT tracker schema
+   *    against R-BE-FRACTAL/R-BE-CAT. CAT requires the chain's enabled covenant
+   *    rules; do not infer Bitcoin mainnet support from shared address syntax.
+   * 2. Add owned-node RPC and owned tracker clients with bounded total
+   *    deadlines, authenticated transport, strict hash/height/token inputs and
+   *    pagination. Source mempool/block/tx bytes from the selected Fractal
+   *    node and prove tracker checkpoint agreement before joining token data.
+   * 3. Map CAT20 supply/holders using exact atomic strings and checked contract
+   *    identifiers. Track spent covenant UTXOs, pending versus confirmed
+   *    state and rollback to a common ancestor after reorg or interrupted
+   *    indexing. Reuse the operated tracker, never infer token type from txid.
+   * 4. Wire fractal.types/routes and universe-api/Fractal/CAT20 consumers;
+   *    preserve null/not-found versus unavailable, correct network labels,
+   *    empty valid data, loading/error/retry and cursor boundaries.
+   * 5. Run supported Fractal testnet node+tracker journeys for every listed
+   *    read, real token lifecycle observations, large holder sets, malformed
+   *    IDs, wrong chain, spent outputs, restart/reorg and dependent totals.
+   * Acceptance: seven source-to-UI operations with exact identities, amounts
+   * and checkpoints; a fixture or HTTP503 is not a completed integration.
+   * Rollback: back up tracker DB, deploy schema before compatible readers,
+   * preserve the last verified checkpoint and restore the matched release.
+   * Preparation only; no executable integration or deployment is changed.
+   */
   /** @asyncSafe */
   public async $getTip(): Promise<{ height: number; hash: string; time: number; network: string }> {
     throw new FractalEvidenceError('unavailable-fractal-node', nodeUnavailable);

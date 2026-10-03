@@ -43,6 +43,29 @@ export class WatchlistMatcher {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   private async record(finding: Finding, now: number): Promise<'inserted' | 'duplicate' | 'rate_limited'> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-002] DEF-BI-002; COV-BI-002A/B/C.
+     * Verified current-code reproduction: insertNotification succeeds, insertOutbox
+     * throws, replay returns duplicate and leaves zero delivery rows indefinitely.
+     * 1. Replace the split insertNotification/enqueueDelivery path with the atomic
+     *    OwnerStore.recordNotificationWithDelivery contract specified beside the SQL
+     *    implementation. Reuse the existing notification ID when an event replays.
+     * 2. Couple any per-rule quota decision to that transaction; previously recorded
+     *    events must still be reconciled when the hourly quota is reached. A retry
+     *    cannot silently abandon delivery intent or advance a checkpoint before commit.
+     * 3. Keep webhook owner/network checks at the durable boundary. Emit websocket
+     *    notifications only after durable commit under WP-BI-004; acknowledgement of
+     *    a source event must mean its required downstream work is durably recorded.
+     * Dependencies: WP-BI-001; store portion of WP-BI-002; then WP-BI-003 worker.
+     * Source: docs/api/OWNER-IDENTITY.md and MySQL 8.4 transaction/locking guidance.
+     * Tests: extend watchlists.test.ts with the injected insertOutbox failure recorded
+     *    in handoff reproductions/intelligence-current-source-results.json; acceptance
+     *    requires restart/replay to leave exactly one notification and one intent.
+     *    Also test duplicate blocks, rate-limit boundary, foreign targets and reorgs.
+     * Command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/watchlists/watchlists.test.ts
+     * MySQL crash fault and Signet consumer readback remain NOT TESTED. Rollback retains
+     *    durable notifications/intents and resumes from the last committed checkpoint.
+     */
     const store = ownerStore();
     const hourAgo = new Date(now - 3_600_000).toISOString();
     if ((await store.countNotificationsSince(finding.rule.rule_id, hourAgo)) >= finding.rule.rate_limit_per_hour) {
@@ -97,6 +120,35 @@ export class WatchlistMatcher {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async observeBlock(block: BlockExtended, transactions: TransactionExtended[], now = Date.now()): Promise<{ inserted: number; duplicates: number; displaced: number }> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-004] DEF-BI-004; COV-BI-004A/B/C/D/E.
+     * Verified: addEntity accepts outpoint/descriptor but this matcher loads only
+     * txid/address. addRule accepts websocket but record has no websocket dispatch.
+     * Public outpoint/descriptor selectors are in frontend watchlists.component.ts.
+     * 1. After the registration contract beside WatchlistsService.addEntity, hash
+     *    normalized txid:vout for observed outputs and vin spent outpoints, and match
+     *    outpoint confirmation/value-transfer rules with an explicit received/spent
+     *    direction. Use per-rule/per-outpoint stable event IDs to avoid duplicates.
+     * 2. Match registered descriptor-child script hashes against output scriptpubkey
+     *    and input prevout.scriptpubkey. Preserve the parent entity ID, derivation
+     *    index, integer sats, block hash and network for readback and reorg displacement.
+     *    Do not attempt to expand a SHA-256 descriptor hash or infer wallet ownership.
+     * 3. Persist first through WP-BI-002. Wire websocket rules to PROPOSED NEW
+     *    watchlists/watchlist-stream.ts, authenticated by requireOwner('watchlists'),
+     *    with owner/network filtering, notification-ID resume cursor, bounded buffers,
+     *    disconnect cleanup and durable catch-up. Update addRule response/capabilities.
+     * Dependencies: WP-BI-001, WP-BI-002, WP-FE-007; shared transport WP-BI-005 only
+     *    when NATS is selected. No unauthenticated global notification publication.
+     * Sources: docs/api/OWNER-IDENTITY.md; BIP380 public descriptor syntax; BIP141
+     *    scriptPubKey matching; existing advertised entity and delivery contracts.
+     * Tests: extend watchlists.test.ts plus PROPOSED NEW watchlists/watchlist-stream.test.ts.
+     *    Independently assert outpoint create/spend, ranged descriptor receive/spend,
+     *    duplicates, restart/reorg, wrong owner/network, websocket reconnect/cursor and
+     *    REST readback. Run cd backend && ./node_modules/.bin/jest --runInBand
+     *    --coverage=false --runTestsByPath src/api/intelligence/watchlists/watchlists.test.ts
+     * Final acceptance: real Signet observed payments reach each selected consumer.
+     * Rollback preserves child registrations and cursor state; never mark opaque
+     *    legacy descriptors monitored until the user resubmits verified public scripts.
+     */
     const store = ownerStore();
     const rules = await this.rulesByWatchlist();
     const findings: Finding[] = [];

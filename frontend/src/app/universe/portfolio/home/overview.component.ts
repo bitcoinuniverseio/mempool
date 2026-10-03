@@ -258,6 +258,19 @@ export class OverviewComponent {
     });
   });
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-005] | D-FE-005B | C-FE-PF-MULTICHAIN-FLOW.
+   * Shared aggregation currently merges native units, while these two labels
+   * always scale by 8 and name BTC; the 1 BTC + 2 DOGE reproduction reads 3 BTC.
+   * 1. Consume WP-FE-005's per-chain/network/asset totals and explicit decimals
+   *    and ticker; render separate flow rows with their scope and coverage.
+   * 2. Preserve unknown/partial values and separately evidenced internal movement;
+   *    never relabel a mixed or unresolved sum. Use exact formatting throughout.
+   * 3. Add overview.component.spec.ts render assertions for BTC+DOGE, mixed Bitcoin
+   *    networks, incomplete history, fee-separated internal movement and zero.
+   * Run npm test -- --maxWorkers=2 src/app/universe/portfolio; shared/aggregation.ts
+   * holds governing contract, full acceptance, dependency and rollback details.
+   */
   readonly drivers = computed(() => {
     const aggregation = this.aggregation();
     if (aggregation === null) return [];

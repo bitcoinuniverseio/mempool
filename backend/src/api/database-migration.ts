@@ -30,6 +30,41 @@ class DatabaseMigration {
    * Entry point
    * @asyncUnsafe
    */
+  /* IMPLEMENTATION-HANDOFF [WP-BE-002]
+   * Defect BE-002; coverage COV-BE-002.migration-upgrade, restart, readiness.
+   * Reproduction: backend-reproduce.cjs starts at schema 103, injects failure
+   * in the later blocks primary-key migration, observes schema_version=112,
+   * a resolved initializer and a subsequent startup that skips the repair.
+   * $createMissingTablesAndIndexes publishes later markers before the older
+   * data/key work; this method then swallows that work's failure. The Liquid
+   * pre-106 repair also writes 106 after 112, creating an interruption window.
+   * Required invariant: the durable version represents completed, verified
+   * steps, and public startup never proceeds with an incomplete migration.
+   * 1. Replace the two-phase version advancement with ordered, recorded,
+   *    idempotent migration steps. Record a step complete only after its
+   *    schema and data postconditions pass. Recover already-drifted versions
+   *    by inspecting actual keys/columns; never blindly replay destructive DDL.
+   * 2. Propagate migration failure through index.ts before workers/listeners
+   *    start. Include an operator-readable failed step without secrets.
+   * 3. For transactional DML, hold one dedicated database connection for
+   *    BEGIN, all statements, COMMIT/ROLLBACK and release. DDL such as ALTER
+   *    TABLE implicitly commits on MySQL/MariaDB; ordinary ROLLBACK does not
+   *    undo it. Use explicit restart checkpoints and backup/restore for DDL.
+   * 4. Add real-database upgrade fixtures at 103, 105, 106, 109, 110 and 111
+   *    plus fresh setup. Kill/restart after each marker and DDL; inject a
+   *    key-migration error; test mainnet, Signet and Liquid schema profiles.
+   *    Assert exact latest schema/keys, monotonic completed markers, no
+   *    duplicate-column restart, and startup failure while work is incomplete.
+   * Dependencies: database.ts, index.ts, integration database helpers,
+   * owner/bootstrap/private-relay tables and the production migration runner.
+   * Sources: R-BE-MYSQL (official implicit-commit rules). Existing table-
+   * existence integration checks alone do not cover crash or upgrade safety.
+   * Acceptance: the reproduced failure cannot be marked current or serving;
+   * every supported upgrade resumes safely and validates its postconditions.
+   * Rollback: take/verify a DB backup before DDL, stop writers, restore the
+   * matching code/schema snapshot on failed rollout; preserve owner records.
+   * Preparation only; this block does not implement the migration repair.
+   */
   public async $initializeOrMigrateDatabase(): Promise<void> {
     logger.debug('MIGRATIONS: Running migrations');
 

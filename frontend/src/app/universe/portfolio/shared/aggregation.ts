@@ -257,6 +257,29 @@ export function aggregatePortfolio(
     });
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-004] | D-FE-004 | C-FE-PF-ACCOUNT-VALUE.
+   * loadAddress emits one AddressSnapshot per native/protocol asset, each with
+   * the same address-wide summary valuation. This loop adds that summary once
+   * per asset: a 10 USD native holding plus a 20 USD token yields portfolio=30
+   * but byAccount=60. Actual-source reproduction: frontend-reproductions.json.
+   * Governing contract: shared/universe-portfolio-v2.types.ts summary.valuation
+   * is address-wide; portfolio-data.service.ts creates the repeated snapshots.
+   * 1. Build an included-address map keyed by chain/network/address/account ID;
+   *    add each address summary valuation exactly once to its selected account.
+   *    Preserve the inclusion policy and reject inconsistent repeated summaries.
+   * 2. Derive per-account distinct holding counts separately from summary totals.
+   *    Fold source failures/completeness from WP-FE-002/003 pessimistically and
+   *    never combine different quote currencies or account contexts as one sum.
+   * 3. Extend aggregation.spec.ts with native+one token, native+many tokens,
+   *    multiple addresses sharing an asset, duplicated address inclusion and
+   *    mixed quotes. Assert total=30/byAccount=30 in the reproduced fixture.
+   *    Run npm test -- --maxWorkers=2 src/app/universe/portfolio/shared/aggregation.spec.ts
+   *    and portfolio-data.service.spec.ts; reconcile downstream reports/insights.
+   * Acceptance: exact per-address, per-account and portfolio readback reconciles
+   *    on Signet without an asset-count multiplier. No migration is needed;
+   *    invalidate derived cached totals on rollout/rollback, retain vault inputs.
+   */
   const accountValues = new Map<string, { values: string[]; states: PortfolioDataState[]; count: number }>();
   for (const snapshot of included) {
     const entry = accountValues.get(snapshot.accountId) ?? { values: [], states: [], count: 0 };
@@ -311,6 +334,38 @@ export function aggregatePortfolio(
 }
 
 /** Deterministic internal-transfer detection from transaction evidence. */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-005] | D-FE-005A/B | C-FE-PF-INTERNAL/MULTICHAIN-FLOW.
+ * The owning semantic-event contract defines nativeValueAtomic as a signed
+ * per-address effect. minPositive rejects a valid -1100 debit, so its paired
+ * +1000 owned credit is incorrectly shown as external. externalFlows also adds
+ * native units across chains/networks, then overview.component.ts labels every
+ * result BTC. Reproduction: 1 BTC + 2 DOGE -> combined 300000000 -> 3 BTC label.
+ * Source: PortfolioSemanticEvent in shared/universe-portfolio-v2.types.ts and
+ * evidence/frontend-reproductions.json; amounts must remain exact strings/BigInt.
+ * 1. Group included, deduplicated events by chain/network/native asset/txid;
+ *    enforce the signed direction contract. Normalize debit magnitude only
+ *    for matching; retain signed effects for reconciliation and separate fees.
+ * 2. Match owned movement against actual input/output or counterparty evidence,
+ *    including multiple owned recipients and mixed external recipients. A shared
+ *    txid alone does not make the whole transaction internal. If current event
+ *    fields cannot prove an amount, expose unresolved movement and extend the
+ *    owning backend-apis event contract before asserting that amount.
+ * 3. Replace the two unscoped native totals with an explicit per-chain/network/
+ *    asset/unit flow result. Update aggregatePortfolio, OverviewComponent.drivers,
+ *    reports/insights and their tests together; retain incomplete history state
+ *    from WP-FE-003. Never sum different native assets or relabel them as BTC.
+ * 4. Extend aggregation.spec.ts with -1100/+1000 plus fee100, >1 owned recipient,
+ *    external+internal outputs, missing prevouts, duplicates/inclusion filters,
+ *    same txid across networks, reorg and >2^53 values. Test 1 BTC and 2 DOGE as
+ *    distinct rows. npm test -- --maxWorkers=2 src/app/universe/portfolio.
+ * Acceptance: real Signet owned transfer and authoritative persisted readback,
+ *    plus a controlled mixed-asset fixture; use justified testnet for Dogecoin.
+ * Dependencies: WP-FE-002/003 read coverage; coordinate any contract change with
+ *    backend-apis before regenerating the shared types. No transaction signing
+ *    belongs here. Version/invalidate derived snapshots on rollout; rollback
+ *    must retain user vault data and must not restore mixed-unit totals.
+ */
 export function detectInternalTransfers(
   events: readonly PortfolioEventInput[],
 ): InternalTransferCandidate[] {
@@ -354,6 +409,14 @@ export function detectInternalTransfers(
 }
 
 /** External (non-internal) flows in exact native units. */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-005] | D-FE-005B | C-FE-PF-MULTICHAIN-FLOW.
+ * Replace this cross-chain accumulator with the explicit scoped result defined
+ * beside detectInternalTransfers. Preserve signed amounts and fee accounting;
+ * update every consumer in one change. The current bigint sums are numerically
+ * exact but dimensionally wrong. Shared work-package tests cover units, inclusion,
+ * incomplete histories, integration acceptance and derived-state rollback.
+ */
 export function externalFlows(
   events: readonly PortfolioEventInput[],
   internalKeys: ReadonlySet<string>,

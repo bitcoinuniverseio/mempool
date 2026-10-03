@@ -31,6 +31,36 @@ export interface IEventBusProvider {
 }
 
 export class NatsJetStreamEventBusProvider implements IEventBusProvider {
+  /* IMPLEMENTATION-HANDOFF [WP-BI-005] DEF-BI-005; COV-BI-005A/B/C/D/E.
+   * Verified at 62dec461: connect() sets a boolean without a client/socket,
+   * publish() returns true without a broker acknowledgement and subscribe() does
+   * nothing. Even an invalid endpoint reports success. IntelligenceEventBus also
+   * never delegates publish/subscribe to natsProvider. Product matrix REQ-DATA-01
+   * offers NATS JetStream durability. Official sources: docs.nats.io Learn JetStream
+   * publishing/pull consumers; exact SDK/server pin is an unresolved prerequisite.
+   * 1. Pin the maintained official NATS Node SDK and compatible server release after
+   *    the targeted compatibility check in intelligence-findings.md. Create a real
+   *    authenticated TLS client; await readiness and return unavailable on failure.
+   *    Validate operator credentials/config without logging secrets or raw URLs.
+   * 2. Provision/bind network-separated streams and durable filtered pull consumers.
+   *    Await JetStream publication acknowledgements using event_id as dedupe ID;
+   *    bound payloads, in-flight messages and reconnect/backoff. Persist failure or
+   *    publish intent before returning a durable-success result.
+   * 3. ACK only after required consumer effects commit; NAK/transient redelivery and
+   *    terminal dead-letter paths must survive restart. Implement drain/unsubscribe,
+   *    max-delivery policy, durable cursor inspection and health/lag diagnostics.
+   *    Never silently replace configured broker durability with process memory.
+   * Dependencies: WP-BI-001 network scope, WP-BI-002 durable consumer effects; owning
+   *    infrastructure/credentials and pinned SDK/server remain BLOCKED prerequisites.
+   * Tests: events/event-envelope.test.ts and PROPOSED NEW events/nats-provider.integration.test.ts.
+   *    Real isolated broker: unreachable/bad credentials fail; publish receipt,
+   *    second-process consumption, restart, lost ACK, duplicate ID, retry/dead-letter,
+   *    wrong-network denial and graceful drain all require authoritative readback.
+   * Existing command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+   *    --runTestsByPath src/api/intelligence/events/event-envelope.test.ts
+   * No broker integration PASS exists here. Rollback drains consumers, preserves
+   *    streams/ACK cursors and stops publication if durable broker service is absent.
+   */
   private natsClient: unknown = null;
   private isConnected = false;
 
@@ -98,6 +128,30 @@ export class IntelligenceEventBus {
     subject: string,
     envelope: IntelligenceEventEnvelope
   ): boolean {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-005] DEF-BI-005; COV-BI-005B/C/D/E.
+     * Verified: configured natsProvider is unused here; local wildcard delivery emits
+     * only exact/prefix keys, so the templates stream's btc.*.template.* never matches.
+     * The '*' branch emits (subject,envelope), while subscribe expects envelope only.
+     * 1. Give IEventBusProvider a single asynchronous publish/subscribe contract and
+     *    route every configured-provider operation through it; update all call sites
+     *    to await durable acceptance and handle explicit unavailable outcomes.
+     * 2. For explicitly selected in-process mode implement/test NATS token matching
+     *    ('*' one token, '>' final suffix) with a consistent handler argument. Keep
+     *    subject and envelope network equal and dedupe only after accepted publication;
+     *    do not acknowledge failed delivery merely because event_id was seen earlier.
+     * 3. Wire templates collector/stream annotations and expose bounded replay by
+     *    event ID/cursor. Keep owner-scoped events isolated under WP-BI-004.
+     * Dependencies: provider portion of WP-BI-005, WP-BI-001 and WP-BI-002 as applicable.
+     * Sources: NATS official subject wildcard and JetStream acknowledgement docs;
+     *    actual consumer at templates/templates.routes.ts.
+     * Tests: add exact, middle wildcard, trailing wildcard, global, invalid pattern,
+     *    duplicate/retry and network-mismatch cases to events/event-envelope.test.ts;
+     *    run cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/events/event-envelope.test.ts
+     * Acceptance includes the real template SSE journey and cross-process NATS path,
+     *    not merely an EventEmitter unit assertion. Rollback retains durable cursors
+     *    and stops consumers before any incompatible envelope/subject schema change.
+     */
     const validation = EventEnvelopeValidator.validateEnvelope(envelope);
     if (!validation.valid) {
       this.quarantineEvent(envelope, `Envelope validation failed: ${validation.error}`);

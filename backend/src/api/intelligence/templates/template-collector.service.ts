@@ -141,6 +141,26 @@ export class TemplateCollectorService {
   }
 
   private remember(template: CandidateTemplate): void {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-005] DEF-BI-005; COV-BI-005E.
+     * Verified: collected templates enter only this process array; there is no
+     * publication to the eventBus consumed by templates.routes.ts $getStream.
+     * 1. Create an event envelope from the validated template using configured
+     *    network, stable source/template identity, observed time and integer amounts.
+     *    Persist publication intent or await broker acknowledgement under WP-BI-005;
+     *    refactor collectCoreTemplate/collectProjection/collect together so failure
+     *    never reports durable stream delivery. Preserve the existing source state.
+     * 2. Publish exactly once logically by stable event ID (transport may redeliver),
+     *    expose replay/retention bounds, and omit credentials/internal RPC endpoint
+     *    details from public events. Maintain separate Core and projection provenance.
+     * 3. Extend templates.test.ts and events integration tests: real collection ->
+     *    publication -> GET /templates/stream -> reconnect readback; duplicate poll,
+     *    tip change and broker outage must have explicit non-success outcomes.
+     * Dependencies: WP-BI-005 provider and corrected route/wildcards. Existing command:
+     *    cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/templates/templates.test.ts
+     * Isolated Core/Signet stream acceptance is NOT TESTED. Rollback retains published
+     *    envelopes/cursors and stops producers before an incompatible schema downgrade.
+     */
     this.templates.push(template);
     if (this.templates.length > TEMPLATE_LIMITS.templates) { this.templates.shift(); }
   }

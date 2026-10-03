@@ -14,6 +14,35 @@
  */
 
 /** A count or an amount in satoshis. Never a string, never a float. */
+/* IMPLEMENTATION-HANDOFF [WP-BE-003]
+ * Defect BE-003; coverage COV-BE-003.address-amounts, utxo-input-contract.
+ * Reproduction: backend-reproduce.cjs passes 9007199254740992 as funded sum
+ * and UTXO value, and 4294967296 as vout; both public contract helpers return
+ * no problems. Number.isInteger does not establish exact integer identity.
+ * 1. Separate bounded counts, uint32 indexes, individual Bitcoin amounts and
+ *    cumulative address sums. Reject non-finite/unsafe numeric provider
+ *    values before readiness or downstream calculations. A single Bitcoin
+ *    output must also obey MAX_MONEY; aggregate historical turnover must not
+ *    be capped to the live coin supply because coins may circulate again.
+ * 2. Trace owned Esplora/Electrum/RPC amounts through esplora-api.interface,
+ *    address-index, gateway and frontend address/portfolio consumers. Where
+ *    cumulative values can exceed safe integers, preserve exact base-10
+ *    strings from the producer and use bigint arithmetic behind a versioned
+ *    response contract. Already-rounded JSON numbers cannot be recovered.
+ * 3. Extend esplora-contract.test.ts with safe-boundary +/-1, MAX_MONEY,
+ *    fractional, negative, Infinity, string and uint32-boundary fixtures.
+ *    Test exact cumulative subtraction with distinct integers that collapse
+ *    as Number, and reject invalid history/UTXO status identities as needed.
+ * 4. Verify owned-source responses and the Signet address/UTXO page, CSV and
+ *    portfolio consumers under the accepted contract; preserve legitimate
+ *    high-volume addresses and explicit source-unavailable states.
+ * Source: R-BE-ECMA for safe integer semantics; Bitcoin amount limits must be
+ * checked against the pinned Core amount.h source in R-BE-MONEY.
+ * Acceptance: no lost atomic unit and no malformed numeric answer reported
+ * ready. Rollback: version producer/consumer changes together and retain the
+ * old API until compatible clients are deployed; keep invalid inputs rejected.
+ * Preparation only; no validation or wire format is changed here.
+ */
 function isWholeNumber(value: unknown): boolean {
   return Number.isInteger(value) && (value as number) >= 0;
 }

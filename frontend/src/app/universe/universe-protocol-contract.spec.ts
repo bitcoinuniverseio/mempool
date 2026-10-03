@@ -233,6 +233,13 @@ describe('activity source and pagination fields', () => {
     expect(result.errors).toHaveLength(1);
   });
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-010] | OV-F002 | C-FE-OPNAMES-PROTOCOL-IDENTITY.
+   * The op_names/op20 vector currently enshrines the wrong authority mapping.
+   * Follow validPage's WP-FE-010: make that vector reject after WP-OV-002 is wired,
+   * add pinned OP Names activity vectors, and research the remaining aliases
+   * individually. Do not remove protocol coverage or weaken identity assertions.
+   */
   it.each([
     ['atomicals_nft', 'atomicals'], ['op_return', 'op20'], ['op_names', 'op20'], ['tap_doge', 'doge-tap'],
   ])('preserves the owned source label for %s', (protocolId, sourceProtocol) => {

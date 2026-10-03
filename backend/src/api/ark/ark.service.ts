@@ -36,6 +36,36 @@ const aspUnavailable =
  * that called any proof path valid because an array length is never negative.
  */
 export class ArkService {
+  /* IMPLEMENTATION-HANDOFF [WP-BE-006]
+   * Defect BE-006; COV-BE-006 operators, batches/list/detail, VTXO detail,
+   * virtual transactions and proof verification. All six offered operations
+   * unconditionally fail for well-formed requests; configuring arkd alone
+   * cannot change these functions. backend-reproduce.cjs records each path.
+   * 1. Resolve the operated provider identity, Ark dialect, supported network
+   *    and exact arkd/API revision. R-BE-ARK points to the retrieved official
+   *    implementation; its current branch is not evidence of the deployed
+   *    version or a production approval. Pin and assess the actual release.
+   * 2. Add an injected, bounded owned-arkd reader with TLS/authentication and
+   *    pagination. Map provider, batch, VTXO and virtual-transaction fields
+   *    from protocol responses, preserving exact amounts and their status.
+   *    Respect provider indexer exposure/intent rules; expose no wallet keys.
+   * 3. Reuse intelligence/ark-vpack anchor-reader, dialect-translator and
+   *    reconstruction instead of a second proof engine. Bind proof bytes,
+   *    VTXO outpoint, batch root, expiry and spend state to the same provider
+   *    and owned Bitcoin checkpoint. The hash-array request alone is not a
+   *    complete exit proof: version the model and consumer input accordingly.
+   * 4. Update ark.types/routes and frontend ark dashboard/VTXO detail;
+   *    routes currently map every non-input verdict to 503, so add explicit
+   *    completed valid/invalid verdict handling after real verification.
+   * 5. Test genuine provider batches/VTXOs on supported Signet, spent/expired
+   *    outputs, wrong dialect/network, malformed/altered proof, pagination,
+   *    provider outage/restart and Bitcoin reorg. Regress the VPACK tools.
+   * Acceptance: all six real API-to-UI journeys pass with pinned evidence;
+   * retain truthful unavailable states until the actual dependency works.
+   * Rollback: preserve provider/index checkpoints and restore matched client/
+   * protocol versions; no mainnet test transfer is required or authorized here.
+   * This preparation comment does not connect a provider or implement a fix.
+   */
   /** @asyncSafe */
   public async $getOperators(): Promise<ArkOperator[]> {
     throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);

@@ -68,6 +68,31 @@ export class TaprootAssetsService {
   }
 
   /** @asyncSafe */
+  /* IMPLEMENTATION-HANDOFF [WP-BE-013]
+   * Defect BE-013; COV-BE-013 public BOLT12 offer listing and validity.
+   * $getOffers always throws even with a configured tapd. The separately
+   * implemented decode and RFQ paths do not complete GET lightning/offers or
+   * the offers table. backend-reproduce.cjs confirms the unconditional branch.
+   * 1. Identify/pin the operated Lightning offer source and its API/version;
+   *    BOLT12 describes offer negotiation, not a global discoverable directory.
+   *    List only intentionally public offers from the authorized owned source.
+   * 2. Implement a bounded, authenticated injected reader with network binding,
+   *    pagination and source freshness. Do not reuse the tapd RFQ response as
+   *    offers or return an empty list when the directory is unavailable.
+   * 3. Reuse bolt12-decoder and the pinned BOLT12 engine/vectors (R-BE-BOLT12)
+   *    to validate encoding/fields and declared chain, expiry and amounts.
+   *    Preserve exact millisatoshis and distinguish syntactic validity from
+   *    live invoice availability; reveal no private offer or node credential.
+   * 4. Update types/routes and lightning-standards table states. Test genuine
+   *    source publication/expiry/revocation on supported Signet Lightning,
+   *    wrong network, malformed offer, empty valid source, outage/recovery and
+   *    adjacent decode/RFQ/proof consumers. No mainnet functional payment.
+   * Acceptance: the existing offer-list journey is source-backed and usable;
+   *    no unrelated payment execution feature is implied by this read repair.
+   * Rollback: restore the compatible source/client contract; retain public
+   *    offer publication intent and do not publish private records on fallback.
+   * Preparation only; no source, offer or executable behavior is changed.
+   */
   public async $getOffers(): Promise<Bolt12Offer[]> {
     throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
   }

@@ -1,4 +1,16 @@
 export interface PayjoinDirectory {
+  /* IMPLEMENTATION-HANDOFF [WP-BI-006] DEF-BI-006; COV-BI-006A/B/C.
+   * Verified: two booleans currently collapse arbitrary HTTP reachability into
+   * protocol support. Coordinate the evidence-state DTO with getDirectories and
+   * frontend payjoin displays: reachable, key-config-valid and each independent
+   * protocol capability need separate known/unknown/unavailable states, source/profile
+   * and observed time. Keep old clients compatible through a documented versioned
+   * transition; no optimistic coercion of unknown to true. Hash only validated bytes.
+   * Sources: BIP77 pinned draft 0.2.0; RFC9458/9540. Dependencies: WP-BI-006 codec/prober.
+   * Tests: response-schema and frontend invalid-body/unknown-state fixtures plus
+   * payjoin.test.ts. Rollback preserves explicit unknown semantics and removes no
+   * required product operation. See adjacent service markers for commands/acceptance.
+   */
   directory_id: string;
   url: string;
   /** SHA-256 of the OHTTP keys the directory served; null when the probe failed. */

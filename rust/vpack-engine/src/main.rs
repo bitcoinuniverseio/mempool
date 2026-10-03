@@ -35,6 +35,51 @@ fn strict_state(value: &Value) -> Result<(), String> {
     Ok(())
 }
 
+// IMPLEMENTATION-HANDOFF [WP-RS-001]
+// Coverage: COV-RS-VPACK-STATE-ARK, COV-RS-VPACK-STATE-SECOND.
+// Defect: DEF-RS-001. Preparation only; executable behavior is unchanged.
+// Verified source cause: strict_state permits each supplied sibling.hash, but
+// the pinned libvpack typed builders replace it with a hash derived from value
+// and script. A well-formed but incorrect supplied commitment is silently lost
+// before validate_invariants sees the tree. This is a reconstruction-integrity
+// defect, not evidence that a spend or signature was accepted. Native execution
+// of the reproduction is BLOCKED in the preparation workspace: Cargo is absent.
+// References at e1f783a02489680b84121c71388a6a96122f5c63:
+// https://github.com/jgmcalpine/libvpack-rs/blob/e1f783a02489680b84121c71388a6a96122f5c63/src/export.rs
+// (tree_from_ark_labs_ingredients and tree_from_second_tech_ingredients), and
+// https://github.com/jgmcalpine/libvpack-rs/blob/e1f783a02489680b84121c71388a6a96122f5c63/src/consensus/mod.rs
+// (hash_sibling_birth_tx documents the compact sibling commitment).
+// 1. After VpackState deserialization and before consuming state.ingredients,
+//    validate every ArkLabs sibling and every SecondTech path-step sibling.
+//    Compare its decoded [u8; 32] hash with
+//    vpack::consensus::hash_sibling_birth_tx(sibling.value, &sibling.script).
+//    Return an error identifying the variant/step/sibling on mismatch. Do not
+//    silently replace a supplied hash, guess byte order, or modify native Bark.
+// 2. Keep strict_state unknown-field rejection and typed numeric/hex bounds.
+//    Invoke the existing builders only after this comparison succeeds. Retain
+//    binary-package checksum/invariant checks and the explicit unknown fields
+//    for signature verification and exit viability. No dependency upgrade or
+//    wire-format change is required; prerequisites: none.
+// 3. Add fixtures to this file's tests module for both typed variants. Derive a
+//    matching hash with the pinned helper, then change one hash byte while
+//    preserving value/script. Assert matching states reconstruct identically
+//    to the baseline, changed hashes reject, malformed lengths still reject,
+//    and an unknown field remains rejected. Cover each SecondTech path step.
+//    Run cargo test --manifest-path rust/vpack-engine/Cargo.toml --locked and
+//    cargo build --manifest-path rust/vpack-engine/Cargo.toml --release --locked.
+//    These commands require the pinned dependencies and are UNVERIFIED here.
+// 4. Coordinate backend/src/api/intelligence/ark-vpack/vpack-reconstruction.ts
+//    and vpack-reconstruction.test.ts: a native exit status of 2 must surface as
+//    HTTP 400 invalid-package; valid state/Bark/binary reconstruction must retain
+//    its prior IDs, scripts and transaction bytes. Exercise both state variants
+//    through POST /api/v1/intelligence/ark/vpack/packages/reconstruct on Signet
+//    with owned anchor evidence and the packaged native binary; retain logs,
+//    revision, fixture hashes and downstream translate/exit-plan regressions.
+// 5. Acceptance requires those native/API tests, not this annotation or a code
+//    inspection alone. Rebuild and package the correct OS/architecture binary.
+//    No migration/backfill or user signing is required. Roll back the wrapper
+//    and binary together if deployment fails; old evidence does not establish
+//    this new validation gate. Preserve supplied public package bytes for retry.
 fn reconstruct(input: &str) -> Result<Value, String> {
     let request: Value = serde_json::from_str(input).map_err(|_| "Invalid JSON")?;
     if let Some(raw) = request.get("bark_hex").and_then(Value::as_str) {

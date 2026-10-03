@@ -9,6 +9,37 @@ const JsonRPC = function (opts) {
   this.http = this.opts.ssl ? https : http;
 };
 
+/* IMPLEMENTATION-HANDOFF [WP-BE-005]
+ * Defect BE-005; coverage COV-BE-005.rpc-body-deadline, transport-recovery.
+ * Real loopback reproduction: backend-reproduce.cjs uses this exact source.
+ * With timeout=40ms, a trickling body resolves after about 150ms; a response
+ * closed after headers leaves the promise pending beyond 250ms. The absolute
+ * timer is cleared at headers and no response aborted/error/close handler
+ * settles the call. Socket inactivity is not a whole-operation deadline.
+ * 1. Keep one absolute deadline through headers, body and JSON decoding.
+ *    Centralize settlement so success/error/timeout is delivered once; clear
+ *    every timer/listener and destroy the transport on cancellation/failure.
+ * 2. Handle response error, aborted and premature close; require complete
+ *    framed input before parsing. Bound response bytes per RPC use case
+ *    (verbose blocks need an appropriate limit), and avoid unbounded string
+ *    concatenation. Validate RPC response identity, shape and batch ordering.
+ * 3. Use Buffer.byteLength for outgoing JSON Content-Length. Preserve Core
+ *    error codes without exposing credentials, cookies or raw sensitive
+ *    parameters; do not automatically retry broadcast or other writes after
+ *    an ambiguous outcome. Refresh changed authentication only deliberately.
+ * 4. Add loopback transport tests for both reproduced failures, split UTF-8,
+ *    malformed JSON, oversized bodies, wrong/missing IDs, timeout before/after
+ *    headers, cancellation and one successful call after recovery. Exercise
+ *    node outage/restart under the main loop and every shared RPC consumer.
+ * Dependencies: rpc-api/index.ts, commands.ts, bitcoin-client/second-client,
+ * all indexers and protocol readers sharing this transport. R-BE-NODE is the
+ * official HTTP lifecycle/deadline reference in the handoff register.
+ * Acceptance: each call settles inside its total budget, buffers are bounded,
+ * no transport failure stalls the indexer, and no uncertain write is replayed.
+ * Rollback: restore the previous client only with bounded caller deadlines;
+ * no database migration is required. Keep logs free of credentials/raw txs.
+ * Preparation only; executable transport behavior is unchanged.
+ */
 JsonRPC.prototype.call = function (method, params) {
   return new Promise((resolve, reject) => {
     const time = Date.now();
