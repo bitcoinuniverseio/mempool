@@ -67,6 +67,20 @@ describe('insight engine', () => {
     expect(concentration!.title).toContain('100%');
     expect(concentration!.calculation).toContain('threshold 60%');
   });
+  it.each([['8.0','10.00'], ['0.80','1.0'], ['0.0000080','0.00001000']])('normalizes differing decimal scales %s/%s', (part, total) => {
+    const value = aggregation();
+    const measured = {...value, pricedTotal: total, holdings: [{...value.holdings[0], pricedValue: part}]};
+    const result = deriveInsights(input({aggregation: measured}), '2026-10-04T00:00:00Z');
+    expect(result.find(row => row.ruleId === 'allocation.asset-concentration')?.title).toContain('80%');
+  });
+  it('changes the dismissal identity when the measured concentration changes', () => {
+    const value = aggregation();
+    const run = (pricedValue: string) => deriveInsights(input({aggregation:{...value, holdings:[{...value.holdings[0],pricedValue}]}}), '2026-10-04T00:00:00Z').find(row => row.ruleId === 'allocation.asset-concentration');
+    expect(run('80')?.insightId).not.toBe(run('90')?.insightId);
+  });
+  it('does not infer a missing backup from an unobserved backup state', () => {
+    expect(deriveInsights(input({lastBackupAt: undefined}), '2026-10-04T00:00:00Z').some(row => row.ruleId === 'backup.missing')).toBe(false);
+  });
 
   it('stays silent when the evidence does not trip a rule', () => {
     const insights = deriveInsights(

@@ -56,6 +56,22 @@ export class PortfolioDataService {
   private readonly _state = signal<PortfolioDataState>(EMPTY_STATE);
   readonly state = this._state.asReadonly();
   readonly aggregation = computed(() => this._state().aggregation);
+  /** Actual retained provider observations, grouped by exact chain/network/source. */
+  readonly sourceStates = computed(() => {
+    this._state();
+    const sources = new Map<string, {authorityId: string; state: AddressSnapshot['summary']['aggregateState']; context: string}>();
+    const severity = ['proven', 'pending', 'unsupported', 'outside_coverage', 'partial', 'stale', 'unavailable'];
+    for (const retained of this.retained.values()) {
+      for (const snapshot of [retained.snapshot, ...retained.protocolSnapshots]) {
+        for (const source of snapshot.summary.sources) {
+          const context = `${snapshot.chain}:${snapshot.network}`, key = JSON.stringify([context, source.authorityId]);
+          const existing = sources.get(key);
+          if (!existing || severity.indexOf(source.state) > severity.indexOf(existing.state)) sources.set(key, {...source, context});
+        }
+      }
+    }
+    return [...sources.values()];
+  });
 
   private loadSequence = 0;
   private readonly cancel = new Subject<void>();

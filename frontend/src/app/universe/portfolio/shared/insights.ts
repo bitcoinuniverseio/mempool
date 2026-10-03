@@ -15,7 +15,7 @@ import type { PortfolioUtxo } from '@app/shared/universe-portfolio-v2.types';
 import { classifyUtxo } from './utxo-safety';
 
 export const INSIGHT_SCHEMA_VERSION = 'universe-portfolio-insight-v1';
-export const INSIGHT_ENGINE_VERSION = '1';
+export const INSIGHT_ENGINE_VERSION = '2';
 
 export type InsightSeverity = 'information' | 'attention' | 'high';
 export type InsightCategory =
@@ -56,9 +56,11 @@ export interface InsightInput {
   readonly sourceStates: readonly {
     readonly authorityId: string;
     readonly state: PortfolioDataState;
+    readonly context?: string;
   }[];
   readonly vaultUnlockedHours: number | null;
-  readonly lastBackupAt: string | null;
+  /** undefined means unobserved; null means an independently observed absence. */
+  readonly lastBackupAt: string | null | undefined;
   readonly lastSnapshotAt: string | null;
 }
 
@@ -75,7 +77,7 @@ function insight(
 ): PortfolioInsight {
   return {
     schemaVersion: INSIGHT_SCHEMA_VERSION,
-    insightId: `${ruleId}:${hashStable(JSON.stringify(partial.evidenceRefs))}`,
+    insightId: `${ruleId}:${hashStable(JSON.stringify(partial))}`,
     ruleId,
     ruleVersion: INSIGHT_ENGINE_VERSION,
     createdAt: now,
@@ -225,12 +227,12 @@ const sourceDegradation: Rule = (context) => {
     {
       severity: 'attention',
       category: 'source-confidence',
-      title: `${degraded.length} source${degraded.length === 1 ? '' : 's'} degraded or stale`,
+      title: `${degraded.length} source context${degraded.length === 1 ? '' : 's'} degraded or stale`,
       explanation:
         'Answers from a degraded source are marked, not silently kept. Totals that include degraded coverage state exactly which parts are affected.',
       calculation: `count(state ∈ {unavailable, stale}) = ${degraded.length}`,
       confidence: 'proven',
-      evidenceRefs: degraded.map((source) => `authority:${source.authorityId}`),
+      evidenceRefs: degraded.map((source) => `authority:${source.context ? source.context + ':' : ''}${source.authorityId}`),
       accountIds: [],
       assetKeys: [],
     },
@@ -357,10 +359,11 @@ function severityOrder(severity: InsightSeverity): number {
 function shareOf(part: string, total: string): string {
   const scale = 1_000_000n;
   const [whole, fraction = ''] = part.split('.');
-  const partUnits = BigInt(whole + fraction.padEnd(fraction.length, '0'));
   const [tWhole, tFraction = ''] = total.split('.');
-  const totalUnits = BigInt(tWhole + tFraction.padEnd(tFraction.length, '0'));
-  if (totalUnits === 0n) return '0';
+  const decimalScale = Math.max(fraction.length, tFraction.length);
+  const partUnits = BigInt(whole + fraction.padEnd(decimalScale, '0'));
+  const totalUnits = BigInt(tWhole + tFraction.padEnd(decimalScale, '0'));
+  if (totalUnits <= 0n) return '0';
   const scaled = (partUnits * 100n * scale) / totalUnits;
   const wholePart = scaled / scale;
   const fractionPart = (scaled % scale).toString().padStart(6, '0').replace(/0+$/, '');
