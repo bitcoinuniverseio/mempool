@@ -97,8 +97,8 @@ class WatchlistsRoutes {
 
   private async $postEntity(req: Request, res: Response): Promise<void> {
     try {
-      const { entity_type, entity_raw_or_blinded, label, blinded } = req.body ?? {};
-      const entity = await watchlistsService.addEntity(ownerOf(res), req.params.id, entity_type, entity_raw_or_blinded, label, blinded === true);
+      const { entity_type, entity_raw_or_blinded, label, blinded, descriptor_scripts } = req.body ?? {};
+      const entity = await watchlistsService.addEntity(ownerOf(res), req.params.id, entity_type, entity_raw_or_blinded, label, blinded === true, descriptor_scripts);
       if (!entity) { res.status(404).json({ error: `Watchlist '${req.params.id}' not found.` }); return; }
       res.status(201).json(entity);
     } catch (e) {

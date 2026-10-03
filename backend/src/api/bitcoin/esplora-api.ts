@@ -1,4 +1,5 @@
 import config from '../../config';
+import {addressSummaryProblems, addressHistoryProblems, transactionSummaryProblems, utxoListProblems} from './esplora-contract';
 import axios, { isAxiosError } from 'axios';
 import http from 'http';
 import { AbstractBitcoinApi, HealthCheckHost } from './bitcoin-api-abstract-factory';
@@ -333,7 +334,15 @@ export class FailoverRouter {
     return endpoint.startsWith('/') ? 'http://api' : new URL(endpoint).origin;
   }
 
+  /** @asyncUnsafe */
   private async $query<T>(method: 'get'| 'post', path, data: any, responseType = 'json', host = this.activeHost, retry: boolean = true): Promise<T> {
+    if (/^\/(?:address|scripthash)\//.test(path)) {
+      const { verifyAddressSource } = await import('./address-source-checkpoint');
+      const options = {socketPath: host.socket ? host.host : undefined, timeout: config.ESPLORA.REQUEST_TIMEOUT};
+      const origin = host.socket ? 'http://api' : host.host;
+      const tip = await this.pollConnection.get(origin + '/blocks/tip/height', options);
+      await verifyAddressSource(Number(tip.data), (height, signal) => this.pollConnection.get(origin + '/block-height/' + height, {...options, signal}).then(response => response.data));
+    }
     let axiosConfig;
     let url;
     if (host.socket) {
@@ -349,7 +358,19 @@ export class FailoverRouter {
     return (method === 'post'
         ? this.requestConnection.post<T>(url, data, axiosConfig)
         : this.requestConnection.get<T>(url, axiosConfig)
-    ).then((response) => { host.failures = Math.max(0, host.failures - 1); return response.data; })
+    ).then((response) => {
+      const addressPath = path.match(/^\/(address|scripthash)\/([^/]+)(\/.*)?$/);
+      if (addressPath) {
+        const suffix = addressPath[3] || '';
+        const problems = suffix === '' && addressPath[1] === 'address' ? addressSummaryProblems(response.data, decodeURIComponent(addressPath[2]))
+          : suffix === '/utxo' ? utxoListProblems(response.data)
+          : /^\/txs\/summary(?:\/|$)/.test(suffix) ? transactionSummaryProblems(response.data)
+          : suffix.startsWith('/txs') ? addressHistoryProblems(response.data) : [];
+        if (problems.length) throw new Error('Address source returned an invalid numeric or transaction contract');
+      }
+      host.failures = Math.max(0, host.failures - 1);
+      return response.data;
+    })
       .catch((e) => {
         let fallbackHost = this.fallbackHost;
         if (e?.response?.status !== 404) {
@@ -531,8 +552,12 @@ class ElectrsApi implements AbstractBitcoinApi {
     return this.failoverRouter.$get<IEsploraApi.Transaction>('/tx/' + txid);
   }
 
-  async $getAddressTransactionSummary(address: string): Promise<IEsploraApi.AddressTxSummary[]> {
-    return this.failoverRouter.$get<IEsploraApi.AddressTxSummary[]>('/address/' + address + '/txs/summary');
+  async $getAddressTransactionSummary(address: string, afterTxid?: string): Promise<IEsploraApi.AddressTxSummary[]> {
+    return this.failoverRouter.$get<IEsploraApi.AddressTxSummary[]>('/address/' + address + '/txs/summary' + (afterTxid ? '/' + afterTxid : ''), 'json', {max_txs: 5000});
+  }
+
+  async $getScriptHashTransactionSummary(scriptHash: string, afterTxid?: string): Promise<IEsploraApi.AddressTxSummary[]> {
+    return this.failoverRouter.$get<IEsploraApi.AddressTxSummary[]>('/scripthash/' + scriptHash + '/txs/summary' + (afterTxid ? '/' + afterTxid : ''), 'json', {max_txs: 5000});
   }
 
   public startHealthChecks(): void {

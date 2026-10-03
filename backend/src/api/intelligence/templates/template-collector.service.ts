@@ -1,3 +1,5 @@
+import { eventBus } from '../events/intelligence-event-bus';
+import { EventEnvelopeValidator } from '../events/event-envelope';
 import * as crypto from 'crypto';
 import config from '../../../config';
 import logger from '../../../logger';
@@ -140,7 +142,8 @@ export class TemplateCollectorService {
     for (const source of this.sources.values()) { source.status = 'not_collected'; source.last_template_at = null; source.last_error = null; }
   }
 
-  private remember(template: CandidateTemplate): void {
+  /** @asyncUnsafe Collection callers report publication failure. */
+  private async remember(template: CandidateTemplate): Promise<void> {
     /* IMPLEMENTATION-HANDOFF [WP-BI-005] DEF-BI-005; COV-BI-005E.
      * Verified: collected templates enter only this process array; there is no
      * publication to the eventBus consumed by templates.routes.ts $getStream.
@@ -161,6 +164,8 @@ export class TemplateCollectorService {
      * Isolated Core/Signet stream acceptance is NOT TESTED. Rollback retains published
      *    envelopes/cursors and stops producers before an incompatible schema downgrade.
      */
+    const envelope = EventEnvelopeValidator.createEnvelope({ network: config.MEMPOOL.NETWORK, event_type: 'observed', entity_type: 'template', entity_id: template.template_id, source_id: template.source_id, observed_at_utc: template.observed_at_utc, payload: { template } });
+    if (!await eventBus.publish(EventEnvelopeValidator.buildSubject(envelope.network, 'template', 'observed'), envelope)) throw new Error('Template publication unavailable');
     this.templates.push(template);
     if (this.templates.length > TEMPLATE_LIMITS.templates) { this.templates.shift(); }
   }
@@ -187,7 +192,7 @@ export class TemplateCollectorService {
         sigops_count: result.transactions.every(tx => typeof tx.sigops === 'number') ? result.transactions.reduce((sum, tx) => sum + (tx.sigops ?? 0), 0) : null,
         coinbase_value_sats: result.coinbasevalue ?? null, fingerprint_hash: fingerprint(txids), observed_at_utc: new Date(observedAt).toISOString(), txids,
       };
-      this.remember(template);
+      await this.remember(template);
       source.status = 'active';
       source.last_template_at = template.observed_at_utc;
       source.last_error = null;
@@ -203,7 +208,8 @@ export class TemplateCollectorService {
   }
 
   /** This backend's own projection of the next block, as a template. */
-  public collectProjection(now = Date.now()): CandidateTemplate | null {
+  /** @asyncUnsafe Collection callers report publication failure. */
+  public async collectProjection(now = Date.now()): Promise<CandidateTemplate | null> {
     const source = this.sources.get('src-mempool-projection') as TemplateSource;
     const projection = this.readProjection();
     if (!projection || this.currentHeight === null || this.currentParentHash === null) {
@@ -218,7 +224,7 @@ export class TemplateCollectorService {
       total_weight: projection.blockVSize * 4, total_fees_sats: Math.round(projection.totalFees), sigops_count: null, coinbase_value_sats: null,
       fingerprint_hash: fingerprint(txids), observed_at_utc: new Date(now).toISOString(), txids,
     };
-    this.remember(template);
+    await this.remember(template);
     source.status = 'active';
     source.last_template_at = template.observed_at_utc;
     source.last_error = null;
@@ -230,7 +236,7 @@ export class TemplateCollectorService {
     this.polling = true;
     try {
       await this.collectCoreTemplate(now);
-      this.collectProjection(now);
+      await this.collectProjection(now);
     } finally {
       this.polling = false;
     }

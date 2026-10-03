@@ -50,8 +50,9 @@ export class PortfolioShareService {
 
   unlocked(): boolean { return this.vault.isUnlocked(); }
 
-  async create(portfolioId: string, holdings: readonly { asset: string; share: string }[], snapshotCreatedAt: string, ttlSeconds: number): Promise<string> {
+  async create(portfolioId: string, holdings: readonly { asset: string; share: string }[], snapshotCreatedAt: string, ttlSeconds: number, coverage?: { state: string; unknownValueBucket: 'present' | 'absent' }): Promise<string> {
     if (!this.unlocked()) {throw new Error('Unlock the portfolio vault before sharing.');}
+    if (coverage && (!['proven', 'partial', 'outside_coverage', 'pending', 'stale', 'unavailable', 'unsupported'].includes(coverage.state) || !['present', 'absent'].includes(coverage.unknownValueBucket))) throw Error('Invalid portfolio coverage');
     if (!portfolioId || holdings.length === 0 || holdings.length > 1000 || !Number.isFinite(Date.parse(snapshotCreatedAt))
       || !Number.isInteger(ttlSeconds) || ttlSeconds < 60 || ttlSeconds > 2_592_000) {
       throw new Error('Load a portfolio report and choose a valid expiry first.');
@@ -64,6 +65,7 @@ export class PortfolioShareService {
         return { asset, share };
       }),
       createdAt: snapshotCreatedAt,
+      ...(coverage ? { coverage } : {}),
     };
     const bytes = new TextEncoder().encode(JSON.stringify(snapshot));
     if (bytes.length + 16 > 32_768) {throw new Error('This report is too large to share. Download it instead.');}

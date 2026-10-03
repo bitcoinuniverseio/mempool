@@ -238,7 +238,12 @@ export class UniverseApiService {
    * Rollback must retain the context guard and clear incompatible cached views.
    */
   private chainRead<T>(chain: Exclude<ExplorerChain, 'bitcoin'>, path: (network: ExplorerNetwork) => string): Observable<T> {
-    return defer(() => this.httpClient.get<T>(this.apiBaseUrl + '/api/v1/' + chain + path(this.chainNetwork(chain))));
+    return this.chainNetwork$(chain).pipe(switchMap((network) =>
+      this.httpClient.get<T>(this.apiBaseUrl + '/api/v1/' + chain + path(network)).pipe(map(value => {
+        this.assertResponseContext(value, network, chain);
+        return value;
+      })),
+    ));
   }
 
   private requestForNetwork<T>(url: string, network: ExplorerNetwork, body?: unknown, chain = 'bitcoin'): Observable<T> {
@@ -269,7 +274,7 @@ export class UniverseApiService {
       || (row.network !== undefined && row.network !== null && row.network !== network)) {
       throw new Error('authority-network-mismatch');
     }
-    for (const key of ['checkpoint', 'flow', 'evidence', 'source']) {
+    for (const key of ['checkpoint', 'flow', 'evidence', 'source', 'account', 'envelope', 'paging']) {
       if (row[key]) {this.assertResponseContext(row[key], network, chain);}
     }
     for (const key of ['results', 'positions', 'sources', 'inputs', 'outputs', 'actions', 'sourceEvidence', 'utxos',
@@ -595,7 +600,7 @@ export class UniverseApiService {
     let paging = '&limit=' + limit;
     if (chain === 'dogecoin' && protocol !== 'doge-tap') {
       paging += '&cursor=' + offset;
-    } else if (chain === 'dogecoin') {
+    } else if (chain === 'dogecoin' || (chain === 'zcash' && protocol === 'zrc20')) {
       paging += '&offset=' + offset;
     }
     if (ruleset) {paging += '&ruleset=' + encodeURIComponent(ruleset);}

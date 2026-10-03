@@ -1,6 +1,7 @@
 import { Application, Request, Response } from 'express';
 import { templateCollectorService } from './template-collector.service';
 import { handleError } from '../../../utils/api';
+import config from '../../../config';
 import { eventBus } from '../events/intelligence-event-bus';
 
 const OVERVIEW_TEMPLATES = 24;
@@ -35,8 +36,8 @@ class TemplatesRoutes {
       .get(prefix + 'policy-fingerprints', this.$getFingerprints)
       .get(prefix + 'blocks/:blockHash/comparison', this.$getBlockComparison)
       .get(prefix + ':templateId/diff/:otherTemplateId', this.$getDiff)
-      .get(prefix + ':templateId', this.$getTemplate)
-      .get(prefix + 'stream', this.$getStream);
+      .get(prefix + 'stream', this.$getStream)
+      .get(prefix + ':templateId', this.$getTemplate);
   }
 
   private async $getOverview(req: Request, res: Response): Promise<void> {
@@ -114,22 +115,50 @@ class TemplatesRoutes {
 
   private async $getStream(req: Request, res: Response): Promise<void> {
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
+    const subject = `btc.${config.MEMPOOL.NETWORK}.template.*`;
+    let keepAliveTimer: NodeJS.Timeout;
+    let closed = false;
+    let unsubscribe: () => void = () => undefined;
+    const cleanup = () => { if (!closed) { closed = true; clearInterval(keepAliveTimer); unsubscribe(); } };
+    const write = (data: string) => {
+      if (closed) return;
+      if (res.writableLength > 262144) { cleanup(); res.end(); return; }
+      try { if (!res.write(data)) { cleanup(); res.end(); } } catch { cleanup(); res.destroy(); }
+    };
+    req.on('close', cleanup);
+    res.on('error', cleanup);
+    const cursor = req.headers['last-event-id'];
+    let replaying = true;
+    const pending: Array<Parameters<typeof eventBus.publish>[1]> = [];
+    const seen = new Set<string>();
+    const emit = (envelope: Parameters<typeof eventBus.publish>[1]) => {
+      if(seen.has(envelope.event_id))return;
+      seen.add(envelope.event_id);
+      if(seen.size>1000)seen.delete(seen.values().next().value!);
+      write(`id: ${envelope.event_id}\nevent: intelligence.template.observed\ndata: ${JSON.stringify(envelope)}\n\n`);
+    };
+    try {
+      unsubscribe = await eventBus.subscribe(subject, (envelope, ack) => {
+        if(replaying) {if(pending.length>=1000){cleanup();res.end();return;}pending.push(envelope);} else emit(envelope);
+        ack();
+      });
+      if(closed){unsubscribe();return;}
+      const recent = typeof cursor==='string' ? await eventBus.replayStored(subject) : [];
+      if (typeof cursor === 'string') {
+        const index = recent.findIndex(envelope => envelope.event_id === cursor);
+        if (index < 0) write('event: reset\ndata: {"reason":"replay_gap"}\n\n');
+        else for (const envelope of recent.slice(index + 1)) emit(envelope);
+      }
+      replaying=false;
+      for(const envelope of pending)emit(envelope);
+    } catch {write('event: unavailable\ndata: {"reason":"provider_unavailable"}\n\n');cleanup();res.end();return;}
+    keepAliveTimer = setInterval(() => write(': keepalive\n\n'), 15000);
+    req.on('close', cleanup);
+    res.on('error', cleanup);
 
-    const unsubscribe = eventBus.subscribe('btc.*.template.*', (envelope) => {
-      res.write(`event: intelligence.template.observed\ndata: ${JSON.stringify(envelope)}\n\n`);
-    });
-
-    const keepAliveTimer = setInterval(() => {
-      res.write(': keepalive\n\n');
-    }, 15000);
-
-    req.on('close', () => {
-      clearInterval(keepAliveTimer);
-      unsubscribe();
-    });
   }
 }
 

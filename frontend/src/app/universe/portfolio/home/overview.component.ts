@@ -275,16 +275,14 @@ export class OverviewComponent {
     const aggregation = this.aggregation();
     if (aggregation === null) return [];
     const drivers: { label: string; value: string }[] = [];
-    if (aggregation.externalInflowAtomic !== null) {
+    for (const flow of aggregation.nativeFlows ?? []) {
       drivers.push({
         label: $localize`:@@universe.portfolio.overview.driver-inflow:External inflows`,
-        value: `${formatExact(atomicToDisplay(aggregation.externalInflowAtomic, 8), 'en')} BTC`,
+        value: `${flow.inflow === null ? 'Unknown' : formatExact(atomicToDisplay(flow.inflow, flow.decimals), 'en')} ${flow.asset} (${flow.network}; ${flow.state})`,
       });
-    }
-    if (aggregation.externalOutflowAtomic !== null) {
       drivers.push({
         label: $localize`:@@universe.portfolio.overview.driver-outflow:External outflows`,
-        value: `${formatExact(atomicToDisplay(aggregation.externalOutflowAtomic, 8), 'en')} BTC`,
+        value: `${flow.outflow === null ? 'Unknown' : formatExact(atomicToDisplay(flow.outflow, flow.decimals), 'en')} ${flow.asset} (${flow.network}; ${flow.state})`,
       });
     }
     drivers.push({

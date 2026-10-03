@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import https from 'node:https';
+import { readFileSync } from 'node:fs';
 import { createServer, connect } from 'node:net';
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -80,21 +82,120 @@ async function assertNothingIsListening(port) {
   );
 }
 
-function startGateway({ gatewayPort, upstreamPort, esploraPort }) {
-  return spawn(process.execPath, [GATEWAY], {
+function startGateway({ gatewayPort, upstreamPort, esploraPort, secure = false }) {
+  const child = spawn(process.execPath, [GATEWAY], {
     env: {
       ...process.env,
+      UNIVERSE_GATEWAY_NO_LISTEN: '0',
+      NODE_USE_ENV_PROXY: '0',
       UNIVERSE_GATEWAY_HOST: '127.0.0.1',
       UNIVERSE_GATEWAY_PORT: String(gatewayPort),
-      UNIVERSE_GATEWAY_BACKEND: `http://127.0.0.1:${upstreamPort}`,
+      UNIVERSE_GATEWAY_BACKEND: `${secure ? 'https' : 'http'}://127.0.0.1:${upstreamPort}`,
+      ...(secure ? { NODE_EXTRA_CA_CERTS: join(HERE, '../../backend/src/api/intelligence/identity/__fixtures__/webhook-receiver.crt') } : {}),
       UNIVERSE_GATEWAY_OVERLAY: `http://127.0.0.1:${upstreamPort}`,
       ...(esploraPort ? { UNIVERSE_GATEWAY_ESPLORA: `http://127.0.0.1:${esploraPort}` } : {}),
       UNIVERSE_GATEWAY_ROOT: ROOT,
     },
-    stdio: 'ignore',
+    stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
   });
+  child.ready = new Promise((resolve, reject) => {
+    let errors = '';
+    const deadline = setTimeout(() => reject(Error(`gateway startup timeout: ${errors}`)), 5000);
+    child.stderr.on('data', chunk => { errors = (errors + String(chunk)).slice(-2000); });
+    child.once('exit', code => { clearTimeout(deadline); reject(Error(`gateway exited ${code}: ${errors}`)); });
+    child.stdout.on('data', chunk => {
+      if (String(chunk).includes('gateway listening')) { clearTimeout(deadline); resolve(); }
+    });
+  });
+  return child;
 }
+
+async function streamingGateway(t, handler, secure = false) {
+  const ports = await reservePorts();
+  const upstream = secure ? https.createServer({
+    key: readFileSync(join(HERE, '../../backend/src/api/intelligence/identity/__fixtures__/webhook-receiver.key')),
+    cert: readFileSync(join(HERE, '../../backend/src/api/intelligence/identity/__fixtures__/webhook-receiver.crt')),
+  }, handler) : http.createServer(handler);
+  await new Promise(resolve => upstream.listen(ports.upstreamPort, '127.0.0.1', resolve));
+  t.after(() => { upstream.closeAllConnections(); return new Promise(resolve => upstream.close(resolve)); });
+  const gateway = startGateway({ ...ports, secure });
+  t.after(() => new Promise(resolve => {
+    if (gateway.exitCode !== null) return resolve();
+    gateway.once('exit', resolve);
+    gateway.kill();
+  }));
+  await gateway.ready;
+  return ports;
+}
+
+for (const secure of [false, true]) {
+  test(`${secure ? 'HTTPS' : 'HTTP'} partial bodies terminate promptly without replay and leave the gateway serving`, async t => {
+    let calls = 0;
+    const ports = await streamingGateway(t, (request, response) => {
+      calls++;
+      if (request.url === '/api/v1/complete') return response.end('{"ok":true}');
+      response.writeHead(200, { 'content-type': 'application/json', 'content-length': '1000' });
+      response.write('{"partial":');
+      setTimeout(() => response.destroy(), 40);
+    }, secure);
+    const started = Date.now();
+    const result = await new Promise(resolve => {
+      const request = http.get({ host: '127.0.0.1', port: ports.gatewayPort, path: '/api/v1/partial', agent: false }, response => {
+        let body = '';
+        response.on('data', chunk => { body += chunk; });
+        response.on('end', () => resolve({ event: 'end', body }));
+        response.on('error', error => resolve({ event: 'error', code: error.code, body }));
+      });
+      request.on('error', error => resolve({ event: 'request-error', code: error.code }));
+      request.setTimeout(2000, () => request.destroy(new Error('client observation timeout')));
+    });
+    assert.notEqual(result.event, 'end', 'truncated JSON must not become successful completion');
+    assert.equal(result.code, 'ECONNRESET');
+    assert.ok(Date.now() - started < 1500, 'upstream close must settle before the client timeout');
+    assert.equal(calls, 1, 'partial responses must never be replayed');
+    const response = await fetch(`http://127.0.0.1:${ports.gatewayPort}/api/v1/complete`, { signal: AbortSignal.timeout(3000) });
+    assert.deepEqual(await response.json(), { ok: true });
+    assert.equal(calls, 2);
+  });
+}
+
+test('client cancellation closes an active body and never replays a write', async t => {
+  let calls = 0;
+  let observedClose;
+  const closed = new Promise(resolve => { observedClose = resolve; });
+  const ports = await streamingGateway(t, (request, response) => {
+    calls++;
+    request.resume();
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.write('{"pending":');
+    response.once('close', observedClose);
+  });
+  const request = http.request({ host: '127.0.0.1', port: ports.gatewayPort, path: '/api/v1/write', method: 'POST' });
+  request.on('error', () => {});
+  request.end('public test body');
+  await new Promise(resolve => request.once('response', response => {
+    response.once('data', () => { response.destroy(); request.destroy(); resolve(); });
+  }));
+  await Promise.race([closed, sleep(1500).then(() => { throw Error('upstream body was not cancelled'); })]);
+  assert.equal(calls, 1);
+});
+
+test('a downstream cancelled before upstream headers closes the upstream socket', async t => {
+  let observedRequest;
+  let observedClose;
+  const seen = new Promise(resolve => { observedRequest = resolve; });
+  const closed = new Promise(resolve => { observedClose = resolve; });
+  const ports = await streamingGateway(t, (_request, response) => {
+    observedRequest();
+    response.once('close', observedClose);
+  });
+  const request = http.get({ host: '127.0.0.1', port: ports.gatewayPort, path: '/api/v1/wait' });
+  request.on('error', () => {});
+  await seen;
+  request.destroy();
+  await Promise.race([closed, sleep(1500).then(() => { throw Error('upstream request was not cancelled'); })]);
+});
 
 function ask(gatewayPort, path = '/api/v1/backend-info') {
   return new Promise((resolve) => {
@@ -124,7 +225,7 @@ test('API redirects cannot send a client or request body to another authority', 
   t.after(() => new Promise(resolve => upstream.close(resolve)));
   const gateway = startGateway(ports);
   t.after(() => new Promise(resolve => { if (gateway.exitCode !== null) return resolve(); gateway.once('exit', resolve); gateway.kill(); }));
-  await sleep(1000);
+  await gateway.ready;
   for (const status of [301,302,303,307,308]) {
     const response = await fetch(`http://127.0.0.1:${ports.gatewayPort}/api/v1/test?status=${status}`, {
       method: 'POST', body: 'public-test-payload', redirect: 'follow', signal: AbortSignal.timeout(5000),
@@ -140,7 +241,7 @@ test('a request waits for an upstream that is restarting, rather than failing', 
   const ports = await reservePorts();
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await gateway.ready;
 
   // Nothing is listening yet, exactly as during a restart.
   const inFlight = ask(ports.gatewayPort);
@@ -162,7 +263,7 @@ test('an upstream that is genuinely gone is still reported, and promptly', async
   await assertNothingIsListening(ports.upstreamPort);
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await gateway.ready;
 
   const dead = await ask(ports.gatewayPort);
   assert.equal(dead.status, 502, 'a dead upstream must be a gateway failure, never an empty success');
@@ -178,7 +279,7 @@ test('a reader who leaves mid-retry does not take the gateway down', async (t) =
   const ports = await reservePorts();
   const gateway = startGateway(ports);
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await gateway.ready;
 
   for (let i = 0; i < 6; i++) {
     const request = http.get({ host: '127.0.0.1', port: ports.gatewayPort, path: '/api/v1/backend-info' });
@@ -220,7 +321,7 @@ test('an index restart is bridged, and only address traffic waits for it', async
 
   const gateway = startGateway({ ...ports, esploraPort });
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await gateway.ready;
 
   // The index is down. An address request enters the retry loop.
   const address = ask(ports.gatewayPort, '/api/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3');
@@ -251,7 +352,7 @@ test('an index that is genuinely gone is reported as unavailable, not as an empt
 
   const gateway = startGateway({ ...ports, esploraPort });
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await gateway.ready;
 
   const dead = await ask(ports.gatewayPort, '/api/address/1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3');
   // Never 200 with an empty body. An address page that renders a zero balance
@@ -275,7 +376,7 @@ test('the index administrative surface is refused rather than proxied', async (t
 
   const gateway = startGateway({ ...ports, esploraPort });
   t.after(() => gateway.kill());
-  await sleep(1200);
+  await gateway.ready;
 
   const internal = await ask(ports.gatewayPort, '/api/internal/txs');
   assert.equal(internal.status, 404, 'the index administrative routes must not be public');

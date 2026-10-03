@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Injector, NgZone, runInInjectionContext } from '@angular/core';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { PortfolioDataService } from './portfolio-data.service';
 import { PortfolioV2ApiService } from './portfolio-v2-api.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
@@ -13,13 +13,14 @@ function portfolio(id: string, networks = ['mainnet']): LocalPortfolio {
 }
 
 function summary(network: string) {
-  return { aggregateState: 'live', valuation: { quoteCurrency: 'USD', pricedValue: '1', pricedHoldingCount: 1, unpricedHoldingCount: 0, state: 'complete-priced' },
-    envelope: { sources: [] }, nativeBalance: { assetKey: `bitcoin:${network}:base:native:bitcoin`, quantityAtomic: '1', value: '1', valuationState: 'priced', price: { quoteCurrency: 'USD' }, sourceState: 'live' } };
+  const account = { chain: 'bitcoin', network, address: 'same-public-address' };
+  return { schemaVersion: 'universe-portfolio-v2-summary-v1', account, aggregateState: 'proven', valuation: { quoteCurrency: 'USD', pricedValue: '1', pricedHoldingCount: 1, unpricedHoldingCount: 0, state: 'complete-priced' },
+    envelope: { ...account, chainTip: null, sources: [] }, nativeBalance: { assetKey: `bitcoin:${network}:base:native:bitcoin`, quantityAtomic: '1', value: '1', valuationState: 'priced', price: { quoteCurrency: 'USD' }, sourceState: 'proven' } };
 }
 
 function fixture() {
   const api = { getSummary$: vi.fn((_chain: string, network: string) => of(summary(network))),
-    getHoldings$: vi.fn(() => of({ holdings: [] })), getActivity$: vi.fn(() => of({ events: [] })) };
+    getHoldings$: vi.fn((_chain: string, network: string) => of({ schemaVersion: 'universe-portfolio-v2-holdings-v1', account: summary(network).account, envelope: summary(network).envelope, holdings: [], sourceState: 'proven', nextCursor: null })), getActivity$: vi.fn((_chain: string, network: string) => of({ ...summary(network).account, schemaVersion: 'universe-portfolio-activity-v2', account: summary(network).account, checkpoint: null, events: [], sourceState: 'proven', nextCursor: null })) };
   const injector = Injector.create({ providers: [
     { provide: PortfolioV2ApiService, useValue: api }, { provide: PortfoliosStore, useValue: {} },
     { provide: NgZone, useValue: { runOutsideAngular: (fn: () => void) => fn() } },
@@ -29,6 +30,26 @@ function fixture() {
 
 describe('portfolio data identity and pending response isolation', () => {
   afterEach(() => vi.restoreAllMocks());
+
+  it('keeps failed targets unknown instead of claiming a proven zero', async () => {
+    const { service, api } = fixture();
+    api.getSummary$.mockReturnValue(throwError(() => Error('outage')));
+    await service.loadPortfolio(portfolio('failed'));
+    expect(service.state().aggregation).toMatchObject({ state: 'unavailable', pricedTotal: null, unknownValueBucket: 'present' });
+  });
+
+  it('retains successful targets while retrying a failed network target', async () => {
+    const { service, api } = fixture();
+    api.getSummary$.mockImplementation((_chain, network) => network === 'signet' ? throwError(() => Error('outage')) : of(summary(network)));
+    const input = portfolio('retry', ['testnet', 'signet']);
+    await service.loadPortfolio(input);
+    expect(service.state().aggregation?.unknownValueBucket).toBe('present');
+    api.getSummary$.mockImplementation((_chain, network) => of(summary(network)));
+    await service.retryFailed(input);
+    expect(service.state().aggregation?.pricedTotal).toBe('2');
+    expect(service.state().accounts).toHaveLength(2);
+    expect(api.getSummary$).toHaveBeenCalledTimes(3);
+  });
 
   it('keeps an identical public address on testnet and signet as separate holdings and account identities', async () => {
     const { service, api } = fixture();

@@ -314,7 +314,8 @@ export class DeveloperPlatformComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.busy = false;
         if (typeof res?.secret_key !== 'string'||!res.secret_key.startsWith('uip_live_')) { this.loadError = 'The server did not return a key.'; this.cdr.markForCheck(); return; }
-        this.ownerKey.set(res.secret_key);
+        if (typeof res.network !== 'string') { this.loadError = 'Owner issuing network was not verified.'; this.cdr.markForCheck(); return; }
+        if (!this.ownerKey.set(res.secret_key, res.network)) { this.loadError = 'Owner issuing network does not match the selected network.'; this.cdr.markForCheck(); return; }
         this.generatedKeySecret = res.secret_key;
         this.ownerId = res.owner_id ?? null;
         this.ownerName = '';

@@ -11,20 +11,20 @@ import { ZcashPrivacyEvidenceError, zcashPrivacyService } from './zcash-privacy.
 describe('ZcashPrivacyService', () => {
   const unavailable = (code: string) => expect.objectContaining({ code, status: 503 });
 
-  it('reports the missing Zcash node rather than a summary with invented pool balances', async () => {
+  it('reports the missing Zcash node rather than a summary with invented pool balances', /** @asyncUnsafe */ async () => {
     await expect(zcashPrivacyService.$getSummary()).rejects.toThrow(unavailable('unavailable-zcash-node'));
     await expect(zcashPrivacyService.$getPools()).rejects.toThrow(unavailable('unavailable-zcash-node'));
   });
 
-  it('still answers the network upgrade catalogue, which is protocol reference', async () => {
+  it('still answers the network upgrade catalogue, which is protocol reference', /** @asyncUnsafe */ async () => {
     const upgrades = await zcashPrivacyService.$getUpgrades();
-    expect(upgrades.length).toBe(6);
+    expect(upgrades.length).toBe(10);
     const nu5 = upgrades.find((u) => u.name === 'NU5');
     expect(nu5?.branchId).toBe('0xc2d6d0b4');
     expect(nu5?.activationHeight).toBe(1687104);
   });
 
-  it('never resolves an absent source as an empty directory', async () => {
+  it('never resolves an absent source as an empty directory', /** @asyncUnsafe */ async () => {
     for (const read of [
       () => zcashPrivacyService.$getSummary(),
       () => zcashPrivacyService.$getPools(),
@@ -53,7 +53,7 @@ describe('Zcash privacy HTTP responses', () => {
     return gets;
   }
 
-  it('answers the observation reads with a 503 that names the missing node and the catalogue with a 200', async () => {
+  it('answers the observation reads with a 503 that names the missing node and the catalogue with a 200', /** @asyncUnsafe */ async () => {
     const gets = mount();
     expect([...gets.keys()].map(path => path.split('/').pop()).sort()).toEqual(['blocks', 'pools', 'summary', 'upgrades']);
     for (const [path, handler] of gets) {
@@ -61,7 +61,7 @@ describe('Zcash privacy HTTP responses', () => {
       await handler({query: {network:'mainnet',start:'415000',end:'415000'}} as unknown as Request, res as unknown as Response);
       if (path.endsWith('upgrades')) {
         expect(res.status).not.toHaveBeenCalled();
-        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ total: 6 }));
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ total: 10 }));
         continue;
       }
       expect(res.status).toHaveBeenCalledWith(503);

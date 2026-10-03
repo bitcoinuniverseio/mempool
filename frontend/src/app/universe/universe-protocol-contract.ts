@@ -74,9 +74,10 @@ function validPage(kind: ProtocolPageKind, value: unknown, protocolId: string): 
     if (kind === 'activity') {
       const source = value.source;
       // The feed client requires an id; optional source fields remain unknown when null.
-      // Source protocol labels are authority-owned (for example op20 serves op_names).
+      // OP Names is an independent authority projection, never an OP20 alias.
       if (!record(source) || !text(source.id)
-        || !['protocol', 'chain', 'network', 'coverage', 'cursor', 'asOf'].every((key) => nullableText(source[key]))) {return false;}
+        || !['protocol', 'chain', 'network', 'coverage', 'cursor', 'asOf'].every((key) => nullableText(source[key]))
+        || (protocolId === 'op_names' && source.protocol !== 'op_names')) {return false;}
     }
     return true;
   }

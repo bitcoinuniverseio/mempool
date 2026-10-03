@@ -23,7 +23,7 @@ import { deriveInsights, type PortfolioInsight } from '../shared/insights';
       }
       <ul>
         @for (insight of insights(); track insight.insightId) {
-          <li [attr.data-severity]="insight.severity">
+          <li [attr.data-severity]="insight.severity" [class.dismissed]="dismissed().includes(insight.insightId)">
             <h2>{{ insight.title }}</h2>
             <p>{{ insight.explanation }}</p>
             <p class="calc">{{ insight.calculation }}</p>
@@ -31,6 +31,7 @@ import { deriveInsights, type PortfolioInsight } from '../shared/insights';
               Rule {{ insight.ruleId }} · confidence: {{ insight.confidence }}
             </p>
             @if (dismissed().includes(insight.insightId)) {
+              <p class="soft" role="status" i18n="@@universe.portfolio.insights.dismissed">Dismissed on this page</p>
               <button type="button" (click)="restore(insight)" i18n="@@universe.portfolio.insights.restore">Restore</button>
             } @else {
               <button type="button" (click)="dismiss(insight)" i18n="@@universe.portfolio.insights.dismiss">Dismiss</button>
@@ -46,6 +47,7 @@ import { deriveInsights, type PortfolioInsight } from '../shared/insights';
       li { border: 1px solid var(--u-separator, rgba(0,0,0,0.08)); border-radius: 12px; padding: 14px 16px; }
       li[data-severity='attention'] { border-color: rgba(180, 120, 0, 0.4); }
       li[data-severity='high'] { border-color: rgba(160, 32, 32, 0.5); }
+      li.dismissed { border-style: dashed; }
       h2 { margin: 0 0 6px; font-size: 15px; }
       p { margin: 4px 0; font-size: 13.5px; }
       .calc { font-family: monospace; font-size: 12px; color: var(--u-fg-soft, inherit); }
@@ -77,7 +79,7 @@ export class InsightsComponent {
         lastSnapshotAt: null,
       },
       '2026-09-02T00:00:00.000Z',
-    ).filter((insight) => !this.dismissed().includes(insight.insightId));
+    );
   });
 
   protected dismiss(insight: PortfolioInsight): void {

@@ -1,6 +1,7 @@
 import {
   addressHistoryProblems,
   addressSummaryProblems,
+  transactionSummaryProblems,
   utxoListProblems,
 } from '../api/bitcoin/esplora-contract';
 
@@ -24,6 +25,14 @@ import {
  */
 
 const ADDRESS = '1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3';
+
+test('compact summaries accept signed exact changes and reject malformed confirmed identities', () => {
+  const entry = {txid: 'ab'.repeat(32), value: -1, height: 1, time: 0, tx_position: 0};
+  expect(transactionSummaryProblems([entry])).toEqual([]);
+  for (const change of [{value: Number.MAX_SAFE_INTEGER + 1}, {value: 0.5}, {value: '1'}, {height: -1}, {time: null}, {tx_position: -1}, {txid: 'ab'}]) {
+    expect(transactionSummaryProblems([{...entry, ...change}]).length).toBeGreaterThan(0);
+  }
+});
 const TXID = 'f4184fc596403b9d638783cf57adfe4c75c605f6356fbc91338530e9831e9e16';
 
 const summaryFixture = {
@@ -54,7 +63,7 @@ const historyFixture = [
 ];
 
 const utxoFixture = [
-  { txid: TXID, vout: 0, value: 1_000_000_000, status: { confirmed: true, block_height: 170 } },
+  { txid: TXID, vout: 0, value: 1_000_000_000, status: { confirmed: true, block_height: 170, block_hash: '00'.repeat(32), block_time: 1231731025 } },
 ];
 
 describe('esplora address contract', () => {
@@ -100,7 +109,7 @@ describe('esplora address contract', () => {
   });
 
   it('refuses a confirmed transaction with no block height', () => {
-    const history = [{ ...historyFixture[0], status: { confirmed: true } }];
+    const history = [{ ...historyFixture[0], status: { confirmed: true, block_hash: '00'.repeat(32), block_time: 1231731025 } }];
     expect(addressHistoryProblems(history)).toContainEqual(expect.stringContaining('without a block height'));
   });
 
@@ -183,4 +192,27 @@ describeLive('esplora address contract against a live index', () => {
     const firstPage = new Set(first.map((transaction) => transaction.txid));
     expect(second.filter((transaction) => firstPage.has(transaction.txid))).toEqual([]);
   }, 60_000);
+});
+
+describe('exact address number boundaries', () => {
+  it('rejects rounded aggregates but permits safe historical turnover beyond supply', () => {
+    for (const value of [Number.MAX_SAFE_INTEGER + 1, Infinity, -1, 0.5]) {
+      expect(addressSummaryProblems({...summaryFixture, chain_stats:{...summaryFixture.chain_stats,funded_txo_sum:value}}, ADDRESS).length).toBeGreaterThan(0);
+    }
+    expect(addressSummaryProblems({...summaryFixture,chain_stats:{...summaryFixture.chain_stats,funded_txo_sum:Number.MAX_SAFE_INTEGER}},ADDRESS)).toEqual([]);
+  });
+  it('bounds individual Bitcoin money and uint32 output positions', () => {
+    const limit=21_000_000 * 100_000_000;
+    expect(utxoListProblems([{...utxoFixture[0],value:limit,vout:0xffffffff}])).toEqual([]);
+    expect(utxoListProblems([{...utxoFixture[0],value:limit+1}]).length).toBeGreaterThan(0);
+    expect(utxoListProblems([{...utxoFixture[0],vout:0x100000000}]).length).toBeGreaterThan(0);
+  });
+});
+
+describe('confirmation identity contracts',()=>{
+  it('rejects malformed UTXO block identity and unconfirmed entries claiming blocks',()=>{
+    expect(utxoListProblems([{...utxoFixture[0],status:{confirmed:true,block_height:170,block_hash:'wrong',block_time:1}}]).length).toBeGreaterThan(0);
+    expect(utxoListProblems([{...utxoFixture[0],status:{confirmed:false,block_height:170}}]).length).toBeGreaterThan(0);
+    expect(utxoListProblems([{...utxoFixture[0],status:{confirmed:false}}])).toEqual([]);
+  });
 });

@@ -1,3 +1,7 @@
+jest.mock('../api/bitcoin/bitcoin-client', () => ({__esModule:true,default:{
+ getBlockchainInfo:async()=>({chain:({mainnet:'main',testnet:'test',testnet4:'testnet4',signet:'signet',regtest:'regtest'} as any)[require('../config').default.MEMPOOL.NETWORK],blocks:100,bestblockhash:'1'.repeat(64),signet_challenge:require('../config').default.MEMPOOL.NETWORK==='signet'?'51':undefined}),
+ getBlockHash:async(height: number)=>height===0?'0'.repeat(64):'1'.repeat(64),
+}}));
 import http from 'http';
 import { address, networks } from 'bitcoinjs-lib';
 import { bech32 } from 'bech32';
@@ -18,6 +22,7 @@ describe('network-specific address readiness', () => {
       const path = req.url!;
       requests.push(path);
       res.setHeader('content-type', 'application/json');
+      if (path.startsWith('/block-height/')) { res.end(JSON.stringify(path === '/block-height/0' ? '0'.repeat(64) : '1'.repeat(64))); return; }
       if (path === '/blocks/tip/height') {
         res.end(JSON.stringify(responses === 'lagging' ? 90 : 100));
         return;
@@ -47,7 +52,7 @@ describe('network-specific address readiness', () => {
     server.closeAllConnections();
     await new Promise<void>(resolve => server.close(() => resolve()));
   });
-  beforeEach(() => { responses = 'valid'; requests.length = 0; config.MEMPOOL.NETWORK = 'signet'; });
+  beforeEach(() => { process.env.UNIVERSE_SIGNET_CHALLENGE='51'; responses = 'valid'; requests.length = 0; config.MEMPOOL.NETWORK = 'signet'; });
 
   it.each(['testnet', 'testnet4', 'signet', 'regtest'] as const)('sends valid %s addresses through the primary HTTP client', async network => {
     config.MEMPOOL.NETWORK = network;
@@ -55,7 +60,7 @@ describe('network-specific address readiness', () => {
     expect(() => address.toOutputScript(probe, network === 'regtest' ? networks.regtest : networks.testnet)).not.toThrow();
     const result = await $probeAddressIndex(100);
     expect(result.state).toBe('ready');
-    expect(requests).toEqual(['/blocks/tip/height', `/address/${probe}`, `/address/${probe}/utxo`]);
+    expect(requests).toEqual(['/blocks/tip/height', `/address/${probe}`, `/address/${probe}/utxo`, '/block-height/0', '/block-height/100']);
   });
   it('preserves the existing mainnet probe', () => {
     expect(addressProbeForNetwork('mainnet')).toBe(ADDRESS_PROBE);

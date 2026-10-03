@@ -1,5 +1,7 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
+import * as tls from 'tls';
+import { parseOhttpDirectoryKeys } from './ohttp-directory-keys';
 import { Psbt } from 'bitcoinjs-lib';
 import { compareProposal } from './proposal-analysis';
 import {
@@ -51,6 +53,8 @@ export type DirectoryProber = (
   address: string
 ) => Promise<{
   ok: boolean;
+  content_type?: string;
+  origin?: string;
   status: number | null;
   body: Buffer | null;
   latency_ms: number | null;
@@ -89,32 +93,41 @@ const defaultProber: DirectoryProber = (url, address) =>
      *    no production capability may depend on an arbitrary response hash.
      */
     const started = Date.now();
+    let settled = false;
+    let deadline: NodeJS.Timeout;
+    let responseHandle: import('http').IncomingMessage | undefined;
+    const finish: typeof resolve = value => { if (!settled) { settled = true; clearTimeout(deadline); resolve(value); } };
     const request = https.request(
       {
         host: address,
         servername: url.hostname,
         port: url.port ? Number(url.port) : 443,
-        path: `${url.pathname.replace(/\/$/, '')}/ohttp-keys`,
+        path: '/.well-known/ohttp-gateway',
+        checkServerIdentity: (_hostname, cert) => tls.checkServerIdentity(url.hostname, cert),
         method: 'GET',
-        headers: { host: url.host },
+        headers: { host: url.host, accept: 'application/ohttp-keys' },
         timeout: 5000,
       },
       (response) => {
+        responseHandle = response;
         const chunks: Buffer[] = [];
         let size = 0;
         response.on('data', (chunk: Buffer) => {
           size += chunk.length;
-          if (size <= 8192) {
-            chunks.push(chunk);
-          }
+          if (size > 8192) { finish({ ok: false, status: response.statusCode ?? null, body: null, latency_ms: Date.now() - started, error: 'response_too_large' }); response.destroy(); request.destroy(); return; }
+          chunks.push(chunk);
         });
+        response.on('error', () => finish({ ok: false, status: response.statusCode ?? null, body: null, latency_ms: Date.now() - started, error: 'response_error' }));
+        response.on('aborted', () => finish({ ok: false, status: response.statusCode ?? null, body: null, latency_ms: Date.now() - started, error: 'response_aborted' }));
         response.on('end', () =>
-          resolve({
+          finish({
             ok:
               (response.statusCode ?? 0) >= 200 &&
               (response.statusCode ?? 0) < 300,
             status: response.statusCode ?? null,
             body: Buffer.concat(chunks),
+            content_type: String(response.headers['content-type'] ?? ''),
+            origin: url.origin,
             latency_ms: Date.now() - started,
             error: null,
           })
@@ -125,7 +138,7 @@ const defaultProber: DirectoryProber = (url, address) =>
       request.destroy(new Error('timeout'));
     });
     request.on('error', (error) =>
-      resolve({
+      finish({
         ok: false,
         status: null,
         body: null,
@@ -133,6 +146,7 @@ const defaultProber: DirectoryProber = (url, address) =>
         error: (error as NodeJS.ErrnoException).code ?? error.message,
       })
     );
+    deadline = setTimeout(() => { finish({ok:false,status:null,body:null,latency_ms:Date.now()-started,error:'timeout'}); request.destroy(); responseHandle?.destroy(); },5000);
     request.end();
   });
 
@@ -141,8 +155,10 @@ export class PayjoinService {
   private playgroundSessions = new Map<string, PayjoinPlaygroundSession>();
   private directoryCache: {
     at: number;
+    config: string;
     directories: PayjoinDirectory[];
   } | null = null;
+  private directoryPending: {key:string;work:Promise<PayjoinDirectory[]>} | null = null;
   public prober: DirectoryProber = defaultProber;
   public configuredDirectories: () => string[] = () =>
     (process.env[DIRECTORIES_ENV] ?? '')
@@ -219,7 +235,13 @@ export class PayjoinService {
   }
 
   /** @asyncUnsafe Configured directories, each probed for its OHTTP keys with a short cache. */
-  public async getDirectories(now = Date.now()): Promise<PayjoinDirectory[]> {
+  public getDirectories(now = Date.now()): Promise<PayjoinDirectory[]> {
+    const key=JSON.stringify(this.configuredDirectories());
+    if(this.directoryPending?.key===key)return this.directoryPending.work;
+    const work=this.refreshDirectories(now).finally(()=>{if(this.directoryPending?.work===work)this.directoryPending=null;});
+    this.directoryPending={key,work};return work;
+  }
+  private async refreshDirectories(now: number): Promise<PayjoinDirectory[]> {
     /* IMPLEMENTATION-HANDOFF [WP-BI-006] DEF-BI-006; COV-BI-006A/B/C.
      * Current-source reproduction: HTTP 200 plus '<html>not OHTTP keys</html>'
      * gives bip77_supported=true, bip78_supported=true and an ohttp_key_hash.
@@ -246,7 +268,7 @@ export class PayjoinService {
      * Rollback retains URL configuration, clears obsolete cache and preserves truthful
      *    unavailable results. No transfer/signing/broadcast occurred in this preparation.
      */
-    if (this.directoryCache && now - this.directoryCache.at < 5 * 60_000) {
+    if (this.directoryCache && this.directoryCache.config === JSON.stringify(this.configuredDirectories()) && now - this.directoryCache.at < 5 * 60_000) {
       return this.directoryCache.directories;
     }
     const configured = this.configuredDirectories();
@@ -257,6 +279,7 @@ export class PayjoinService {
       );
     }
     const directories: PayjoinDirectory[] = [];
+    if (configured.length > 16) throw new PayjoinUnavailableError('directory_limit', 'At most16 directories may be configured');
     for (const raw of configured) {
       let url: URL;
       try {
@@ -266,6 +289,7 @@ export class PayjoinService {
           directory_id: `dir-${crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12)}`,
           url: raw,
           ohttp_key_hash: null,
+          reachable: false, key_config_valid: false, key_ids: [], protocol_profile: 'rfc9458-rfc9540', bip77_state: 'unavailable', bip78_state: 'unknown',
           bip77_supported: false,
           bip78_supported: false,
           latency_ms: null,
@@ -287,21 +311,31 @@ export class PayjoinService {
           error: error instanceof Error ? error.message : String(error),
         };
       }
+      let keyIds: number[] = [];
+      let invalid: string | null = null;
+      if (probe.ok) {
+        try {
+          if (probe.content_type?.split(';')[0].trim().toLowerCase() !== 'application/ohttp-keys' || probe.origin !== url.origin || !probe.body) throw new Error('invalid_key_response');
+          keyIds = parseOhttpDirectoryKeys(probe.body).map(key => key.key_id);
+        } catch (error) { invalid = error instanceof Error ? error.message : 'invalid_key_collection'; }
+      }
       directories.push({
         directory_id: `dir-${crypto.createHash('sha256').update(url.toString()).digest('hex').slice(0, 12)}`,
         url: url.toString(),
         ohttp_key_hash:
-          probe.ok && probe.body
+          keyIds.length > 0 && probe.body
             ? crypto.createHash('sha256').update(probe.body).digest('hex')
             : null,
-        bip77_supported: probe.ok,
-        bip78_supported: probe.ok,
+        reachable: probe.ok, key_config_valid: keyIds.length > 0, key_ids: keyIds, protocol_profile: 'rfc9458-rfc9540',
+        bip77_state: keyIds.length ? 'unknown' : 'unavailable', bip78_state: 'unknown',
+        bip77_supported: false,
+        bip78_supported: false,
         latency_ms: probe.latency_ms,
         last_tested_at: new Date(now).toISOString(),
-        error: probe.error ?? (probe.ok ? null : `http ${probe.status}`),
+        error: invalid ?? probe.error ?? (probe.ok ? null : `http ${probe.status}`),
       });
     }
-    this.directoryCache = { at: now, directories };
+    this.directoryCache = { at: now, config: JSON.stringify(configured), directories };
     return directories;
   }
 

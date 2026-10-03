@@ -97,6 +97,7 @@ export class PortfoliosStore {
   ): Promise<LocalPortfolio> {
     const portfolio = emptyPortfolio(newLocalId(), name, new Date().toISOString());
     if (options.sessionOnly === true) {
+      this.sessionOnlyIds.add(portfolio.id);
       this._portfolios.update((all) => [...all, portfolio]);
       this._activePortfolioId.set(portfolio.id);
       return portfolio;
@@ -137,10 +138,15 @@ export class PortfoliosStore {
   }
 
   async deletePortfolio(id: string): Promise<void> {
-    await this.vault.deleteRecord(id);
+    if (!this._portfolios().some(portfolio => portfolio.id === id)) {
+      throw new Error('The portfolio no longer exists.');
+    }
+    const replacement = this._portfolios().find(portfolio => portfolio.id !== id && !portfolio.archived)?.id ?? null;
+    if (this.isSessionOnly(id)) { this.sessionOnlyIds.delete(id); }
+    else { await this.vault.deletePortfolioRecords(id, replacement); }
     this._portfolios.update((all) => all.filter((p) => p.id !== id));
     if (this._activePortfolioId() === id) {
-      this._activePortfolioId.set(this._portfolios().find((p) => !p.archived)?.id ?? null);
+      this._activePortfolioId.set(replacement);
     }
   }
 

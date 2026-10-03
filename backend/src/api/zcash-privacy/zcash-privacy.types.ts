@@ -28,6 +28,10 @@ export interface ZcashPoolFlow {
 }
 
 export interface ZcashNetworkUpgrade {
+  readonly source?: string;
+  readonly referenceStatus?: 'final' | 'draft-specification-settled-upgrade';
+  readonly network?: string;
+  readonly observation?: false;
   readonly name: string;
   readonly activationHeight: number;
   readonly branchId: string;

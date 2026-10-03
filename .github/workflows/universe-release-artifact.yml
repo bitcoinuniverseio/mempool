@@ -113,6 +113,11 @@ jobs:
             --network mainnet \
             --acceptance docs/acceptance/qualified-release-evidence.json \
             --acceptance-root "$GITHUB_WORKSPACE"
+          node scripts/universe/reconciled-release.mjs check \
+            docs/acceptance/reconciled-operations.json \
+            docs/acceptance/qualified-application-evidence.json \
+            docs/acceptance/qualified-release-evidence.json \
+            "$GITHUB_WORKSPACE" "$(git rev-parse HEAD)"
 
       # release.sh reads the frontend from frontend/build, the backend from
       # backend/dist, and the gateway from scripts/universe. node_modules and
@@ -155,6 +160,11 @@ jobs:
             --manifest docs/protocols/PROTOCOL-COVERAGE.json \
             --acceptance docs/acceptance/qualified-release-evidence.json \
             --acceptance-root "$GITHUB_WORKSPACE"
+          node scripts/universe/reconciled-release.mjs stage \
+            docs/acceptance/reconciled-operations.json \
+            docs/acceptance/qualified-application-evidence.json \
+            docs/acceptance/qualified-release-evidence.json \
+            "$GITHUB_WORKSPACE" "$(git rev-parse HEAD)" "$stage"
           # The unit files travel with the release rather than being fetched
           # from a checkout that happens to be on the right commit. Adopting
           # socket activation needed both of these on the host, and taking

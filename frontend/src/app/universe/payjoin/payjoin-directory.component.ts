@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -72,15 +72,15 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <td><code class="fw-bold">{{ dir.url }}</code></td>
                 <td>
                   <span class="badge" [ngClass]="dir.bip77_supported ? 'bg-success' : 'bg-secondary'">
-                    {{ dir.bip77_supported ? 'v2 Enabled' : 'No' }}
+                    {{ dir.bip77_state || 'unknown' }}
                   </span>
                 </td>
                 <td>
                   <span class="badge" [ngClass]="dir.bip78_supported ? 'bg-primary' : 'bg-secondary'">
-                    {{ dir.bip78_supported ? 'v1 Supported' : 'No' }}
+                    {{ dir.bip78_state || 'unknown' }}
                   </span>
                 </td>
-                <td><code class="small text-muted">{{ dir.ohttp_key_hash.slice(0, 16) }}...</code></td>
+                <td><code class="small text-muted">{{ keyLabel(dir.ohttp_key_hash) }}</code></td>
                 <td>{{ dir.latency_ms !== null ? dir.latency_ms + ' ms' : (dir.error || 'unreachable') }}</td>
                 <td class="text-end text-muted small">{{ dir.last_tested_at }}</td>
               </tr>
@@ -108,9 +108,13 @@ export class PayjoinDirectoryComponent implements OnInit, OnDestroy {
   error: string | null = null;
   private sub = new Subscription();
 
+  keyLabel(hash: string | null): string {
+    return hash && /^[a-f0-9]{64}$/i.test(hash) ? hash.slice(0, 16) + '...' : 'Key unavailable';
+  }
+
   constructor(
-    private api: PayjoinApiService,
-    private cd: ChangeDetectorRef
+    @Inject(PayjoinApiService) private api: PayjoinApiService,
+    @Inject(ChangeDetectorRef) private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {

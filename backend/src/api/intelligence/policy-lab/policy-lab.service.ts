@@ -90,7 +90,7 @@ export class PolicyLabService {
         total_weight: report.total_weight,
       },
     });
-    eventBus.publish('btc.bitcoin.mempool.evaluated', envelope);
+    await eventBus.publish(EventEnvelopeValidator.buildSubject(envelope.network, 'mempool', 'evaluated'), envelope);
 
     return response;
   }

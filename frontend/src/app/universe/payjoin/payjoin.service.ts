@@ -31,6 +31,10 @@ export interface PayjoinDirectory {
   ohttp_key_hash: string | null;
   bip77_supported: boolean;
   bip78_supported: boolean;
+  bip77_state?: 'unknown' | 'unavailable' | 'supported' | 'unsupported';
+  bip78_state?: 'unknown' | 'unavailable' | 'supported' | 'unsupported';
+  reachable?: boolean;
+  key_config_valid?: boolean;
   latency_ms: number | null;
   last_tested_at: string;
   error: string | null;
@@ -71,6 +75,7 @@ export interface PayjoinCompatibilityEntry {
 
 export interface PayjoinPlaygroundSession {
   session_id: string;
+  simulated: true;
   step: 'original_created' | 'proposal_generated' | 'signed_and_broadcast';
   sender_address: string;
   receiver_address: string;

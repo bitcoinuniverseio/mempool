@@ -94,7 +94,7 @@ describe('NetworkObservatoryService', () => {
     templateCollectorService.fetchCoreTemplate = async () => ({ height: 100, previousblockhash: 'p'.repeat(64), transactions: [{ txid: TX, hash: TX, fee: 100, weight: 400 }, { txid: OTHER, hash: OTHER, fee: 50, weight: 400 }], coinbasevalue: 5000 });
     await templateCollectorService.collectCoreTemplate(1_000);
     templateCollectorService.readProjection = () => ({ transactionIds: [TX], totalFees: 100, blockVSize: 100, nTx: 1 });
-    templateCollectorService.collectProjection(2_000);
+    await templateCollectorService.collectProjection(2_000);
     const comparison = await service.$getTemplates();
     expect(comparison).toMatchObject({ state: 'observed', blockHeight: 100, generatedAt: 2_000, consensusMempoolTxCount: 1, missingFromLocalCount: 1, feeRateSpreadSatVb: null, observer: { observers: 1 } });
     expect(comparison.candidateTemplates).toHaveLength(2);

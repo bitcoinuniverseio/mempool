@@ -48,6 +48,13 @@ function capabilityRows(url: string): Observable<unknown> {
 }
 
 describe('UniverseApiService addressing', () => {
+  it('rejects an explicit wrong-network multichain read response', () => {
+    const { service } = build(true, () => of({ chain: 'dogecoin', network: 'mainnet' }), { dogecoin: 'testnet' });
+    const failures: unknown[] = [];
+    service.getChainDashboard$('dogecoin').subscribe({ error: error => failures.push(error) });
+    expect(failures).toHaveLength(1);
+    expect(String(failures[0])).toContain('authority-network-mismatch');
+  });
   it('cancels prior Bitcoin health and keeps the other picker rows on their own network', () => {
     const changed = new BehaviorSubject('');
     const state = { isBrowser: true, env: {}, network: '', networkChanged$: changed } as unknown as StateService;
@@ -187,7 +194,7 @@ describe('UniverseApiService addressing', () => {
     service.getChainProtocolList$('zcash', 'zrc20', 25, 50, 'zord').subscribe();
     expect(urls).toEqual([
       '/api/v1/dogecoin/protocols/doge-tap?network=mainnet&limit=25&offset=50',
-      '/api/v1/zcash/protocols/zrc20?network=mainnet&limit=25&ruleset=zord',
+      '/api/v1/zcash/protocols/zrc20?network=mainnet&limit=25&offset=50&ruleset=zord',
     ]);
     expect(() => service.getChainProtocolList$('dogecoin', '../zcash')).toThrow(
       'unsupported-chain-protocol',
@@ -205,7 +212,7 @@ describe('UniverseApiService chain network context', () => {
     service.getChainProtocolList$('zcash', 'zrc20').subscribe();
     expect(urls).toEqual([
       '/api/v1/dogecoin/dashboard?network=mainnet',
-      '/api/v1/zcash/protocols/zrc20?network=mainnet&limit=100',
+      '/api/v1/zcash/protocols/zrc20?network=mainnet&limit=100&offset=0',
     ]);
     expect(service.chainNetwork('dogecoin')).toBe('mainnet');
     expect(warn).not.toHaveBeenCalled();

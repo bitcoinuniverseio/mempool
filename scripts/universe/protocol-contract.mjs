@@ -1155,7 +1155,14 @@ function validateQualifiedAcceptanceEvidence(
       report.fail(`${key} carries no consumer assertions.`);
     }
     verifyEvidenceFiles(row.evidence, context, report, `Acceptance row ${key}`);
-    if (row.result === 'PASS') {
+    if (row.evidencePolicyVersion !== undefined && ![1, 2].includes(row.evidencePolicyVersion)) {
+      report.fail(`${key} names an unsupported evidence policy version.`);
+    }
+    const staticRegistry = row.evidencePolicyVersion === 2 &&
+      descriptor.evidencePolicy?.version === 2 && descriptor.evidencePolicy?.checkpoint === 'not-required' &&
+      descriptor.id === 'registry' && descriptor.method === 'GET' &&
+      descriptor.route === '/api/v1/universe/protocols' && descriptor.authorityPath === null;
+    if (row.result === 'PASS' && !(staticRegistry && row.checkpoint === null)) {
       const checkpoint = row.checkpoint;
       const hasHeight =
         (Number.isInteger(checkpoint?.height) && checkpoint.height >= 0) ||

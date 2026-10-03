@@ -142,11 +142,10 @@ export class ElectrsApiService {
   }
 
   getAddressSummary$(address: string,  txid?: string): Observable<AddressTxSummary[]> {
-    let params = new HttpParams();
-    if (txid) {
-      params = params.append('after_txid', txid);
-    }
-    return this.httpClient.get<AddressTxSummary[]>(this.apiBaseUrl + this.apiBasePath + '/api/address/' + address + '/txs/summary', { params });
+    // Owned electrs v3.3.0 compact summaries read the continuation from the
+    // optional path segment. after_txid is the full-history query contract.
+    const cursor = txid ? '/' + encodeURIComponent(txid) : '';
+    return this.httpClient.get<AddressTxSummary[]>(this.apiBaseUrl + this.apiBasePath + '/api/address/' + encodeURIComponent(address) + '/txs/summary' + cursor);
   }
 
   getAddressesSummary$(addresses: string[],  txid?: string): Observable<AddressTxSummary[]> {
@@ -181,12 +180,9 @@ export class ElectrsApiService {
 
   getScriptHashSummary$(script: string,  txid?: string): Observable<AddressTxSummary[]> {
     const requestBase = this.apiBaseUrl + this.apiBasePath;
-    let params = new HttpParams();
-    if (txid) {
-      params = params.append('after_txid', txid);
-    }
+    const cursor = txid ? '/' + encodeURIComponent(txid) : '';
     return from(calcScriptHash$(script)).pipe(
-      switchMap(scriptHash => this.httpClient.get<AddressTxSummary[]>(requestBase + '/api/scripthash/' + scriptHash + '/txs/summary', { params })),
+      switchMap(scriptHash => this.httpClient.get<AddressTxSummary[]>(requestBase + '/api/scripthash/' + scriptHash + '/txs/summary' + cursor)),
     );
   }
 
