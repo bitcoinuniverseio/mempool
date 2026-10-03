@@ -64,4 +64,40 @@ describe('ordered migration completion',()=>{
   it.each([105,106,109,110,111])('advances monotonically from %i',async(version)=>{
     const test=setup(version);await test.subject.$initializeOrMigrateDatabase();expect(test.getVersion()).toBe(113);expect(test.markers).toEqual(Array.from({length:113-version},(_,i)=>version+i+1));
   });
+  function interrupted47(existing: Record<string, unknown> | null = null) {
+    const test=setup(46);test.subject.constructor.currentVersion=47;
+    const query=test.db.query;let column=existing;let failMarker=false;
+    const required={COLUMN_TYPE:'tinyint(1)',IS_NULLABLE:'YES',COLUMN_DEFAULT:'0',EXTRA:''};
+    test.db.query=async(input:any)=>{
+      const sql=typeof input==='string'?input:input.sql;
+      if(sql.includes('information_schema.columns')&&sql.includes("COLUMN_NAME='cpfp_indexed'"))return [column?[column]:[]];
+      if(sql==='ALTER TABLE `blocks` ADD cpfp_indexed tinyint(1) DEFAULT 0'){
+        if(column)throw Error('Duplicate column cpfp_indexed');column=required;
+      }
+      if(failMarker&&sql.includes('UPDATE state SET number = 47'))throw Error('interrupted after committed DDL');
+      return query(input);
+    };
+    return {...test,required,failMarker:(value:boolean)=>failMarker=value};
+  }
+  it('resumes step47 after the column DDL committed but the version marker did not',async()=>{
+    const test=interrupted47();test.failMarker(true);
+    await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 47');
+    expect(test.getVersion()).toBe(46);expect(test.markers).toEqual([]);
+    test.failMarker(false);
+    await expect(test.subject.$initializeOrMigrateDatabase()).resolves.toBeUndefined();
+    expect(test.getVersion()).toBe(47);expect(test.markers).toEqual([47]);
+    expect(test.statements.filter(sql=>sql==='ALTER TABLE `blocks` ADD cpfp_indexed tinyint(1) DEFAULT 0')).toHaveLength(1);
+  });
+  it.each([
+    {COLUMN_TYPE:'varchar(1)',IS_NULLABLE:'YES',COLUMN_DEFAULT:'0',EXTRA:''},
+    {COLUMN_TYPE:'tinyint unsigned',IS_NULLABLE:'YES',COLUMN_DEFAULT:'0',EXTRA:''},
+    {COLUMN_TYPE:'tinyint',IS_NULLABLE:'NO',COLUMN_DEFAULT:'0',EXTRA:''},
+    {COLUMN_TYPE:'tinyint',IS_NULLABLE:'YES',COLUMN_DEFAULT:'1',EXTRA:''},
+    {COLUMN_TYPE:'tinyint',IS_NULLABLE:'YES',COLUMN_DEFAULT:'0',EXTRA:'VIRTUAL GENERATED'},
+  ])('rejects incompatible step47 column before completing its marker (%j)',async(column)=>{
+    const test=interrupted47(column);
+    await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 47');
+    expect(test.getVersion()).toBe(46);expect(test.markers).toEqual([]);
+    expect(test.statements.some(sql=>sql.startsWith('ALTER TABLE `blocks` ADD cpfp_indexed'))).toBe(false);
+  });
 });

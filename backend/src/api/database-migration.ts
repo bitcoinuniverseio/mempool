@@ -399,7 +399,7 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 47 && this.targetMigrationVersion >= 47) {
-      await this.$executeQuery('ALTER TABLE `blocks` ADD cpfp_indexed tinyint(1) DEFAULT 0');
+      await this.$ensureCfpIndexedColumn();
       await this.$executeQuery(this.getCreateCPFPTableQuery(), await this.$checkIfTableExists('cpfp_clusters'));
       await this.$executeQuery(this.getCreateTransactionsTableQuery(), await this.$checkIfTableExists('transactions'));
     }
@@ -1647,6 +1647,29 @@ class DatabaseMigration {
       return columns.length === 1 && columns[0].COLUMN_TYPE.replace('(11)', '') === expected &&
         columns[0].IS_NULLABLE === 'YES' && columns[0].COLUMN_DEFAULT === null && columns[0].EXTRA === '';
     })) throw new Error('Interrupted migration 29 nodes columns do not match the required schema');
+  }
+
+  /** @asyncUnsafe */
+  private async $ensureCfpIndexedColumn(): Promise<void> {
+    const read = /** @asyncUnsafe */ async (): Promise<any[]> => {
+      const [columns]: any[] = await this.$executeQuery(`SELECT COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, EXTRA
+        FROM information_schema.columns WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='blocks' AND COLUMN_NAME='cpfp_indexed'`, true);
+      return columns;
+    };
+    const matches = (columns: any[]): boolean => columns.length === 1 &&
+      /^tinyint(?:\(\d+\))?$/.test(columns[0].COLUMN_TYPE) && columns[0].IS_NULLABLE === 'YES' &&
+      String(columns[0].COLUMN_DEFAULT) === '0' && columns[0].EXTRA === '';
+    const before = await read();
+    if (!before.length) {
+      await this.$executeQuery('ALTER TABLE `blocks` ADD cpfp_indexed tinyint(1) DEFAULT 0');
+    } else if (!matches(before)) {
+      throw new Error('Interrupted migration 47 cpfp_indexed column does not match the required schema');
+    }
+    // MySQL DDL commits before the step marker; inspect its durable result on
+    // both a fresh execution and a restart rather than swallowing duplicates.
+    if (!matches(await read())) {
+      throw new Error('Migration 47 cpfp_indexed column postcondition failed');
+    }
   }
 
   /** @asyncUnsafe */
