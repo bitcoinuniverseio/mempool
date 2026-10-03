@@ -140,9 +140,11 @@ function addressContext(address: string): { chain: string; network: string } | n
         @case ('input') {
           <section class="panel">
             <h2>{{ inputTitle() }}</h2>
+            @if (error(); as message) { <p class="error" role="alert">{{ message }}</p> }
+            @if (saving()) { <p role="status">{{ stepChoice() === 'ephemeral' ? 'Opening the public address…' : 'Saving the local portfolio…' }}</p> }
             @if (stepChoice() === 'ephemeral') {
               <label for="ephemeral-context" i18n="@@universe.portfolio.onboarding.lookup-network">Chain and network</label>
-              <select id="ephemeral-context" #contextInput [value]="ephemeralContext()" (change)="selectEphemeralContext(contextInput.value)">
+              <select [disabled]="saving()" id="ephemeral-context" #contextInput [value]="ephemeralContext()" (change)="selectEphemeralContext(contextInput.value)">
                 <option value="bitcoin:mainnet">Bitcoin mainnet</option>
                 <option value="dogecoin:mainnet">Dogecoin mainnet</option>
                 <option value="zcash:mainnet">Zcash mainnet (transparent)</option>
@@ -151,7 +153,7 @@ function addressContext(address: string): { chain: string; network: string } | n
             <label>
               <span>{{ inputLabel() }}</span>
               @if (stepChoice() === 'watch-only') {
-                <textarea #materialInput rows="3" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
+                <textarea [disabled]="saving()" #materialInput rows="3" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
               } @else {
                 <textarea #materialInput rows="4" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
               }
@@ -162,11 +164,11 @@ function addressContext(address: string): { chain: string; network: string } | n
               Detection runs locally before anything is sent or stored. Rejected input is discarded immediately.
             </p>
             <div class="actions">
-              <button type="button" class="primary" [disabled]="!valid()" (click)="save()">
+              <button type="button" class="primary" [disabled]="!valid() || saving()" (click)="save()">
                 @if (stepChoice() === 'ephemeral') { <span i18n="@@universe.portfolio.onboarding.open-unsaved">Open without saving</span> }
                 @else { <span i18n="@@universe.portfolio.onboarding.save">Save portfolio</span> }
               </button>
-              <button type="button" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
+              <button type="button" [disabled]="saving()" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
             </div>
           </section>
         }
@@ -211,6 +213,7 @@ export class OnboardingComponent implements OnInit {
   readonly stepChoice = signal<EntryChoice>('address');
   readonly error = signal('');
   readonly creatingVault = signal(false);
+  readonly saving = signal(false);
   readonly unlockingVault = signal(false);
   readonly preparingManual = signal(false);
   readonly rejection = signal('');
@@ -227,7 +230,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   protected choose(choice: EntryChoice): void {
-    if (this.preparingManual()) {return;}
+    if (this.preparingManual() || this.saving()) {return;}
     this.error.set('');
     this.stepChoice.set(choice);
     this.validateMaterial('');
@@ -418,67 +421,75 @@ export class OnboardingComponent implements OnInit {
   }
 
   protected async save(): Promise<void> {
-    this.validateMaterial(this.material);
-    if (!this.valid()) return;
-    if (this.stepChoice() === 'ephemeral') {
+    if (this.saving()) return;
+    this.saving.set(true);
+    this.error.set('');
+    try {
       this.validateMaterial(this.material);
-      if (!this.valid()) {return;}
-      const [chain, network] = this.ephemeralContext().split(':');
-      await this.router.navigate(['/portfolio', chain, network, this.material.trim()]);
-      return;
-    }
-    const portfolio =
-      this.portfolio ??
-      (await this.store.createPortfolio(this.defaultName()));
-    this.portfolio = portfolio;
-    const now = new Date().toISOString();
-    const accounts: LocalAccount[] = [...portfolio.accounts];
-    if (this.stepChoice() === 'watch-only') {
-      const extended = classifyExtendedKey(this.material);
-      const descriptor = extended === null ? classifyDescriptor(this.material) : null;
-      if (extended !== null) {
-        accounts.push({
-          id: crypto.randomUUID(),
-          name: $localize`:@@universe.portfolio.onboarding.watch-account:Watch-only wallet`,
-          chain: 'bitcoin',
-          network: extended.testnet ? 'testnet' : 'mainnet',
-          kind: 'xpub',
-          xpub: { key: extended.key, script: extended.script as ScriptKind, account: 0, gapLimit: 20, branches: ['external'] },
-          tags: [],
-          createdAt: now,
-        });
-      } else if (descriptor !== null) {
-        accounts.push({
-          id: crypto.randomUUID(),
-          name: $localize`:@@universe.portfolio.onboarding.descriptor-account:Descriptor wallet`,
-          chain: 'bitcoin',
-          network: descriptor.testnet ? 'testnet' : 'mainnet',
-          kind: 'descriptor',
-          descriptor: { value: descriptor.value, gapLimit: 20 },
-          tags: [],
-          createdAt: now,
-        });
+      if (!this.valid()) return;
+      const choice = this.stepChoice(), material = this.material, ephemeralContext = this.ephemeralContext();
+      if (choice === 'ephemeral') {
+        this.validateMaterial(this.material);
+        if (!this.valid()) {return;}
+        const [chain, network] = ephemeralContext.split(':');
+        await this.router.navigate(['/portfolio', chain, network, material.trim()]);
+        return;
       }
-    } else {
-      const imported = this.parseList(this.material);
-      for (const entry of imported.entries) {
-        const match = addressContext(entry.address);
-        if (match === null) continue;
-        accounts.push({
-          id: crypto.randomUUID(),
-          name: entry.label.length > 0 ? entry.label : entry.address.slice(0, 12) + '…',
-          chain: entry.chain.length > 0 ? entry.chain : match.chain,
-          network: entry.network.length > 0 ? entry.network : match.network,
-          kind: imported.entries.length > 1 ? 'addresses' : 'address',
-          addresses: [entry.address],
-          tags: [],
-          createdAt: now,
-        });
+      const portfolio =
+        this.portfolio ??
+        (await this.store.createPortfolio(this.defaultName()));
+      this.portfolio = portfolio;
+      const now = new Date().toISOString();
+      const accounts: LocalAccount[] = [...portfolio.accounts];
+      if (choice === 'watch-only') {
+        const extended = classifyExtendedKey(material);
+        const descriptor = extended === null ? classifyDescriptor(material) : null;
+        if (extended !== null) {
+          accounts.push({
+            id: crypto.randomUUID(),
+            name: $localize`:@@universe.portfolio.onboarding.watch-account:Watch-only wallet`,
+            chain: 'bitcoin',
+            network: extended.testnet ? 'testnet' : 'mainnet',
+            kind: 'xpub',
+            xpub: { key: extended.key, script: extended.script as ScriptKind, account: 0, gapLimit: 20, branches: ['external'] },
+            tags: [],
+            createdAt: now,
+          });
+        } else if (descriptor !== null) {
+          accounts.push({
+            id: crypto.randomUUID(),
+            name: $localize`:@@universe.portfolio.onboarding.descriptor-account:Descriptor wallet`,
+            chain: 'bitcoin',
+            network: descriptor.testnet ? 'testnet' : 'mainnet',
+            kind: 'descriptor',
+            descriptor: { value: descriptor.value, gapLimit: 20 },
+            tags: [],
+            createdAt: now,
+          });
+        }
+      } else {
+        const imported = this.parseList(material);
+        for (const entry of imported.entries) {
+          const match = addressContext(entry.address);
+          if (match === null) continue;
+          accounts.push({
+            id: crypto.randomUUID(),
+            name: entry.label.length > 0 ? entry.label : entry.address.slice(0, 12) + '…',
+            chain: entry.chain.length > 0 ? entry.chain : match.chain,
+            network: entry.network.length > 0 ? entry.network : match.network,
+            kind: imported.entries.length > 1 ? 'addresses' : 'address',
+            addresses: [entry.address],
+            tags: [],
+            createdAt: now,
+          });
+        }
       }
-    }
-    await this.store.updatePortfolio(portfolio.id, (current) => ({ ...current, accounts }));
-    this.step.set('done');
-    void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
+      await this.store.updatePortfolio(portfolio.id, (current) => ({ ...current, accounts }));
+      this.step.set('done');
+      void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
+    } catch {
+      this.error.set('The local portfolio could not be saved. Check that the vault is unlocked and browser storage is available, then retry. Any prepared definition will be reused.');
+    } finally { this.saving.set(false); }
   }
 
   private async prepareEntry(): Promise<void> {

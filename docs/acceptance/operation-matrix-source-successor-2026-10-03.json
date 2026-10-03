@@ -2622,9 +2622,9 @@
     },
     {
       "path": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-      "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+      "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
       "sha256Encoding": "utf8-lf",
-      "bytes": 15970
+      "bytes": 16616
     },
     {
       "path": "frontend/src/app/components/transaction/transaction.component.ts",
@@ -3906,9 +3906,9 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-      "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+      "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
       "sha256Encoding": "utf8-lf",
-      "bytes": 24947
+      "bytes": 25837
     },
     {
       "path": "frontend/src/app/universe/portfolio/performance/performance.component.ts",
@@ -3924,9 +3924,9 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-      "sha256": "a777e70fc0dfaf7a43b698a46cb21a024aeb02d6afa44bf0c6be0497ce1c34cb",
+      "sha256": "a9f916699c64340c92e01422164cfdaa86de1480ed3661208d88ee30c12848a0",
       "sha256Encoding": "utf8-lf",
-      "bytes": 8535
+      "bytes": 8772
     },
     {
       "path": "frontend/src/app/universe/portfolio/share/share-view.component.ts",
@@ -21375,7 +21375,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -21643,7 +21643,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "a777e70fc0dfaf7a43b698a46cb21a024aeb02d6afa44bf0c6be0497ce1c34cb",
+          "sha256": "a9f916699c64340c92e01422164cfdaa86de1480ed3661208d88ee30c12848a0",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -23481,7 +23481,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -73055,7 +73055,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -73252,7 +73252,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -73449,7 +73449,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -73646,7 +73646,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -73843,7 +73843,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -74040,7 +74040,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -74237,7 +74237,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -74434,7 +74434,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -74631,7 +74631,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/onboarding/onboarding.component.ts",
-          "sha256": "2442c8e931586ed62aee7e92eee54d359dbbd49cde725b872a28c02bee267afb",
+          "sha256": "11eaa21bd399e06419bcd329a20265b49d42ef8b09bf2ee8f9b011962ac44d99",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -75700,7 +75700,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "a777e70fc0dfaf7a43b698a46cb21a024aeb02d6afa44bf0c6be0497ce1c34cb",
+          "sha256": "a9f916699c64340c92e01422164cfdaa86de1480ed3661208d88ee30c12848a0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -75833,7 +75833,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "a777e70fc0dfaf7a43b698a46cb21a024aeb02d6afa44bf0c6be0497ce1c34cb",
+          "sha256": "a9f916699c64340c92e01422164cfdaa86de1480ed3661208d88ee30c12848a0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -75966,7 +75966,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "a777e70fc0dfaf7a43b698a46cb21a024aeb02d6afa44bf0c6be0497ce1c34cb",
+          "sha256": "a9f916699c64340c92e01422164cfdaa86de1480ed3661208d88ee30c12848a0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -76099,7 +76099,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "a777e70fc0dfaf7a43b698a46cb21a024aeb02d6afa44bf0c6be0497ce1c34cb",
+          "sha256": "a9f916699c64340c92e01422164cfdaa86de1480ed3661208d88ee30c12848a0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -76232,7 +76232,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/settings/portfolio-settings.component.ts",
-          "sha256": "a777e70fc0dfaf7a43b698a46cb21a024aeb02d6afa44bf0c6be0497ce1c34cb",
+          "sha256": "a9f916699c64340c92e01422164cfdaa86de1480ed3661208d88ee30c12848a0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -80605,7 +80605,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -80789,7 +80789,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -80973,7 +80973,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -81157,7 +81157,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -81341,7 +81341,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -81525,7 +81525,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -81709,7 +81709,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -81893,7 +81893,7 @@
         },
         {
           "artifact": "frontend/src/app/components/transaction/transaction-raw.component.ts",
-          "sha256": "5f8af6e2bd79fc0fab8600e7942ac6e99373f9c110b34a76594ebbf6d2faf924",
+          "sha256": "7147c8742b0bd81789fc774670808938c668e2a4e7c37f1ad323a91319eec594",
           "sha256Encoding": "utf8-lf"
         }
       ],

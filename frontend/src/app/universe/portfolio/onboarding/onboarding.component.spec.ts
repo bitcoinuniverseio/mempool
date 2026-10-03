@@ -393,3 +393,34 @@ describe('saved onboarding checksum and existing vault boundaries', () => {
     expect(view.componentInstance.valid()).toBe(false);
   });
 });
+
+describe('address portfolio save lifecycle', () => {
+  const definition = { id: 'test-owned-definition', name: 'Owned', accounts: [] };
+  function setup(createPortfolio: any) {
+    const store = { vaultKind: () => 'unlocked', createPortfolio, updatePortfolio: vi.fn().mockResolvedValue(undefined) };
+    const router = { navigate: vi.fn().mockResolvedValue(true) };
+    TestBed.configureTestingModule({ providers: [{ provide: PortfoliosStore, useValue: store }, { provide: Router, useValue: router }] });
+    const view = TestBed.createComponent(OnboardingComponent);
+    view.componentInstance.step.set('input'); view.detectChanges();
+    const textarea = view.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    textarea.value = '1BoatSLRHtKNngkdXEeobR76b53LETtpyT'; textarea.dispatchEvent(new Event('input')); view.detectChanges();
+    const button = view.nativeElement.querySelector('button.primary') as HTMLButtonElement;
+    return { view, button, store, router };
+  }
+  it('blocks a second save while definition creation is pending', async () => {
+    let finish!: (value: any) => void;
+    const f = setup(vi.fn(() => new Promise(resolve => { finish = resolve; })));
+    f.button.click(); f.view.detectChanges(); expect(f.button.disabled).toBe(true);
+    await (f.view.componentInstance as any).save(); expect(f.store.createPortfolio).toHaveBeenCalledOnce();
+    finish(definition); await vi.waitFor(() => expect(f.store.updatePortfolio).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(f.view.componentInstance.saving()).toBe(false));
+    expect(f.router.navigate).toHaveBeenCalledOnce();
+  });
+  it('renders a failed save and retries the same already prepared definition', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition)); f.store.updatePortfolio.mockRejectedValueOnce(Error('private failure payload'));
+    f.button.click(); await vi.waitFor(() => { f.view.detectChanges(); expect(f.view.componentInstance.saving()).toBe(false); expect(f.view.nativeElement.querySelector('[role=alert]').textContent).toContain('could not be saved'); });
+    expect(f.button.disabled).toBe(false); expect(f.view.nativeElement.textContent).not.toContain('private failure'); expect(f.router.navigate).not.toHaveBeenCalled();
+    f.button.click(); await vi.waitFor(() => expect(f.router.navigate).toHaveBeenCalledOnce());
+    expect(f.store.createPortfolio).toHaveBeenCalledOnce(); expect(f.store.updatePortfolio.mock.calls.every(call => call[0] === definition.id)).toBe(true);
+  });
+});
