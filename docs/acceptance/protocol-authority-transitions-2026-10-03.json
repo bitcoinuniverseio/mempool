@@ -7,7 +7,7 @@
       "fromAuthority": "index-op20",
       "toAuthority": "index-op20-op-names",
       "sourceRepository": "bitcoinuniverseio/backend-apis",
-      "registrySourceRevision": "16298d7d8574f9cbe621a519b6f35847131e1b41",
+      "registrySourceRevision": "a7f08fb94b85ead9daf7f4a04f0b6beb4ba7acfa",
       "producerRepository": "bitcoinuniverseio/index-op20",
       "producerSourceRevision": "7c0305a38deb968460a668484b2febf57e099add",
       "producerPath": "/token-explorer/op-names",

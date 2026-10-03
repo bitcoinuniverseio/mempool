@@ -20,9 +20,9 @@ A protocol never silently disappears from this table: `PROTOCOL-ROSTER.lock`
 records every id that has been published, and the gate fails when one of them
 stops appearing.
 
-Pinned from bitcoinuniverseio/backend-apis at commit 16298d7d8574f9cbe621a519b6f35847131e1b41,
+Pinned from bitcoinuniverseio/backend-apis at commit a7f08fb94b85ead9daf7f4a04f0b6beb4ba7acfa,
 manifest schema universe-explorer-protocol-manifest-v1, registry version 1.1.0,
-recorded 2026-10-03T20:56:23.655Z.
+recorded 2026-10-03T22:19:55.686Z.
 
 39 protocol identities are retained. 7 carry historical readable declarations; these are not current runtime or E2E passes. Operation descriptors identify implemented public reads and their owned authority routes; configuration and acceptance are separate. The registry is not the complete application operation inventory.
 

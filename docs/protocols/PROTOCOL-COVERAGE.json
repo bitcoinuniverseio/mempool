@@ -2,8 +2,8 @@
   "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.1.0",
   "sourceRepository": "bitcoinuniverseio/backend-apis",
-  "sourceSha": "16298d7d8574f9cbe621a519b6f35847131e1b41",
-  "generatedAt": "2026-10-03T20:56:23.655Z",
+  "sourceSha": "a7f08fb94b85ead9daf7f4a04f0b6beb4ba7acfa",
+  "generatedAt": "2026-10-03T22:19:55.686Z",
   "primaryStrip": [
     "ORDINALS",
     "RUNES",
@@ -420,7 +420,7 @@
           "id": "objects",
           "method": "GET",
           "route": "/api/v1/universe/protocols/unat/objects",
-          "authorityPath": "/v1/marketplace/protocols/unat/assets",
+          "authorityPath": "/unat/assets",
           "evidence": "source-contract",
           "evidencePolicy": {
             "version": 2,
