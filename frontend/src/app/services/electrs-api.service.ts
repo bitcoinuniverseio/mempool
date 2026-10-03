@@ -51,6 +51,10 @@ export class ElectrsApiService {
     );
   }
 
+  getBlockTipHash$(): Observable<string> {
+    return this.httpClient.get(this.apiBaseUrl + this.apiBasePath + '/api/blocks/tip/hash', { responseType: 'text' });
+  }
+
   getBlock$(hash: string): Observable<BlockExtended> {
     return this.httpClient.get<BlockExtended>(this.apiBaseUrl + this.apiBasePath + '/api/block/' + hash);
   }
