@@ -20,7 +20,9 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import test from 'node:test';
 import { stageAcceptance, acceptanceEvidenceClosure } from './protocol-contract.mjs';
-import { qualifyArtifact, memberProblems } from './qualify-artifact.mjs';
+import { fixture } from './reconciled-release-fixture.mjs';
+import { spawnSync } from 'node:child_process';
+import { qualifyArtifact, memberProblems, REQUIRED_MEMBERS } from './qualify-artifact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = join(here, '..', '..');
@@ -188,7 +190,21 @@ function stagedRelease(candidate, { commit = ARTIFACT_COMMIT } = {}) {
   });
   assert.deepEqual(report.problems, []);
   mkdirSync(join(stage, 'scripts', 'universe'), { recursive: true });
-  copyFileSync(join(here, 'protocol-contract.mjs'), join(stage, 'scripts', 'universe', 'protocol-contract.mjs'));
+  for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs']) {
+    copyFileSync(join(here, name), join(stage, 'scripts', 'universe', name));
+  }
+  const application = fixture(candidate.envelope);
+  for (const [name, bytes] of [['reconciled-operations.json', application.rosterBytes],
+    ['qualified-application-evidence.json', Buffer.from(JSON.stringify(application.acceptance))]]) {
+    writeFileSync(join(candidate.root, 'docs/acceptance', name), bytes);
+  }
+  mkdirSync(join(candidate.root, 'docs/acceptance/evidence/application'), { recursive: true });
+  writeFileSync(join(candidate.root, 'docs/acceptance/evidence/application/receipt.json'), application.receiptBytes);
+  const admission = spawnSync(process.execPath, [join(here, 'reconciled-release.mjs'), 'stage',
+    join(candidate.root, 'docs/acceptance/reconciled-operations.json'),
+    join(candidate.root, 'docs/acceptance/qualified-application-evidence.json'), candidate.acceptancePath,
+    candidate.root, ARTIFACT_COMMIT, stage], { encoding: 'utf8' });
+  assert.equal(admission.status, 0, admission.stderr);
   writeFileSync(join(stage, 'RELEASE-MANIFEST.json'), JSON.stringify({ commit }));
   return stage;
 }
@@ -200,6 +216,11 @@ function entriesOf(stage, relatives) {
 const CARRIED = (candidate) => [
   'RELEASE-MANIFEST.json',
   'scripts/universe/protocol-contract.mjs',
+  'scripts/universe/reconciled-release.mjs',
+  'scripts/universe/reconciled-operations.mjs',
+  'docs/acceptance/reconciled-operations.json',
+  'docs/acceptance/qualified-application-evidence.json',
+  'docs/acceptance/evidence/application/receipt.json',
   'docs/protocols/PROTOCOL-COVERAGE.json',
   'docs/acceptance/qualified-release-evidence.json',
   candidate.journeyPath,
@@ -265,8 +286,7 @@ test('a link in the evidence tree is refused before extraction', async () => {
 });
 
 test('member names that are absolute or climb out of the release are refused', () => {
-  const required = ['RELEASE-MANIFEST.json', 'docs/protocols/PROTOCOL-COVERAGE.json',
-    'docs/acceptance/qualified-release-evidence.json', 'scripts/universe/protocol-contract.mjs'];
+  const required = REQUIRED_MEMBERS;
   assert.deepEqual(memberProblems(required, []), []);
   assert.match(memberProblems([...required, '../outside.json'], []).join('\n'), /escapes the release directory/);
   assert.match(memberProblems([...required, '/etc/cron.d/x'], []).join('\n'), /is absolute/);
@@ -323,4 +343,16 @@ test('the workflow stages the closure, packs docs, and qualifies the packed arch
   const upload = workflow.indexOf('- name: Upload');
   assert.ok(pack > 0 && qualify > pack && upload > qualify, 'qualification must sit between packing and upload');
   assert.match(workflow.slice(qualify, upload), /qualify-artifact\.mjs[\s\S]*--commit '\$\{\{ steps\.sha\.outputs\.sha \}\}' --network mainnet/);
+});
+
+test('protocol acceptance alone and a damaged application lifecycle receipt cannot qualify a packed archive', async () => {
+  const candidate = signetQualifiedCandidate();
+  const stage = stagedRelease(candidate);
+  const missing = CARRIED(candidate).filter(name => name !== 'docs/acceptance/qualified-application-evidence.json');
+  assert.match((await qualifyArtifact(packed('missing-application.tar.gz', entriesOf(stage, missing)),
+    { commit: ARTIFACT_COMMIT })).join('\n'), /does not carry docs\/acceptance\/qualified-application/);
+  const damaged = entriesOf(stage, CARRIED(candidate)).map(([name, bytes]) =>
+    name === 'docs/acceptance/evidence/application/receipt.json' ? [name, Buffer.from('{}')] : [name, bytes]);
+  assert.match((await qualifyArtifact(packed('damaged-application.tar.gz', damaged),
+    { commit: ARTIFACT_COMMIT })).join('\n'), /full application acceptance did not qualify/);
 });

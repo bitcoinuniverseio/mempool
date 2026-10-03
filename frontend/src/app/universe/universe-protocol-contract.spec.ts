@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { Observable, Subject, TimeoutError, of, throwError } from 'rxjs';
 import { UniverseApiService } from './universe-api.service';
+import { readProtocolPage } from './universe-protocol-contract';
 import manifest from '../../../../docs/protocols/PROTOCOL-COVERAGE.json';
 
 type Kind = 'activity' | 'objects';
@@ -41,6 +42,12 @@ describe.each<Kind>(['activity', 'objects'])('%s document contract', (kind) => {
   const protocolId = kind === 'activity' ? 'mezcal' : 'names';
   const rowField = kind === 'activity' ? 'events' : 'items';
   const routeField = kind === 'activity' ? 'feedPath' : 'objectsPath';
+
+  it('rejects an OP20 source under OP Names', () => {
+    const body = page('activity', 'op_names');
+    (body.source as Record<string, unknown>).protocol = 'op20';
+    expect(() => readProtocolPage('activity', body, 'op_names')).toThrow('contract-mismatch');
+  });
 
   it.each([
     ['incomplete served', { state: 'served' }],
@@ -241,7 +248,7 @@ describe('activity source and pagination fields', () => {
    * individually. Do not remove protocol coverage or weaken identity assertions.
    */
   it.each([
-    ['atomicals_nft', 'atomicals'], ['op_return', 'op20'], ['op_names', 'op20'], ['tap_doge', 'doge-tap'],
+    ['atomicals_nft', 'atomicals'], ['op_return', 'op20'], ['op_names', 'op_names'], ['tap_doge', 'doge-tap'],
   ])('preserves the owned source label for %s', (protocolId, sourceProtocol) => {
     const body = page('activity', protocolId);
     (body.source as Record<string, unknown>).protocol = sourceProtocol;

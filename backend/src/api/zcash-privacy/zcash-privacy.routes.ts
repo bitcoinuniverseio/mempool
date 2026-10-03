@@ -51,7 +51,7 @@ class ZcashPrivacyRoutes {
 
   private async $getUpgrades(req: Request, res: Response): Promise<void> {
     try {
-      const upgrades = await zcashPrivacyService.$getUpgrades();
+      const upgrades = await zcashPrivacyService.$getUpgrades(req.query.network === undefined ? 'mainnet' : String(req.query.network));
       res.json({ upgrades, total: upgrades.length });
     } catch (e) {
       fail(req, res, e);

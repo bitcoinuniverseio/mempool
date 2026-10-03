@@ -532,7 +532,8 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   /** Query parameters for a link to another page of the current list. */
   pageLink(page: number): Record<string, string> {
-    return { page: String(page) };
+    const ruleset = this.route.snapshot.queryParamMap.get('ruleset');
+    return { page: String(page), ...(ruleset ? { ruleset } : {}) };
   }
 
   isProtocolPage(): boolean {
@@ -732,7 +733,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
           this.chain,
           protocol,
           100,
-          0,
+          this.chain === 'zcash' && protocol === 'zrc20' ? (context.listPage - 1) * 100 : 0,
           context.ruleset
         );
       case 'protocol-detail':

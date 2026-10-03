@@ -28,7 +28,7 @@
  *   the chain does not have.
  */
 
-import { ExactNumber, formatAtomicAmount, humanizeFieldName } from './multichain-view';
+import { ExactNumber, formatAtomicAmount, humanizeFieldName, readOffsetPaging } from './multichain-view';
 
 /** What a ruleset field is, so it is never shifted by the wrong rule. */
 export type FigureKind =
@@ -267,6 +267,7 @@ export interface RulesetAssetListRow {
 }
 
 export interface RulesetAssetListReading {
+  readonly paging?: import('./multichain-view').Paging | null;
   readonly lens: string | null;
   /** Every ruleset seen across the rows, lens first. */
   readonly rulesets: readonly string[];
@@ -356,6 +357,7 @@ export function readRulesetAssetList(payload: unknown): RulesetAssetListReading 
       })),
     })),
     shownCount: rows.length,
+    paging: readOffsetPaging(payload),
     totalExact: text(payload.total),
     hiddenFigureFields,
     unreadRowCount,

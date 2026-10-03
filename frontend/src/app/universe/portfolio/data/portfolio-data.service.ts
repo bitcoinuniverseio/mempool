@@ -10,9 +10,12 @@
  */
 
 import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil, timeout } from 'rxjs';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfoliosStore } from '../stores/portfolios.store';
+import { readEvidencePages, EvidencePageRead } from './read-evidence-pages';
+import type { ExplorerCheckpoint, PortfolioV2Holding, PortfolioSemanticEvent } from '@app/shared/universe-portfolio-v2.types';
+import { PORTFOLIO_SOURCE_STATES, portfolioAssetKey } from '@app/shared/universe-portfolio-v2.types';
 import {
   accountAddresses,
   type InclusionPolicy,
@@ -55,6 +58,10 @@ export class PortfolioDataService {
   readonly aggregation = computed(() => this._state().aggregation);
 
   private loadSequence = 0;
+  private readonly cancel = new Subject<void>();
+  private scope = '';
+  private readonly retained = new Map<string, { snapshot: AddressSnapshot; protocolSnapshots: AddressSnapshot[]; events: PortfolioEventInput[]; error?: string }>();
+  private readonly pages = new Map<string, { checkpoint: string; holdings?: EvidencePageRead<PortfolioV2Holding>; activity?: EvidencePageRead<PortfolioSemanticEvent> }>();
 
   private readonly api = inject(PortfolioV2ApiService);
   private readonly store = inject(PortfoliosStore);
@@ -98,16 +105,15 @@ export class PortfolioDataService {
     portfolio: LocalPortfolio,
     options: { readonly includeAccounts?: readonly string[] } = {},
   ): Promise<void> {
+    this.cancel.next();
     const sequence = ++this.loadSequence;
+    const scope = JSON.stringify([portfolio.id, portfolio.accounts]);
+    const retry = options.includeAccounts !== undefined && this.scope === scope;
+    if (!retry) { this.retained.clear(); this.pages.clear(); }
+    this.scope = scope;
     const policy = inclusionPolicyOf(portfolio);
     const targets: { account: LocalAccount; address: string }[] = [];
     for (const account of portfolio.accounts) {
-      if (
-        options.includeAccounts !== undefined &&
-        !options.includeAccounts.includes(account.id)
-      ) {
-        continue;
-      }
       for (const address of accountAddresses(account)) {
         targets.push({ account, address });
       }
@@ -116,8 +122,8 @@ export class PortfolioDataService {
     const accountStates: AccountLoadState[] = targets.map(({ account, address }) => ({
       accountId: account.id,
       address,
-      state: 'loading',
-      aggregateState: 'pending',
+      state: retry && !options.includeAccounts?.includes(account.id) ? 'ok' : 'loading',
+      aggregateState: this.retained.get(JSON.stringify([account.id, account.chain, account.network, address]))?.snapshot.summary.aggregateState ?? 'pending',
     }));
     this._state.set({
       loading: true,
@@ -126,12 +132,11 @@ export class PortfolioDataService {
       completedAt: this._state().completedAt,
     });
 
-    const snapshots: AddressSnapshot[] = [];
-    const events: PortfolioEventInput[] = [];
+    const reads = retry ? targets.filter(target => options.includeAccounts?.includes(target.account.id)) : targets;
     const CHUNK = 6;
-    for (let index = 0; index < targets.length; index += CHUNK) {
+    for (let index = 0; index < reads.length; index += CHUNK) {
       if (sequence !== this.loadSequence) return;
-      const chunk = targets.slice(index, index + CHUNK);
+      const chunk = reads.slice(index, index + CHUNK);
       const results = await Promise.allSettled(
         chunk.map(({ account, address }) => this.loadAddress(account, address)),
       );
@@ -143,13 +148,12 @@ export class PortfolioDataService {
           (entry) => entry.accountId === account.id && entry.address === address,
         );
         if (result.status === 'fulfilled') {
-          snapshots.push(result.value.snapshot);
-          snapshots.push(...result.value.protocolSnapshots);
-          events.push(...result.value.events);
+          this.retained.set(JSON.stringify([account.id, account.chain, account.network, address]), result.value);
           if (stateIndex >= 0) {
             accountStates[stateIndex] = {
               ...accountStates[stateIndex],
-              state: 'ok',
+              state: result.value.error ? 'failed' : 'ok',
+              errorMessage: result.value.error,
               aggregateState: result.value.snapshot.summary.aggregateState,
             };
           }
@@ -171,7 +175,17 @@ export class PortfolioDataService {
     }
 
     if (sequence !== this.loadSequence) return;
-    const aggregation = this.aggregate(snapshots, events, policy, options.includeAccounts);
+    const results = [...this.retained.values()];
+    const snapshots = results.flatMap(result => [result.snapshot, ...result.protocolSnapshots]);
+    const events = results.flatMap(result => result.events);
+    const incomplete = accountStates.some(account => account.state === 'failed')
+      || portfolio.accounts.some(account => accountAddresses(account).length === 0 || ((account.kind === 'descriptor' || account.kind === 'xpub') && account.discovery?.complete !== true));
+    const derived = this.aggregate(snapshots, events, policy);
+    const byAccount = [...derived.byAccount];
+    for (const account of portfolio.accounts) {
+      if (!byAccount.some(entry => entry.accountId === account.id)) byAccount.push({ accountId: account.id, pricedValue: null, holdingCount: 0, state: 'unavailable' });
+    }
+    const aggregation: AggregationResult = incomplete ? { ...derived, byAccount, nativeFlows: derived.nativeFlows?.map(flow => ({ ...flow, state: 'partial' })), state: results.length ? 'partial' : 'unavailable', unknownValueBucket: 'present', pricedTotal: results.length ? derived.pricedTotal : null } : derived;
     this._state.set({
       loading: false,
       accounts: accountStates,
@@ -215,23 +229,59 @@ export class PortfolioDataService {
     snapshot: AddressSnapshot;
     protocolSnapshots: AddressSnapshot[];
     events: PortfolioEventInput[];
+    error?: string;
   }> {
+    const sequence = this.loadSequence;
     const summary = await firstValueFrom(
-      this.api.getSummary$(account.chain, account.network, address),
+      this.api.getSummary$(account.chain, account.network, address).pipe(timeout(15000), takeUntil(this.cancel)),
     );
-    const holdingsPage = await firstValueFrom(
-      this.api.getHoldings$(account.chain, account.network, address, undefined, 250),
+    if (sequence !== this.loadSequence) throw Error('Portfolio read cancelled');
+    const context = { chain: account.chain, network: account.network, address };
+    const sameContext = (value: { chain: string; network: string; address: string } | undefined) => value && Object.entries(context).every(([key, expected]) => value[key as keyof typeof context] === expected);
+    if (!sameContext(summary.account) || !sameContext(summary.envelope) || summary.schemaVersion !== 'universe-portfolio-v2-summary-v1' || !PORTFOLIO_SOURCE_STATES.includes(summary.aggregateState)) throw Error('Portfolio summary context mismatch');
+    const pageKey = JSON.stringify([account.id, account.chain, account.network, address]);
+    const checkpoint = checkpointKey(summary.envelope.chainTip, account.chain, account.network);
+    const previous = this.pages.get(pageKey);
+    const resumed = previous?.checkpoint === checkpoint ? previous : undefined;
+    let holdingsCheckpoint: string | undefined = checkpoint !== 'null' ? checkpoint : undefined;
+    const holdingsRead = await readEvidencePages(
+      cursor => this.api.getHoldings$(account.chain, account.network, address, cursor, 250),
+      page => {
+        if (!sameContext(page.account) || !sameContext(page.envelope) || page.schemaVersion !== 'universe-portfolio-v2-holdings-v1' || !Array.isArray(page.holdings) || !PORTFOLIO_SOURCE_STATES.includes(page.sourceState)) throw Error('Holdings page context mismatch');
+        if (!page.holdings.every(row => row.holding?.identity?.chain === account.chain && row.holding.identity.network === account.network
+          && portfolioAssetKey(row.holding.identity) === row.holding.assetKey && PORTFOLIO_SOURCE_STATES.includes(row.holding.sourceState)
+          && Array.isArray(row.locations) && row.locations.every(location => sameContext(location.account)))) throw Error('Holdings row context mismatch');
+        const checkpoint = checkpointKey(page.envelope.chainTip, account.chain, account.network);
+        if (holdingsCheckpoint !== undefined && holdingsCheckpoint !== checkpoint) throw Error('Holdings checkpoint changed');
+        holdingsCheckpoint = checkpoint;
+        return page.holdings;
+      },
+      row => row.holding.assetKey, this.cancel,
+      resumed?.holdings?.error ? resumed.holdings : undefined,
     );
-    const activityPage = await firstValueFrom(
-      this.api.getActivity$(account.chain, account.network, address),
+    if (sequence !== this.loadSequence) throw Error('Portfolio read cancelled');
+    let activityCheckpoint: string | undefined = checkpoint !== 'null' ? checkpoint : undefined;
+    const activityRead = await readEvidencePages(
+      cursor => this.api.getActivity$(account.chain, account.network, address, cursor),
+      page => {
+        if (!sameContext(page.account) || !sameContext(page) || page.schemaVersion !== 'universe-portfolio-activity-v2' || !Array.isArray(page.events) || !PORTFOLIO_SOURCE_STATES.includes(page.sourceState)) throw Error('Activity page context mismatch');
+        const checkpoint = checkpointKey(page.checkpoint, account.chain, account.network);
+        if (activityCheckpoint !== undefined && activityCheckpoint !== checkpoint) throw Error('Activity checkpoint changed');
+        activityCheckpoint = checkpoint;
+        if (!page.events.every(event => event.chain === account.chain && event.network === account.network && typeof event.eventId === 'string')) throw Error('Activity row context mismatch');
+        return page.events;
+      }, row => row.eventId, this.cancel,
+      resumed?.activity?.error ? resumed.activity : undefined,
     );
+    if (sequence !== this.loadSequence) throw Error('Portfolio read cancelled');
+    this.pages.set(pageKey, { checkpoint, holdings: holdingsRead, activity: activityRead });
     const snapshot: AddressSnapshot = {
       chain: account.chain,
       network: account.network,
       address,
       accountId: account.id,
       summary: {
-        aggregateState: summary.aggregateState,
+        aggregateState: holdingsRead.complete && activityRead.complete ? summary.aggregateState : 'partial',
         valuation: summary.valuation,
         sources: summary.envelope.sources.map((source) => ({
           authorityId: source.authorityId,
@@ -254,7 +304,7 @@ export class PortfolioDataService {
         locations: [],
       },
     };
-    const protocolSnapshots = holdingsPage.holdings
+    const protocolSnapshots = holdingsRead.rows
       .filter((entry) => entry.holding.identity.protocol !== 'base')
       .map((entry) => ({
         chain: account.chain,
@@ -284,7 +334,8 @@ export class PortfolioDataService {
           })),
         },
       }));
-    const events: PortfolioEventInput[] = activityPage.events.map((event) => ({
+    const events: PortfolioEventInput[] = activityRead.rows.map((event) => ({
+      eventId: event.eventId,
       chain: event.chain,
       network: event.network,
       txid: event.txid,
@@ -305,6 +356,7 @@ export class PortfolioDataService {
       snapshot,
       protocolSnapshots,
       events,
+      error: holdingsRead.error ?? activityRead.error,
     };
   }
 
@@ -349,6 +401,10 @@ export class PortfolioDataService {
   }
 
   reset(): void {
+    this.cancel.next();
+    this.retained.clear();
+    this.pages.clear();
+    this.scope = '';
     this.loadSequence += 1;
     this._state.set(EMPTY_STATE);
   }
@@ -363,4 +419,10 @@ function inclusionPolicyOf(portfolio: LocalPortfolio): InclusionPolicy {
     }
   }
   return policy;
+}
+
+/** Observation time may advance while the same chain checkpoint remains valid. */
+function checkpointKey(value: ExplorerCheckpoint | null, chain: string, network: string): string {
+  if (value !== null && (value.chain !== chain || value.network !== network || !/^(0|[1-9][0-9]*)$/.test(value.heightAtomic) || !/^[a-f0-9]{64}$/i.test(value.blockHash) || typeof value.reorgEpoch !== 'string')) throw Error('Invalid portfolio checkpoint');
+  return value === null ? 'null' : JSON.stringify([value.chain, value.network, value.heightAtomic, value.blockHash, value.reorgEpoch]);
 }

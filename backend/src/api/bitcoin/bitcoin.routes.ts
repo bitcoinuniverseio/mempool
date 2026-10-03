@@ -70,6 +70,8 @@ class BitcoinRoutes {
       .get(config.MEMPOOL.API_URL_PREFIX + 'internal/blocks/definition/list', this.getBlockDefinitionHashes)
       .get(config.MEMPOOL.API_URL_PREFIX + 'internal/blocks/definition/current', this.getCurrentBlockDefinitionHash)
       .get(config.MEMPOOL.API_URL_PREFIX + 'internal/blocks/:definitionHash', this.getBlocksByDefinitionHash)
+      .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs/summary/:afterTxid?', this.getAddressTransactionSummary)
+      .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs/summary/:afterTxid?', this.getScriptHashTransactionSummary)
       ;
 
       if (config.MEMPOOL.BACKEND !== 'esplora') {
@@ -94,11 +96,9 @@ class BitcoinRoutes {
           .get(config.MEMPOOL.API_URL_PREFIX + 'block-height/:height', this.getBlockHeight)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address', this.getAddress)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs', this.getAddressTransactions)
-          .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs/summary', this.getAddressTransactionSummary)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/utxo', this.getAddressUtxo)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash', this.getScriptHash)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs', this.getScriptHashTransactions)
-          .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs/summary', this.getScriptHashTransactionSummary)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/utxo', this.getScriptHashUtxo)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address-prefix/:prefix', this.getAddressPrefix)
           ;
@@ -734,9 +734,18 @@ class BitcoinRoutes {
       sendAddressError(req, res, 'invalid-address');
       return;
     }
+    const afterTxid = req.params.afterTxid ?? req.query.after_txid;
+    if (req.params.afterTxid && req.query.after_txid !== undefined && req.params.afterTxid !== req.query.after_txid) {
+      sendAddressError(req, res, 'invalid-address', 'Summary cursors disagree.');
+      return;
+    }
+    if (afterTxid !== undefined && (typeof afterTxid !== 'string' || !TXID_REGEX.test(afterTxid))) {
+      sendAddressError(req, res, 'invalid-address', 'The summary cursor must be a transaction ID.');
+      return;
+    }
 
     try {
-      const summary = await bitcoinApi.$getAddressTransactionSummary(req.params.address);
+      const summary = await bitcoinApi.$getAddressTransactionSummary(req.params.address, afterTxid as string | undefined);
       res.json(summary);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -811,6 +820,21 @@ class BitcoinRoutes {
     if (config.MEMPOOL.BACKEND !== 'esplora') {
       handleError(req, res, 405, 'Scripthash summary lookups require mempool/electrs backend.');
       return;
+    }
+    const afterTxid = req.params.afterTxid ?? req.query.after_txid;
+    if (req.params.afterTxid && req.query.after_txid !== undefined && req.params.afterTxid !== req.query.after_txid) {
+      sendAddressError(req, res, 'invalid-address', 'Summary cursors disagree.');
+      return;
+    }
+    if (!SCRIPT_HASH_REGEX.test(req.params.scripthash)
+      || (afterTxid !== undefined && (typeof afterTxid !== 'string' || !TXID_REGEX.test(afterTxid)))) {
+      sendAddressError(req, res, 'invalid-address', 'A script hash and summary cursor must be 64 hexadecimal characters.');
+      return;
+    }
+    try {
+      res.json(await bitcoinApi.$getScriptHashTransactionSummary(req.params.scripthash, afterTxid as string | undefined));
+    } catch (e) {
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 

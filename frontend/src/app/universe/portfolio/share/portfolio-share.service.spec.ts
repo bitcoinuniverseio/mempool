@@ -56,6 +56,16 @@ describe('encrypted portfolio share owner workflow', () => {
     expect(Object.keys(summary[0]).sort()).toEqual(['shareId', 'state', 'createdAt', 'expiresAt'].sort());
   });
 
+  it('preserves partial unknown coverage inside the encrypted projection', async () => {
+    const coverage = { state: 'partial', unknownValueBucket: 'present' as const };
+    const id = await service.create('owner-one', holdings, createdAt, 86400, coverage);
+    const stored = records.get(`portfolio-share:${id}`)!;
+    const key = await webcrypto.subtle.importKey('raw', Buffer.from(stored.keyB64Url, 'base64url'), 'AES-GCM', false, ['decrypt']);
+    const plaintext = await webcrypto.subtle.decrypt({ name: 'AES-GCM', iv: Buffer.from(stored.request.nonceB64, 'base64') }, key, Buffer.from(stored.request.ctB64, 'base64'));
+    expect(JSON.parse(new TextDecoder().decode(plaintext)).coverage).toEqual(coverage);
+    expect(JSON.stringify(stored.request)).not.toContain('partial');
+  });
+
   it('retains the exact pending request across an uncertain response and a recreated service', async () => {
     http.post.mockImplementationOnce(() => throwError(() => new Error('response lost')));
     await expect(service.create('owner-one', holdings, createdAt, 86400)).rejects.toThrow('response lost');

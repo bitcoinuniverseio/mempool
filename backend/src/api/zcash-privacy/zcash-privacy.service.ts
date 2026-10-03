@@ -62,6 +62,23 @@ const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
     activatedAt: '2022-05-31',
     features: ['Halo 2 trustless zk-SNARKs', 'Orchard shielded pool', 'Unified Addresses'],
   },
+  {
+    name: 'NU6', activationHeight: 2726400, branchId: '0xc8e71055', activatedAt: '',
+    features: ['ZIP 253 consensus upgrade'], source: 'https://zips.z.cash/zip-0253', referenceStatus: 'final',
+  },
+  {
+    name: 'NU6.1', activationHeight: 3146400, branchId: '0x4dec4df0', activatedAt: '',
+    features: ['ZIP 255 consensus upgrade'], source: 'https://zips.z.cash/zip-0255', referenceStatus: 'final',
+  },
+  {
+    name: 'NU6.2', activationHeight: 3364600, branchId: '0x5437f330', activatedAt: '',
+    features: ['Corrected Orchard proof circuit and proof length rules'], source: 'https://zips.z.cash/zip-0257', referenceStatus: 'final',
+  },
+  {
+    name: 'NU6.3', activationHeight: 3428143, branchId: '0x37a5165b', activatedAt: '',
+    features: ['Ironwood shielded pool', 'Orchard inbound transfer restrictions'],
+    source: 'https://zips.z.cash/zip-0258', referenceStatus: 'draft-specification-settled-upgrade',
+  },
 ];
 
 /**
@@ -113,8 +130,13 @@ export class ZcashPrivacyService {
   }
 
   /** @asyncSafe */
-  public async $getUpgrades(): Promise<ZcashNetworkUpgrade[]> {
-    return NETWORK_UPGRADES;
+  public async $getUpgrades(network = 'mainnet'): Promise<ZcashNetworkUpgrade[]> {
+    if (!['mainnet', 'testnet'].includes(network)) throw new ZcashPrivacyEvidenceError('invalid-network', 'Choose mainnet or testnet.', 400);
+    // zcashd v6.20.0 chainparams.cpp through NU6.2; ZIP258 for NU6.3.
+    const heights = [207500, 280000, 584000, 903800, 1028500, 1842420, 2976000, 3536500, 4052000, 4134000];
+    return NETWORK_UPGRADES.map((upgrade, index) => ({...upgrade, network, observation: false,
+      activationHeight: network === 'testnet' ? heights[index] : upgrade.activationHeight,
+      activatedAt: network === 'testnet' ? '' : upgrade.activatedAt}));
   }
 }
 

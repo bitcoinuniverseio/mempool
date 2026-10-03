@@ -1,6 +1,6 @@
 # Mempool Backend
 
-These instructions are mostly intended for developers. 
+These instructions are mostly intended for developers.
 
 If you choose to use these instructions for a production setup, be aware that you will still probably need to do additional configuration for your specific OS, environment, use-case, etc. We do our best here to provide a good starting point, but only proceed if you know what you're doing. Mempool only provides support for custom setups to project sponsors through [Mempool Enterprise®](https://mempool.space/enterprise).
 
@@ -101,7 +101,7 @@ In the backend folder, make a copy of the sample config file:
 cp mempool-config.sample.json mempool-config.json
 ```
 
-Edit `mempool-config.json` as needed. 
+Edit `mempool-config.json` as needed.
 
 In particular, make sure:
 - the correct Bitcoin Core RPC credentials are specified in `CORE_RPC`
@@ -153,7 +153,7 @@ With the backend configured and running, proceed to set up the [Mempool frontend
 
 ### Set Up Backend Watchers
 
-The Mempool backend is static. TypeScript scripts are compiled into the `dist` folder and served through a Node.js web server. 
+The Mempool backend is static. TypeScript scripts are compiled into the `dist` folder and served through a Node.js web server.
 
 As a result, for development purposes, you may find it helpful to set up backend watchers to avoid the manual shutdown/recompile/restart command-line cycle.
 
@@ -233,7 +233,7 @@ Generate block at regular interval (every 10 seconds in this example):
 
 ### Mining pools update
 
-By default, mining pools will be not automatically updated regularly (`config.MEMPOOL.AUTOMATIC_POOLS_UPDATE` is set to `false`). 
+By default, mining pools will be not automatically updated regularly (`config.MEMPOOL.AUTOMATIC_POOLS_UPDATE` is set to `false`).
 
 To manually update your mining pools, you can use the `--update-pools` command line flag when you run the nodejs backend. For example `npm run start --update-pools`. This will trigger the mining pools update and automatically re-index appropriate blocks.
 
@@ -258,3 +258,25 @@ Feb 13 14:55:32 [63246] NOTICE: <lightning> Table hashrates has been truncated
 ```
 
 Reference: https://github.com/mempool/mempool/pull/1269
+
+### Database upgrade safety
+
+Database startup advances each schema marker only after that step's schema and data work succeeds. A failed step prevents startup. Schema 113 adds indexed descriptor children for owner-scoped watchlists. Previously advanced markers are checked against the actual blocks primary key and height index before newer migrations run.
+
+Take a verified backup before upgrades. MySQL DDL commits implicitly; it cannot be undone by ordinary transaction rollback. Historical upgrades and interruption recovery require qualification on a disposable MySQL 8.4 instance before rollout. Liquid checkpoint repairs and transactional data migrations use one connection for all statements.
+
+### Address source identity
+
+Address readiness includes a verified genesis and shared active block hash from the selected index and the operated node. Each Esplora address source, including a selected fallback, is checked before serving; Electrum reads check its own indexed headers. An unverified source remains unavailable or degraded.
+
+For Signet, set `UNIVERSE_SIGNET_CHALLENGE` to the exact challenge reported by the intended operated Core node. The probe requires an observed non-genesis checkpoint; a matching genesis alone cannot identify a Signet. Source headers and observed checkpoints never replace the node's consensus validation.
+
+Address responses reject unsafe numeric integers, output indexes above uint32 and individual Bitcoin outputs above the money limit. Safe cumulative history totals may exceed the live supply limit. Oversized or already-rounded numeric aggregate totals require a coordinated exact-value producer and consumer contract; they cannot be recovered from a floating point JSON number.
+
+### RPC request lifecycle
+
+The shared RPC transport keeps its deadline through the complete response, checks response IDs, restores batch request ordering and bounds bodies to 64 MiB by default (`maxResponseBytes`). Persistent connection pools default to eight sockets per client. A failed or uncertain write is returned to its caller and is never automatically replayed by this transport.
+
+### Zcash upgrade references
+
+`GET /api/v1/zcash/privacy/upgrades?network=mainnet|testnet` returns network-specific reference heights through NU6.3. Entries state `observation: false`; they do not certify the operated node's active branch. NU6.3 is labeled separately because the official ZIP index reports a settled upgrade while ZIP 258 remains a draft specification. Summary and pool views still require a verified operated node schema and checkpoint history.

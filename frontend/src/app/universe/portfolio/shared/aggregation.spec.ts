@@ -56,6 +56,29 @@ const event = (overrides: Partial<PortfolioEventInput>): PortfolioEventInput => 
 });
 
 describe('portfolio aggregation', () => {
+  it('counts one address summary once across native and protocol asset snapshots', () => {
+    const base = snapshot({ address: 'a', accountId: 'one' });
+    const summary = { ...base.summary, valuation: { ...base.summary.valuation, pricedValue: '30' } };
+    const result = aggregatePortfolio([
+      { ...base, summary, holdings: { ...base.holdings, value: '10' } },
+      { ...base, summary, holdings: { ...base.holdings, assetKey: 'bitcoin:mainnet:op20:token:T', protocol: 'op20', value: '20' } },
+    ]);
+    expect(result.pricedTotal).toBe('30');
+    expect(result.byAccount[0]).toMatchObject({ pricedValue: '30', holdingCount: 2 });
+  });
+
+  it('keeps exact native flows on separate chain and network rows', () => {
+    const bitcoin = snapshot({ address: 'a', accountId: 'one' });
+    const dogecoin = { ...snapshot({ address: 'b', accountId: 'two' }), chain: 'dogecoin' };
+    const result = aggregatePortfolio([bitcoin, dogecoin], [
+      event({ chain: 'bitcoin', address: 'a', accountId: 'one', nativeValueAtomic: '9007199254740993' }),
+      event({ chain: 'dogecoin', address: 'b', accountId: 'two', nativeValueAtomic: '200000000' }),
+    ]);
+    expect(result.externalInflowAtomic).toBeNull();
+    expect(result.nativeFlows).toMatchObject([
+      { asset: 'BTC', inflow: '9007199254740993' }, { asset: 'DOGE', inflow: '200000000' },
+    ]);
+  });
   it('merges the same asset across accounts with exact sums', () => {
     const result = aggregatePortfolio([
       snapshot({ address: 'bc1qa', accountId: 'a', holdings: { ...snapshot({ address: 'bc1qa', accountId: 'a' }).holdings, quantityAtomic: '100000', value: '25' } }),
@@ -129,10 +152,16 @@ describe('portfolio aggregation', () => {
 });
 
 describe('internal transfer detection', () => {
+  it('does not infer owned movement from transaction ID alone', () => {
+    expect(detectInternalTransfers([
+      event({ direction: 'out', nativeValueAtomic: '-1100', feeAtomic: '100', accountId: 'a' }),
+      event({ direction: 'in', nativeValueAtomic: '1000', accountId: 'b' }),
+    ])).toEqual([]);
+  });
   it('matches an outflow and inflow inside one confirmed transaction', () => {
     const transfers = detectInternalTransfers([
-      event({ txid: 'tx1', direction: 'out', nativeValueAtomic: '50000', accountId: 'a', feeAtomic: '300' }),
-      event({ txid: 'tx1', direction: 'in', nativeValueAtomic: '50000', accountId: 'b' }),
+      event({ txid: 'tx1', direction: 'out', nativeValueAtomic: '-50300', accountId: 'a', feeAtomic: '300', address: 'a', counterparties: ['b'] }),
+      event({ txid: 'tx1', direction: 'in', nativeValueAtomic: '50000', accountId: 'b', address: 'b', counterparties: ['a'] }),
     ]);
     expect(transfers).toHaveLength(1);
     expect(transfers[0]).toMatchObject({
@@ -145,8 +174,8 @@ describe('internal transfer detection', () => {
 
   it('excludes internal transfers from external flow totals', () => {
     const events = [
-      event({ txid: 'tx1', direction: 'out', nativeValueAtomic: '50000', accountId: 'a' }),
-      event({ txid: 'tx1', direction: 'in', nativeValueAtomic: '50000', accountId: 'b' }),
+      event({ txid: 'tx1', direction: 'out', nativeValueAtomic: '-50000', accountId: 'a', feeAtomic: '0', address: 'a', counterparties: ['b'] }),
+      event({ txid: 'tx1', direction: 'in', nativeValueAtomic: '50000', accountId: 'b', address: 'b', counterparties: ['a'] }),
       event({ txid: 'tx2', direction: 'in', nativeValueAtomic: '7000', accountId: 'b' }),
     ];
     const internal = detectInternalTransfers(events);

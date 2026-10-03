@@ -35,6 +35,10 @@ export const REQUIRED_MEMBERS = [
   'docs/protocols/PROTOCOL-COVERAGE.json',
   'docs/acceptance/qualified-release-evidence.json',
   'scripts/universe/protocol-contract.mjs',
+  'docs/acceptance/reconciled-operations.json',
+  'docs/acceptance/qualified-application-evidence.json',
+  'scripts/universe/reconciled-release.mjs',
+  'scripts/universe/reconciled-operations.mjs',
 ];
 
 /**
@@ -121,6 +125,11 @@ export async function qualifyArtifact(archive, { commit, network = 'mainnet' }) 
       acceptanceEvidence,
       acceptanceRoot: extracted,
     });
+    const applicationCheck = spawnSync(process.execPath, [path.join(extracted, 'scripts/universe/reconciled-release.mjs'),
+      'check', path.join(extracted, 'docs/acceptance/reconciled-operations.json'),
+      path.join(extracted, 'docs/acceptance/qualified-application-evidence.json'),
+      path.join(extracted, 'docs/acceptance/qualified-release-evidence.json'), extracted, commit], { encoding: 'utf8' });
+    if (applicationCheck.status !== 0) problems.push('The carried full application acceptance did not qualify.');
     return [...problems, ...report.problems];
   } finally {
     rmSync(extracted, { recursive: true, force: true });

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { verifyAddressSource, AddressSourceCheckpoint } from './address-source-checkpoint';
 import http from 'http';
 import { bech32 } from 'bech32';
 import config from '../../config';
@@ -43,6 +44,7 @@ export interface AddressIndexFacts {
   readonly utxoAnswered: boolean;
   /** How far behind Core the index may be and still be called current. */
   readonly maxBehindTip: number;
+  readonly checkpoint?: AddressSourceCheckpoint | null;
 }
 
 export interface AddressIndexVerdict {
@@ -130,6 +132,9 @@ export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict
       degradedReason: 'Bitcoin Core did not report a height, so the index cannot be held to it.',
     };
   }
+  if (!Number.isSafeInteger(facts.indexedTip) || facts.indexedTip < 0 || !Number.isSafeInteger(facts.chainTip) || facts.chainTip < 0 || facts.indexedTip > facts.chainTip + 2) {
+    return {state: 'degraded', lagBlocks: null, degradedReason: 'The address index reported an invalid or implausible height.'};
+  }
   // Still building, or fallen behind far enough that its answers would be
   // wrong. Both are the same thing to a reader: the numbers on this page are
   // not the numbers on the chain, so do not show them.
@@ -153,6 +158,9 @@ export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict
       lagBlocks,
       degradedReason: 'The address index is current but a UTXO query did not return a usable answer.',
     };
+  }
+  if (!facts.checkpoint || facts.checkpoint.blockHeight !== Math.min(facts.indexedTip, facts.chainTip) || Date.now() - Date.parse(facts.checkpoint.verifiedAt) > 90000 || Date.parse(facts.checkpoint.verifiedAt) > Date.now() + 5000 || !/^[0-9a-f]{64}$/.test(facts.checkpoint.genesisHash) || !/^[0-9a-f]{64}$/.test(facts.checkpoint.blockHash) || !Number.isFinite(Date.parse(facts.checkpoint.verifiedAt))) {
+    return {state: 'degraded', lagBlocks, degradedReason: 'The address source has no verified active-chain checkpoint.'};
   }
   return { state: 'ready', lagBlocks, degradedReason: null };
 }
@@ -190,6 +198,7 @@ export interface AddressIndexProbe extends AddressIndexVerdict {
   readonly indexedTip: number | null;
   readonly chainTip: number | null;
   readonly maxBehindTip: number;
+  readonly checkpoint?: AddressSourceCheckpoint | null;
   readonly summaryAnswered: boolean;
   readonly utxoAnswered: boolean;
   /** What the index says it was built from, when it says. Never an origin. */
@@ -210,10 +219,10 @@ const probeConnection = axios.create({
   proxy: false,
 });
 
-function esploraRequest(path: string, timeout: number): Promise<{ data: unknown; headers: Record<string, unknown> }> {
+function esploraRequest(path: string, timeout: number, signal?: AbortSignal): Promise<{ data: unknown; headers: Record<string, unknown> }> {
   return config.ESPLORA.UNIX_SOCKET_PATH
-    ? probeConnection.get(`http://api${path}`, { socketPath: config.ESPLORA.UNIX_SOCKET_PATH as string, timeout })
-    : probeConnection.get(`${config.ESPLORA.REST_API_URL}${path}`, { timeout });
+    ? probeConnection.get(`http://api${path}`, { socketPath: config.ESPLORA.UNIX_SOCKET_PATH as string, timeout, signal })
+    : probeConnection.get(`${config.ESPLORA.REST_API_URL}${path}`, { timeout, signal });
 }
 
 export function addressBackendKind(): AddressBackendKind {
@@ -288,6 +297,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     // the API factory drags the whole backend graph, and the compiled gbt
     // module with it, into anything that merely wants to reason about states.
     let client: {
+      $getIndexBlockHash?: (height: number) => Promise<string>;
       $getIndexedTip?: () => Promise<number | null>;
       $getAddress?: (address: string) => Promise<unknown>;
       $getAddressUtxos?: (address: string) => Promise<unknown>;
@@ -328,7 +338,10 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
       }
     }
 
+    let checkpoint: AddressSourceCheckpoint | null = null;
+    try { checkpoint = await verifyAddressSource(indexedTip, height => client.$getIndexBlockHash!(height)); } catch { /* Unverified source stays degraded. */ }
     const facts = factsFor(backendKind, maxBehindTip, chainTip, {
+      checkpoint,
       configured: true,
       reachable,
       indexedTip,
@@ -342,6 +355,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
       indexedTip,
       summaryAnswered,
       utxoAnswered,
+      checkpoint: facts.checkpoint,
       ...addressIndexState(facts),
     };
   }
@@ -362,7 +376,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     const height = await esploraRequest('/blocks/tip/height', timeout);
     reachable = true;
     const parsed = Number(height.data);
-    indexedTip = Number.isInteger(parsed) ? parsed : null;
+    indexedTip = Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
     // electrs names the commit it was built from in this header and nowhere
     // else in its REST surface.
     const poweredBy = height.headers?.['x-powered-by'];
@@ -394,7 +408,10 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     }
   }
 
+  let checkpoint: AddressSourceCheckpoint | null = null;
+  try { checkpoint = await verifyAddressSource(indexedTip, async (height, signal) => (await esploraRequest('/block-height/' + height, timeout, signal)).data); } catch { /* Unverified source stays degraded. */ }
   const facts = factsFor(backendKind, maxBehindTip, chainTip, {
+    checkpoint,
     configured: true,
     reachable,
     indexedTip,
@@ -411,6 +428,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     summaryAnswered,
     utxoAnswered,
     sourceRelease,
+    checkpoint,
     ...addressIndexState(facts),
   };
 }

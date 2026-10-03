@@ -26,7 +26,7 @@ describe('template collector: real sources only', () => {
     resolveTemplate(gbt(100, []));
     expect(await pending).toBeNull();
     templateCollectorService.readProjection = () => ({ transactionIds: [], totalFees: 0, blockVSize: 0, nTx: 0 });
-    expect(templateCollectorService.collectProjection(2100)).toMatchObject({ height: 101, prev_block_hash: '1'.repeat(64) });
+    expect(await templateCollectorService.collectProjection(2100)).toMatchObject({ height: 101, prev_block_hash: '1'.repeat(64) });
     expect(templateCollectorService.compareMinedBlock('1'.repeat(64))?.template_age_seconds).toBe(1);
   });
 
@@ -65,7 +65,7 @@ describe('template collector: real sources only', () => {
     templateCollectorService.fetchCoreTemplate = async () => gbt(100, [{ txid: 'a'.repeat(64), fee: 100, weight: 400 }, { txid: 'b'.repeat(64), fee: 300, weight: 800 }, { txid: 'c'.repeat(64), fee: 50, weight: 400 }]);
     const core = (await templateCollectorService.collectCoreTemplate())!;
     templateCollectorService.readProjection = () => ({ transactionIds: ['b'.repeat(64), 'a'.repeat(64), 'd'.repeat(64)], totalFees: 420, blockVSize: 400, nTx: 3 });
-    const projection = templateCollectorService.collectProjection()!;
+    const projection = (await templateCollectorService.collectProjection())!;
     expect(projection).toMatchObject({ height: 100, source_type: 'mempool_projection', total_fees_sats: 420, total_weight: 1600 });
     const diff = templateCollectorService.computeTemplateDiff(core.template_id, projection.template_id)!;
     expect(diff).toMatchObject({ added_to_b: ['d'.repeat(64)], removed_from_b: ['c'.repeat(64)], reordered_count: 1, fee_delta_sats: -30, similarity_score: 0.6667 });

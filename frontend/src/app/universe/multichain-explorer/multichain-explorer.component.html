@@ -809,6 +809,7 @@
     <p class="panel-lede" *ngIf="list.unreadRowCount" i18n="universe.chain.ruleset-list-unread">
       {{ list.unreadRowCount }} entries in the response carry no ruleset ledger and are only in the full response below.
     </p>
+    <ng-container *ngTemplateOutlet="pager; context: { $implicit: list.paging }"></ng-container>
   </section>
 
   <!-- ------------------------------------------------------------------ -->

@@ -38,5 +38,5 @@ run(bindgen,['target/wasm32-unknown-unknown/release/universe_rgb_engine.wasm','-
 //    Acceptance: every declared hash matches packaged bytes, all ten fixture
 //    regressions pass, and a worker mutation fails the manifest regression.
 //    Roll back the complete asset/manifest set together. Prerequisites: none.
-const files=['rgb_engine.js','rgb_engine_bg.wasm','rgb.worker.js'];
-fs.writeFileSync(path.join(output,'engine-manifest.json'),JSON.stringify({engine:'rgb-ops 0.11.1-rc.11',wasm_bindgen:'0.2.114',max_memory_bytes:268435456,files:Object.fromEntries(files.map(name=>[name,createHash('sha256').update(fs.readFileSync(path.join(output,name))).digest('hex')]))},null,2)+'\n');
+const { writeManifest } = await import('./manifest.mjs');
+writeManifest();

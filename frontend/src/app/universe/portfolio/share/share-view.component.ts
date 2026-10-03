@@ -49,6 +49,7 @@ interface SharePayload {
             Decrypted in your browser. The server stored only ciphertext and an expiry.
           </p>
           @if (snapshot(); as snapshot) {
+            <p role="note">Coverage: {{ snapshot.coverage?.state || 'unknown' }}. Unknown value: {{ snapshot.coverage?.unknownValueBucket || 'unknown' }}. Percentages describe loaded priced holdings.</p>
             <p class="soft" i18n="@@universe.portfolio.share.age">
               Snapshot age: {{ snapshotAge() }}
             </p>
@@ -90,7 +91,7 @@ export class ShareViewComponent implements OnInit {
   private requestSequence = 0;
 
   private readonly stateSignal = signal<'loading' | 'ready' | 'expired' | 'missing' | 'no-key' | 'failed'>('loading');
-  private readonly snapshotSignal = signal<{ readonly holdings: readonly { readonly asset: string; readonly share: string }[]; readonly createdAt: string } | null>(null);
+  private readonly snapshotSignal = signal<{ readonly holdings: readonly { readonly asset: string; readonly share: string }[]; readonly createdAt: string; readonly coverage?: { state: string; unknownValueBucket: string } } | null>(null);
 
   readonly state = this.stateSignal.asReadonly();
   readonly snapshot = this.snapshotSignal.asReadonly();
@@ -147,7 +148,7 @@ export class ShareViewComponent implements OnInit {
     }
   }
 
-  private async decrypt(payload: SharePayload, keyB64Url: string): Promise<{ holdings: { asset: string; share: string }[]; createdAt: string }> {
+  private async decrypt(payload: SharePayload, keyB64Url: string): Promise<{ holdings: { asset: string; share: string }[]; createdAt: string; coverage?: { state: string; unknownValueBucket: string } }> {
     const keyBytes = Uint8Array.from(atob(keyB64Url.replace(/-/g, '+').replace(/_/g, '/')), (character) => character.charCodeAt(0));
     const key = await crypto.subtle.importKey('raw', keyBytes as BufferSource, 'AES-GCM', false, ['decrypt']);
     const nonce = Uint8Array.from(atob(payload.nonceB64), (character) => character.charCodeAt(0));
@@ -158,6 +159,7 @@ export class ShareViewComponent implements OnInit {
         snapshot.holdings.some(row => !row || typeof row.asset !== 'string' || typeof row.share !== 'string')) {
       throw new Error('Invalid share snapshot.');
     }
+    if (snapshot.coverage !== undefined && (!snapshot.coverage || !['proven', 'partial', 'outside_coverage', 'pending', 'stale', 'unavailable', 'unsupported'].includes(snapshot.coverage.state) || !['present', 'absent'].includes(snapshot.coverage.unknownValueBucket))) throw Error('Invalid share coverage');
     return snapshot;
   }
 }

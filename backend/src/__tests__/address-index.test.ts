@@ -20,6 +20,7 @@ const current: AddressIndexFacts = {
   summaryAnswered: true,
   utxoAnswered: true,
   maxBehindTip: 2,
+  checkpoint: {network:'signet',genesisHash:'0'.repeat(64),blockHash:'1'.repeat(64),blockHeight:964769,signetChallenge:'51',verifiedAt:new Date().toISOString()},
 };
 
 describe('address index readiness', () => {
@@ -54,7 +55,7 @@ describe('address index readiness', () => {
   });
 
   it('tolerates exactly the configured lag and refuses one block more', () => {
-    expect(addressIndexState({ ...current, indexedTip: 964_767 }).state).toBe('ready');
+    expect(addressIndexState({ ...current, indexedTip: 964_767, checkpoint: {...current.checkpoint!,blockHeight:964767} }).state).toBe('ready');
     expect(addressIndexState({ ...current, indexedTip: 964_766 }).state).toBe('syncing');
   });
 
@@ -87,7 +88,7 @@ describe('address index readiness', () => {
     expect(addressIndexState({ ...current, chainTip: null }).state).toBe('degraded');
   });
 
-  it('never reports a negative lag when the index is ahead of a stale Core reading', () => {
+  it('tolerates a bounded one-block race with a verified shared checkpoint', () => {
     const verdict = addressIndexState({ ...current, indexedTip: 964_770, chainTip: 964_769 });
     expect(verdict.lagBlocks).toBe(0);
     expect(verdict.state).toBe('ready');
@@ -96,5 +97,13 @@ describe('address index readiness', () => {
   it('never calls an Electrum deployment ready without an indexed height', () => {
     const verdict = addressIndexState({ ...current, backendKind: 'electrum', indexedTip: null });
     expect(verdict.state).not.toBe('ready');
+  });
+});
+
+describe('unverified address source rejection',()=>{
+  it('refuses height-only readiness and implausibly ahead heights',()=>{
+    expect(addressIndexState({...current,checkpoint:null}).state).toBe('degraded');
+    expect(addressIndexState({...current,indexedTip:1000000}).state).toBe('degraded');
+    expect(addressIndexState({...current,indexedTip:Infinity}).state).toBe('degraded');
   });
 });

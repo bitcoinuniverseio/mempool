@@ -312,6 +312,10 @@ class BitcoinApi implements AbstractBitcoinApi {
     throw new Error('Method getAddressTransactionSummary not supported by the Bitcoin RPC API.');
   }
 
+  async $getScriptHashTransactionSummary(scriptHash: string): Promise<IEsploraApi.AddressTxSummary[]> {
+    throw new Error('Method getScriptHashTransactionSummary not supported by the Bitcoin RPC API.');
+  }
+
   $getEstimatedHashrate(blockHeight: number): Promise<number> {
     // 120 is the default block span in Core
     return this.bitcoindClient.getNetworkHashPs(120, blockHeight);

@@ -52,6 +52,9 @@ type ValueMode = 'absolute' | 'percentages';
 
       <section class="preview" aria-label="Report preview">
         <h2 i18n="@@universe.portfolio.reports.preview">Preview</h2>
+        @if (data().aggregation; as aggregate) {
+          <p class="soft">Coverage: {{ aggregate.state }}. Unknown value: {{ aggregate.unknownValueBucket }}. Percentages describe loaded priced holdings.</p>
+        }
         @if (reportRows().length === 0) {
           @if (manualRows().length > 0) {
             <p class="soft">No address-derived holdings loaded. Manual positions are listed separately below.</p>
@@ -226,7 +229,9 @@ export class ReportBuilderComponent {
     const completedAt = this.data().completedAt;
     if (this.data().loading || !completedAt) {return;}
     await this.shareAction(async () => {
-      const shareId = await this.shares.create(portfolioId, this.reportRows().map(({ asset, share }) => ({ asset, share })), completedAt, this.shareTtl());
+      const aggregation = this.data().aggregation;
+      const coverage = aggregation ? { state: aggregation.state, unknownValueBucket: aggregation.unknownValueBucket } : undefined;
+      const shareId = await this.shares.create(portfolioId, this.reportRows().map(({ asset, share }) => ({ asset, share })), completedAt, this.shareTtl(), coverage);
       const link = await this.shares.link(shareId, portfolioId, window.location.origin);
       if (this.portfolioId() === portfolioId) { this.shareLink.set(link); }
     }, 'Encrypted share created. Copy the full recipient link.');
@@ -324,6 +329,10 @@ export class ReportBuilderComponent {
       ...this.reportRows().map(row => [row.asset, row.holding, row.share, row.value, 'Address-derived', '', '', '', '', '']),
       ...manual.map(row => [row.name, '', 'Not combined', row.value, 'User-entered', row.kind, row.quantity, row.unitPrice, row.quoteCurrency, row.effectiveAt]),
     ];
+    const aggregation = this.data().aggregation;
+    const coverage = aggregation ? `${aggregation.state}; unknown value: ${aggregation.unknownValueBucket}` : 'unknown';
+    rows[0].push('coverage');
+    rows.slice(1).forEach(row => row.push(coverage));
     const csv = rows
       .map((row) => row.map((field) => `"${csvLiteralText(field).replace(/"/g, '""')}"`).join(','))
       .join('\n');

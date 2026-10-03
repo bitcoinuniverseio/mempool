@@ -11,6 +11,12 @@ export interface PayjoinDirectory {
    * payjoin.test.ts. Rollback preserves explicit unknown semantics and removes no
    * required product operation. See adjacent service markers for commands/acceptance.
    */
+  reachable: boolean;
+  key_config_valid: boolean;
+  key_ids: number[];
+  protocol_profile: 'rfc9458-rfc9540';
+  bip77_state: 'unknown' | 'unavailable';
+  bip78_state: 'unknown' | 'unavailable';
   directory_id: string;
   url: string;
   /** SHA-256 of the OHTTP keys the directory served; null when the probe failed. */

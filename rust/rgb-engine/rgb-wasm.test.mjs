@@ -18,3 +18,8 @@ test('wrong chain is invalid',()=>assert.equal(run({...a,network:'signet'}).stat
 test('malformed and trailing encoded bytes reject',()=>{assert.equal(run({...a,consignment:'aabb'}).status,'malformed');assert.equal(run({...a,consignment:a.consignment+'00'}).status,'malformed');});
 test('untrusted lengths never allocate their full declared capacity',()=>{for(let offset=100;offset<441;offset+=31){const copy=Buffer.from(a.consignment,'hex');copy[offset]^=1;const result=run({...a,consignment:copy.toString('hex')});assert(['malformed','invalid','valid','warnings','unresolved'].includes(result.status));}});
 test('public transaction bytes cannot be rebound to another ID',()=>{const id=Object.keys(a.witnesses)[0];const witnesses=structuredClone(a.witnesses);witnesses[id].raw_tx='0300'+witnesses[id].raw_tx.slice(4);const result=run({...a,witnesses});assert.equal(result.status,'unresolved');assert.match(result.reason,/ID mismatch/);});
+
+import { verifyManifest } from './manifest.mjs';
+const manifest=JSON.parse(fs.readFileSync(path.join(assets,'engine-manifest.json')));
+test('packaged RGB digests match every final artifact',()=>assert.equal(verifyManifest(manifest),true));
+test('every declared artifact mutation is rejected',()=>{for(const file of ['rgb_engine.js','rgb_engine_bg.wasm','rgb.worker.js'])assert.throws(()=>verifyManifest(manifest,name=>{const bytes=fs.readFileSync(path.join(assets,name));if(name===file)bytes[0]^=1;return bytes;}),/digest mismatch/);});

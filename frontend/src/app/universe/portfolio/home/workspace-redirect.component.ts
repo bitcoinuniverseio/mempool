@@ -91,9 +91,9 @@ export class WorkspaceRedirectComponent implements OnInit {
       await this.store.updatePortfolio(portfolio.id, () => migrated);
       await this.store.markMigrated();
       this.redirect();
-    } catch (error) {
+    } catch {
       this.errorSignal.set(
-        error instanceof Error ? error.message : 'The migration could not complete; nothing was changed.',
+        'The migration did not complete. Some local changes may have been saved. Review your portfolios before retrying.',
       );
     }
   }

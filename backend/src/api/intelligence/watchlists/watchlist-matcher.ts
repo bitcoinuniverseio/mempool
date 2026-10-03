@@ -3,7 +3,6 @@ import config from '../../../config';
 import logger from '../../../logger';
 import { BlockExtended, TransactionExtended } from '../../../mempool.interfaces';
 import { EventEnvelopeValidator } from '../events/event-envelope';
-import { developerIdentity } from '../identity/developer-identity';
 import { NotificationRow, ownerStore, WatchlistEntityRow, WatchlistRuleRow } from '../identity/owner-store';
 
 /**
@@ -67,10 +66,6 @@ export class WatchlistMatcher {
      *    durable notifications/intents and resumes from the last committed checkpoint.
      */
     const store = ownerStore();
-    const hourAgo = new Date(now - 3_600_000).toISOString();
-    if ((await store.countNotificationsSince(finding.rule.rule_id, hourAgo)) >= finding.rule.rate_limit_per_hour) {
-      return 'rate_limited';
-    }
     const row: NotificationRow = {
       notification_id: EventEnvelopeValidator.generateUuidV7(),
       owner_id: finding.rule.owner_id,
@@ -89,11 +84,7 @@ export class WatchlistMatcher {
       created_at: new Date(now).toISOString(),
       acknowledged_at: null,
     };
-    const outcome = await store.insertNotification(row);
-    if (outcome === 'inserted' && finding.rule.delivery_channel === 'webhook' && finding.rule.webhook_id) {
-      await developerIdentity.enqueueDelivery(row.notification_id, finding.rule.webhook_id, now);
-    }
-    return outcome;
+    return store.recordNotificationWithDelivery(row, finding.rule.delivery_channel === 'webhook' ? finding.rule.webhook_id : null, finding.rule.rate_limit_per_hour);
   }
 
   /** @asyncUnsafe Rules grouped by watchlist, only enabled ones. */
@@ -179,6 +170,10 @@ export class WatchlistMatcher {
     if (rules.size > 0) {
       const watchedTxids = await this.entitiesByHash('txid');
       const watchedAddresses = await this.entitiesByHash('address');
+      const watchedOutpoints = await this.entitiesByHash('outpoint');
+      const descriptors = await ownerStore().listEntitiesByType(this.network,'descriptor');
+      const scripts = await ownerStore().listDescriptorScripts(this.network);
+      const descriptorEntities = new Map(descriptors.map(entity=>[entity.entity_id,entity]));
       for (const tx of transactions) {
         const txidHash = sha256(tx.txid);
         for (const entity of watchedTxids.get(txidHash) ?? []) {
@@ -188,6 +183,25 @@ export class WatchlistMatcher {
               rule, entity, event_id: `${block.id}:${tx.txid}:confirmation`, title: 'Transaction confirmed',
               message: `${entity.label} confirmed in block ${block.height}.`, severity: 'info', entity_type: 'txid', blinded_hash: txidHash, block_height: block.height, block_hash: block.id,
             });
+          }
+        }
+        const observed = [
+          ...(tx.vout ?? []).map((output,index)=>({direction:'received',index,outpoint:tx.txid+':'+index,script:output.scriptpubkey,value:output.value})),
+          ...(tx.vin ?? []).filter(input=>!input.is_coinbase).map((input,index)=>({direction:'spent',index,outpoint:input.txid+':'+input.vout,script:input.prevout?.scriptpubkey,value:input.prevout?.value}))
+        ];
+        for (const item of observed) {
+          const outpointHash = sha256(item.outpoint.toLowerCase());
+          const matches: Array<{entity:WatchlistEntityRow; hash:string; child?:number}> = (watchedOutpoints.get(outpointHash) ?? []).map(entity=>({entity,hash:outpointHash}));
+          if (item.script && /^[0-9a-fA-F]*$/.test(item.script) && item.script.length % 2 === 0) {
+            const hash = crypto.createHash('sha256').update(Buffer.from(item.script,'hex')).digest('hex');
+            for (const child of scripts.filter(child=>child.script_hash===hash)) {
+              const entity = descriptorEntities.get(child.entity_id);
+              if (entity) matches.push({entity,hash:entity.blinded_hash,child:child.derivation_index});
+            }
+          }
+          for (const match of matches) for (const rule of rules.get(match.entity.watchlist_id) ?? []) {
+            if (!['confirmation','value_transfer'].includes(rule.condition_type) || rule.condition_type==='value_transfer' && (item.value===undefined || rule.threshold_value!==null && item.value<rule.threshold_value)) continue;
+            findings.push({rule,entity:match.entity,event_id:`${block.id}:${tx.txid}:${item.index}:${item.direction}:${match.entity.entity_id}:${match.child??''}`,title:item.direction==='spent'?'Watched output spent':'Watched output confirmed',message:`${match.entity.label} ${item.direction} ${item.value??'unknown'} sats in block ${block.height}${match.child===undefined?'':'; derivation '+match.child}.`,severity:item.direction==='spent'?'warning':'info',entity_type:match.entity.entity_type,blinded_hash:match.hash,block_height:block.height,block_hash:block.id});
           }
         }
         if (watchedAddresses.size === 0) { continue; }

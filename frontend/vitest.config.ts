@@ -69,6 +69,7 @@ export default defineConfig({
    * Rollback only the runner/test policy change; preserve cryptographic behavior.
    */
   test: {
+    maxWorkers: 2,
     environment: 'node',
     globals: true,
     setupFiles: ['./src/universe-test-setup.ts'],

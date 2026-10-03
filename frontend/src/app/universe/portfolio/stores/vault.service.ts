@@ -284,6 +284,43 @@ export class PortfolioVaultService implements OnDestroy {
     return this.serialize(version => this.removeRecord(id, version));
   }
 
+  /** Delete one portfolio and explicitly owned encrypted records together.
+   * Accounts embedded in the portfolio disappear with it. Separate records
+   * must name the exact portfolioId; prefixes and account IDs are not ownership.
+   * All decryption/encryption precedes the single synchronous write transaction.
+   */
+  async deletePortfolioRecords(portfolioId: string, replacementActiveId: string | null): Promise<void> {
+    return this.serialize(async version => {
+      const key = this.requireKey();
+      const records = await this.readAllRecords();
+      if (!records.some(record => record.id === portfolioId && record.type === 'portfolio')) {
+        throw new Error('The portfolio no longer exists in this vault.');
+      }
+      const deletes = new Set<string>([portfolioId]);
+      let preference: VaultRecord | undefined;
+      for (const record of records) {
+        const bytes = await this.decryptBytes(key, record.envelope);
+        try {
+          const value = JSON.parse(new TextDecoder().decode(bytes));
+          if (record.type !== 'portfolio' && value && typeof value === 'object' && value.portfolioId === portfolioId) {
+            deletes.add(record.id);
+          } else if (record.type === 'preferences' && record.id === 'preferences' && value?.activePortfolioId === portfolioId) {
+            const plaintext = new TextEncoder().encode(JSON.stringify({ ...value, activePortfolioId: replacementActiveId }));
+            try { preference = { ...record, envelope: await this.encryptBytes(key, plaintext), updatedAt: new Date().toISOString() }; }
+            finally { plaintext.fill(0); }
+          }
+        } finally { bytes.fill(0); }
+      }
+      this.assertLockVersion(version);
+      const db = await this.open();
+      this.assertLockVersion(version);
+      await this.transaction(db, ['records'], 'readwrite', stores => {
+        for (const id of deletes) { stores['records'].delete(id); }
+        if (preference) { stores['records'].put(preference); }
+      });
+    });
+  }
+
   private async removeRecord(id: string, version: number): Promise<void> {
     this.requireKey();
     const db = await this.open();

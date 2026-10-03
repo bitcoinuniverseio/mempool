@@ -58,6 +58,7 @@ export class IdentityError extends Error {
 }
 
 export interface DeveloperApiKey {
+  network: string;
   key_id: string;
   key_prefix: string;
   owner_id: string;
@@ -91,6 +92,7 @@ export interface RegisteredWebhook extends WebhookView {
 }
 
 export interface AuthenticatedOwner {
+  network?: string;
   owner_id: string;
   key_id: string;
   scopes: string[];
@@ -112,6 +114,7 @@ export type DeliveryTransport = (input: {
   body: string;
   timeoutMs: number;
   maxResponseBytes: number;
+  signal?: AbortSignal;
 }) => Promise<DeliveryOutcome>;
 
 /** True for loopback, private, link-local, CGNAT, multicast, reserved and IPv4-mapped equivalents. */
@@ -209,7 +212,7 @@ export function extraCertificateAuthority(): Buffer | undefined {
   try { return fs.readFileSync(file); } catch { return undefined; }
 }
 
-export const httpsTransport: DeliveryTransport = ({ url, address, family, headers, body, timeoutMs, maxResponseBytes }) => new Promise(resolve => {
+export const httpsTransport: DeliveryTransport = ({ url, address, family, headers, body, timeoutMs, maxResponseBytes, signal }) => new Promise(resolve => {
   /* IMPLEMENTATION-HANDOFF [WP-BI-003] DEF-BI-003; COV-BI-003C/D.
    * Verified: timeout is a Node socket inactivity timeout; a peer sending bytes
    * periodically can keep the request alive beyond the outbox lease. There is no
@@ -235,7 +238,10 @@ export const httpsTransport: DeliveryTransport = ({ url, address, family, header
    *    restore only a version with bounded requests and the same fencing contract.
    */
   let settled = false;
-  const finish = (outcome: DeliveryOutcome): void => { if (!settled) { settled = true; resolve(outcome); } };
+  let deadline: NodeJS.Timeout | undefined;
+  let responseHandle: import('http').IncomingMessage | undefined;
+  const abort = () => { request.destroy(new Error('lease_lost')); responseHandle?.destroy(); finish({ status_code: null, success: false, response_digest: null, error_code: 'lease_lost' }); };
+  const finish = (outcome: DeliveryOutcome): void => { if (!settled) { settled = true; if (deadline) clearTimeout(deadline); signal?.removeEventListener('abort', abort); resolve(outcome); } };
   const ca = extraCertificateAuthority();
   const request = https.request({
     host: address,
@@ -250,11 +256,12 @@ export const httpsTransport: DeliveryTransport = ({ url, address, family, header
     // Connecting to the pinned address while verifying the certificate for the hostname.
     checkServerIdentity: (_hostname, cert) => tls.checkServerIdentity(url.hostname, cert),
   }, response => {
+    responseHandle = response;
     const hash = crypto.createHash('sha256');
     let received = 0;
     response.on('data', (chunk: Buffer) => {
       received += chunk.length;
-      if (received > maxResponseBytes) { response.destroy(); finish({ status_code: response.statusCode ?? null, success: false, response_digest: null, error_code: 'response_too_large' }); return; }
+      if (received > maxResponseBytes) { finish({ status_code: response.statusCode ?? null, success: false, response_digest: null, error_code: 'response_too_large' }); response.destroy(); return; }
       hash.update(chunk);
     });
     response.on('end', () => {
@@ -262,10 +269,14 @@ export const httpsTransport: DeliveryTransport = ({ url, address, family, header
       // A redirect is not a delivery: the target must accept the request itself.
       finish({ status_code: status, success: status !== null && status >= 200 && status < 300, response_digest: hash.digest('hex'), error_code: status !== null && status >= 200 && status < 300 ? null : (status !== null && status >= 300 && status < 400 ? 'redirect' : 'http_error') });
     });
+    response.on('aborted', () => finish({ status_code: response.statusCode ?? null, success: false, response_digest: null, error_code: 'response_aborted' }));
     response.on('error', () => finish({ status_code: response.statusCode ?? null, success: false, response_digest: null, error_code: 'response_error' }));
   });
   request.on('timeout', () => { request.destroy(new Error('timeout')); });
   request.on('error', error => finish({ status_code: null, success: false, response_digest: null, error_code: (error as NodeJS.ErrnoException).code === undefined ? (error.message === 'timeout' ? 'timeout' : 'connection_error') : String((error as NodeJS.ErrnoException).code).toLowerCase() }));
+  deadline = setTimeout(() => { finish({ status_code: null, success: false, response_digest: null, error_code: 'timeout' }); request.destroy(new Error('timeout')); responseHandle?.destroy(); }, timeoutMs);
+  signal?.addEventListener('abort', abort, { once: true });
+  if (signal?.aborted) { abort(); return; }
   request.end(body);
 });
 
@@ -358,7 +369,7 @@ export class DeveloperIdentityService {
 
   private view(row: ApiKeyRow): DeveloperApiKey {
     return {
-      key_id: row.key_id, key_prefix: row.key_prefix, owner_id: row.owner_id, name: row.name, scopes: row.scopes, rate_limit: row.rate_limit,
+      network: row.network, key_id: row.key_id, key_prefix: row.key_prefix, owner_id: row.owner_id, name: row.name, scopes: row.scopes, rate_limit: row.rate_limit,
       expires_at: row.expires_at, created_at: row.created_at, last_used_at: row.last_used_at, revoked: row.revoked_at !== null,
     };
   }
@@ -474,15 +485,16 @@ export class DeveloperIdentityService {
       return null;
     }
     const legacy = process.env.UNIVERSE_INTELLIGENCE_LEGACY_MASTER_KEY;
-    if (legacy && legacy.length >= 32 && crypto.timingSafeEqual(Buffer.from(rawSecret.padEnd(legacy.length)), Buffer.from(legacy.padEnd(rawSecret.length)))) {
-      return { owner_id: 'owner-operator', key_id: 'key-operator-env', scopes: ['*'] };
+    const legacyNetworks = (process.env.UNIVERSE_INTELLIGENCE_LEGACY_NETWORKS ?? '').split(',').map(value => value.trim());
+    if (legacyNetworks.includes(this.network) && legacy && legacy.length >= 32 && crypto.timingSafeEqual(Buffer.from(rawSecret.padEnd(legacy.length)), Buffer.from(legacy.padEnd(rawSecret.length)))) {
+      return { network: this.network, owner_id: 'owner-operator', key_id: 'key-operator-env', scopes: ['*'] };
     }
-    const row = await this.store.findApiKeyByHash(await this.hashSecret(rawSecret));
-    if (!row || row.revoked_at !== null) { return null; }
+    const row = await this.store.findApiKeyByHash(await this.hashSecret(rawSecret), this.network);
+    if (!row || row.network !== this.network || row.revoked_at !== null) { return null; }
     if (row.expires_at && Date.parse(row.expires_at) < now) { return null; }
     if (requiredScope && !row.scopes.includes('*') && !row.scopes.includes(requiredScope)) { return null; }
-    this.store.touchApiKey(row.key_id, new Date(now).toISOString()).catch(() => undefined);
-    return { owner_id: row.owner_id, key_id: row.key_id, scopes: row.scopes };
+    this.store.touchApiKey(row.key_id, new Date(now).toISOString(), this.network).catch(() => undefined);
+    return { network: row.network, owner_id: row.owner_id, key_id: row.key_id, scopes: row.scopes };
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
@@ -567,7 +579,22 @@ export class DeveloperIdentityService {
     const webhook = await this.store.getWebhookById(this.network, outbox.webhook_id);
     const notification = await this.store.getNotificationById(this.network, outbox.notification_id);
     const started = new Date(now).toISOString();
-    const attemptNumber = outbox.attempt_count + 1;
+    if (!outbox.lease_token || outbox.network !== this.network) throw new IdentityError('lease_lost', 'A current delivery lease is required', 409);
+    const attemptNumber = outbox.attempt_count;
+    const controller = new AbortController();
+    let renewing = false;
+    const expires = Date.now() + 45000;
+    const renewal = setInterval(() => {
+      if (renewing || controller.signal.aborted) return;
+      if (Date.now() >= expires) { controller.abort(); return; }
+      renewing = true;
+      this.store.renewOutbox(outbox.outbox_id, this.network, outbox.lease_token!, new Date().toISOString(), new Date(Math.min(expires,Date.now()+30000)).toISOString())
+        .then(owned => { if (!owned) controller.abort(); })
+        .catch(() => controller.abort()).finally(() => { renewing = false; });
+    }, 3000);
+    renewal.unref();
+    try {
+
     const base = { attempt_id: EventEnvelopeValidator.generateUuidV7(), outbox_id: outbox.outbox_id, webhook_id: outbox.webhook_id, event_id: notification?.event_id ?? 'unknown', attempt_number: attemptNumber, started_at: started };
     let outcome: DeliveryOutcome;
     if (!webhook || !webhook.active || !notification) {
@@ -576,6 +603,7 @@ export class DeveloperIdentityService {
       try {
         const url = validateWebhookUrl(webhook.url);
         const pinned = await resolvePublicAddress(url, this.resolver);
+        if (controller.signal.aborted) throw new IdentityError('lease_lost','Delivery lease lost',409);
         const body = JSON.stringify({
           event_id: notification.event_id, notification_id: notification.notification_id, watchlist_id: notification.watchlist_id, rule_id: notification.rule_id,
           network: notification.network, title: notification.title, message: notification.message, severity: notification.severity,
@@ -593,24 +621,19 @@ export class DeveloperIdentityService {
           'x-universe-timestamp': String(timestamp),
           'x-universe-signature': `v1=${this.signWebhookPayload(body, secret, timestamp)}`,
         };
-        outcome = await this.transport({ url, address: pinned.address, family: pinned.family, headers, body, timeoutMs: LIMITS.deliveryTimeoutMs, maxResponseBytes: LIMITS.responseBytes });
+        if (!await this.store.renewOutbox(outbox.outbox_id, this.network, outbox.lease_token, new Date().toISOString(), new Date(Date.now() + 30000).toISOString())) throw new IdentityError('lease_lost', 'Delivery lease lost', 409);
+        outcome = await this.transport({ url, address: pinned.address, family: pinned.family, headers, body, timeoutMs: LIMITS.deliveryTimeoutMs, maxResponseBytes: LIMITS.responseBytes, signal: controller.signal });
       } catch (error) {
         outcome = { status_code: null, success: false, response_digest: null, error_code: error instanceof IdentityError ? error.code : 'delivery_error' };
       }
     }
     const attempt: WebhookAttemptRow = { ...base, finished_at: new Date().toISOString(), ...outcome };
-    await this.store.insertAttempt(attempt);
-    const permanent = outcome.error_code === 'webhook_missing' || outcome.error_code === 'webhook_inactive' || outcome.error_code === 'notification_missing' || outcome.error_code === 'blocked_destination' || outcome.error_code === 'invalid_url';
-    if (outcome.success) {
-      await this.store.completeOutbox(outbox.outbox_id, 'delivered', attemptNumber, new Date(now).toISOString(), null, new Date().toISOString());
-    } else if (permanent || attemptNumber >= LIMITS.maxAttempts) {
-      await this.store.completeOutbox(outbox.outbox_id, 'failed', attemptNumber, new Date(now).toISOString(), outcome.error_code, new Date().toISOString());
-    } else {
-      // Capped exponential backoff with jitter: 30 s, 60 s, 120 s ... up to an hour.
-      const delay = Math.min(3_600_000, 30_000 * 2 ** (attemptNumber - 1)) * (0.8 + Math.random() * 0.4);
-      await this.store.completeOutbox(outbox.outbox_id, 'pending', attemptNumber, new Date(now + delay).toISOString(), outcome.error_code, new Date().toISOString());
-    }
+    const permanent = ['webhook_missing', 'webhook_inactive', 'notification_missing', 'blocked_destination', 'invalid_url'].includes(outcome.error_code ?? '');
+    const state = outcome.success ? 'delivered' : permanent || attemptNumber >= LIMITS.maxAttempts ? 'failed' : 'pending';
+    const delay = Math.min(3600000, 30000 * 2 ** (attemptNumber - 1)) * (0.8 + Math.random() * 0.4);
+    await this.store.finishOutbox(outbox, attempt, state, new Date(Date.now() + (state === 'pending' ? delay : 0)).toISOString());
     return attempt;
+    } finally { clearInterval(renewal); controller.abort(); }
   }
 
   /** @asyncUnsafe Claims due outbox rows under a lease and delivers them. Returns the attempts made. */
@@ -643,9 +666,11 @@ export class DeveloperIdentityService {
     if (this.outboxRunning) { return []; }
     this.outboxRunning = true;
     try {
-      const claimed = await this.store.claimOutbox(this.network, new Date(now).toISOString(), new Date(now + LIMITS.deliveryTimeoutMs * 3).toISOString(), limit);
       const attempts: WebhookAttemptRow[] = [];
-      for (const row of claimed) {
+      for (let i = 0; i < Math.min(100, Math.max(0, limit)); i++) {
+        const current = i === 0 ? now : Date.now();
+        const [row] = await this.store.claimOutbox(this.network, new Date(current).toISOString(), new Date(current + 30000).toISOString(), 1);
+        if (!row) break;
         attempts.push(await this.deliver(row, Date.now()));
       }
       return attempts;

@@ -114,12 +114,13 @@ describe('vault replacement persistence and malformed backups', () => {
   let rows: Map<string, unknown>;
   let metadata: Map<string, unknown>;
   let failRecordWrite: boolean;
+  let failRecordDelete: boolean;
   let onRecordWrite: (() => void) | null;
   let internals: VaultInternals;
 
   beforeEach(async () => {
     vi.stubGlobal('crypto', webcrypto);
-    rows = new Map(); metadata = new Map(); failRecordWrite = false; onRecordWrite = null;
+    rows = new Map(); metadata = new Map(); failRecordWrite = false; failRecordDelete = false; onRecordWrite = null;
     service = new PortfolioVaultService({} as NgZone);
     internals = service as unknown as VaultInternals;
     vi.spyOn(internals, 'canRunArgon2id').mockResolvedValue(false);
@@ -133,6 +134,7 @@ describe('vault replacement persistence and malformed backups', () => {
         const pendingMeta = new Map(metadata);
         let aborted = false;
         let recordWrites = 0;
+        let recordDeletes = 0;
         const tx = {
           error: null,
           oncomplete: (() => undefined) as () => void,
@@ -150,7 +152,12 @@ describe('vault replacement persistence and malformed backups', () => {
               get: (id: string) => request(values.get(id)),
               getAll: () => request([...values.values()]),
               clear: () => { values.clear(); },
-              delete: (id: string) => { values.delete(id); },
+              delete: (id: string) => {
+                if (name === 'records' && ++recordDeletes === 2 && failRecordDelete) {
+                  throw new DOMException('controlled delete failure', 'UnknownError');
+                }
+                values.delete(id);
+              },
               put: (record: { id: string }, id?: string) => {
                 if (name === 'records' && ++recordWrites === 2 && failRecordWrite) {
                   throw new DOMException('controlled quota failure', 'QuotaExceededError');
@@ -187,6 +194,43 @@ describe('vault replacement persistence and malformed backups', () => {
     });
     return { release, started };
   }
+
+  it('atomically removes a portfolio and explicitly owned records while preserving another portfolio and global data', async () => {
+    await service.put('portfolio', 'portfolio-A', { id: 'portfolio-A', accounts: [{ id: 'embedded-A' }], name: 'Delete A' });
+    await service.put('portfolio', 'portfolio-B', { id: 'portfolio-B', accounts: [{ id: 'embedded-B' }], name: 'Keep B' });
+    await service.put('account', 'account-A', { portfolioId: 'portfolio-A', id: 'separate-A' });
+    await service.put('snapshot', 'snapshot-A', { portfolioId: 'portfolio-A', valueAtomic: '9007199254740993' });
+    await service.put('snapshot', 'snapshot-B', { portfolioId: 'portfolio-B', valueAtomic: '17' });
+    await service.put('labels', 'prefix-only-portfolio-A', { label: 'Not an ownership link' });
+    await service.deletePortfolioRecords('portfolio-A', 'portfolio-B');
+    expect(await service.get('portfolio-A')).toBeNull();
+    expect(await service.get('account-A')).toBeNull();
+    expect(await service.get('snapshot-A')).toBeNull();
+    expect(await service.get('portfolio-B')).toEqual({ id: 'portfolio-B', accounts: [{ id: 'embedded-B' }], name: 'Keep B' });
+    expect(await service.get('snapshot-B')).toEqual({ portfolioId: 'portfolio-B', valueAtomic: '17' });
+    expect(await service.get('prefix-only-portfolio-A')).toEqual({ label: 'Not an ownership link' });
+    expect(await service.get('preferences')).toEqual({ activePortfolioId: 'portfolio-B' });
+  });
+
+  it('rolls back every portfolio deletion and preference change when a later delete in the same write transaction fails', async () => {
+    await service.put('account', 'account-A', { portfolioId: 'portfolio-A' });
+    await service.put('snapshot', 'snapshot-A', { portfolioId: 'portfolio-A' });
+    const before = JSON.stringify([...rows]);
+    failRecordDelete = true;
+    await expect(service.deletePortfolioRecords('portfolio-A', null)).rejects.toThrow('controlled delete failure');
+    expect(JSON.stringify([...rows])).toBe(before);
+    expect(await service.get('portfolio-A')).toEqual({ name: 'Private A' });
+    expect(await service.get('account-A')).toEqual({ portfolioId: 'portfolio-A' });
+    expect(await service.get('preferences')).toEqual({ activePortfolioId: 'portfolio-A' });
+  });
+  it('aborts portfolio cascade and preferences together if locking occurs during the final preference write', async () => {
+    await service.put('snapshot', 'snapshot-A', { portfolioId: 'portfolio-A' });
+    const before = JSON.stringify([...rows]);
+    onRecordWrite = () => service.lock();
+    await expect(service.deletePortfolioRecords('portfolio-A', null)).rejects.toThrow('aborted');
+    expect(JSON.stringify([...rows])).toBe(before);
+    expect(service.isUnlocked()).toBe(false);
+  });
 
   it('aborts synchronous record-write failures without changing the prior key, metadata or records', async () => {
     const before = JSON.stringify([[...metadata], [...rows]]);

@@ -1,3 +1,4 @@
+import { attachWatchlistStream } from './api/intelligence/watchlists/watchlist-stream';
 import express from 'express';
 import { Application, Request, Response, NextFunction } from 'express';
 import * as http from 'http';
@@ -91,6 +92,7 @@ import { timeMachineService } from './api/intelligence/time-machine/time-machine
 import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
 import { boundedHistoryFlush } from './api/intelligence/time-machine/history-shutdown';
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
+import { eventBus } from './api/intelligence/events/intelligence-event-bus';
 import { orderingEvidenceService } from './api/intelligence/private-submission/ordering-evidence.service';
 import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
@@ -444,9 +446,11 @@ class Server {
   setUpWebsocketHandling(): void {
     if (this.wss) {
       websocketHandler.addWebsocketServer(this.wss);
+      attachWatchlistStream(this.wss);
     }
     if (this.wssUnixSocket) {
       websocketHandler.addWebsocketServer(this.wssUnixSocket);
+      attachWatchlistStream(this.wssUnixSocket);
     }
 
     if (Common.isLiquid() && config.DATABASE.ENABLED) {
@@ -677,7 +681,10 @@ class Server {
     }
     this.server?.close();
     this.serverUnixSocket?.close();
-    boundedHistoryFlush(() => timeMachineService.closeHistory()).then(
+    templateCollectorService.stopPolling();
+    boundedHistoryFlush(/** @asyncUnsafe boundedHistoryFlush catches and reports shutdown rejection. */ async () => {
+      await Promise.all([timeMachineService.closeHistory(), eventBus.drain()]);
+    }).then(
       flushed => {
         if (!flushed) logger.warn('Time Machine shutdown flush failed or exceeded 5 seconds; the next start will expose a history gap.');
         process.exit(code ?? (flushed ? 0 : 1));

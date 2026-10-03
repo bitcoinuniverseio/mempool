@@ -5,6 +5,7 @@ import logger from '../logger';
 import { Common } from '../api/common';
 import PoolsRepository from './PoolsRepository';
 import HashratesRepository from './HashratesRepository';
+import CpfpRepository from './CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 import BlocksSummariesRepository from './BlocksSummariesRepository';
 import DifficultyAdjustmentsRepository from './DifficultyAdjustmentsRepository';
@@ -361,7 +362,7 @@ class BlocksRepository {
 
     const params: any[] = [];
     let query = `SELECT count(height) as blockCount
-      FROM blocks 
+      FROM blocks
       WHERE stale = 0`;
 
     if (poolId) {
@@ -706,88 +707,60 @@ class BlocksRepository {
    * restore compatible schema/data and reindex from the verified fork point.
    * This annotation is preparation only; executable behavior is unchanged.
    */
+  /** @asyncUnsafe */
   public async $validateChain(): Promise<boolean> {
-    try {
-      const start = new Date().getTime();
-      const tip = await bitcoinApi.$getBlockHashTip();
-      let firstBadBlockHeight: number | null = null;
-      const [blocks]: any[] = await DB.query(`
-        SELECT
-          height,
-          hash,
-          previous_block_hash,
-          UNIX_TIMESTAMP(blockTimestamp) AS timestamp,
-          stale
-        FROM blocks
-        ORDER BY height DESC
-      `);
-      const blocksByHash = {};
-      const blocksByHeight = {};
-      let minHeight = Infinity;
-      for (const block of blocks) {
-        blocksByHash[block.hash] = block;
-        if (!blocksByHeight[block.height]) {
-          blocksByHeight[block.height] = [block];
-        } else {
-          blocksByHeight[block.height].push(block);
-        }
-        minHeight = block.height;
-      }
-
-      // ensure that indexed blocks are correctly classified as stale or canonical
-      // iterate back to genesis, resetting canonical status where necessary
-      let hash = tip;
-      const tipHeight = blocksByHash[hash].height || (await bitcoinApi.$getBlock(hash))?.height;
-
-      // stop at the last canonical block we're supposed to have indexed already
-      let lastIndexedBlockHeight = minHeight;
-      const indexedBlockAmount = Math.min(config.MEMPOOL.INDEXING_BLOCKS_AMOUNT, tipHeight);
-      if (indexedBlockAmount > 0) {
-        lastIndexedBlockHeight = Math.max(0, tipHeight - indexedBlockAmount + 1);
-      }
-
-
-      for (let height = tipHeight; height > lastIndexedBlockHeight; height--) {
-        const block = blocksByHash[hash];
-        if (!block) {
-          // block hasn't been indexed
-          // mark any other blocks at this height as stale
-          if (blocksByHeight[height]?.length > 1) {
-            await this.$setCanonicalBlockAtHeight(null, height);
-          }
-        } else if (block.stale) {
-          // block is marked stale, but shouldn't be
-          await this.$setCanonicalBlockAtHeight(block.hash, height);
-          firstBadBlockHeight = height;
-        }
-        hash = block?.previous_block_hash;
-        if (!hash) {
-          if (height < minHeight) {
-            // we haven't indexed anything below this height anyway
-            height = -1;
-            break;
-          } else {
-            logger.info('Some blocks are not indexed, looking up prevhashes directly for chain validation');
-            hash = await bitcoinApi.$getBlockHash(height - 1);
-          }
-        }
-      }
-
-      if (firstBadBlockHeight != null) {
-        logger.warn(`Chain divergence detected at block ${firstBadBlockHeight}`);
-        await HashratesRepository.$deleteHashratesFromTimestamp(blocksByHash[firstBadBlockHeight].timestamp - 604800);
-        await DifficultyAdjustmentsRepository.$deleteAdjustementsFromHeight(firstBadBlockHeight);
-        return false;
-      }
-
-      logger.debug(`validated best chain of ${tipHeight} blocks in ${new Date().getTime() - start} ms`);
-      return true;
-    } catch (e) {
-      logger.err('Cannot validate chain of block hash. Reason: ' + (e instanceof Error ? e.message : e));
-      return true; // Don't do anything if there is a db error
+    const start = Date.now();
+    const tip = await bitcoinCoreApi.$getBlockHashTip();
+    const tipBlock = await bitcoinCoreApi.$getBlock(tip);
+    if (tipBlock?.id !== tip || !Number.isSafeInteger(tipBlock.height) || tipBlock.height < 0) {
+      throw new Error('Chain validation received an invalid tip checkpoint');
     }
+    const [rows]: any[] = await DB.query(`SELECT height, hash, previous_block_hash,
+      UNIX_TIMESTAMP(blockTimestamp) AS timestamp, stale FROM blocks ORDER BY height DESC`);
+    if (!rows.length) return false;
+    const byHash = new Map<string, any>(rows.map(block => [block.hash, block]));
+    const byHeight = new Map<number, any[]>();
+    for (const block of rows) {
+      if (!Number.isSafeInteger(block.height) || block.height < 0) throw new Error('Invalid retained block height');
+      byHeight.set(block.height, [...(byHeight.get(block.height) || []), block]);
+    }
+    let oldest = Infinity;
+    for (const height of byHeight.keys()) oldest = Math.min(oldest, height);
+    const configured = config.MEMPOOL.INDEXING_BLOCKS_AMOUNT;
+    const lower = configured > 0 ? Math.max(oldest, tipBlock.height - configured + 1) : oldest;
+    const changes: Array<{height: number; hash: string | null; timestamp: number}> = [];
+    for (const [height, peers] of byHeight) {
+      if (height > tipBlock.height && peers.some(peer => !peer.stale)) changes.push({height, hash: null, timestamp: peers[0].timestamp});
+    }
+    let hash = tip;
+    let missing = false;
+    for (let height = tipBlock.height; height >= lower; height--) {
+      const block = byHash.get(hash);
+      const peers = byHeight.get(height) || [];
+      if (block && block.height !== height) throw new Error('Retained block does not match its expected height');
+      if (!block) missing = true;
+      if (peers.some(peer => !!peer.stale !== (peer.hash !== hash))) {
+        const timestamp = block?.timestamp ?? peers[0]?.timestamp;
+        if (!Number.isFinite(timestamp)) throw new Error('Missing divergence timestamp');
+        changes.push({height, hash: block ? hash : null, timestamp});
+      }
+      if (height > lower) hash = block?.previous_block_hash || await bitcoinCoreApi.$getBlockHash(height - 1);
+    }
+    // No mutations until the checkpoint has survived the entire traversal.
+    if (await bitcoinCoreApi.$getBlockHashTip() !== tip) throw new Error('Chain tip changed during validation; retry');
+    if (changes.length) {
+      const earliest = changes.reduce((a, b) => a.height < b.height ? a : b);
+      // Invalidate derived data before updates, so interruption cannot preserve stale summaries.
+      await DB.query('DELETE FROM hashrates WHERE hashrate_timestamp >= FROM_UNIXTIME(?)', [earliest.timestamp - 604800]);
+      await HashratesRepository.$deleteHashratesFromTimestamp(earliest.timestamp - 604800);
+      await DifficultyAdjustmentsRepository.$deleteAdjustementsFromHeight(earliest.height);
+      await CpfpRepository.$deleteClustersFrom(earliest.height);
+      for (const change of changes) await this.$setCanonicalBlockAtHeight(change.hash, change.height);
+      return false;
+    }
+    logger.debug(`Validated retained chain at height ${tipBlock.height} in ${Date.now() - start} ms`);
+    return !missing;
   }
-
   /**
    * Get the historical averaged block fees
    * @asyncSafe
@@ -1207,7 +1180,7 @@ class BlocksRepository {
 
   /**
    * Get all blocks which do not have a first seen time yet
-   * 
+   *
    * @param includeAlreadyTried Include blocks we have already tried to fetch first seen time for, identified by sentinel value 1
    */
   public async $getBlocksWithoutFirstSeen(includeAlreadyTried = false): Promise<{ hash: string; timestamp: number }[]> {
@@ -1231,28 +1204,13 @@ class BlocksRepository {
    * @param hash
    * @param height
    */
+  /** @asyncUnsafe */
   public async $setCanonicalBlockAtHeight(hash: string | null, height: number): Promise<void> {
-    try {
-      // do this first, so that we fail if the block hasn't actually been indexed yet
-      if (hash) {
-        await DB.query(`
-          UPDATE blocks SET stale = 0
-          WHERE hash = ?`,
-          [hash]
-        );
-      }
-      // all other blocks at this height must be stale
-      await DB.query(`
-        UPDATE blocks SET stale = 1
-        WHERE height = ? AND hash != ?`,
-        [height, hash ?? '']
-      );
-    } catch (e) {
-      logger.err(`Cannot set canonical block at height. Reason: ` + (e instanceof Error ? e.message : e));
-      throw e;
-    }
+    const queries: Array<{query: string; params: Array<string | number>}> = [];
+    if (hash) queries.push({query: 'UPDATE blocks SET stale = 0 WHERE hash = ?', params: [hash]});
+    queries.push({query: 'UPDATE blocks SET stale = 1 WHERE height = ? AND hash != ?', params: [height, hash ?? '']});
+    await DB.$atomicQuery(queries);
   }
-
   /**
    * Convert a mysql row block into a BlockExtended. Note that you
    * must provide the correct field into dbBlk object param

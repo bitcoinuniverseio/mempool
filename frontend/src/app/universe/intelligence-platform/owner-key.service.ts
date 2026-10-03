@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Optional } from '@angular/core';
+import { StateService } from '@app/services/state.service';
 import { HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 
@@ -45,12 +46,31 @@ export const KEY_PREFIX = 'uip_live_';
 
 @Injectable({ providedIn: 'root' })
 export class OwnerKeyService {
-  private readonly subject = new BehaviorSubject<string | null>(this.read());
+  private network = 'mainnet';
+  private readonly subject = new BehaviorSubject<string | null>(null);
   public readonly key$ = this.subject.asObservable();
+
+  constructor(@Optional() private readonly state?: StateService) {
+    this.network = state?.network || 'mainnet';
+    this.subject.next(this.read());
+    state?.networkChanged$.subscribe(network => {
+      const next = network || 'mainnet';
+      if (next === this.network) return;
+      this.network = next;
+      this.subject.next(this.read());
+    });
+  }
+
+  private storageKey(): string {
+    const origin = typeof location === 'undefined' ? 'server' : location.origin;
+    return STORAGE_KEY + '.v2.' + encodeURIComponent(origin) + '.' + encodeURIComponent(this.network);
+  }
 
   private read(): string | null {
     try {
-      const value = localStorage.getItem(STORAGE_KEY);
+      // Legacy unscoped credentials remain stored for explicit recovery. Their
+      // issuing network cannot be inferred from the shared key prefix.
+      const value = localStorage.getItem(this.storageKey());
       return value && value.startsWith(KEY_PREFIX) ? value : null;
     } catch {
       return null;
@@ -61,14 +81,15 @@ export class OwnerKeyService {
     return this.subject.value;
   }
 
-  public set(key: string): void {
-    if (!key.startsWith(KEY_PREFIX)) { return; }
-    try { localStorage.setItem(STORAGE_KEY, key); } catch { /* private mode: the key lives for this page only */ }
+  public set(key: string, issuingNetwork = this.network): boolean {
+    if (!key.startsWith(KEY_PREFIX) || issuingNetwork !== this.network) { return false; }
+    try { localStorage.setItem(this.storageKey(), key); } catch { /* private mode: the key lives for this page only */ }
     this.subject.next(key);
+    return true;
   }
 
   public clear(): void {
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* nothing stored */ }
+    try { localStorage.removeItem(this.storageKey()); } catch { /* nothing stored */ }
     this.subject.next(null);
   }
 

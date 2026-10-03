@@ -74,9 +74,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               snapshots from the encrypted vault on this device. Your blockchain assets are
               untouched - this deletes only what this browser stored.
             </p>
+            @if (deleteError()) { <p role="alert">{{ deleteError() }}</p> }
             <div class="actions">
-              <button type="button" class="danger" (click)="confirmDeleteStep2()" i18n="@@universe.portfolio.manage.delete-confirm">Delete local data</button>
-              <button type="button" (click)="deleting.set('')" i18n="@@universe.portfolio.manage.cancel">Cancel</button>
+              <button type="button" class="danger" [disabled]="deleteBusy()" (click)="confirmDeleteStep2()" i18n="@@universe.portfolio.manage.delete-confirm">Delete local data</button>
+              <button type="button" [disabled]="deleteBusy()" (click)="deleting.set('')" i18n="@@universe.portfolio.manage.cancel">Cancel</button>
             </div>
           </div>
         </div>
@@ -115,6 +116,8 @@ export class ManagePortfoliosComponent {
 
   readonly renaming = signal('');
   readonly deleting = signal('');
+  readonly deleteBusy = signal(false);
+  readonly deleteError = signal('');
 
   protected findDuplicateAddresses = findDuplicateAddresses;
 
@@ -156,13 +159,21 @@ export class ManagePortfoliosComponent {
   }
 
   protected confirmDelete(id: string): void {
+    this.deleteError.set('');
     this.deleting.set(id);
   }
 
   protected async confirmDeleteStep2(): Promise<void> {
     const id = this.deleting();
-    this.deleting.set('');
-    await this.store.deletePortfolio(id);
-    void this.router.navigate(['/portfolio']);
+    if (!id || this.deleteBusy()) return;
+    this.deleteBusy.set(true);
+    this.deleteError.set('');
+    try {
+      await this.store.deletePortfolio(id);
+      this.deleting.set('');
+      void this.router.navigate(['/portfolio']);
+    } catch {
+      this.deleteError.set($localize`:@@universe.portfolio.manage.delete-failed:Local data could not be deleted. Unlock the vault and retry. Nothing was partially deleted.`);
+    } finally { this.deleteBusy.set(false); }
   }
 }

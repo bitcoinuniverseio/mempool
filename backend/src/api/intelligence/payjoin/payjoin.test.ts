@@ -61,11 +61,11 @@ describe('payjoin directories and overview', () => {
     jest.spyOn(identity, 'resolvePublicAddress').mockResolvedValue({ address: '93.184.216.5', family: 4 });
     const directories = await payjoinService.getDirectories();
     expect(directories).toHaveLength(3);
-    expect(directories[0]).toMatchObject({ bip77_supported: true, latency_ms: 42, error: null, ohttp_key_hash: crypto.createHash('sha256').update('keys').digest('hex') });
+    expect(directories[0]).toMatchObject({ reachable:true,key_config_valid:false,bip77_supported:false,bip78_supported:false,bip77_state:'unavailable',bip78_state:'unknown',latency_ms:42,error:'invalid_key_response',ohttp_key_hash:null });
     expect(directories[1]).toMatchObject({ bip77_supported: false, latency_ms: null, error: 'ECONNREFUSED', ohttp_key_hash: null });
     expect(directories[2]).toMatchObject({ bip77_supported: false, error: expect.stringMatching(/https/) });
     const overview = await payjoinService.getOverview();
-    expect(overview).toMatchObject({ active_directories_count: 1, configured_directories_count: 3, total_payjoins_detected_24h: null });
+    expect(overview).toMatchObject({ active_directories_count: 0, configured_directories_count: 3, total_payjoins_detected_24h: null });
   });
 
   it('the playground is a labelled walkthrough with no transaction ids', () => {

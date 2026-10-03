@@ -570,12 +570,24 @@ NODE
     --acceptance "$evidence" \
     --acceptance-root "$root_real" \
     || fail "qualified acceptance evidence did not qualify the release candidate"
+  local application_roster="$root_real/docs/acceptance/reconciled-operations.json"
+  local application_evidence="$root_real/docs/acceptance/qualified-application-evidence.json"
+  [ -f "$application_roster" ] && [ -f "$application_evidence" ] \
+    || fail "release carries no complete reconciled application acceptance"
+  node "$dir/scripts/universe/reconciled-release.mjs" check \
+    "$application_roster" "$application_evidence" "$evidence" "$root_real" "$candidate_sha" \
+    || fail "full application acceptance did not qualify the release candidate"
   local evidence_digest contract_digest
   evidence_digest=$(sha256sum "$evidence" | awk '{print $1}') \
     || fail "qualified acceptance evidence identity could not be recorded"
   contract_digest=$(sha256sum "$dir/scripts/universe/protocol-contract.mjs" | awk '{print $1}') \
     || fail "qualified acceptance contract identity could not be recorded"
-  QUALIFIED_ACCEPTANCE_IDENTITY="$candidate_sha:$evidence_digest:$contract_digest"
+  local application_digest roster_digest application_contract_digest reconciler_digest
+  application_digest=$(sha256sum "$application_evidence" | awk '{print $1}') || fail "application acceptance identity missing"
+  roster_digest=$(sha256sum "$application_roster" | awk '{print $1}') || fail "application roster identity missing"
+  application_contract_digest=$(sha256sum "$dir/scripts/universe/reconciled-release.mjs" | awk '{print $1}') || fail "application verifier identity missing"
+  reconciler_digest=$(sha256sum "$dir/scripts/universe/reconciled-operations.mjs" | awk '{print $1}') || fail "application proof reader identity missing"
+  QUALIFIED_ACCEPTANCE_IDENTITY="$candidate_sha:$evidence_digest:$contract_digest:$roster_digest:$application_digest:$application_contract_digest:$reconciler_digest"
   log "qualified acceptance passed for $candidate_sha"
 }
 

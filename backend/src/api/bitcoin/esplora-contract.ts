@@ -44,7 +44,7 @@
  * Preparation only; no validation or wire format is changed here.
  */
 function isWholeNumber(value: unknown): boolean {
-  return Number.isInteger(value) && (value as number) >= 0;
+  return Number.isSafeInteger(value) && (value as number) >= 0;
 }
 
 function isTxid(value: unknown): boolean {
@@ -79,7 +79,7 @@ export function addressSummaryProblems(body: unknown, address: string): string[]
   }
   for (const section of ['chain_stats', 'mempool_stats']) {
     const stats = document[section];
-    if (!stats || typeof stats !== 'object') {
+    if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
       problems.push(`${section} is missing`);
       continue;
     }
@@ -101,6 +101,21 @@ export function addressSummaryProblems(body: unknown, address: string): string[]
  * confirmed history would put millions of transactions through a browser, and
  * that is the failure the old "stronger backend" warning grew out of.
  */
+export function transactionSummaryProblems(body: unknown): string[] {
+  if (!Array.isArray(body)) return ['the transaction summary is not a list'];
+  if (body.length > 5000) return ['the transaction summary exceeds the requested 5000 entries'];
+  const problems: string[] = [];
+  for (const entry of body) {
+    if (!isTxid(entry?.txid) || !Number.isSafeInteger(entry?.value)
+      || !isWholeNumber(entry?.height) || !isWholeNumber(entry?.time)
+      || (entry?.tx_position != null && !isWholeNumber(entry.tx_position))) {
+      problems.push('a transaction summary entry has an invalid identity or exact integer');
+      break;
+    }
+  }
+  return problems;
+}
+
 export function addressHistoryProblems(body: unknown, maxPageSize = 100): string[] {
   if (!Array.isArray(body)) {
     return ['the address history is not a list'];
@@ -121,6 +136,14 @@ export function addressHistoryProblems(body: unknown, maxPageSize = 100): string
     const status = transaction.status;
     if (!status || typeof status.confirmed !== 'boolean') {
       problems.push(`transaction ${transaction.txid} does not say whether it is confirmed`);
+      break;
+    }
+    if (status.confirmed && (!isTxid(status.block_hash) || !isWholeNumber(status.block_time))) {
+      problems.push(`transaction ${transaction.txid} has an invalid confirmed block identity`);
+      break;
+    }
+    if (!status.confirmed && ['block_height', 'block_hash', 'block_time'].some(field => status[field] != null)) {
+      problems.push(`transaction ${transaction.txid} claims block data while unconfirmed`);
       break;
     }
     // A confirmed transaction has to name its block. Without that the page
@@ -154,12 +177,19 @@ export function utxoListProblems(body: unknown, utxosLimit = 500): string[] {
       problems.push(`a UTXO names ${JSON.stringify(utxo?.txid)} rather than a transaction`);
       break;
     }
-    if (!isWholeNumber(utxo.vout)) {
+    if (!isWholeNumber(utxo.vout) || utxo.vout > 0xffffffff) {
       problems.push(`UTXO ${utxo.txid} has output index ${JSON.stringify(utxo.vout)}`);
       break;
     }
-    if (!isWholeNumber(utxo.value)) {
+    if (!isWholeNumber(utxo.value) || utxo.value > 21_000_000 * 100_000_000) {
       problems.push(`UTXO ${utxo.txid} has value ${JSON.stringify(utxo.value)} rather than a whole number of satoshis`);
+      break;
+    }
+    const status = utxo.status;
+    if (!status || typeof status.confirmed !== 'boolean' ||
+        status.confirmed && (!isWholeNumber(status.block_height) || !isTxid(status.block_hash) || !isWholeNumber(status.block_time)) ||
+        !status.confirmed && ['block_height', 'block_hash', 'block_time'].some(field => status[field] != null)) {
+      problems.push(`UTXO ${utxo.txid} has an invalid confirmation identity`);
       break;
     }
   }
