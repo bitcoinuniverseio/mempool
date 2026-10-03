@@ -177,6 +177,34 @@ export class WatchlistsService {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async addEntity(owner: AuthenticatedOwner, watchlistId: string, entityType: unknown, entityRawOrBlinded: unknown, label: unknown, alreadyBlinded = false): Promise<WatchlistEntity | null> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-004] DEF-BI-004; COV-BI-004A/B/C/D/E.
+     * Verified: this method accepts and hashes outpoint/descriptor strings but no
+     * matcher consumes them; hashed descriptors cannot be expanded by the backend.
+     * 1. Define a versioned registration DTO with explicit network, entity kind and
+     *    finite descriptor range. Validate txid as 32-byte hex and vout as uint32;
+     *    normalize raw outpoints to lowercase txid:decimal-vout before hashing.
+     * 2. Extend the frontend under WP-FE-007 to parse a public descriptor and expand
+     *    its bounded range locally into scriptPubKeys. Register normalized script
+     *    hashes with parent/derivation metadata; never submit xprivs or seeds.
+     *    Validate hash lengths/counts, quotas, parent ownership and backend network.
+     * 3. Add PROPOSED NEW intelligence_watchlist_entity_scripts migration and store
+     *    APIs for owner/network/parent-scoped children, using composite uniqueness
+     *    for duplicate registration and cascading deletion. Mirror memory store.
+     *    Raw/opaque existing descriptors remain marked pending-resubmission until
+     *    explicitly expanded; keep their IDs and labels for a non-destructive upgrade.
+     * 4. Wire actual matching and authenticated websocket delivery as annotated in
+     *    WatchlistMatcher.observeBlock. Return a truthful registration/matching state;
+     *    addRule may only report a live channel when its consumer path is connected.
+     * Dependencies: WP-BI-001 auth network, WP-BI-002 durable effects, WP-FE-007 DTO/UI.
+     * Governing sources: BIP380 descriptor syntax and docs/api/OWNER-IDENTITY.md.
+     * Tests: watchlists.test.ts, proposed stream test, frontend watchlists specs;
+     *    strict outpoint boundaries, descriptor checksum/range/network errors, private
+     *    key rejection, restart/delete/quota tests and Signet receive/spend readback.
+     * Existing command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/watchlists/watchlists.test.ts
+     * Schema/new DTO tests are NOT TESTED in preparation. Rollback retains parent and
+     *    child data with versioned readers; no removal of required public options.
+     */
     const store = ownerStore();
     const parent = await store.getWatchlist(owner.owner_id, this.network, watchlistId);
     if (!parent) { return null; }

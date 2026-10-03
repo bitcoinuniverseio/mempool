@@ -208,6 +208,35 @@ export class UniverseApiService {
    * configuration fails as a ChainNetworkUnavailableError and sends nothing,
    * and a retry resolves again rather than reusing an earlier network.
    */
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-006] | D-FE-006 | C-FE-CHAIN-RESPONSE-CONTEXT.
+   * Verified: a request for /dogecoin/dashboard?network=testnet accepts an
+   * explicit {chain:'dogecoin',network:'mainnet'} response. Unlike scopedRequest
+   * and getChains$, this common reader never invokes assertResponseContext;
+   * ChainDashboardService forwards the result without a context check.
+   * Evidence: frontend-reproductions.json. Governing contract: chain-network.ts,
+   * universe.types.ts chain payloads and backend-apis explorer-context.ts;
+   * Angular HttpClient generics are assertions, not runtime response validation
+   * (https://angular.dev/guide/http/making-requests).
+   * 1. Resolve the requested network once inside defer, retain that immutable
+   *    context for this attempt, and validate every response before emission.
+   *    At minimum reject every explicit mismatched chain/network via the shared
+   *    guard; add endpoint decoders for required identity/checkpoint fields.
+   * 2. Preserve legacy payloads only where their owning contract allows omitted
+   *    context; label missing evidence unknown, never fill in a claimed response
+   *    identity from the request. Include nested checkpoints/evidence collections.
+   * 3. Ensure ChainDashboardService and multichain/graphs consumers surface the
+   *    validation error, cancel stale reads and never retain another network's
+   *    last-good view. Keep valid same-network stale data explicitly dated.
+   * 4. Extend universe-api.service.spec.ts for every method using chainRead with
+   *    wrong chain, wrong network, nested mismatch, malformed envelope and valid
+   *    unavailable reply. Run npm test -- --maxWorkers=2 with that file and
+   *    chain-dashboard/multichain-explorer/chain-graphs regressions.
+   * Acceptance: configured testnet Dogecoin/Zcash data reaches its own UI; a
+   *    controlled wrong-context HTTP response is rejected. No mainnet test funds.
+   * Prerequisite: pin each endpoint contract; no schema/data migration needed.
+   * Rollback must retain the context guard and clear incompatible cached views.
+   */
   private chainRead<T>(chain: Exclude<ExplorerChain, 'bitcoin'>, path: (network: ExplorerNetwork) => string): Observable<T> {
     return defer(() => this.httpClient.get<T>(this.apiBaseUrl + '/api/v1/' + chain + path(this.chainNetwork(chain))));
   }
@@ -535,6 +564,32 @@ export class UniverseApiService {
     return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols?network=' + network);
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-011] | OV-F006 / D-FE-011 | C-FE-ZRC20-CATALOG-PAGE.
+   * Verified: Zcash protocol-list URLs omit offset even when the caller supplies
+   * 100; the owning indexer handleTokenList supports offset/limit and returns
+   * total/offset. MultichainExplorerComponent also always calls with offset=0.
+   * This prevents browsing beyond the first ZRC20 catalogue page; no working
+   * protocol-list pager is claimed. Source: index-zcash-metaprotocols pinned in
+   * overlay-authority-sources, src/api/server.mjs handleTokenList; WP-OV-006.
+   * 1. After the owning controller/client accepts a bounded nonnegative offset,
+   *    send it for zcash/zrc20 and preserve the selected ruleset. Keep existing
+   *    chain/protocol-specific cursor contracts separate; do not coerce opaque
+   *    cursors into numbers or add unsupported filters.
+   * 2. Validate page limit/offset/total and checkpoint context; forward exact
+   *    paging data to the component. A malformed or failed continuation stays
+   *    an error with retry, never a reused first page or a terminal empty list.
+   * 3. Extend universe-api.service.spec.ts for distinct page-one/page-two URLs,
+   *    ruleset preservation, invalid bounds and correct chain network. Extend
+   *    multichain/ruleset tests as specified at pageRequest$. Run npm test --
+   *    --maxWorkers=2 src/app/universe/universe-api.service.spec.ts
+   *    src/app/universe/multichain-explorer.
+   * Acceptance: >100 known indexed testnet tokens can all be reached without
+   *    duplication, including direct page-two navigation and refresh; justify
+   *    Zcash testnet because Bitcoin Signet is not this chain's test network.
+   * Dependency: WP-OV-006 end-to-end paging; no migration. Roll back deployment
+   *    coherently if DTOs differ, preserving the previous page and its evidence.
+   */
   getChainProtocolList$(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string, limit = 100, offset = 0, ruleset?: string): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
     let paging = '&limit=' + limit;
@@ -719,6 +774,25 @@ export class UniverseApiService {
   // Product Verticals API Methods
   // ---------------------------------------------------------------------------
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-007 / WP-BE-007 | C-FE-OFFERED-FRACTAL.
+   * The Fractal/CAT20 pages still call this family; the pinned backend service
+   * methods return unavailable unconditionally. This is incomplete offered scope,
+   * not live acceptance or a reason to delete its route.
+   * 1. Complete backend WP-BE-007 first, then align getFractalTip/Mempool/Block/Tx
+   *    and getCat20Tokens/Token/Holders with its pinned DTOs, explicit configured
+   *    Fractal network, pagination, errors and exact quantities.
+   * 2. Update fractal-dashboard.component.ts and cat20-center.component.ts to
+   *    clear stale context, preserve independent partial panels and distinguish
+   *    indexing/empty/error outcomes. Verify block height-versus-hash contract.
+   * 3. Extend fractal/fractal.component.spec.ts and universe-api.service.spec.ts;
+   *    npm test -- --maxWorkers=2 src/app/universe/fractal. Require real indexed
+   *    supported-Fractal-testnet reads and complete list/detail/holder navigation,
+   *    then offline mainnet configuration checks. Signet cannot replace this chain.
+   * Sources/prerequisites: backend WP-BE-007 and frontend-research-register.json.
+   * Rollback restores matching client/server DTOs without deleting authority state;
+   *    unavailable responses remain honest until the real integration passes.
+   */
   getFractalTip$(): Observable<{ height: number; hash: string; time: number; network: string }> {
     return this.httpClient.get<{ height: number; hash: string; time: number; network: string }>(
       this.apiBaseUrl + '/api/v1/fractal/tip'
@@ -761,6 +835,21 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-014 / WP-BE-014 | C-FE-OFFERED-ZCASH-PRIVACY.
+   * Summary/pool service methods are unfinished and the upgrade catalogue is
+   * stale per WP-BE-014. The privacy page still consumes all three methods here.
+   * 1. Complete WP-BE-014 using pinned Zcash node/ZIP contracts, then bind this
+   *    family to explicit configured Zcash network and validate each response.
+   * 2. Update zcash-privacy.component.ts for current pool/upgrade state, retaining
+   *    missing observations and private local scanner outcomes independently.
+   * 3. Add proposed zcash-privacy.component.spec.ts and extend API tests; npm test
+   *    -- --maxWorkers=2 src/app/universe/zcash-privacy. Acceptance is authoritative
+   *    Zcash testnet readback plus offline mainnet activation-height checks; no
+   *    viewing key should enter logs or server requests. This chain has no Signet.
+   * References, dependency and rollback: WP-BE-014 plus this package's Fractal
+   *    anchor; preserve local scanner data and never invent unknown pool totals.
+   */
   getZcashPrivacySummary$(): Observable<ZcashPrivacySummary> {
     return this.httpClient.get<ZcashPrivacySummary>(
       this.apiBaseUrl + '/api/v1/zcash/privacy/summary'
@@ -783,6 +872,21 @@ export class UniverseApiService {
     return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl + '/api/v1/liquid/observatory/node?network=' + encodeURIComponent(network));
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-010 / WP-BE-010 | C-FE-OFFERED-LIQUID.
+   * Existing Liquid node/unblinding tools do not implement the still-unavailable
+   * summary/assets/asset/pegs/federation family used by liquid-observatory.component.
+   * 1. Complete WP-BE-010 authorities, then align all five clients to its explicit
+   *    Liquid network, exact asset amounts, cursor and federation/peg contracts.
+   * 2. Preserve independent panel state so unavailable registry/peg evidence does
+   *    not erase valid node/proof results or become a zero count.
+   * 3. Extend liquid-observatory.component.spec.ts and API tests; npm test --
+   *    --maxWorkers=2 src/app/universe/liquid-observatory. Require Liquid testnet
+   *    asset/detail/peg/federation readback; test blinded/private inputs locally
+   *    without sending keys. Mainnet parameter differences get offline checks.
+   * Dependency/references: WP-BE-010 and frontend-research-register.json. Rollback
+   *    preserves local proof work and source state; no placeholder success data.
+   */
   getLiquidObservatorySummary$(): Observable<LiquidObservatorySummary> {
     return this.httpClient.get<LiquidObservatorySummary>(
       this.apiBaseUrl + '/api/v1/liquid/observatory/summary'
@@ -873,6 +977,19 @@ export class UniverseApiService {
     return this.httpClient.post<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer>(this.backendBase + '/api/v1/lightning/offers/decode', {offer, network:this.network || 'mainnet'});
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-013 / WP-BE-013 | C-FE-OFFERED-BOLT12-LIST.
+   * Real local offer decoding does not complete the offered list route: the
+   * backend listing still returns unavailable. 1. Complete WP-BE-013's owned
+   *    offer source, then validate its network, list pagination and offer state.
+   * 2. Keep LightningStandardsComponent decode and listing outcomes separate;
+   *    never infer payment/settlement from decoding or a list row.
+   * 3. Extend lightning-standards.component.spec.ts and universe-api.service.spec.ts;
+   *    npm test -- --maxWorkers=2 src/app/universe/taproot-assets. Accept real
+   *    supported test-network listing/readback; retain BOLT12 parser regressions.
+   * References/prerequisite: WP-BE-013. Rollback keeps actual offers and keys at
+   *    their authority and restores a compatible DTO without synthetic rows.
+   */
   getBolt12Offers$(): Observable<{ offers: Bolt12Offer[]; total: number }> {
     return this.httpClient.get<{ offers: Bolt12Offer[]; total: number }>(
       this.backendBase + '/api/v1/lightning/offers'
@@ -885,6 +1002,21 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-006 / WP-BE-006 | C-FE-OFFERED-ARK.
+   * ArkDashboard calls operators/batches and ArkVtxoDetail calls vtxos; the
+   * backend family is unconditionally unavailable at this baseline.
+   * 1. Complete WP-BE-006 real operator/batch/VTXO sources before updating these
+   *    four typed clients; require selected network and actual stable identifiers.
+   * 2. Wire ark-dashboard and ark-vpack/ark-vtxo-detail to validated partial/read
+   *    states while preserving V-PACK cryptographic/proof tools separately.
+   * 3. Extend ark-dashboard.component.spec.ts, ark-vtxo-detail tests and API tests;
+   *    npm test -- --maxWorkers=2 src/app/universe/ark src/app/universe/ark-vpack.
+   *    Accept known Signet operator/batch/VTXO readback where the provider supports
+   *    Signet; otherwise document its exact supported testnet and reason.
+   * References/prerequisites/rollback: WP-BE-006 and this package's Fractal anchor.
+   *    Retain provider state and backups; never replace missing evidence with zero.
+   */
   getArkOperators$(): Observable<{ operators: ArkOperator[]; total: number }> {
     return this.httpClient.get<{ operators: ArkOperator[]; total: number }>(
       this.backendBase + '/api/v1/ark/operators'
@@ -909,6 +1041,19 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-011 / WP-BE-011 | C-FE-OFFERED-STRATUM.
+   * StratumV2Component requests roles/templates/declarations from unfinished
+   * backend methods. 1. Implement WP-BE-011 and its owned SV2 collector first;
+   *    agree response version, network, freshness, template and declaration IDs.
+   * 2. Validate each client response and retain independent unavailable states;
+   *    never label configured software as observed mining/job activity.
+   * 3. Extend stratum-v2.component.spec.ts/API tests; npm test -- --maxWorkers=2
+   *    src/app/universe/stratum-v2. Accept a real supported Signet/testnet collector
+   *    observation through API/UI with restart and stale-data handling.
+   * Sources/prerequisite: WP-BE-011. Rollback preserves collector state and
+   *    restores matching DTOs; production mining endpoints are not fault targets.
+   */
   getStratumV2Network$(): Observable<{ roles: StratumV2RoleStatus[]; total: number }> {
     return this.httpClient.get<{ roles: StratumV2RoleStatus[]; total: number }>(
       this.backendBase + '/api/v1/stratum-v2/network'
@@ -927,6 +1072,21 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-009 / WP-BE-009 | C-FE-OFFERED-L2.
+   * L2Observatory still calls systems/challenges backed by unfinished methods;
+   * system detail/reserve audit APIs remain part of the offered denominator.
+   * 1. Complete WP-BE-009 pinned bridge adapters before wiring these DTOs.
+   *    Preserve protocol-specific network/finality/challenge/reserve semantics.
+   * 2. Update l2-observatory.component.ts for real typed results, cursors and
+   *    distinct unavailable/empty/pending/disputed/resolved outcomes.
+   * 3. Extend l2-observatory.component.spec.ts and API tests; npm test --
+   *    --maxWorkers=2 src/app/universe/l2-observatory. Accept each supported
+   *    bridge's justified test network with authoritative persisted readback;
+   *    one bridge does not validate another. No invented deposit/trade workflow.
+   * References/prerequisite: WP-BE-009. Rollback preserves bridge observations
+   *    and uses compatible DTOs without asserting unobserved reserves/finality.
+   */
   getL2Systems$(): Observable<{ systems: L2BridgeSystem[]; total: number }> {
     return this.httpClient.get<{ systems: L2BridgeSystem[]; total: number }>(
       this.backendBase + '/api/v1/l2/systems'
@@ -970,12 +1130,39 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-012 / WP-BE-012 | C-FE-OFFERED-UTREEXO.
+   * UtxoSetComponent now reads this family through UtxoEvidenceService.watch$;
+   * both paths still require WP-BE-012's actual protocol-UTXO/accumulator source.
+   * 1. Complete that backend package, then align this legacy typed client and
+   *    the active UtxoEvidenceService with one validated network/checkpoint DTO.
+   * 2. Preserve independently available Core checkpoints; accumulator roots or
+   *    complete protocol-UTXO coverage cannot be inferred from them.
+   * 3. Extend utxo-set.component.spec.ts and API tests; npm test -- --maxWorkers=2
+   *    src/app/universe/utxo-set. Accept actual supported Signet accumulator and
+   *    protocol index readback with reorg/restart checks. References: WP-BE-012.
+   * Rollback preserves index state and requires a compatible response contract.
+   */
   getUtreexoRoots$(): Observable<UtreexoRootsView> {
     return this.httpClient.get<UtreexoRootsView>(
       this.backendBase + '/api/v1/utreexo/roots'
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-008 / WP-BE-008 | C-FE-OFFERED-WILDKIN.
+   * Wildkin status, creatures list/detail and braid pages all remain wired to
+   * backend methods that unconditionally report unavailable.
+   * 1. Complete WP-BE-008 against the pinned Wildkin authority; bind these four
+   *    clients to real entity/lineage/braid IDs, selected network and pagination.
+   * 2. Update the three wildkin components together for actual lifecycle/read
+   *    states, route changes and refresh; preserve unknown ownership/lineage.
+   * 3. Extend wildkin.component.spec.ts and API tests; npm test -- --maxWorkers=2
+   *    src/app/universe/wildkin. Accept known Signet or explicitly supported
+   *    testnet records through status/list/detail/braid UI with authority readback.
+   * Sources/prerequisite: WP-BE-008. Rollback preserves entity state and restores
+   *    compatible views; missing integrations remain required implementation work.
+   */
   getWildkinStatus$(): Observable<WildkinStatusSummary> {
     return this.httpClient.get<WildkinStatusSummary>(
       this.backendBase + '/api/v1/wildkin/status'

@@ -306,6 +306,23 @@ export class MysqlOwnerStore implements OwnerStore {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async findApiKeyByHash(hash: string): Promise<ApiKeyRow | null> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-001] DEF-BI-001; COV-BI-001A/B.
+     * Verified: this read ignores the stored network; the memory implementation
+     * does the same. See developer-identity.ts authenticateKey for the shared contract.
+     * 1. Change the OwnerStore signature to findApiKeyByHash(hash, network), bind both
+     *    values in SQL, and implement identical filtering in MemoryOwnerStore.
+     * 2. Scope touchApiKey to the authenticated network too; retain existing unique
+     *    key_hash and row.network data. Add a migration only if an inspected query
+     *    plan establishes an index need, not to duplicate credential records.
+     * 3. Add a real-MySQL same-hash lookup regression across distinct requested
+     *    networks and assert a wrong-network attempt cannot update last_used_at.
+     * Dependency: WP-BI-001 auth contract and WP-FE-008 client key partition.
+     * Test command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/identity/developer-identity.test.ts
+     * Real-MySQL test prerequisites/commands remain to be supplied by the isolated DB
+     *    fixture; no live database verification was performed during preparation.
+     * Rollback preserves credential records and the network rejection boundary.
+     */
     const [rows]: any[] = await DB.query('SELECT * FROM intelligence_api_keys WHERE key_hash = ? LIMIT 1', [hash]);
     return rows?.length ? this.apiKey(rows[0]) : null;
   }
@@ -608,6 +625,32 @@ export class MysqlOwnerStore implements OwnerStore {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async insertNotification(row: NotificationRow): Promise<'inserted' | 'duplicate'> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-002] DEF-BI-002; COV-BI-002A/B/C.
+     * Verified: WatchlistMatcher.record commits this INSERT before a separate
+     * insertOutbox; failure between them permanently loses webhook work on replay.
+     * Requirement: docs/api/OWNER-IDENTITY.md Webhooks; MySQL 8.4 transaction semantics.
+     * 1. Add OwnerStore.recordNotificationWithDelivery (PROPOSED NEW method), with
+     *    the notification and optional verified webhook target in one DB transaction.
+     *    Lock/resolve the existing row by (rule_id,event_id), retain its notification_id,
+     *    verify owner/network equality with rule and webhook, and insert missing
+     *    outbox intent under the existing unique (notification_id,webhook_id) key.
+     * 2. Mirror atomic outcomes in MemoryOwnerStore. Return inserted/duplicate and
+     *    durable delivery intent separately so the matcher advances only after commit.
+     *    Do not treat duplicate notification insertion as permission to skip intent.
+     * 3. Reconcile existing webhook-rule notifications lacking outbox rows in bounded,
+     *    owner/network-scoped batches; dry-run counts first and exclude disabled or
+     *    missing targets with an operator-visible reason. Never mark them delivered.
+     * Dependencies: WP-BI-001 owner scope; WP-BI-003 fenced delivery follows this commit.
+     * Tests: watchlists/watchlists.test.ts and PROPOSED NEW
+     *    identity/owner-store-outbox.integration.test.ts. Inject rollback before/after
+     *    each statement; replay the block after restart; expect one notification and
+     *    one intent, one receiver-side effect by notification_id, foreign target denied.
+     * Existing command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/watchlists/watchlists.test.ts
+     * MySQL crash/restart and Signet UI-to-receiver acceptance are NOT TESTED.
+     * Rollback: stop producers/consumers, retain intent rows and reconciliation cursor;
+     *    never delete audit history or re-send an already acknowledged delivery blindly.
+     */
     const [result]: any[] = await DB.query(
       `INSERT IGNORE INTO intelligence_notifications (notification_id, owner_id, network, watchlist_id, rule_id, event_id, title, message, severity, entity_type, blinded_hash, block_height, block_hash, state, created_at, acknowledged_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -748,6 +791,30 @@ export class MysqlOwnerStore implements OwnerStore {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async claimOutbox(network: string, now: string, leaseUntil: string, limit: number): Promise<OutboxRow[]> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-003] DEF-BI-003; COV-BI-003A/B/C/D.
+     * Verified: SQL stores a lease_token, outbox() discards it, and completeOutbox
+     * updates by ID alone. An old worker can overwrite a new worker's delivered state.
+     * See developer-identity.ts processOutbox/httpsTransport for the expired-batch cause.
+     * 1. Include lease_token in OutboxRow and every SQL/memory mapping. Claim only
+     *    immediately executable rows and return the fresh token plus lease expiry.
+     * 2. Add token-fenced renewal and completion: WHERE outbox_id=?, network=?,
+     *    state='pending', lease_token=? and lease still current. Require affectedRows=1;
+     *    on zero, stop processing and report lost lease without altering newer state.
+     * 3. Reserve/increment attempt_number under the same fence and persist the attempt
+     *    outcome with completion atomically; uphold the existing unique outbox/attempt
+     *    index. A stale completion must never regress a terminal state or consume retry
+     *    budget twice. Match MemoryOwnerStore behavior and preserve receiver deduplication.
+     * Dependencies: WP-BI-002 durable intent first; existing migration already defines
+     *    lease_token. Inspect legacy pending rows before enabling the new worker.
+     * Governing source: MySQL 8.4 locking reads, docs/api/OWNER-IDENTITY.md leased outbox.
+     * Tests: extend identity/developer-identity.test.ts; PROPOSED NEW
+     *    identity/owner-store-outbox.integration.test.ts with two DB connections,
+     *    expired A/reclaimed B/B-success/A-late-failure, crash before completion and
+     *    exactly one receiver-side notification effect. No public-chain fault injection.
+     * Command for existing suite: cd backend && ./node_modules/.bin/jest --runInBand
+     *    --coverage=false --runTestsByPath src/api/intelligence/identity/developer-identity.test.ts
+     * Rollback: drain/fence all workers before version change; retain attempts and tokens.
+     */
     const token = randomUUID();
     // Two statements: lease the due rows under a fresh token, then read back exactly those rows.
     await DB.query(

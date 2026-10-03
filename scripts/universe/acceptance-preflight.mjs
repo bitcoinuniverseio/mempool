@@ -96,6 +96,36 @@ export const TRANSPORT_PATHS = [
   "/api/v1/anima/organisms/invalid-acceptance-identity",
   "/api/v1/anima/organisms/invalid-acceptance-identity/history?limit=1",
 ];
+/**
+ * IMPLEMENTATION-HANDOFF [WP-OPS-000] | G-RUNTIME-01 | COV-OPS-BASELINE
+ * Current prerequisite is BLOCKED: the authorized Windows SERVER was offline
+ * on 2026-10-03. No current C:\AGENTS.md, runtime checkout, service configuration,
+ * node identity or deployed revision was read. Existing reports are historical.
+ * This preflight explicitly proves only API genesis/stable-tip observations;
+ * it cannot establish independent node, authority, database or Signet identity.
+ * Sources: R-BTC-04/05/06 in bundled research/btc-core-source-register.json.
+ * 1. Restore the existing authorized SERVER connection, read C:\AGENTS.md and
+ *    applicable repository instructions, then inventory actual worktrees and
+ *    dirty files before applying the supplied patches. Preserve concurrent work.
+ * 2. Create PROPOSED NEW scripts/universe/runtime-evidence.mjs, invoked by the
+ *    private acceptance runner, to record allowlisted component revisions,
+ *    network/genesis/Signet challenge, node version and checkpoint identity.
+ *    Read credentials only through existing authorized providers; never export
+ *    secrets, wallet material, environment dumps or arbitrary RPC responses.
+ * 3. Reconcile Core and each indexer/authority at a common block hash, retrying
+ *    boundedly when the tip changes. Bind the signed/configuration evidence to
+ *    the selected backend, database namespace and candidate artifact; keep the
+ *    API-only result from this function separately labelled transport evidence.
+ * 4. Add PROPOSED NEW scripts/universe/runtime-evidence.test.mjs for wrong chain,
+ *    two Signets with the same genesis but different challenge, lag/forked tip,
+ *    stale identity, permission failure and secret redaction. Run node --test
+ *    scripts/universe/acceptance-preflight.test.mjs plus the new suite after
+ *    creation; actual network assertions require the restored authorized stack.
+ * Acceptance: exact current identities and isolation proofs are reproducible
+ * without exposing credentials; no API-only observation becomes functional GO.
+ * Rollback: remove only test-owned runners/data. Do not alter access controls,
+ * production network defaults, wallet files or shared service state for access.
+ */
 export async function preflight({ origin, network }, read = readBounded) {
   const prefix = network === "mainnet" ? "" : `/${network}`;
   const records = [];

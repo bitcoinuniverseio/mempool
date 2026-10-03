@@ -639,6 +639,30 @@ function proxy(request, response, route) {
         response.destroy();
         return;
       }
+      /*
+       * IMPLEMENTATION-HANDOFF [WP-GW-001] | F-GW-001 | COV-GW-STREAM
+       * Verified at 62dec4617: after an upstream sends headers and part of its
+       * body then closes, this IncomingMessage has no error/aborted handler.
+       * The downstream keeps the partial JSON open until its own timeout.
+       * Controlled loopback reproduction: handoff evidence
+       * gateway-truncated-response-final.json; no gateway crash was observed.
+       * Governing source: S-NODE-HTTP-24 (Node 24.19 HTTP response-close events).
+       * Prerequisites: none. 1. Register one idempotent response-body cleanup
+       * path before piping, covering error, aborted and incomplete close.
+       * 2. If headers were sent, destroy the downstream response; otherwise
+       * use failClosed. Never replay a partial response or a state-changing
+       * request. 3. When the client leaves, destroy the active upstream request
+       * and response and cancel retries; remove listeners after completion.
+       * 4. Add loopback cases to gateway-restart.test.mjs for partial JSON,
+       * mid-body close, client cancellation and a successful subsequent read.
+       * Verify: TMPDIR=<writable-dir> node --test scripts/universe/gateway*.test.mjs
+       * plus handoff reproduction/gateway-truncated-response.mjs. Assert one
+       * upstream call, prompt downstream failure, no partial-success body and
+       * a still-serving gateway. Media streaming and both HTTP/HTTPS regress.
+       * Rollback only the gateway artifact; no database migration. Do not
+       * infer this defect caused the public 502 outage: its cause is unknown.
+       * Preparation only: executable behavior deliberately remains unchanged.
+       */
       upstreamResponse.pipe(response);
     });
     proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));

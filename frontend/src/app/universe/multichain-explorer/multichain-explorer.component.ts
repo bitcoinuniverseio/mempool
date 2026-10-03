@@ -488,6 +488,23 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
         return $localize`:@@universe.chain.page-outpoint:outpoint`;
       case 'protocols':
         return $localize`:@@universe.chain.page-protocols:protocols`;
+      /**
+       * IMPLEMENTATION-HANDOFF [WP-FE-011] | OV-F006 / D-FE-011 | C-FE-ZRC20-CATALOG-PAGE.
+       * This offered catalogue always reads page one, despite listPage already
+       * being route state. ZRC20 fixtures report total=159 with a finite limit.
+       * 1. For the supported ZRC20 offset contract, use the route page to compute
+       *    the bounded offset and retain ruleset on pageLink/back/forward/reload.
+       * 2. Add typed paging to the ruleset-list view model and render the existing
+       *    pager after that list in multichain-explorer.component.html. Show the
+       *    checked interval and total; reset page to one on ruleset change.
+       * 3. Test actual navigation for >1 page, different rows, failed continuation,
+       *    retry, empty final page, invalid page and route/network cancellation.
+       *    Keep all offered protocol catalogues in the coverage inventory, then
+       *    implement each according to its own cursor/offset contract.
+       * Related source/prerequisites/commands/acceptance/rollback: WP-FE-011 at
+       * UniverseApiService.getChainProtocolList$ and backend WP-OV-006. No
+       * executable placeholder or behavior change belongs to this preparation.
+       */
       case 'protocol-list':
         return $localize`:@@universe.chain.page-protocol-list:protocol assets`;
       case 'protocol-detail':

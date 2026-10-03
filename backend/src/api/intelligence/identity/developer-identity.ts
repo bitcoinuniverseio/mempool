@@ -210,6 +210,30 @@ export function extraCertificateAuthority(): Buffer | undefined {
 }
 
 export const httpsTransport: DeliveryTransport = ({ url, address, family, headers, body, timeoutMs, maxResponseBytes }) => new Promise(resolve => {
+  /* IMPLEMENTATION-HANDOFF [WP-BI-003] DEF-BI-003; COV-BI-003C/D.
+   * Verified: timeout is a Node socket inactivity timeout; a peer sending bytes
+   * periodically can keep the request alive beyond the outbox lease. There is no
+   * absolute delivery deadline. Governing source: Node.js v24.19.0 http request timeout
+   * documentation; docs/api/OWNER-IDENTITY.md bounded delivery/retry contract.
+   * 1. Add an absolute wall-clock deadline covering connection, TLS, request and
+   *    response; destroy the request/response on expiry and settle exactly once.
+   *    Keep the inactivity timeout, pinned DNS/TLS hostname and byte cap as separate
+   *    bounds. Clear deadline and listeners on every error, end and cancellation path.
+   * 2. Carry the worker cancellation/lost-lease signal into transport so a stale
+   *    worker cannot continue an unsupervised send. Record timeout versus lease-lost
+   *    accurately; receiver-side deduplication by notification_id remains necessary.
+   * 3. Test an isolated HTTPS receiver that trickles below maxResponseBytes and an
+   *    aborted response; require settlement within the configured absolute deadline,
+   *    socket closure and no leaked timer. Use the existing identity/__fixtures__ CA
+   *    only in isolated tests, never weaken destination or TLS checks in production.
+   * Dependencies: WP-BI-003 token fencing/just-in-time claim; WP-BI-002 durable intent.
+   * Tests: extend identity/developer-identity.test.ts; command cd backend &&
+   *    ./node_modules/.bin/jest --runInBand --coverage=false --runTestsByPath
+   *    src/api/intelligence/identity/developer-identity.test.ts. Trickle transport test
+   *    is a PROPOSED NEW case, NOT TESTED in preparation.
+   * Rollback: drain or cancel worker requests, preserve delivery/attempt rows and
+   *    restore only a version with bounded requests and the same fencing contract.
+   */
   let settled = false;
   const finish = (outcome: DeliveryOutcome): void => { if (!settled) { settled = true; resolve(outcome); } };
   const ca = extraCertificateAuthority();
@@ -420,6 +444,32 @@ export class DeveloperIdentityService {
    * @asyncUnsafe Callers turn a rejection into an exact HTTP answer.
    */
   public async authenticateKey(rawSecret: unknown, requiredScope?: string, now = Date.now()): Promise<AuthenticatedOwner | null> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-001] DEF-BI-001; COV-BI-001A/B. Preparation only.
+     * Verified at 62dec461: a Signet key authenticates on Mainnet when the store
+     * and pepper are shared. findApiKeyByHash and this method never test row.network.
+     * Governing contract: docs/api/OWNER-IDENTITY.md Storage; owner-store.ts header;
+     * user-required credential/network separation; OWASP Authorization Cheat Sheet.
+     * 1. Require this.network in the store lookup and reject an unequal row.network
+     *    before scope/expiry checks and last-used writes. Bind AuthenticatedOwner,
+     *    key views and issuance responses to the server-derived network; never accept
+     *    a body-selected network. Keep unknown/wrong-network keys indistinguishable.
+     * 2. Update OwnerStore/MysqlOwnerStore/MemoryOwnerStore.findApiKeyByHash together,
+     *    then owner-auth.ts and the frontend OwnerKeyService under WP-FE-008.
+     *    The explicit legacy operator key needs an operator-configured network
+     *    allowlist; do not silently convert stored user keys into multi-network keys.
+     * 3. Preserve key hashes, expiry and revocations. Existing row.network is the
+     *    migration source; ambiguous client-only legacy keys require issuing-network
+     *    readback or reissuance, never a guessed network or automatic cross-network copy.
+     * Dependencies: credential/network contract before downstream owner features.
+     * Tests: extend identity/developer-identity.test.ts with shared-store Signet/Mainnet
+     *    issuance, wrong-network 401, same-network success, revoke and limited-scope
+     *    regressions; repeat against isolated MySQL and both HTTP prefixes. Command:
+     *    cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/identity/developer-identity.test.ts
+     * Acceptance: current-source DEF-BI-001 reproduction rejects cross-network use;
+     *    refresh/network changes preserve only the selected network's authenticated key.
+     * Rollback: retain rows and hash material; do not restore permissive authentication.
+     */
     if (typeof rawSecret !== 'string' || !rawSecret.startsWith(KEY_PREFIX) || rawSecret.length > 128) {
       return null;
     }
@@ -565,6 +615,31 @@ export class DeveloperIdentityService {
 
   /** @asyncUnsafe Claims due outbox rows under a lease and delivers them. Returns the attempts made. */
   public async processOutbox(limit = 20, now = Date.now()): Promise<WebhookAttemptRow[]> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-003] DEF-BI-003; COV-BI-003A/B/C/D.
+     * Verified: 20 rows receive one 30-second lease before sequential delivery.
+     * With 10-second attempts, 16 rows start after expiry in the controlled repro;
+     * another process can reclaim them. outboxRunning protects only this process.
+     * 1. Claim one row immediately before each send (or at most currently free slots
+     *    in a bounded pool). Carry its returned lease_token to all attempt/renewal/
+     *    completion operations; stop if fenced renewal reports a lost lease.
+     * 2. Apply the absolute transport deadline annotated at httpsTransport, plus
+     *    bounded renewal for DB persistence. Do not lengthen all batch leases to
+     *    mask idle claims. Protect terminal transitions in MysqlOwnerStore.
+     * 3. Reserve attempt numbers atomically and persist their actual outcomes even
+     *    if a downstream acknowledgement is lost. Deliveries are at-least-once;
+     *    receiver idempotency uses stable notification_id, not the attempt counter.
+     * Dependencies: WP-BI-002 durable enqueue, then WP-BI-003 store/transport changes.
+     * Sources: MySQL 8.4 locking/transaction docs; Node.js v24.19.0 HTTP timeouts.
+     * Tests: identity/developer-identity.test.ts plus proposed owner-store-outbox
+     *    integration suite. Exercise two workers, 20 slow rows, expired A/reclaimed B,
+     *    B success/A failure, crash/restart, retry ceiling and receiver deduplication.
+     * Existing command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/identity/developer-identity.test.ts
+     * Acceptance requires no stale overwrite, no idle expired claims and a durable
+     *    final readback after real Signet event delivery; fault tests remain isolated.
+     * Rollback: stop all worker generations before changing fencing format and retain
+     *    pending jobs, attempts, tokens and next-attempt timestamps for safe resume.
+     */
     if (this.outboxRunning) { return []; }
     this.outboxRunning = true;
     try {

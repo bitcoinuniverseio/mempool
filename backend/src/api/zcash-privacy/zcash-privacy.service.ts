@@ -74,6 +74,34 @@ const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
  * catalogue is protocol reference and stays answerable.
  */
 export class ZcashPrivacyService {
+  /* IMPLEMENTATION-HANDOFF [WP-BE-014]
+   * Defect BE-014; COV-BE-014 privacy summary, value pools, upgrade reference.
+   * Summary/pools always throw, although zcash-block-source supplies a
+   * separate block tool. The public upgrade catalogue ends at NU5 despite
+   * final NU6/NU6.1/NU6.2 specifications (R-BE-ZIP253/255/257). Current-source
+   * reproduction records both missing operations and the returned names.
+   * 1. Pin the operated Zcash node implementation/release, network/genesis,
+   *    active branch and RPC schema. Extend zcash-block-source's owned reader
+   *    for supported getblockchaininfo/value-pool facts; do not route these
+   *    summaries to an unrelated public explorer or fabricate pool balances.
+   * 2. Define exact zatoshi totals and supply accounting for the selected
+   *    source. Bind every pool and derived flow to a consistent block
+   *    checkpoint and retain reversible history across restart/reorg.
+   * 3. Regenerate upgrade reference from pinned final specifications and
+   *    implementation constants for each supported network. Include all
+   *    applicable upgrades beyond NU5, verify heights/branch IDs and label
+   *    reference facts separately from observed activation. Recheck newer
+   *    releases before implementation; do not infer deployment from this list.
+   * 4. Map service/types/routes and zcash-privacy consumers. Regress the
+   *    existing raw-block/scanner path and verify summary/pools/upgrades on
+   *    genuine Zcash testnet, upgrade boundaries, wrong branch/network,
+   *    malformed/absent pool data, source outage, restart and reorg.
+   * Acceptance: both observed views and the complete network-specific
+   *    reference are correct, with exact totals and explicit unavailable data.
+   * Rollback: preserve node/index checkpoints and restore matched schemas/
+   *    adapters; never downgrade node consensus support to match old UI data.
+   * Preparation only; current returned data and unavailable states remain.
+   */
   /** @asyncSafe */
   public async $getSummary(): Promise<ZcashPrivacySummary> {
     throw new ZcashPrivacyEvidenceError('unavailable-zcash-node', zcashNodeUnavailable);

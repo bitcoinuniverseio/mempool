@@ -41,6 +41,33 @@ export default defineConfig({
       '@interfaces': fileURLToPath(new URL('./src/app/interfaces', import.meta.url)),
     },
   },
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-001] | D-FE-001 | C-FE-CI-01..03 | 2026-10-03.
+   * GitHub run 37009333065, job 110845029936, fails three 5000ms tests:
+   * ark-backup-crypto.spec.ts wrong-passphrase/tamper; consensus-conformance.spec.ts
+   * SSR evidence render; portfolio-shell.component.spec.ts real overview route.
+   * 2513 assertions passed; the log proves timeouts, not a broken cipher or UI.
+   * Governing runner: Vitest 3.2.7, https://v3.vitest.dev/config/#testtimeout and
+   * #maxworkers. Handoff evidence/frontend-ci-job-110845029936-excerpts.txt.
+   * 1. Reproduce all three on the pinned CI runner with CPU/memory allocation
+   *    recorded; compare a bounded two-worker run with the present default.
+   *    Start with maxWorkers=2 in the implementation change; retain the real
+   *    authenticated decrypt, Angular renderer and routed chart dependency.
+   * 2. Measure crypto-case duration with its real 600000 PBKDF2 rounds. If a
+   *    case exceeds the measured budget, give only that case a finite explicit
+   *    timeout with a documented margin. Never lower KDF cost, skip negative
+   *    assertions, disable timeouts globally or replace the renderer with a stub.
+   * 3. Diagnose unresolved teardown/worker handles before increasing budgets:
+   *    this sandbox printed passing files but the isolated runner did not exit
+   *    inside 45s. A printed test success is not a successful command exit.
+   * 4. Update the three named specs and .github/workflows/universe-ci.yml only
+   *    as required by measured runner constraints. Run npm test -- --maxWorkers=2
+   *    for the three files, then three full suite runs and npm run build:universe
+   *    on the release runner. Require all assertions, clean exits and artifacts.
+   * Prerequisites: pinned Node/npm install, writable TMPDIR, CI runner access.
+   * Acceptance is a stable CI gate, separate from Signet feature acceptance.
+   * Rollback only the runner/test policy change; preserve cryptographic behavior.
+   */
   test: {
     environment: 'node',
     globals: true,

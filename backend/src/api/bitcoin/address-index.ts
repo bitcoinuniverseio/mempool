@@ -59,6 +59,36 @@ export interface AddressIndexVerdict {
  * within the accepted distance of the chain, or the page it backs is going to
  * tell somebody a wrong thing about their money.
  */
+/* IMPLEMENTATION-HANDOFF [WP-BE-004]
+ * Defect BE-004; coverage COV-BE-004.source-network, readiness, failover.
+ * Reproduction: backend-reproduce.cjs obtains ready from only height,
+ * address-summary and UTXO reads, with no genesis/shared block hash check.
+ * An index at 1000000 versus Core at 100 is also ready because lag clamps
+ * to zero. A same-height fork/custom Signet can satisfy the existing facts.
+ * 1. Add validated source identity and a shared checkpoint to these facts,
+ *    probe results and capabilities. Read expected network/genesis from the
+ *    owned node and compare the address index block hash at a shared height.
+ *    Recheck the node tip around the reads; bounded retry handles normal tip
+ *    movement. Validate safe nonnegative heights before computing lag.
+ * 2. For Signet, bind the configured challenge as well as chain and genesis:
+ *    BIP325 Signets share genesis, so a matching genesis is insufficient.
+ *    If a reader cannot attest the required context, readiness is unavailable.
+ * 3. Apply the same identity check separately to each Esplora failover host
+ *    and Electrum backend before its data is served. Preserve owned endpoints
+ *    and never substitute an unrelated public provider to pass the gate.
+ * 4. Extend address-index/network/capabilities tests with equal-height forks,
+ *    wrong genesis, custom Signet challenge, huge ahead height, normal one-
+ *    block races, missing/malformed checkpoint and stale fallback. Exercise
+ *    actual Signet node plus index restart/reorg and frontend source states.
+ * Dependencies: AddressIndexFacts/Probe, capabilities.ts, backend-info.ts,
+ * esplora-api.ts FailoverRouter, electrum-indexed-tip, gateway health contract.
+ * Sources: R-BTC-06 (BIP325), R-BE-CORE (getblockchaininfo), owned index RPC.
+ * Acceptance: ready proves the expected chain at an observed shared block;
+ * height alone cannot establish identity and negative lag hides no mismatch.
+ * Rollback: retain previous validated source and data checkpoint; disable
+ * only an unverified source connection while restoring the compatible pair.
+ * Preparation only; the existing readiness behavior remains unchanged.
+ */
 export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict {
   const lagBlocks =
     facts.indexedTip !== null && facts.chainTip !== null

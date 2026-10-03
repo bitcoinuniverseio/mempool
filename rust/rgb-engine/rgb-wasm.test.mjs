@@ -1,3 +1,14 @@
+// IMPLEMENTATION-HANDOFF [WP-RS-002] COV-RS-RGB-MANIFEST / DEF-RS-002.
+// 1. Before treating fixture success as packaged-engine acceptance, load
+//    frontend/src/resources/rgb-engine/engine-manifest.json, require entries for
+//    rgb_engine.js, rgb_engine_bg.wasm and rgb.worker.js, and recompute SHA256 from
+//    each file's raw bytes. Assert exact equality with every manifest value.
+// 2. Test the validator with copied bytes changed by one byte; it must reject
+//    without editing committed assets. Retain the ten real WASM regressions below.
+// 3. Coordinate manifest refresh at rust/rgb-engine/build.mjs; run
+//    node --test rust/rgb-engine/rgb-wasm.test.mjs. Baseline fixture run: 10 PASS;
+//    baseline worker digest: FAIL. No Signet or Mainnet execution is implied.
+//    Prerequisites: reviewed artifact set; rollback: keep assets/manifest together.
 import fs from 'node:fs';import vm from 'node:vm';import path from 'node:path';import {fileURLToPath} from 'node:url';import {webcrypto} from 'node:crypto';import test from 'node:test';import assert from 'node:assert/strict';
 const root=path.dirname(fileURLToPath(import.meta.url));const assets=path.resolve(root,'../../frontend/src/resources/rgb-engine');const context={console,TextEncoder,TextDecoder,WebAssembly,Uint8Array,ArrayBuffer,DataView,URL,crypto:webcrypto};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(assets,'rgb_engine.js'),'utf8')+';globalThis.engine=wasm_bindgen;',context);context.bytes=fs.readFileSync(path.join(assets,'rgb_engine_bg.wasm'));vm.runInContext('engine.initSync({module:bytes})',context);const fixtures=JSON.parse(fs.readFileSync(path.join(root,'tests/public-fixtures.json')));const run=request=>JSON.parse(context.engine.validate_rgb(JSON.stringify(request)));const a=fixtures[0].request;
 for(const fixture of fixtures)test(`official ${fixture.scenario} schema/history/seal verification in WASM`,()=>{const result=run(fixture.request);assert.equal(result.status,'valid');assert(result.contract_id);assert.equal(result.anchor_txids.length,Object.keys(fixture.request.witnesses).length);});

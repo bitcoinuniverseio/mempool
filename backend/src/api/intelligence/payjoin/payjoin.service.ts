@@ -59,6 +59,35 @@ export type DirectoryProber = (
 
 const defaultProber: DirectoryProber = (url, address) =>
   new Promise((resolve) => {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-006] DEF-BI-006; COV-BI-006A/B/C.
+     * Verified: this probe uses /ohttp-keys, omits media-type evidence and treats any
+     * 2xx body as success; getDirectories then declares both BIP77 and BIP78 support.
+     * Governing sources: BIP77 draft 0.2.0 at bitcoin/bips 927b6de9915c9262615a6399de51b200f81e5aa4,
+     * RFC9540 sections 5-6 and RFC9458 sections 3.1-3.2. The pinned BIP snapshot is
+     * bundled under research/snapshots/bip-0077.md. BIP78 plaintext support is optional.
+     * 1. Probe the configured directory's RFC9540 /.well-known/ohttp-gateway with
+     *    Accept: application/ohttp-keys; any legacy endpoint requires an explicitly
+     *    pinned deployment profile, not an assumed universal path.
+     * 2. Return content-type, final authenticated origin, full bounded body and a
+     *    typed transport outcome. Abort on excess bytes instead of hashing a truncated
+     *    prefix; use an absolute deadline and bounded directory concurrency/singleflight.
+     *    Preserve DNS pinning and TLS checks. Redirects, if supported, require fresh
+     *    destination checks and the RFC9540 privacy rules, never arbitrary following.
+     * 3. Parse/validate the entire RFC9458 length-prefixed key collection and supported
+     *    KEM/KDF/AEAD suites in PROPOSED NEW payjoin/ohttp-directory-keys.ts using a
+     *    pinned compatible codec. Reject malformed, empty or unsupported collections;
+     *    the BIP77 draft's key-fragment ambiguity must be resolved against its selected
+     *    implementation profile before adding client encapsulation, never guessed.
+     * Dependencies: pinned directory/codec profile, then getDirectories DTO/consumer.
+     * Tests: payjoin.test.ts and PROPOSED NEW payjoin/ohttp-directory-keys.test.ts;
+     *    RFC vectors, invalid HTML/empty body, wrong content-type, truncation, oversized
+     *    body, timeout, DNS/redirect rejection, supported/unsupported suites and rotation.
+     * Command after native deps are built: cd backend && ./node_modules/.bin/jest
+     *    --runInBand --coverage=false --runTestsByPath src/api/intelligence/payjoin/payjoin.test.ts
+     * Full test command was incomplete with absent native artifacts during preparation.
+     * Rollback keeps configured URLs but invalidates old unvalidated capability cache;
+     *    no production capability may depend on an arbitrary response hash.
+     */
     const started = Date.now();
     const request = https.request(
       {
@@ -191,6 +220,32 @@ export class PayjoinService {
 
   /** @asyncUnsafe Configured directories, each probed for its OHTTP keys with a short cache. */
   public async getDirectories(now = Date.now()): Promise<PayjoinDirectory[]> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-006] DEF-BI-006; COV-BI-006A/B/C.
+     * Current-source reproduction: HTTP 200 plus '<html>not OHTTP keys</html>'
+     * gives bip77_supported=true, bip78_supported=true and an ohttp_key_hash.
+     * 1. Separate reachability, validated OHTTP key configuration and verified
+     *    protocol capability in PayjoinDirectory and all overview/UI consumers.
+     *    Hash only the complete validated key collection; record pinned profile,
+     *    evidence timestamp, key IDs/suites and typed unavailable/invalid reason.
+     * 2. A valid OHTTP key establishes key availability, not a full BIP77 workflow.
+     *    Require compatible directory behavior evidence before asserting BIP77 support;
+     *    keep BIP78 support unknown until independently configured/verified against
+     *    its plaintext receiver contract. Never infer it from OHTTP availability.
+     * 3. Key the cache by normalized endpoint and protocol profile; coalesce concurrent
+     *    refreshes, bound configured entries and invalidate when config/keys change.
+     *    Update getOverview active count and frontend directory/compatibility displays
+     *    to consume evidence states rather than optimistic booleans.
+     * Dependencies: WP-BI-006 prober/codec; BIP77 927b6de... draft 0.2.0, RFC9458/9540.
+     * Tests: extend payjoin.test.ts and frontend payjoin component tests. Invalid HTML
+     *    must never imply either protocol; valid keys alone leave negotiation unknown;
+     *    BIP78 and BIP77 integration cases have separate evidence and failure paths.
+     * Existing suite command: cd backend && ./node_modules/.bin/jest --runInBand
+     *    --coverage=false --runTestsByPath src/api/intelligence/payjoin/payjoin.test.ts
+     * Acceptance: real configured directory discovery, validated keys and truthful
+     *    API/UI readback; test offered transaction-analysis paths separately on Signet.
+     * Rollback retains URL configuration, clears obsolete cache and preserves truthful
+     *    unavailable results. No transfer/signing/broadcast occurred in this preparation.
+     */
     if (this.directoryCache && now - this.directoryCache.at < 5 * 60_000) {
       return this.directoryCache.directories;
     }

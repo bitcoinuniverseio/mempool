@@ -298,6 +298,32 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
     this.run(this.api.deleteWatchlist$(watchlistId), () => this.load());
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-007] | DEF-BI-004 | COV-BI-004A/B.
+   * ENTITY_TYPES offers outpoint and descriptor, but the pinned backend matcher
+   * only matches txid/address hashes. Accepted registration is not a functioning
+   * alert. Backend WP-BI-004 owns registration/matcher/store repair; see its
+   * source annotations and frontend-findings.json for cross-repository evidence.
+   * 1. Agree a versioned expanded-entity DTO with WP-BI-004 before changing
+   *    IntelligenceApiService.addWatchlistEntity$. Normalize outpoint as strict
+   *    lowercase 64-hex txid plus uint32 vout under the selected backend network.
+   * 2. Expand public descriptors in the browser over a finite explicit range;
+   *    reject private material, require the supported network, and derive public
+   *    scriptPubKey children using exactly the backend's matching normalization.
+   *    Preserve parent/range metadata and registration progress in the UI.
+   * 3. Display registered/indexing/active/failed coverage from actual backend
+   *    readback. Do not hide the offered kinds or claim that an opaque parent
+   *    hash already covers outputs. Legacy opaque hashes require explicit public
+   *    input resubmission because the backend cannot reverse them.
+   * 4. Extend watchlists component/service tests for create/read/reload/delete,
+   *    finite range validation, wrong-network/private input rejection and failure
+   *    recovery. Run npm test -- --maxWorkers=2 src/app/universe/intelligence-platform.
+   *    Signet acceptance: watch a real known outpoint's confirmation/spend and a
+   *    derived public descriptor output; verify persisted matching notification,
+   *    owner isolation, duplicate suppression and retry after service restart.
+   * Dependencies: WP-BI-004 and WP-FE-008/WP-BI-001 credential context. Rollback
+   *    preserves parent/child registration metadata; never discard stored watches.
+   */
   addEntity(watchlistId: string): void {
     const raw = (this.entityRaw[watchlistId] || '').trim();
     if (!raw) { return; }

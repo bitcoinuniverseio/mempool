@@ -645,6 +645,30 @@ wait_for() {
 
 # Returns non-zero rather than exiting, so a failed check can be rolled back
 # instead of leaving the new release in place with nothing serving.
+# IMPLEMENTATION-HANDOFF [WP-OPS-001] | F-OPS-001 | COV-OPS-AVAILABILITY
+# Observed 2026-10-03 05:01 UTC: public /, backend-info, capabilities, protocols
+# and chains all answered nginx HTTP 502. Scheduled run 37088438880 independently
+# failed with 502. No deployed commit, private process/configuration or outage
+# cause could be read: the connected Windows device was offline. Do not reuse
+# the September Fulcrum diagnosis as evidence for this outage.
+# Source: handoff evidence/public-readonly-probes.json and production smoke log.
+# Prerequisite WP-OPS-000: restore authorized SERVER access and read C:\AGENTS.md.
+# 1. Record the actual release symlinks/manifests, gateway socket/service status,
+# edge upstream, listening ports and bounded recent service logs without secrets.
+# 2. Probe edge -> gateway health -> explorer/overlay directly in that order;
+# stop at the first failing hop and establish its concrete cause before repair.
+# 3. Compare configuration and dependencies with the last accepted release;
+# repair that hop or restore the last accepted route under the deployment lock.
+# Preserve databases, index progress, credentials and uncommitted work.
+# 4. Run this existing verify_live through the documented release process, then
+# protocol-contract.mjs --against <owned-origin> and synthetic-check.mjs. Compare
+# reported frontend/backend/overlay identities with the artifact receipts.
+# Acceptance: expected public routes answer with correct chain data and explicit
+# unavailable states; no 502 remains; no new mainnet transaction is required.
+# This restores operational service only, not the full Signet acceptance gate.
+# Rollback: keep previous immutable release and routing state. Do not cut over a
+# new candidate without qualified functional evidence. Preparation changes no
+# commands, runtime state, deployment defaults, services or databases.
 verify_live() {
   local dir=$1
   wait_for "$GATEWAY/__gateway/health" gateway       || { log "gateway did not come back"; return 1; }

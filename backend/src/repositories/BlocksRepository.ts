@@ -672,6 +672,40 @@ class BlocksRepository {
    * Check if the canonical chain of blocks is valid and fix it if needed
    * @asyncSafe
    */
+  /* IMPLEMENTATION-HANDOFF [WP-BE-001]
+   * Defect BE-001; coverage COV-BE-001.chain-validation, reorg, mining-history.
+   * Current-source reproduction: backend-reproduce.cjs and
+   * backend-reproduction-results.json, scenarios missing-tip,
+   * stale-active-block and stale-lowest-indexed-block. A missing tip throws
+   * before the RPC fallback; stale cleanup indexes blocksByHash by height;
+   * both exceptions return true. The lowest retained height is not inspected.
+   * Required invariant: success means the retained active chain was checked
+   * against the same owned-node checkpoint and required cleanup completed.
+   * 1. Read the pinned tip safely (blocksByHash[hash]?.height); validate its
+   *    fetched identity/height, handle an empty database explicitly, and walk
+   *    every retained height including the oldest indexed boundary. Preserve
+   *    the earliest changed block object/hash for its cleanup timestamp.
+   * 2. Distinguish valid, repaired-needs-reindex, and unavailable/failed.
+   *    Propagate failures to blocks.$generateBlockDatabase and Indexer.$run
+   *    so dependent summaries, hash rates, difficulty, CPFP and audits cannot
+   *    claim completion after an incomplete validation. Keep retries bounded.
+   * 3. Recheck the owned tip after traversal; if it moved, retry a bounded
+   *    snapshot or report unavailable. Make partial active/stale updates and
+   *    downstream invalidation resumable; do not delete unrelated history.
+   * 4. Add focused repository tests for all three reproductions, RPC/DB
+   *    failures, gaps, empty DB, fork depth beyond cache and retry after
+   *    interruption. Run database integration with competing valid regtest
+   *    branches, then Signet explorer/mining consumer regression. Assert
+   *    cleanup bounds and persisted active hashes, not only returned booleans.
+   * Dependencies: api/blocks.ts, indexer.ts, HashratesRepository,
+   * DifficultyAdjustmentsRepository, CpfpRepository and mining API consumers.
+   * Acceptance: no failure becomes a valid-chain result; repaired derived
+   * data agrees with the accepted checkpoint after restart. See R-BTC-05/06
+   * and R-BE-CORE in the handoff research register for node/network rules.
+   * Rollback: stop affected index workers, retain the pre-repair DB snapshot,
+   * restore compatible schema/data and reindex from the verified fork point.
+   * This annotation is preparation only; executable behavior is unchanged.
+   */
   public async $validateChain(): Promise<boolean> {
     try {
       const start = new Date().getTime();
