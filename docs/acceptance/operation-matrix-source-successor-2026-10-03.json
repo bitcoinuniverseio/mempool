@@ -2442,7 +2442,7 @@
     },
     {
       "path": "docs/acceptance/protocol-authority-transitions-2026-10-03.json",
-      "sha256": "3366495cbb2760bedd9d3429cd41da2377843193c7d54eb8f8b6e89bd8882508",
+      "sha256": "7eea0057b223c9f7d8eb359a2fd06a708b621ba5c56b3a316e28537328c4c536",
       "sha256Encoding": "raw-bytes",
       "bytes": 772
     },
@@ -2490,7 +2490,7 @@
     },
     {
       "path": "docs/protocols/PROTOCOL-COVERAGE.json",
-      "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+      "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
       "sha256Encoding": "raw-bytes",
       "bytes": 75917
     },
@@ -2556,9 +2556,9 @@
     },
     {
       "path": "frontend/src/app/components/push-transaction/push-transaction.component.ts",
-      "sha256": "df870021ece99c9fa1b39579d6911a8963e243d2af18193bd21aad8165b2a568",
+      "sha256": "0ee3e4a462c170189d99bd68b2bdb9e1f2aeb8b73222ab140ceba44ab491e579",
       "sha256Encoding": "utf8-lf",
-      "bytes": 7882
+      "bytes": 10129
     },
     {
       "path": "frontend/src/app/components/rbf-list/rbf-list.component.ts",
@@ -3894,9 +3894,9 @@
     },
     {
       "path": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-      "sha256": "5f8a85587c0c845079df433942be9d4c45818ffea436550fd0278b0e3ebfb78c",
+      "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
       "sha256Encoding": "utf8-lf",
-      "bytes": 4414
+      "bytes": 5097
     },
     {
       "path": "frontend/src/app/universe/portfolio/insights/insights.component.ts",
@@ -5243,7 +5243,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/push-transaction/push-transaction.component.ts",
-          "sha256": "df870021ece99c9fa1b39579d6911a8963e243d2af18193bd21aad8165b2a568",
+          "sha256": "0ee3e4a462c170189d99bd68b2bdb9e1f2aeb8b73222ab140ceba44ab491e579",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -21711,7 +21711,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-          "sha256": "5f8a85587c0c845079df433942be9d4c45818ffea436550fd0278b0e3ebfb78c",
+          "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -45236,7 +45236,7 @@
         },
         {
           "artifact": "docs/acceptance/protocol-authority-transitions-2026-10-03.json",
-          "sha256": "3366495cbb2760bedd9d3429cd41da2377843193c7d54eb8f8b6e89bd8882508",
+          "sha256": "7eea0057b223c9f7d8eb359a2fd06a708b621ba5c56b3a316e28537328c4c536",
           "sha256Encoding": "raw-bytes",
           "protocol": "op_names"
         }
@@ -45266,7 +45266,7 @@
         "fromAuthority": "index-op20",
         "toAuthority": "index-op20-op-names",
         "sourceRepository": "bitcoinuniverseio/backend-apis",
-        "registrySourceRevision": "b5542b0471caa86b93e35ca348ee7cfc217eee1a",
+        "registrySourceRevision": "2822a72f6c7a94a5f01beed58e69d6d433df1d5e",
         "producerRepository": "bitcoinuniverseio/index-op20",
         "producerSourceRevision": "8cdb0bd5d1c177126eda55316e2533cb722d0619",
         "producerPath": "/token-explorer/op-names",
@@ -49838,7 +49838,7 @@
         },
         {
           "artifact": "frontend/src/app/components/push-transaction/push-transaction.component.ts",
-          "sha256": "df870021ece99c9fa1b39579d6911a8963e243d2af18193bd21aad8165b2a568",
+          "sha256": "0ee3e4a462c170189d99bd68b2bdb9e1f2aeb8b73222ab140ceba44ab491e579",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -50020,7 +50020,7 @@
         },
         {
           "artifact": "frontend/src/app/components/push-transaction/push-transaction.component.ts",
-          "sha256": "df870021ece99c9fa1b39579d6911a8963e243d2af18193bd21aad8165b2a568",
+          "sha256": "0ee3e4a462c170189d99bd68b2bdb9e1f2aeb8b73222ab140ceba44ab491e579",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -76365,7 +76365,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-          "sha256": "5f8a85587c0c845079df433942be9d4c45818ffea436550fd0278b0e3ebfb78c",
+          "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -76466,7 +76466,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/portfolio/home/workspace-redirect.component.ts",
-          "sha256": "5f8a85587c0c845079df433942be9d4c45818ffea436550fd0278b0e3ebfb78c",
+          "sha256": "d9039cc46069c49e07233b7c9e42fad678edb143de09784166264200a25bb3c1",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -134986,7 +134986,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/0"
         },
@@ -135091,7 +135091,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/1"
         },
@@ -135196,7 +135196,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/2"
         },
@@ -135301,7 +135301,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/3"
         },
@@ -135406,7 +135406,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/4"
         },
@@ -135507,7 +135507,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/5"
         },
@@ -135612,7 +135612,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/6"
         },
@@ -135713,7 +135713,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/0/readOperationDescriptors/7"
         },
@@ -135815,7 +135815,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/1/readOperationDescriptors/0"
         },
@@ -135920,7 +135920,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/1/readOperationDescriptors/1"
         },
@@ -136025,7 +136025,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/1/readOperationDescriptors/2"
         },
@@ -136130,7 +136130,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/1/readOperationDescriptors/3"
         },
@@ -136235,7 +136235,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/1/readOperationDescriptors/4"
         },
@@ -136336,7 +136336,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/1/readOperationDescriptors/5"
         },
@@ -136441,7 +136441,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/1/readOperationDescriptors/6"
         },
@@ -136543,7 +136543,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/2/readOperationDescriptors/0"
         },
@@ -136644,7 +136644,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/2/readOperationDescriptors/1"
         },
@@ -136746,7 +136746,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/3/readOperationDescriptors/0"
         },
@@ -136847,7 +136847,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/3/readOperationDescriptors/1"
         },
@@ -136949,7 +136949,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/4/readOperationDescriptors/0"
         },
@@ -137050,7 +137050,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/4/readOperationDescriptors/1"
         },
@@ -137152,7 +137152,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/5/readOperationDescriptors/0"
         },
@@ -137257,7 +137257,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/5/readOperationDescriptors/1"
         },
@@ -137362,7 +137362,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/5/readOperationDescriptors/2"
         },
@@ -137467,7 +137467,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/5/readOperationDescriptors/3"
         },
@@ -137572,7 +137572,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/5/readOperationDescriptors/4"
         },
@@ -137673,7 +137673,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/5/readOperationDescriptors/5"
         },
@@ -137778,7 +137778,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/5/readOperationDescriptors/6"
         },
@@ -137880,7 +137880,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/6/readOperationDescriptors/0"
         },
@@ -137981,7 +137981,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/6/readOperationDescriptors/1"
         },
@@ -138083,7 +138083,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/7/readOperationDescriptors/0"
         },
@@ -138184,7 +138184,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/7/readOperationDescriptors/1"
         },
@@ -138286,7 +138286,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/8/readOperationDescriptors/0"
         },
@@ -138387,7 +138387,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/8/readOperationDescriptors/1"
         },
@@ -138489,7 +138489,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/9/readOperationDescriptors/0"
         },
@@ -138590,7 +138590,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/9/readOperationDescriptors/1"
         },
@@ -138692,7 +138692,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/10/readOperationDescriptors/0"
         },
@@ -138793,7 +138793,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/10/readOperationDescriptors/1"
         },
@@ -138895,7 +138895,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/11/readOperationDescriptors/0"
         },
@@ -138996,7 +138996,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/11/readOperationDescriptors/1"
         },
@@ -139101,7 +139101,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/11/readOperationDescriptors/2"
         },
@@ -139206,7 +139206,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/11/readOperationDescriptors/3"
         },
@@ -139311,7 +139311,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/11/readOperationDescriptors/4"
         },
@@ -139416,7 +139416,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/11/readOperationDescriptors/5"
         },
@@ -139517,7 +139517,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/11/readOperationDescriptors/6"
         },
@@ -139619,7 +139619,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/12/readOperationDescriptors/0"
         },
@@ -139720,7 +139720,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/12/readOperationDescriptors/1"
         },
@@ -139825,7 +139825,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/12/readOperationDescriptors/2"
         },
@@ -139930,7 +139930,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/12/readOperationDescriptors/3"
         },
@@ -140035,7 +140035,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/12/readOperationDescriptors/4"
         },
@@ -140140,7 +140140,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/12/readOperationDescriptors/5"
         },
@@ -140241,7 +140241,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/12/readOperationDescriptors/6"
         },
@@ -140343,7 +140343,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/13/readOperationDescriptors/0"
         },
@@ -140448,7 +140448,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/13/readOperationDescriptors/1"
         },
@@ -140553,7 +140553,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/13/readOperationDescriptors/2"
         },
@@ -140658,7 +140658,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/13/readOperationDescriptors/3"
         },
@@ -140763,7 +140763,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/13/readOperationDescriptors/4"
         },
@@ -140864,7 +140864,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/13/readOperationDescriptors/5"
         },
@@ -140966,7 +140966,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/14/readOperationDescriptors/0"
         },
@@ -141067,7 +141067,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/14/readOperationDescriptors/1"
         },
@@ -141169,7 +141169,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/15/readOperationDescriptors/0"
         },
@@ -141270,7 +141270,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/15/readOperationDescriptors/1"
         },
@@ -141372,13 +141372,13 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/16/readOperationDescriptors/0"
         },
         {
           "artifact": "docs/acceptance/protocol-authority-transitions-2026-10-03.json",
-          "sha256": "3366495cbb2760bedd9d3429cd41da2377843193c7d54eb8f8b6e89bd8882508",
+          "sha256": "7eea0057b223c9f7d8eb359a2fd06a708b621ba5c56b3a316e28537328c4c536",
           "sha256Encoding": "raw-bytes",
           "protocol": "op_names"
         },
@@ -141413,7 +141413,7 @@
         "fromAuthority": "index-op20",
         "toAuthority": "index-op20-op-names",
         "sourceRepository": "bitcoinuniverseio/backend-apis",
-        "registrySourceRevision": "b5542b0471caa86b93e35ca348ee7cfc217eee1a",
+        "registrySourceRevision": "2822a72f6c7a94a5f01beed58e69d6d433df1d5e",
         "producerRepository": "bitcoinuniverseio/index-op20",
         "producerSourceRevision": "8cdb0bd5d1c177126eda55316e2533cb722d0619",
         "producerPath": "/token-explorer/op-names",
@@ -141492,13 +141492,13 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/16/readOperationDescriptors/1"
         },
         {
           "artifact": "docs/acceptance/protocol-authority-transitions-2026-10-03.json",
-          "sha256": "3366495cbb2760bedd9d3429cd41da2377843193c7d54eb8f8b6e89bd8882508",
+          "sha256": "7eea0057b223c9f7d8eb359a2fd06a708b621ba5c56b3a316e28537328c4c536",
           "sha256Encoding": "raw-bytes",
           "protocol": "op_names"
         },
@@ -141533,7 +141533,7 @@
         "fromAuthority": "index-op20",
         "toAuthority": "index-op20-op-names",
         "sourceRepository": "bitcoinuniverseio/backend-apis",
-        "registrySourceRevision": "b5542b0471caa86b93e35ca348ee7cfc217eee1a",
+        "registrySourceRevision": "2822a72f6c7a94a5f01beed58e69d6d433df1d5e",
         "producerRepository": "bitcoinuniverseio/index-op20",
         "producerSourceRevision": "8cdb0bd5d1c177126eda55316e2533cb722d0619",
         "producerPath": "/token-explorer/op-names",
@@ -141613,7 +141613,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/17/readOperationDescriptors/0"
         },
@@ -141714,7 +141714,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/17/readOperationDescriptors/1"
         },
@@ -141816,7 +141816,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/18/readOperationDescriptors/0"
         },
@@ -141917,7 +141917,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/18/readOperationDescriptors/1"
         },
@@ -142019,7 +142019,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/19/readOperationDescriptors/0"
         },
@@ -142120,7 +142120,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/19/readOperationDescriptors/1"
         },
@@ -142222,7 +142222,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/20/readOperationDescriptors/0"
         },
@@ -142323,7 +142323,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/20/readOperationDescriptors/1"
         },
@@ -142425,7 +142425,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/21/readOperationDescriptors/0"
         },
@@ -142526,7 +142526,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/21/readOperationDescriptors/1"
         },
@@ -142628,7 +142628,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/22/readOperationDescriptors/0"
         },
@@ -142729,7 +142729,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/22/readOperationDescriptors/1"
         },
@@ -142831,7 +142831,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/23/readOperationDescriptors/0"
         },
@@ -142932,7 +142932,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/23/readOperationDescriptors/1"
         },
@@ -143034,7 +143034,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/24/readOperationDescriptors/0"
         },
@@ -143135,7 +143135,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/24/readOperationDescriptors/1"
         },
@@ -143237,7 +143237,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/25/readOperationDescriptors/0"
         },
@@ -143338,7 +143338,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/25/readOperationDescriptors/1"
         },
@@ -143440,7 +143440,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/26/readOperationDescriptors/0"
         },
@@ -143541,7 +143541,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/26/readOperationDescriptors/1"
         },
@@ -143643,7 +143643,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/27/readOperationDescriptors/0"
         },
@@ -143744,7 +143744,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/27/readOperationDescriptors/1"
         },
@@ -143846,7 +143846,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/28/readOperationDescriptors/0"
         },
@@ -143947,7 +143947,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/28/readOperationDescriptors/1"
         },
@@ -144049,7 +144049,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/29/readOperationDescriptors/0"
         },
@@ -144151,7 +144151,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/29/readOperationDescriptors/1"
         },
@@ -144254,7 +144254,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/30/readOperationDescriptors/0"
         },
@@ -144356,7 +144356,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/31/readOperationDescriptors/0"
         },
@@ -144457,7 +144457,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/31/readOperationDescriptors/1"
         },
@@ -144558,7 +144558,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/31/readOperationDescriptors/2"
         },
@@ -144659,7 +144659,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/31/readOperationDescriptors/3"
         },
@@ -144760,7 +144760,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/31/readOperationDescriptors/4"
         },
@@ -144861,7 +144861,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/31/readOperationDescriptors/5"
         },
@@ -144962,7 +144962,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/31/readOperationDescriptors/6"
         },
@@ -145064,7 +145064,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/32/readOperationDescriptors/0"
         },
@@ -145165,7 +145165,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/32/readOperationDescriptors/1"
         },
@@ -145266,7 +145266,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/32/readOperationDescriptors/2"
         },
@@ -145368,7 +145368,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/33/readOperationDescriptors/0"
         },
@@ -145469,7 +145469,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/33/readOperationDescriptors/1"
         },
@@ -145570,7 +145570,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/33/readOperationDescriptors/2"
         },
@@ -145671,7 +145671,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/33/readOperationDescriptors/3"
         },
@@ -145773,7 +145773,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/34/readOperationDescriptors/0"
         },
@@ -145874,7 +145874,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/34/readOperationDescriptors/1"
         },
@@ -145961,7 +145961,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/34/readOperationDescriptors/2"
         },
@@ -146028,7 +146028,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/34/readOperationDescriptors/3"
         },
@@ -146095,7 +146095,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/34/readOperationDescriptors/4"
         },
@@ -146162,7 +146162,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/34/readOperationDescriptors/5"
         },
@@ -146244,7 +146244,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/35/readOperationDescriptors/0"
         },
@@ -146345,7 +146345,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/35/readOperationDescriptors/1"
         },
@@ -146446,7 +146446,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/35/readOperationDescriptors/2"
         },
@@ -146548,7 +146548,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/36/readOperationDescriptors/0"
         },
@@ -146649,7 +146649,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/36/readOperationDescriptors/1"
         },
@@ -146750,7 +146750,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/36/readOperationDescriptors/2"
         },
@@ -146852,7 +146852,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/37/readOperationDescriptors/0"
         },
@@ -146953,7 +146953,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/37/readOperationDescriptors/1"
         },
@@ -147054,7 +147054,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/37/readOperationDescriptors/2"
         },
@@ -147156,7 +147156,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/38/readOperationDescriptors/0"
         },
@@ -147257,7 +147257,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/38/readOperationDescriptors/1"
         },
@@ -147358,7 +147358,7 @@
       "sources": [
         {
           "artifact": "docs/protocols/PROTOCOL-COVERAGE.json",
-          "sha256": "020c96e8c8127e47cffe1e9f96ed200b51ddd3f1ffccc85368ee068f62eeebfe",
+          "sha256": "954d9813697da99e652d32132ffe0cb56a84e3b3b1c6139d195d199aa5e00ee3",
           "sha256Encoding": "raw-bytes",
           "pointer": "/protocols/38/readOperationDescriptors/2"
         },
