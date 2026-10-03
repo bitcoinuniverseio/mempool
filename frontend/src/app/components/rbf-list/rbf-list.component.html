@@ -14,6 +14,12 @@
   </div>
 
   <div class="clearfix"></div>
+  @if (loadError) {
+    <div role="alert" class="mb-3">
+      <p>{{ loadError }}</p>
+      <button type="button" class="btn btn-primary" [disabled]="isLoading" (click)="retryLoad()">Retry</button>
+    </div>
+  }
 
   <div class="rbf-trees" [ngStyle]="{ 'min-height': '295px', 'opacity': isLoading ? '0.75' : '1' }">
     <ng-container *ngIf="rbfTrees$ | async as trees">
@@ -30,7 +36,7 @@
         </div>
       </div>
 
-      <div class="no-replacements" *ngIf="!trees?.length">
+      <div class="no-replacements" *ngIf="!loadError && !trees?.length">
         <p i18n="rbf.no-replacements-yet">There are no replacements in the mempool yet!</p>
       </div>
     </ng-container>

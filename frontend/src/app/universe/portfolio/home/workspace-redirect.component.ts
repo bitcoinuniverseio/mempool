@@ -90,12 +90,13 @@ export class WorkspaceRedirectComponent implements OnInit {
   }
 
   protected async run(): Promise<void> {
-    if (this.pending() || !this.store.isUnlocked()) return;
+    const preview = this.previewSignal();
+    if (this.pending() || !this.store.isUnlocked() || !preview) return;
     this.pending.set(true);
     this.errorSignal.set('');
     try {
       const name = $localize`:@@universe.portfolio.workspace.default-name:Migrated watchlist`;
-      await this.store.migrateWorkspace(name, migrateWorkspace());
+      await this.store.migrateWorkspace(name, preview);
       await this.redirect();
     } catch {
       this.errorSignal.set(

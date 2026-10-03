@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, EMPTY, merge, Observable, of, Subscription } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, merge, Observable, of, Subject, Subscription } from 'rxjs';
+import { catchError, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { WebsocketService } from '@app/services/websocket.service';
 import { RbfTree } from '@interfaces/node-api.interface';
 import { ApiService } from '@app/services/api.service';
@@ -23,6 +23,9 @@ export class RbfList implements OnInit, OnDestroy {
   urlFragmentSubscription: Subscription;
   fullRbf: boolean;
   isLoading = true;
+  loadError: string | null = null;
+  private destroyed = false;
+  private readonly destroyed$ = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
@@ -36,25 +39,27 @@ export class RbfList implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.urlFragmentSubscription = this.route.fragment.subscribe((fragment) => {
+      if (this.destroyed) { return; }
       this.fullRbf = (fragment === 'fullrbf');
       this.websocketService.startTrackRbf(this.fullRbf ? 'fullRbf' : 'all');
-      this.nextRbfSubject.next(null);
       this.isLoading = true;
+      this.nextRbfSubject.next(null);
     });
 
     this.rbfTrees$ = merge(
       this.nextRbfSubject.pipe(
         switchMap(() => {
-          return this.apiService.getRbfList$(this.fullRbf);
-        }),
-        catchError((e) => {
-          this.isLoading = false;
-          return of([]);
+          this.isLoading = true; this.loadError = null;
+          return this.apiService.getRbfList$(this.fullRbf).pipe(catchError(() => {
+            this.isLoading = false; this.loadError = 'Replacement history is unavailable. Retry to load it.';
+            return of([]);
+          }));
         })
       ),
       this.stateService.rbfLatest$
     )
     .pipe(
+      takeUntil(this.destroyed$),
       tap(() => {
         this.isLoading = false;
       })
@@ -64,7 +69,14 @@ export class RbfList implements OnInit, OnDestroy {
     this.seoService.setDescription($localize`:@@meta.description.rbf-list:See the most recent RBF replacements on the Bitcoin${seoDescriptionNetwork(this.stateService.network)} network, updated in real-time.`);
   }
 
+  retryLoad(): void {
+    if (!this.destroyed) { this.nextRbfSubject.next(null); }
+  }
+
   ngOnDestroy(): void {
+    this.destroyed = true;
+    this.destroyed$.next(); this.destroyed$.complete();
+    this.urlFragmentSubscription?.unsubscribe();
     this.websocketService.stopTrackRbf();
   }
 }
