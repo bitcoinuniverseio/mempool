@@ -1,6 +1,9 @@
 <app-nodes-channels-map [style]="'widget'"></app-nodes-channels-map>
 
 <div class="container-xl dashboard-container">
+  <p *ngIf="statisticsError" class="alert alert-warning" role="alert">{{ statisticsError }}</p>
+  <p *ngIf="rankingError" class="alert alert-warning" role="alert">{{ rankingError }}</p>
+  <button *ngIf="statisticsError || rankingError" class="btn btn-outline-secondary mb-3" (click)="retry()" [disabled]="statisticsPending || rankingPending">Retry dashboard reads</button>
 
   <div class="row row-cols-1 row-cols-md-2">
 
@@ -12,7 +15,7 @@
       <div class="card-wrapper">
         <div class="card" style="height: 123px">
           <div class="card-body more-padding">
-            <app-node-statistics [statistics$]="statistics$"></app-node-statistics>
+            <app-node-statistics *ngIf="!statisticsError" [statistics$]="statistics$"></app-node-statistics>
           </div>
         </div>
       </div>
@@ -26,7 +29,7 @@
       <div class="card-wrapper">
         <div class="card" style="height: 123px">
           <div class="card-body more-padding">
-            <app-channels-statistics [statistics$]="statistics$"></app-channels-statistics>
+            <app-channels-statistics *ngIf="!statisticsError" [statistics$]="statistics$"></app-channels-statistics>
           </div>
         </div>
       </div>
@@ -67,7 +70,7 @@
             <span>&nbsp;</span>
             <fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true" style="vertical-align: text-top; font-size: 13px; color: var(--title-fg)"></fa-icon>
           </a>
-          <app-top-nodes-per-capacity [nodes$]="nodesRanking$" [statistics$]="statistics$" [widget]="true"></app-top-nodes-per-capacity>
+          <app-top-nodes-per-capacity *ngIf="!rankingError" [nodes$]="nodesRanking$" [statistics$]="statistics$" [widget]="true"></app-top-nodes-per-capacity>
         </div>
       </div>
     </div>
@@ -81,7 +84,7 @@
             <span>&nbsp;</span>
             <fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true" style="vertical-align: text-top; font-size: 13px; color: var(--title-fg)"></fa-icon>
           </a>
-          <app-top-nodes-per-channels [nodes$]="nodesRanking$" [statistics$]="statistics$" [widget]="true"></app-top-nodes-per-channels>
+          <app-top-nodes-per-channels *ngIf="!rankingError" [nodes$]="nodesRanking$" [statistics$]="statistics$" [widget]="true"></app-top-nodes-per-channels>
         </div>
       </div>
     </div>
