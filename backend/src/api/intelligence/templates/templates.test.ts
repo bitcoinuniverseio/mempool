@@ -4,9 +4,9 @@ jest.mock('../../mempool-blocks', () => ({ __esModule: true, default: { getMempo
 import { templateCollectorService } from './template-collector.service';
 import { BlockExtended, TransactionExtended } from '../../../mempool.interfaces';
 
-const gbt = (height: number, txs: { txid: string; fee: number; weight: number }[]) => ({ height, previousblockhash: 'p'.repeat(64), transactions: txs.map(tx => ({ ...tx, hash: tx.txid, sigops: 1 })), coinbasevalue: 5000 });
+const gbt = (height: number, txs: { txid: string; fee: number; weight: number }[]) => ({ height, previousblockhash: 'a'.repeat(64), transactions: txs.map(tx => ({ ...tx, hash: tx.txid, sigops: 1 })), coinbasevalue: 5000 });
 const block = (height: number, id: string, fees: number, txids: string[]): [BlockExtended, TransactionExtended[]] => [
-  { height, id, previousblockhash: 'p'.repeat(64), timestamp: 2_000_000, weight: 4000, extras: { totalFees: fees } } as unknown as BlockExtended,
+  { height, id, previousblockhash: 'a'.repeat(64), timestamp: 2_000_000, weight: 4000, extras: { totalFees: fees } } as unknown as BlockExtended,
   [{ txid: 'coinbase', vin: [{ is_coinbase: true }], fee: 0 }, ...txids.map(txid => ({ txid, vin: [{}], fee: 10 }))] as unknown as TransactionExtended[],
 ];
 
@@ -34,11 +34,11 @@ describe('template collector: real sources only', () => {
     templateCollectorService.fetchCoreTemplate = async () => gbt(100, [{ txid: 'a'.repeat(64), fee: 100, weight: 400 }]);
     const eligible = (await templateCollectorService.collectCoreTemplate(1000))!;
     await templateCollectorService.collectCoreTemplate(5000);
-    templateCollectorService.fetchCoreTemplate = async () => ({ ...gbt(100, [{ txid: 'b'.repeat(64), fee: 1000, weight: 400 }]), previousblockhash: 'q'.repeat(64) });
+    templateCollectorService.fetchCoreTemplate = async () => ({ ...gbt(100, [{ txid: 'b'.repeat(64), fee: 1000, weight: 400 }]), previousblockhash: 'b'.repeat(64) });
     await templateCollectorService.collectCoreTemplate(2000);
     const [mined, txs] = block(100, '1'.repeat(64), 100, ['a'.repeat(64)]);
     expect(templateCollectorService.observeBlock(mined, txs, 3000)?.best_template_id).toBe(eligible.template_id);
-    expect(templateCollectorService.observeBlock({ ...mined, previousblockhash: 'r'.repeat(64) }, txs, 3000)).toBeNull();
+    expect(templateCollectorService.observeBlock({ ...mined, previousblockhash: 'c'.repeat(64) }, txs, 3000)).toBeNull();
   });
 
   it('lists the two sources this deployment has, uncollected until something was fetched', () => {
@@ -58,7 +58,7 @@ describe('template collector: real sources only', () => {
     expect(templateCollectorService.getSources().find(s => s.source_type === 'core_gbt')).toMatchObject({ status: 'active', last_error: null });
     templateCollectorService.fetchCoreTemplate = async () => { throw new Error('401 Unauthorized'); };
     expect(await templateCollectorService.collectCoreTemplate()).toBeNull();
-    expect(templateCollectorService.getSources().find(s => s.source_type === 'core_gbt')).toMatchObject({ status: 'offline', last_error: '401 Unauthorized' });
+    expect(templateCollectorService.getSources().find(s => s.source_type === 'core_gbt')).toMatchObject({ status: 'offline', last_error: 'Core template observation unavailable' });
   });
 
   it('the projection is a template for the height Core reported and diffs against Core are real set differences', async () => {
@@ -66,9 +66,9 @@ describe('template collector: real sources only', () => {
     const core = (await templateCollectorService.collectCoreTemplate())!;
     templateCollectorService.readProjection = () => ({ transactionIds: ['b'.repeat(64), 'a'.repeat(64), 'd'.repeat(64)], totalFees: 420, blockVSize: 400, nTx: 3 });
     const projection = (await templateCollectorService.collectProjection())!;
-    expect(projection).toMatchObject({ height: 100, source_type: 'mempool_projection', total_fees_sats: 420, total_weight: 1600 });
+    expect(projection).toMatchObject({ height: 100, source_type: 'mempool_projection', total_fees_sats: 420, total_weight: null, estimated_weight: 1600 });
     const diff = templateCollectorService.computeTemplateDiff(core.template_id, projection.template_id)!;
-    expect(diff).toMatchObject({ added_to_b: ['d'.repeat(64)], removed_from_b: ['c'.repeat(64)], reordered_count: 1, fee_delta_sats: -30, similarity_score: 0.6667 });
+    expect(diff).toMatchObject({ added_to_b: ['d'.repeat(64)], removed_from_b: ['c'.repeat(64)], reordered_count: 1, fee_delta_sats: null, weight_delta: null, comparison_context: 'unavailable', similarity_score: 0.6667 });
   });
 
   it('a mined block is compared against the best template for its height, and only then', async () => {

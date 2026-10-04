@@ -9,9 +9,9 @@ const OVERVIEW_TEMPLATES = 24;
 class TemplatesRoutes {
   public initRoutes(app: Application): void {
     /* IMPLEMENTATION-HANDOFF [WP-BI-005] DEF-BI-005; COV-BI-005E.
-     * Verified: :templateId is registered before literal stream, so GET /stream
-     * hits $getTemplate; even if reordered, btc.*.template.* is unsupported by the
-     * current bus and TemplateCollectorService.remember never publishes an event.
+     * The literal stream precedes the template-ID route and consumes the selected
+     * network's published envelopes. Replay gaps and provider failure are explicit;
+     * mounted native producer/consumer acceptance is separate from source wiring.
      * 1. Register literal stream before :templateId and validate template IDs. Keep
      *    overview/sources/fingerprints/diff/comparison routes reachable unchanged.
      * 2. After the provider and collector changes, subscribe to the selected network's
@@ -46,6 +46,8 @@ class TemplatesRoutes {
       const templates = templateCollectorService.getTemplatesForHeight();
       // The overview shows the newest collections; the full list is paged through the stream and per-height routes.
       res.json({
+        configured_network: config.MEMPOOL.NETWORK,
+        current_observation_context: templateCollectorService.getCurrentObservationContext(),
         sources_count: sources.length,
         candidate_templates_count: templates.length,
         sources,
