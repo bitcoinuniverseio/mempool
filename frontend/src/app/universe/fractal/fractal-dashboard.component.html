@@ -29,7 +29,7 @@
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.tip">
       <section class="panel">
-        <p>Source: {{ vm.tip.observation.network }} · release {{ vm.tip.observation.source.release }} · observed {{ vm.tip.observation.observedAt }}</p>
+        <p>Source: {{ vm.tip.observation.network }} &middot; release {{ vm.tip.observation.source.release }} &middot; observed {{ vm.tip.observation.observedAt }}</p>
         <details><summary>Native source provenance</summary><p class="mono">Source revision {{ vm.tip.observation.source.sourceRevision }}<br>Binary SHA256 {{ vm.tip.observation.source.binarySha256 }}<br>Configuration SHA256 {{ vm.tip.observation.source.configurationSha256 }}<br>Genesis {{ vm.tip.observation.genesisHash }}<br>Block one {{ vm.tip.observation.blockOneHash }}</p></details>
         <p>Checkpoint #{{ vm.tip.observation.checkpoint.height }} <span class="mono">{{ vm.tip.observation.checkpoint.hash }}</span></p>
         <p>{{ vm.tip.observation.ready ? 'Node reports ready at this observation; CAT-20 has a separate projection.' : 'Node is still syncing. This observed tip does not establish a ready CAT-20 projection.' }}</p>
