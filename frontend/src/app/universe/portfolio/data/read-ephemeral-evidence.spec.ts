@@ -12,6 +12,18 @@ const page = (rows: any[], nextCursor: string | null) => ({ account: context, en
 const activity = { ...context, account: context, schemaVersion: 'universe-portfolio-activity-v2', sourceState: 'proven', checkpoint: null, events: [], nextCursor: null };
 function api() { return { getSummary$: vi.fn(() => of(summary)), getHoldings$: vi.fn((_chain, _network, _address, cursor) => of(page([holding(cursor ? 'second' : 'first')], cursor ? null : 'opaque-cursor'))), getActivity$: vi.fn(() => of(activity)) }; }
 describe('bounded ephemeral evidence read', () => {
+  it('retains a long name holding with its exact serialized identity and atomic quantity', async () => {
+    const assetId = 'op_names:name:b64.' + Buffer.from('b'.repeat(251) + '.btc', 'utf8').toString('base64url');
+    expect(assetId).toHaveLength(358);
+    const row = holding(assetId);
+    row.holding.identity = {...row.holding.identity, protocol:'op-names', assetType:'name'};
+    row.holding.assetKey = `bitcoin:signet:op-names:name:${assetId}`;
+    const service = api(); service.getHoldings$.mockReturnValue(of(page([row], null)));
+    const result = await firstValueFrom(readEphemeralEvidence(service as any, 'bitcoin', 'signet', 'a'));
+    expect(result.holdings?.holdings).toEqual([row]);
+    expect(result.summary.aggregateState).toBe('proven');
+    expect(result.warnings).toEqual([]);
+  });
   it('traverses opaque continuation and merges both scoped pages without changing exact quantities', async () => {
     const service = api(); const result = await firstValueFrom(readEphemeralEvidence(service as any, 'bitcoin', 'signet', 'a'));
     expect(service.getHoldings$.mock.calls.map(c => c[3])).toEqual([undefined, 'opaque-cursor']);
