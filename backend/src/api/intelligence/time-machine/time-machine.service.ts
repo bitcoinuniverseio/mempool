@@ -227,7 +227,7 @@ export class TimeMachineService {
   }
 
   private static eventFor(tx: MempoolTransactionExtended | TransactionExtended, type: HistoricalMempoolEvent['event_type'], at: number, blockHeight?: number, replacedBy?: string): HistoricalMempoolEvent {
-    const vsize = tx.vsize ?? Math.ceil((tx.weight ?? 0) / 4);
+    const vsize = tx.vsize == null ? Math.ceil((tx.weight ?? 0) / 4) : Number.isFinite(tx.vsize) && tx.vsize >= 0 ? Math.ceil(tx.vsize) : tx.vsize;
     return {
       event_id: crypto.createHash('sha256').update(`${tx.txid}:${type}:${blockHeight ?? ''}:${replacedBy ?? ''}`).digest('hex').slice(0, 32),
       txid: tx.txid, timestamp_utc: new Date(at).toISOString(), event_type: type, vsize, weight: tx.weight, fee_sats: tx.fee ?? 0,
