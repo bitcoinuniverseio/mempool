@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { IntelligenceApiService } from './intelligence-api.service';
+import { StateService } from '@app/services/state.service';
 
 @Component({
   selector: 'app-incident-center',
@@ -14,11 +15,11 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <header class="page-header">
         <div class="title-row">
           <h1>Consensus Incident and Reorganization Center</h1>
-          <span class="badge badge-success" *ngIf="!loading && activeIncidentsCount === 0">
-            Consensus Rules Aligned
+          <span class="badge badge-secondary" *ngIf="!loading && !loadError && observed">
+            {{ activeIncidentsCount }} active retained incident records
           </span>
           <span class="badge badge-warning" *ngIf="!loading && activeIncidentsCount > 0">
-            {{ activeIncidentsCount }} Active Divergences
+            {{ activeIncidentsCount }} active incident records
           </span>
           <span class="badge badge-secondary" *ngIf="loading">
             Syncing Incident Records...
@@ -27,6 +28,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <p class="subtitle">
           Timeline of detected chain reorganizations, candidate invalid blocks, and consensus divergences observed across Universe self-hosted nodes.
         </p>
+        <p class="small text-muted">Source identity and monitoring coverage are not reported by this response.</p>
       </header>
 
       <div *ngIf="loadError" class="alert alert-danger mb-4">
@@ -34,7 +36,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
       </div>
 
       <div *ngIf="!loading && incidents.length === 0 && !loadError" class="p-4 rounded bg-dark-subtle text-muted text-center mb-4">
-        No active consensus incidents or chain reorganizations detected across monitored nodes.
+        No incident records returned by the selected source. This does not establish consensus agreement or complete monitoring coverage.
       </div>
 
       <section class="incidents-list" *ngIf="incidents.length > 0">
@@ -108,8 +110,12 @@ export class IncidentCenterComponent implements OnInit, OnDestroy {
   incidents: any[] = [];
   loading = false;
   loadError: string | null = null;
+  observed = false;
 
   private sub?: Subscription;
+  private networkSub?: Subscription;
+  private revision = 0;
+  private destroyed = false;
 
   get activeIncidentsCount(): number {
     return this.incidents.filter((i) => i.status !== 'resolved').length;
@@ -117,18 +123,44 @@ export class IncidentCenterComponent implements OnInit, OnDestroy {
 
   constructor(
     private api: IntelligenceApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private stateService: StateService = null
   ) {}
 
   ngOnInit(): void {
+    this.networkSub = this.stateService?.networkChanged$?.subscribe(() => this.load());
+    this.load();
+  }
+
+  private get network(): string { return this.stateService?.network || this.stateService?.env?.ROOT_NETWORK || 'mainnet'; }
+
+  private load(): void {
+    if (this.destroyed) return;
+    const revision = ++this.revision, network = this.network;
+    this.sub?.unsubscribe();
+    this.incidents = [];
+    this.loadError = null;
+    this.observed = false;
     this.loading = true;
     this.sub = this.api.getIncidents$().subscribe({
       next: (res) => {
-        this.incidents = res?.incidents || [];
+        if (this.destroyed || revision !== this.revision || network !== this.network) return;
+        if (!res || !Array.isArray(res.incidents) || res.incidents.length > 10000 ||
+            !Number.isSafeInteger(res.count) || res.count !== res.incidents.length ||
+            res.incidents.some((incident: any) => !validIncident(incident))) {
+          this.loadError = 'The selected incident source returned an invalid or incomplete response.';
+          this.incidents = [];
+        } else {
+          this.incidents = res.incidents;
+          this.observed = true;
+        }
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: (err) => {
+        if (this.destroyed || revision !== this.revision || network !== this.network) return;
+        this.incidents = [];
+        this.observed = false;
         this.loadError = err?.error?.error || loadFailureMessage(classifyLoadFailure(err));
         this.loading = false;
         this.cdr.markForCheck();
@@ -137,6 +169,24 @@ export class IncidentCenterComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
+    ++this.revision;
     this.sub?.unsubscribe();
+    this.networkSub?.unsubscribe();
   }
+}
+
+function validIncident(value: any): boolean {
+  const text = (field: string) => typeof value?.[field] === 'string' && value[field].length <= 65536;
+  const integer = (field: string) => Number.isSafeInteger(value?.[field]) && value[field] >= 0;
+  const utc = (field: string) => {
+    if (!text(field) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value[field])) return false;
+    const parsed = Date.parse(value[field]);
+    return Number.isFinite(parsed) && new Date(parsed).toISOString().slice(0, 19) === value[field].slice(0, 19);
+  };
+  return value && ['incident_id', 'title', 'summary', 'technical_postmortem'].every(text) &&
+    ['reorg', 'invalid_block', 'stale_tip', 'consensus_divergence'].includes(value.incident_type) &&
+    ['resolved', 'investigating', 'mitigated'].includes(value.status) &&
+    typeof value.block_hash === 'string' && /^[0-9a-f]{64}$/.test(value.block_hash) && utc('detected_at_utc') && utc('resolved_at_utc') &&
+    ['block_height', 'duration_seconds', 'reorg_depth', 'displaced_tx_count', 'double_spend_attempts_count'].every(integer);
 }
