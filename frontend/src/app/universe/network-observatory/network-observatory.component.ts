@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, Subscription, catchError, combineLatest, map, of, startWith, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, catchError, combineLatest, map, merge, of, startWith, switchMap } from 'rxjs';
 import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -45,6 +46,7 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
   constructor(
     private api: UniverseApiService,
     private seo: SeoService,
+    private selectedState: StateService,
   ) {
     this.seo.setTitle('Cross-Node Mempool & Template Observatory');
   }
@@ -54,19 +56,23 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
     // error with its reason, not an empty table under a live-looking timeline.
     // Retry re-runs all three reads; a click while one attempt is in flight
     // cancels it.
-    this.subscription = this.retry$.pipe(
-      startWith(undefined),
-      switchMap(() => combineLatest([
+    this.subscription = merge(
+      this.retry$.pipe(map(() => this.selectedNetwork())),
+      this.selectedState.networkChanged$.pipe(map(network => this.selectedNetwork(network))),
+    ).pipe(
+      startWith(this.selectedNetwork()),
+      switchMap(expectedNetwork => combineLatest([
         this.api.getObserverNodes$(),
         this.api.getPropagationObservation$(),
         this.api.getBlockTemplateComparison$(),
       ]).pipe(
-        map(([nodesData, propagation, templates]): NetworkViewModel => ({
-          kind: 'ready',
-          nodes: nodesData.nodes,
-          propagation,
-          templates,
-        })),
+        map(([nodesData, propagation, templates]): NetworkViewModel => {
+          if (!Array.isArray(nodesData?.nodes) || nodesData.nodes.some(node => node.network !== expectedNetwork) ||
+              propagation?.network !== expectedNetwork || templates?.network !== expectedNetwork) {
+            throw new Error('Observer facts do not match the selected network. Retry on the intended source.');
+          }
+          return { kind: 'ready', nodes: nodesData.nodes, propagation, templates };
+        }),
         catchError((error) => of(this.failure(error))),
         startWith<NetworkViewModel>({ kind: 'loading' }),
       )),
@@ -81,10 +87,14 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
     this.retry$.next();
   }
 
+  private selectedNetwork(network = this.selectedState.network): string {
+    return network || this.selectedState.env.ROOT_NETWORK || 'mainnet';
+  }
+
   private failure(error: any): NetworkViewModel {
     const reason = classifyLoadFailure(error);
     const stage = typeof error?.error?.stage === 'string' ? error.error.stage : undefined;
-    const message = typeof error?.error?.error === 'string' ? error.error.error : loadFailureMessage(reason);
+    const message = typeof error?.error?.error === 'string' ? error.error.error : error instanceof Error && !(error as any).status ? error.message : loadFailureMessage(reason);
     return { kind: reason === 'unavailable' || reason === 'timeout' || reason === 'network' ? 'unavailable' : 'error', message, stage };
   }
 

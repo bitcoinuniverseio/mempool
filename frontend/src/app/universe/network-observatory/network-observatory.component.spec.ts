@@ -13,8 +13,8 @@ const window = { observedAtUtc: '2026-09-17T00:00:00.000Z', ageMs: 5, freshnessL
 const node = { id: 'n1', name: 'owned core', region: 'unknown', clientVersion: '/Satoshi:29.0.0/', protocolVersion: 70016, fullRbf: null, minRelayFeeRate: 1, clockOffsetMs: null, connectedPeers: 8, mempoolTxCount: null, status: 'online' as const, network: 'signet', observedAtUtc: '2026-09-17T00:00:00.000Z', policySourceAvailable: true, scope: 'one observer' };
 const noTemplates = { network: 'signet', state: 'no-templates-observed' as const, blockHeight: null, generatedAt: null, candidateTemplates: [], consensusMempoolTxCount: null, missingFromLocalCount: null, feeRateSpreadSatVb: null, sources: [{ sourceId: 'core', name: 'Core GBT', status: 'not_collected' as const, lastTemplateAt: null, lastError: null }], observer, retention: { templates: 4, txidsPerTemplate: 100 }, scope: 'one observer' };
 
-function build(api: Partial<UniverseApiService>): NetworkObservatoryComponent {
-  const view = new NetworkObservatoryComponent(api as UniverseApiService, { setTitle: vi.fn() } as unknown as SeoService);
+function build(api: Partial<UniverseApiService>, state: any = { network: 'signet', env: { ROOT_NETWORK: 'signet' }, networkChanged$: new Subject<string>() }): NetworkObservatoryComponent {
+  const view = new NetworkObservatoryComponent(api as UniverseApiService, { setTitle: vi.fn() } as unknown as SeoService, state);
   view.ngOnInit();
   return view;
 }
@@ -97,5 +97,65 @@ describe('Network observatory single-observer facts', () => {
     expect(view.measured(null, 'ms')).toBe('not measured');
     expect(view.measured(0, 'ms')).toBe('0 ms');
     view.ngOnDestroy();
+  });
+});
+
+
+describe('Network observatory selected source fences', () => {
+  const propagation = (network: string) => ({ network, observer, window } as any);
+  const templates = (network: string) => ({ ...noTemplates, network } as any);
+  it('cancels all old pending reads on context change and rejects late replies', () => {
+    const changed = new Subject<string>();
+    const state = { network: 'signet', env: { ROOT_NETWORK: 'signet' }, networkChanged$: changed };
+    const pending = [new Subject<any>(), new Subject<any>(), new Subject<any>()];
+    let first = true;
+    const view = build({
+      getObserverNodes$: () => first ? pending[0] : of({ nodes: [{ ...node, network: state.network }], total: 1 }),
+      getPropagationObservation$: () => first ? pending[1] : of(propagation(state.network)),
+      getBlockTemplateComparison$: () => first ? pending[2] : of(templates(state.network)),
+    }, state);
+    let vm: any; const sub = view.vm$.subscribe(v => vm = v);
+    expect(pending.every(p => p.observed)).toBe(true);
+    first = false; state.network = 'testnet4'; changed.next('testnet4');
+    expect(pending.every(p => !p.observed)).toBe(true);
+    expect(vm.kind).toBe('ready'); expect(vm.nodes[0].network).toBe('testnet4');
+    pending[0].next({ nodes: [node], total: 1 }); pending[1].next(propagation('signet')); pending[2].next(templates('signet'));
+    expect(vm.nodes[0].network).toBe('testnet4');
+    first = true; view.retry(); expect(vm.kind).toBe('loading'); expect(vm.nodes).toBeUndefined();
+    view.ngOnDestroy(); expect(pending.every(p => !p.observed)).toBe(true); sub.unsubscribe();
+  });
+  it('clears ready facts immediately when the new selected source remains pending', () => {
+    const changed = new Subject<string>();
+    const state = { network: 'signet', env: { ROOT_NETWORK: 'signet' }, networkChanged$: changed };
+    const pending = [new Subject<any>(), new Subject<any>(), new Subject<any>()];
+    const view = build({
+      getObserverNodes$: () => state.network === 'signet' ? of({ nodes: [node], total: 1 }) : pending[0],
+      getPropagationObservation$: () => state.network === 'signet' ? of(propagation('signet')) : pending[1],
+      getBlockTemplateComparison$: () => state.network === 'signet' ? of(templates('signet')) : pending[2],
+    }, state);
+    let vm: any; const sub = view.vm$.subscribe(v => vm = v);
+    expect(vm.kind).toBe('ready');
+    state.network = 'testnet'; changed.next('testnet');
+    expect(vm.kind).toBe('loading'); expect(vm.nodes).toBeUndefined(); expect(vm.propagation).toBeUndefined(); expect(vm.templates).toBeUndefined();
+    expect(pending.every(p => p.observed)).toBe(true);
+    view.ngOnDestroy(); expect(pending.every(p => !p.observed)).toBe(true);
+    changed.next('signet'); expect(vm.kind).toBe('loading'); sub.unsubscribe();
+  });
+  it.each(['nodes', 'propagation', 'templates'])('rejects a mixed %s network and recovers', (foreign) => {
+    let mismatch = true;
+    const view = build({
+      getObserverNodes$: () => of({ nodes: [{ ...node, network: mismatch && foreign === 'nodes' ? 'mainnet' : 'signet' }], total: 1 }),
+      getPropagationObservation$: () => of(propagation(mismatch && foreign === 'propagation' ? 'mainnet' : 'signet')),
+      getBlockTemplateComparison$: () => of(templates(mismatch && foreign === 'templates' ? 'mainnet' : 'signet')),
+    });
+    let vm: any; const sub = view.vm$.subscribe(v => vm = v);
+    expect(vm.kind).toBe('error'); expect(vm.nodes).toBeUndefined(); expect(vm.message).toContain('selected network');
+    mismatch = false; view.retry(); expect(vm.kind).toBe('ready'); expect(vm.nodes[0].clockOffsetMs).toBeNull();
+    view.ngOnDestroy(); sub.unsubscribe();
+  });
+  it('normalizes an empty selected path to configured Signet', () => {
+    const state = { network: '', env: { ROOT_NETWORK: 'signet' }, networkChanged$: new Subject<string>() };
+    const view = build({ getObserverNodes$: () => of({ nodes: [node], total: 1 }), getPropagationObservation$: () => of(propagation('signet')), getBlockTemplateComparison$: () => of(templates('signet')) }, state);
+    let vm: any; view.vm$.subscribe(v => vm = v).unsubscribe(); expect(vm.kind).toBe('ready'); view.ngOnDestroy();
   });
 });
