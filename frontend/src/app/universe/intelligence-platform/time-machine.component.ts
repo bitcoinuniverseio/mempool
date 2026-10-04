@@ -6,6 +6,31 @@ import { IntelligenceApiService } from './intelligence-api.service';
 import { StateService } from '@app/services/state.service';
 import { atomicToDisplay } from '../portfolio/shared/exact';
 
+function canonicalHistoryState(value: unknown): unknown {
+  if (Array.isArray(value)) { return value.map(canonicalHistoryState); }
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonicalHistoryState((value as Record<string, unknown>)[key])]));
+  }
+  return value;
+}
+
+function validHistoryUtc(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 19) === value.slice(0, 19);
+}
+
+function validHistorySummary(value: any, network: string): boolean {
+  const integer = (n: unknown): boolean => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
+  return !!value && typeof value.state_hash === 'string' && /^[0-9a-f]{64}$/.test(value.state_hash)
+    && typeof value.checkpoint_block_hash === 'string' && /^[0-9a-f]{64}$/.test(value.checkpoint_block_hash)
+    && typeof value.nearest_checkpoint_id === 'string' && value.nearest_checkpoint_id.startsWith('chk-' + network + '-') && value.nearest_checkpoint_id.length <= 128
+    && validHistoryUtc(value.target_timestamp_utc)
+    && ['target_block_height', 'applied_events_count', 'total_transactions', 'total_vsize', 'total_weight', 'total_fees_sats', 'projected_blocks_count'].every(key => integer(value[key]))
+    && typeof value.median_feerate_sats_vb === 'number' && Number.isFinite(value.median_feerate_sats_vb) && value.median_feerate_sats_vb >= 0
+    && ['complete', 'partial', 'gap_detected'].includes(value.coverage_status)
+    && Array.isArray(value.fee_distribution) && value.fee_distribution.length <= 5 && value.fee_distribution.every((row: any) => row && typeof row.feerate_bucket === 'string' && row.feerate_bucket.length > 0 && row.feerate_bucket.length <= 128 && integer(row.count) && integer(row.total_vsize))
+    && Array.isArray(value.gap_intervals) && value.gap_intervals.length <= 50000 && value.gap_intervals.every((gap: any) => gap && validHistoryUtc(gap.start_utc) && validHistoryUtc(gap.end_utc) && Date.parse(gap.end_utc) >= Date.parse(gap.start_utc) && typeof gap.reason === 'string' && gap.reason.length > 0 && gap.reason.length <= 256);
+}
+
 @Component({
   selector: 'app-time-machine',
   standalone: true,
@@ -148,7 +173,7 @@ import { atomicToDisplay } from '../portfolio/shared/exact';
                 </thead>
                 <tbody>
                   <tr *ngFor="let h of currentState.fee_distribution">
-                    <td class="fw-bold font-monospace">{{ h.feerate_bucket }} sat/vB</td>
+                    <td class="fw-bold font-monospace">{{ h.feerate_bucket }}</td>
                     <td>{{ h.count | number }}</td>
                     <td>{{ h.total_vsize | number }} vB</td>
                   </tr>
@@ -232,7 +257,7 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
   runReplay(): void {
     this.invalidate(); const height = this.targetHeight, timestamp = this.targetTimestamp.trim(), revision = this.revision, network = this.network;
     if (height == null && !timestamp) { return; }
-    if ((height != null && timestamp) || (height != null && (!Number.isSafeInteger(height) || height < 0)) || (timestamp && (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(timestamp) || !Number.isFinite(Date.parse(timestamp))))) {
+    if ((height != null && timestamp) || (height != null && (!Number.isSafeInteger(height) || height < 0)) || (timestamp && !validHistoryUtc(timestamp))) {
       this.replayError = 'Supply one nonnegative integer block height or one ISO 8601 UTC timestamp.'; return;
     }
     this.loading = true;
@@ -242,7 +267,7 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
     this.replay = this.api.replayHistory$(timestamp || undefined, height ?? undefined).subscribe({
         next: (res) => {
           if (this.destroyed || revision !== this.revision || network !== this.network || height !== this.targetHeight || timestamp !== this.targetTimestamp.trim()) { return; }
-          if (!res || !/^[0-9a-f]{64}$/.test(res.state_hash) || !['complete', 'partial', 'gap_detected'].includes(res.coverage_status) || (height != null && res.target_block_height !== height) || (timestamp && Date.parse(res.target_timestamp_utc) !== Date.parse(timestamp))) {
+          if (!validHistorySummary(res, network) || (height != null && res.target_block_height !== height) || (timestamp && Date.parse(res.target_timestamp_utc) !== Date.parse(timestamp))) {
             this.replayError = 'Historical evidence does not match the selected target.'; this.loading = false; this.cdr.markForCheck(); return;
           }
           this.currentState = res;
@@ -261,11 +286,13 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
   exportData(format: string): void {
     if (!this.currentState || format !== 'json' || this.exporting || !this.state?.isBrowser) { return; }
     const hash = this.currentState.state_hash, revision = this.revision, network = this.network;
+    // The producer may cache another replay summary under the same membership hash.
+    const capturedSummary = JSON.stringify(canonicalHistoryState(this.currentState));
     this.exporting = true; this.exportError = null;
     this.exportRead = this.api.exportHistory$(hash).subscribe({next: result => {
       if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }
       this.exporting = false;
-      if (result?.format !== 'json' || result?.state?.state_hash !== hash || !Array.isArray(result.txids) || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id))) { this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
+      if (result?.format !== 'json' || result?.state?.state_hash !== hash || JSON.stringify(canonicalHistoryState(result.state)) !== capturedSummary || !Array.isArray(result.txids) || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id))) { this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
       try {
         const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], {type: 'application/json'}));
         const link = document.createElement('a'); link.href = url; link.download = 'mempool-state-' + hash + '.json'; link.click(); URL.revokeObjectURL(url);

@@ -6,6 +6,8 @@ import { networkScopedUrl } from '@app/services/network-prefix.interceptor';
 
 afterEach(() => {vi.unstubAllGlobals(); vi.restoreAllMocks();});
 
+function summary() { return {state_hash:'b'.repeat(64),target_block_height:10,target_timestamp_utc:'2026-10-04T12:00:00Z',nearest_checkpoint_id:'chk-signet-10-'+ 'c'.repeat(12),checkpoint_block_hash:'c'.repeat(64),applied_events_count:0,total_transactions:0,total_vsize:0,total_weight:0,total_fees_sats:0,median_feerate_sats_vb:0,fee_distribution:[],projected_blocks_count:0,coverage_status:'partial',gap_intervals:[]}; }
+
 function setup() {
   const state: any = { network: '', networkChanged$: new Subject<string>(), env: {ROOT_NETWORK: 'signet', BASE_MODULE: 'mempool'}, isBrowser: true };
   const replay = new Subject<any>();
@@ -39,7 +41,7 @@ describe('Time Machine selected context and target lifecycle', () => {
   });
   it('publishes only the requested retained height and preserves partial coverage', () => {
     const {page,replay}=setup();page.targetHeight=10;page.runReplay();replay.next({state_hash:'a'.repeat(64),target_block_height:11,coverage_status:'complete'});expect(page.currentState).toBeNull();
-    page.runReplay();replay.next({state_hash:'b'.repeat(64),target_block_height:10,coverage_status:'partial',gap_intervals:[]});expect(page.currentState.coverage_status).toBe('partial');page.ngOnDestroy();
+    page.runReplay();replay.next(summary());expect(page.currentState.coverage_status).toBe('partial');page.ngOnDestroy();
   });
   it('exports through the selected actual JSON POST contract', () => {
     const {state}=setup();state.network='testnet4';const post=vi.fn(() => of({}));
@@ -54,5 +56,19 @@ describe('Time Machine selected context and target lifecycle', () => {
     const {page,api}=setup();const click=vi.fn(),link: any={click};vi.stubGlobal('document',{createElement:vi.fn(()=>link)});
     const create=vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:owned-fixture'),revoke=vi.spyOn(URL,'revokeObjectURL').mockImplementation(()=>{});
     page.currentState={state_hash:'a'.repeat(64)};page.exportData('json');expect(api.exportHistory$).toHaveBeenCalledWith('a'.repeat(64));expect(click).toHaveBeenCalledOnce();expect(link.download).toBe('mempool-state-'+'a'.repeat(64)+'.json');expect(create).toHaveBeenCalledOnce();expect(revoke).toHaveBeenCalledWith('blob:owned-fixture');page.ngOnDestroy();
+  });
+  it('rejects a same-hash export whose replay target or coverage was replaced', () => {
+    const {page,api}=setup();const click=vi.fn();vi.stubGlobal('document',{createElement:()=>({click})});
+    vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:owned-fixture');vi.spyOn(URL,'revokeObjectURL').mockImplementation(()=>{});
+    page.currentState={state_hash:'a'.repeat(64),target_block_height:10,coverage_status:'partial',gap_intervals:[{reason:'observed-gap'}]};
+    api.exportHistory$.mockReturnValue(of({format:'json',state:{state_hash:'a'.repeat(64),target_block_height:11,coverage_status:'complete',gap_intervals:[]},txids:[]}));
+    page.exportData('json');expect(click).not.toHaveBeenCalled();expect(page.exportError).toMatch(/does not match/);page.ngOnDestroy();
+  });
+  it('rejects impossible UTC calendar dates before HTTP', () => {
+    const {page,api}=setup();page.targetTimestamp='2026-02-31T00:00:00Z';page.runReplay();expect(api.replayHistory$).not.toHaveBeenCalled();page.ngOnDestroy();
+  });
+  it('rejects malformed replay distributions before publishing a rendered state', () => {
+    const {page,replay}=setup();page.targetHeight=10;page.runReplay();replay.next({...summary(),fee_distribution:{forged:'not-an-array'}});expect(page.currentState).toBeNull();
+    page.runReplay();replay.next({...summary(),fee_distribution:[{feerate_bucket:'1-5 sat/vB',count:-1,total_vsize:0}]});expect(page.currentState).toBeNull();page.ngOnDestroy();
   });
 });
