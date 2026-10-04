@@ -52,7 +52,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
 
       <!-- Initial Empty State -->
       <div *ngIf="!evaluationResult && !loading && !errorMessage" class="card p-4 text-center text-muted mb-4">
-        <p class="mb-0">Enter one or more raw transaction hex strings or load a sample package to inspect relay rules, feerates, and inclusion forecasts.</p>
+        <p class="mb-0">Enter one or more raw transaction hex strings or load a sample package to inspect the owned node's policy checks and observed feerates.</p>
       </div>
 
       <!-- Error State -->
