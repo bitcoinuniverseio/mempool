@@ -33,7 +33,7 @@
     <ng-container *ngIf="vm.kind === 'detail' && vm.selected">
       <section class="panel">
         <h2>{{ vm.selected.name }} ({{ vm.selected.symbol }})</h2>
-        <p>{{ vm.selected.observation.network }} · token checkpoint #{{ vm.selected.checkpoint.height }} <span class="mono">{{ vm.selected.checkpoint.hash }}</span> · observed {{ vm.selected.observation.observedAt }}</p>
+        <p>{{ vm.selected.observation.network }} &middot; token checkpoint #{{ vm.selected.checkpoint.height }} <span class="mono">{{ vm.selected.checkpoint.hash }}</span> &middot; observed {{ vm.selected.observation.observedAt }}</p>
         <p>Supply is the tracker-observed exact token balance sum; supply limits and covenant state are unvalidated.</p>
         <div class="metrics-grid">
           <div class="metric-card">
@@ -118,12 +118,12 @@
       </section>
     </ng-container>
     <section class="panel" *ngIf="vm.page">
-      <p>{{ vm.selected ? vm.holders?.length : vm.tokens?.length }} / {{ vm.page.total }} rows loaded · {{ vm.page.nextCursor ? 'Partial page coverage' : 'Complete at the observed checkpoint' }}</p>
-      <p>{{ vm.page.observation.network }} · checkpoint #{{ vm.page.checkpoint.height }} <span class="mono">{{ vm.page.checkpoint.hash }}</span></p>
-      <p>Tracker source {{ vm.page.trackerSourceRevision }} · observed {{ vm.page.observation.observedAt }}</p>
+      <p>{{ vm.selected ? vm.holders?.length : vm.tokens?.length }} / {{ vm.page.total }} rows loaded &middot; {{ vm.page.nextCursor ? 'Partial page coverage' : 'Complete at the observed checkpoint' }}</p>
+      <p>{{ vm.page.observation.network }} &middot; checkpoint #{{ vm.page.checkpoint.height }} <span class="mono">{{ vm.page.checkpoint.hash }}</span></p>
+      <p>Tracker source {{ vm.page.trackerSourceRevision }} &middot; observed {{ vm.page.observation.observedAt }}</p>
     </section>
     <p role="alert" *ngIf="vm.pageFailure">{{ vm.pageFailure }}</p>
-    <button type="button" *ngIf="vm.page?.nextCursor || vm.holderFailure || vm.pageFailure" (click)="more()" [disabled]="vm.pending || vm.restartRequired">{{ vm.pending ? 'Reading page…' : vm.pageFailure || vm.holderFailure ? 'Retry page' : 'Load more' }}</button>
+    <button type="button" *ngIf="vm.page?.nextCursor || vm.holderFailure || vm.pageFailure" (click)="more()" [disabled]="vm.pending || vm.restartRequired">{{ vm.pending ? 'Reading page...' : vm.pageFailure || vm.holderFailure ? 'Retry page' : 'Load more' }}</button>
     <button type="button" (click)="restart()" [disabled]="vm.kind === 'loading' || vm.pending">Restart read</button>
   </ng-container>
 </div>
