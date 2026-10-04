@@ -33,26 +33,28 @@
     <ng-container *ngIf="vm.kind === 'detail' && vm.selected">
       <section class="panel">
         <h2>{{ vm.selected.name }} ({{ vm.selected.symbol }})</h2>
+        <p>{{ vm.selected.observation.network }} · token checkpoint #{{ vm.selected.checkpoint.height }} <span class="mono">{{ vm.selected.checkpoint.hash }}</span> · observed {{ vm.selected.observation.observedAt }}</p>
+        <p>Supply is the tracker-observed exact token balance sum; supply limits and covenant state are unvalidated.</p>
         <div class="metrics-grid">
           <div class="metric-card">
-            <span class="metric-label">Max Supply</span>
-            <span class="metric-value">{{ vm.selected.maxSupplyAtomic }}</span>
+            <span class="metric-label">Max Supply (atomic units)</span>
+            <span class="metric-value">{{ vm.selected.maxSupplyAtomic === null ? 'Unknown' : vm.selected.maxSupplyAtomic }}</span>
             <span class="metric-sub">{{ vm.selected.decimals }} Decimals</span>
           </div>
           <div class="metric-card">
-            <span class="metric-label">Circulating Supply</span>
+            <span class="metric-label">Observed token supply (atomic units)</span>
             <span class="metric-value">{{ vm.selected.circulatingSupplyAtomic }}</span>
-            <span class="metric-sub">Mint Limit: {{ vm.selected.mintLimitAtomic }}</span>
+            <span class="metric-sub">Mint Limit (atomic units): {{ vm.selected.mintLimitAtomic === null ? 'Unknown' : vm.selected.mintLimitAtomic }}</span>
           </div>
           <div class="metric-card">
             <span class="metric-label">Holders</span>
             <span class="metric-value">{{ vm.selected.holderCount }}</span>
-            <span class="metric-sub">{{ vm.selected.transferCount }} Transfers</span>
+            <span class="metric-sub">{{ vm.selected.transferCount === null ? 'Unknown' : vm.selected.transferCount }} Transfers</span>
           </div>
           <div class="metric-card">
             <span class="metric-label">Minter Covenant</span>
-            <span class="metric-value">{{ vm.selected.minterType }}</span>
-            <span class="metric-sub">State: {{ vm.selected.state }}</span>
+            <span class="metric-value">{{ vm.selected.minterType === null ? 'Unknown' : vm.selected.minterType }}</span>
+            <span class="metric-sub">State: {{ vm.selected.state === null ? 'Unknown' : vm.selected.state }}</span>
           </div>
         </div>
 
@@ -60,23 +62,26 @@
           <p><strong>Token ID:</strong> <span class="mono">{{ vm.selected.tokenId }}</span></p>
           <p><strong>Deploy Txid:</strong> <span class="mono">{{ vm.selected.deployTxid }}</span></p>
           <p><strong>Deploy Height:</strong> Block #{{ vm.selected.deployHeight }}</p>
-          <p><strong>Minter Address:</strong> <span class="mono">{{ vm.selected.minterAddress }}</span></p>
+          <p><strong>Minter Address:</strong> <span class="mono">{{ vm.selected.minterAddress === null ? 'Unknown' : vm.selected.minterAddress }}</span></p>
         </div>
 
+        <p><strong>Minter public key:</strong> <span class="mono">{{ vm.selected.minterPubKey }}</span></p>
+        <p>Holder addresses and percentage shares are unavailable; a public-key hash does not establish a spendable address.</p>
+        <p role="alert" *ngIf="vm.holderFailure">Holder projection unavailable: {{ vm.holderFailure }}</p>
         <h3 style="margin-top: 1.5rem; font-size: 1.1rem;">Top Token Holders</h3>
         <table class="data-table" *ngIf="vm.holders?.length">
           <thead>
             <tr>
-              <th>Holder Address</th>
-              <th>Balance</th>
+              <th>Owner public-key hash</th>
+              <th>Balance (atomic units)</th>
               <th>Share</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let h of vm.holders">
-              <td class="mono">{{ h.address }}</td>
+              <td class="mono">{{ h.ownerPubKeyHash }}</td>
               <td class="mono">{{ h.balanceAtomic }}</td>
-              <td><span class="badge badge-info">{{ h.percentage }}%</span></td>
+              <td><span class="badge badge-info">{{ h.percentage === null ? 'Unknown' : h.percentage + '%' }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -92,7 +97,7 @@
               <th>Token ID</th>
               <th>Symbol</th>
               <th>Name</th>
-              <th>Max Supply</th>
+              <th>Max Supply (atomic units)</th>
               <th>Holders</th>
               <th>Minter Type</th>
               <th>Status</th>
@@ -103,14 +108,22 @@
               <td class="mono"><a [routerLink]="['/fractal/cat20/token' | relativeUrl, t.tokenId]">{{ t.tokenId.slice(0, 16) }}...</a></td>
               <td><strong>{{ t.symbol }}</strong></td>
               <td>{{ t.name }}</td>
-              <td class="mono">{{ t.maxSupplyAtomic }}</td>
+              <td class="mono">{{ t.maxSupplyAtomic === null ? 'Unknown' : t.maxSupplyAtomic }}</td>
               <td>{{ t.holderCount }}</td>
-              <td><span class="badge badge-info">{{ t.minterType }}</span></td>
-              <td><span class="badge badge-success">{{ t.state }}</span></td>
+              <td><span class="badge badge-info">{{ t.minterType === null ? 'Unknown' : t.minterType }}</span></td>
+              <td><span class="badge badge-info">{{ t.state === null ? 'Unknown' : t.state }}</span></td>
             </tr>
           </tbody>
         </table>
       </section>
     </ng-container>
+    <section class="panel" *ngIf="vm.page">
+      <p>{{ vm.selected ? vm.holders?.length : vm.tokens?.length }} / {{ vm.page.total }} rows loaded · {{ vm.page.nextCursor ? 'Partial page coverage' : 'Complete at the observed checkpoint' }}</p>
+      <p>{{ vm.page.observation.network }} · checkpoint #{{ vm.page.checkpoint.height }} <span class="mono">{{ vm.page.checkpoint.hash }}</span></p>
+      <p>Tracker source {{ vm.page.trackerSourceRevision }} · observed {{ vm.page.observation.observedAt }}</p>
+    </section>
+    <p role="alert" *ngIf="vm.pageFailure">{{ vm.pageFailure }}</p>
+    <button type="button" *ngIf="vm.page?.nextCursor || vm.holderFailure || vm.pageFailure" (click)="more()" [disabled]="vm.pending || vm.restartRequired">{{ vm.pending ? 'Reading page…' : vm.pageFailure || vm.holderFailure ? 'Retry page' : 'Load more' }}</button>
+    <button type="button" (click)="restart()" [disabled]="vm.kind === 'loading' || vm.pending">Restart read</button>
   </ng-container>
 </div>

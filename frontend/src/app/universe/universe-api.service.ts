@@ -93,6 +93,8 @@ import {
   RpcCatalog,
   RpcResult,
 } from '@app/universe/node-console/node-console.types';
+import { fractalProfile, requireCatTokenId, requireFractal, validateFractalRead } from './fractal/fractal-evidence';
+import { Cat20Page, Cat20PageRequest, Cat20TokenDetail, FractalTip } from './universe.types';
 import { OwnerKeyService } from '@app/universe/intelligence-platform/owner-key.service';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
@@ -798,46 +800,35 @@ export class UniverseApiService {
    * Rollback restores matching client/server DTOs without deleting authority state;
    *    unavailable responses remain honest until the real integration passes.
    */
-  getFractalTip$(): Observable<{ height: number; hash: string; time: number; network: string }> {
-    return this.httpClient.get<{ height: number; hash: string; time: number; network: string }>(
-      this.apiBaseUrl + '/api/v1/fractal/tip'
-    );
+  private fractalRead<T>(path: string, schema: string): Observable<T> {
+    return defer(() => {
+      requireFractal(this.chainNetwork('fractal') === 'testnet', 'Only the explicitly configured Fractal testnet source is supported.');
+      const profile = fractalProfile(this.stateService.env.FRACTAL_SOURCE_PROFILE);
+      return this.httpClient.get<T>(this.apiBaseUrl + '/api/v1/fractal/' + path + (path.includes('?') ? '&' : '?') + 'network=testnet', {headers: {'Cache-Control': 'no-store'}})
+        .pipe(timeout(15_000), map(data => validateFractalRead(data, schema, profile)));
+    });
   }
-
-  getFractalMempool$(): Observable<FractalMempoolOverview> {
-    return this.httpClient.get<FractalMempoolOverview>(
-      this.apiBaseUrl + '/api/v1/fractal/mempool'
-    );
+  private catPageQuery(request: Cat20PageRequest): string {
+    const limit = request.limit ?? 50;
+    requireFractal(Number.isInteger(limit) && limit >= 1 && limit <= 500 && (request.cursor === undefined || (typeof request.cursor === 'string' && request.cursor.length > 0 && request.cursor.length <= 4096)), 'Invalid CAT-20 page request.');
+    return '?limit=' + limit + (request.cursor === undefined ? '' : '&cursor=' + encodeURIComponent(request.cursor));
   }
-
+  getFractalTip$(): Observable<FractalTip> { return this.fractalRead('tip', 'fractal-tip-v1'); }
+  getFractalMempool$(): Observable<FractalMempoolOverview> { return this.fractalRead('mempool', 'fractal-mempool-v1'); }
   getFractalBlock$(hash: string): Observable<FractalBlockSummary> {
-    return this.httpClient.get<FractalBlockSummary>(
-      this.apiBaseUrl + '/api/v1/fractal/block/' + encodeURIComponent(hash)
-    );
+    return defer(() => { requireFractal(/^[0-9a-f]{64}$/.test(hash), 'Invalid Fractal block hash.'); return this.fractalRead<FractalBlockSummary>('block/' + hash, 'fractal-block-v1').pipe(map(block => {requireFractal(block.hash === hash, 'The returned Fractal block differs from the requested hash.');return block;})); });
   }
-
   getFractalTx$(txid: string): Observable<FractalTransactionView> {
-    return this.httpClient.get<FractalTransactionView>(
-      this.apiBaseUrl + '/api/v1/fractal/tx/' + encodeURIComponent(txid)
-    );
+    return defer(() => { requireFractal(/^[0-9a-f]{64}$/.test(txid), 'Invalid Fractal transaction ID.'); return this.fractalRead<FractalTransactionView>('tx/' + txid, 'fractal-transaction-v1').pipe(map(tx => {requireFractal(tx.txid === txid);return tx;})); });
   }
-
-  getCat20Tokens$(): Observable<{ tokens: Cat20Token[]; total: number }> {
-    return this.httpClient.get<{ tokens: Cat20Token[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens'
-    );
+  getCat20Tokens$(request: Cat20PageRequest = {}): Observable<Cat20Page<Cat20Token>> {
+    return defer(() => this.fractalRead<Cat20Page<Cat20Token>>('cat20/tokens' + this.catPageQuery(request), 'cat20-page-v1').pipe(map(page=>{requireFractal(page.items.every(item=>'tokenId' in item));return page;})));
   }
-
-  getCat20Token$(tokenId: string): Observable<Cat20Token> {
-    return this.httpClient.get<Cat20Token>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens/' + encodeURIComponent(tokenId)
-    );
+  getCat20Token$(tokenId: string): Observable<Cat20TokenDetail> {
+    return defer(() => {requireCatTokenId(tokenId);return this.fractalRead<Cat20TokenDetail>('cat20/tokens/' + encodeURIComponent(tokenId), 'cat20-token-v1').pipe(map(token=>{requireFractal(token.tokenId===tokenId);return token;}));});
   }
-
-  getCat20Holders$(tokenId: string): Observable<{ holders: Cat20Holder[]; total: number }> {
-    return this.httpClient.get<{ holders: Cat20Holder[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens/' + encodeURIComponent(tokenId) + '/holders'
-    );
+  getCat20Holders$(tokenId: string, request: Cat20PageRequest = {}): Observable<Cat20Page<Cat20Holder>> {
+    return defer(() => {requireCatTokenId(tokenId);return this.fractalRead<Cat20Page<Cat20Holder>>('cat20/tokens/' + encodeURIComponent(tokenId) + '/holders' + this.catPageQuery(request), 'cat20-page-v1').pipe(map(page=>{requireFractal(page.items.every(item=>'ownerPubKeyHash' in item));return page;}));});
   }
 
   /**
