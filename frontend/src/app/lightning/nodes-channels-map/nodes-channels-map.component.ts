@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter, NgZone, OnInit } from '@angular/core';
+import { Subject as ScopeSubject } from 'rxjs';
+import { lightningReadScope } from '../lightning-read-scope';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter, NgZone, OnInit , OnDestroy } from '@angular/core';
 import { SeoService } from '@app/services/seo.service';
 import { ApiService } from '@app/services/api.service';
 import { delay, Observable, of, switchMap, tap, zip } from 'rxjs';
@@ -20,7 +22,7 @@ import { chartChrome } from '@app/shared/chart-theme';
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodesChannelsMap implements OnInit {
+export class NodesChannelsMap implements OnDestroy, OnInit {
   @Input() style: 'graph' | 'nodepage' | 'widget' | 'channelpage' = 'graph';
   @Input() publicKey: string | undefined;
   @Input() channel: any[] = [];
@@ -43,6 +45,10 @@ export class NodesChannelsMap implements OnInit {
 
   chartInstance = undefined;
   chartOptions: EChartsOption = {};
+  loadError: string | null = null;
+  private readonly retry$ = new ScopeSubject<void>();
+  private readonly destroy$ = new ScopeSubject<void>();
+  private destroyed = false;
   chartInitOptions = {
     renderer: 'canvas',
   };
@@ -58,6 +64,9 @@ export class NodesChannelsMap implements OnInit {
     private amountShortenerPipe: AmountShortenerPipe,
   ) {
   }
+
+  retry(): void { if (!this.destroyed && this.loadError && !this.isLoading) { this.retry$.next(); } }
+  ngOnDestroy(): void { this.destroyed = true; this.destroy$.next(); this.destroy$.complete(); this.retry$.complete(); }
 
   ngOnInit(): void {
     this.center = this.style === 'widget' ? [0, 40] : [0, 5];
@@ -80,10 +89,8 @@ export class NodesChannelsMap implements OnInit {
       this.nodeSize = 8;
     }
 
-    this.channelsObservable = this.activatedRoute.paramMap
-     .pipe(
-       delay(100),
-       switchMap((params: ParamMap) => {
+    this.channelsObservable = lightningReadScope(this.activatedRoute.paramMap, this.stateService.networkChanged$, this.retry$, this.destroy$,
+      (selected: ParamMap) => of(selected).pipe(delay(100), switchMap((params: ParamMap) => {
         this.isLoading = true;
         if (this.style === 'channelpage' && this.channel.length === 0 || !this.hasLocation) {
           this.isLoading = false;
@@ -218,7 +225,9 @@ export class NodesChannelsMap implements OnInit {
           maxLiquidity = Math.max(1, maxLiquidity);
           this.prepareChartOptions(nodes, channelsLoc, maxLiquidity);
         }));
-      })
+      })), () => { this.loadError = null; this.isLoading = true; this.chartOptions = {}; if (!this.chartInstance?.isDisposed?.()) { this.chartInstance?.clear(); }    },
+      () => { this.loadError = 'Lightning channel map is unavailable from the selected source. Retry when it is available.'; },
+      () => { this.isLoading = false; }
      );
   }
 
@@ -355,7 +364,7 @@ export class NodesChannelsMap implements OnInit {
   }
 
   onChartInit(ec) {
-    if (this.chartInstance !== undefined) {
+    if (this.destroyed || this.chartInstance === ec) {
       return;
     }
 

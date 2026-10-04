@@ -1,3 +1,5 @@
+<p *ngIf="loadError" class="alert alert-warning" role="alert">{{ loadError }}</p>
+<button *ngIf="loadError" class="btn btn-outline-secondary mb-2" (click)="retry()" [disabled]="isLoading">Retry Lightning channel map</button>
 <div class="map-wrapper" [class]="style" *ngIf="style !== 'graph'">
   <ng-container *ngIf="channelsObservable | async">
     <div *ngIf="chartOptions" [class]="'full-container ' + style + (fitContainer ? ' fit-container' : '')">

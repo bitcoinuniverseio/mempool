@@ -1,7 +1,9 @@
-import { Component, Inject, Input, LOCALE_ID, OnInit, HostBinding, OnChanges, SimpleChanges } from '@angular/core';
+import { Subject as ScopeSubject } from 'rxjs';
+import { lightningReadScope } from '../lightning-read-scope';
+import { Component, Inject, Input, LOCALE_ID, OnInit, HostBinding, OnChanges, SimpleChanges , OnDestroy } from '@angular/core';
 import { echarts, EChartsOption } from '@app/graphs/echarts';
-import { Observable, combineLatest, fromEvent } from 'rxjs';
-import { map, share, startWith, switchMap, tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map, startWith, tap } from 'rxjs/operators';
 import { SeoService } from '@app/services/seo.service';
 import { formatNumber } from '@angular/common';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
@@ -28,7 +30,7 @@ import { chartChrome, chartDataZoomStyle, rampStops } from '@app/shared/chart-th
   `],
   standalone: false,
 })
-export class LightningStatisticsChartComponent implements OnInit, OnChanges {
+export class LightningStatisticsChartComponent implements OnDestroy, OnInit, OnChanges {
   @Input() height: number = 150;
   @Input() right: number | string = 45;
   @Input() left: number | string = 45;
@@ -38,6 +40,10 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
   radioGroupForm: UntypedFormGroup;
 
   chartOptions: EChartsOption = {};
+  loadError: string | null = null;
+  private readonly retry$ = new ScopeSubject<void>();
+  private readonly destroy$ = new ScopeSubject<void>();
+  private destroyed = false;
   chartInitOptions = {
     renderer: 'svg',
   };
@@ -63,6 +69,9 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
   ) {
   }
 
+  retry(): void { if (!this.destroyed && this.loadError && !this.isLoading) { this.retry$.next(); } }
+  ngOnDestroy(): void { this.destroyed = true; this.destroy$.next(); this.destroy$.complete(); this.retry$.complete(); }
+
   ngOnInit(): void {
     let firstRun = true;
 
@@ -76,9 +85,8 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
     this.radioGroupForm = this.formBuilder.group({ dateSpan: this.miningWindowPreference });
     this.radioGroupForm.controls.dateSpan.setValue(this.miningWindowPreference);
 
-    this.capacityObservable$ = this.radioGroupForm.get('dateSpan').valueChanges.pipe(
-      startWith(this.miningWindowPreference),
-      switchMap((timespan) => {
+    this.capacityObservable$ = lightningReadScope(this.radioGroupForm.get('dateSpan').valueChanges.pipe(startWith(this.miningWindowPreference)),
+      this.stateService.networkChanged$, this.retry$, this.destroy$, (timespan) => {
         this.timespan = timespan;
         if (!this.widget && !firstRun) {
           this.storageService.setValue('lightningWindowPreference', timespan);
@@ -103,8 +111,9 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
               };
             }),
           );
-      }),
-      share(),
+      }, () => { this.loadError = null; this.isLoading = true; this.chartOptions = {}; if (!this.chartInstance?.isDisposed?.()) { this.chartInstance?.clear(); } this.chartData = undefined;   },
+      () => { this.loadError = 'Lightning capacity history is unavailable from the selected source. Retry when it is available.'; },
+      () => { this.isLoading = false; }
     );
   }
 
@@ -331,7 +340,7 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
   }
 
   onChartInit(ec): void {
-    if (this.chartInstance !== undefined) {
+    if (this.destroyed || this.chartInstance === ec) {
       return;
     }
 
@@ -343,6 +352,7 @@ export class LightningStatisticsChartComponent implements OnInit, OnChanges {
   }
 
   onSaveChart(): void {
+    if (this.destroyed || this.isLoading || this.loadError || !this.chartInstance || this.chartInstance.isDisposed?.() || !this.chartOptions.series) { return; }
     // @ts-ignore
     const prevBottom = this.chartOptions.grid.bottom;
     const now = new Date();
