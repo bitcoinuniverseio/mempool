@@ -859,6 +859,10 @@ export class UniverseApiService {
     return this.chainRead<ZcashPrivacySummary>('zcash', network => '/privacy/summary?network=' + network);
   }
 
+  getZcashPrivacyHistory$(): Observable<import('./zcash-privacy/zcash-history-view').ZcashPoolHistory> {
+    return this.chainRead<import('./zcash-privacy/zcash-history-view').ZcashPoolHistory>('zcash', network => '/privacy/history?network=' + network);
+  }
+
   getZcashPools$(): Observable<{ pools: ZcashValuePool[]; total: number }> {
     return this.chainRead<{ pools: ZcashValuePool[]; total: number }>('zcash', network => '/privacy/pools?network=' + network);
   }

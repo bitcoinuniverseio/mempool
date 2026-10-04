@@ -49,7 +49,7 @@ function capabilityRows(url: string): Observable<unknown> {
 
 describe('UniverseApiService addressing', () => {
   it.each([
-    ['getZcashPrivacySummary$', 'summary'], ['getZcashPools$', 'pools'], ['getZcashUpgrades$', 'upgrades'],
+    ['getZcashPrivacySummary$', 'summary'], ['getZcashPools$', 'pools'], ['getZcashUpgrades$', 'upgrades'], ['getZcashPrivacyHistory$', 'history'],
   ] as const)('binds %s to configured Zcash testnet and rejects foreign responses', (method, path) => {
     const {service, urls} = build(true, () => of({network:'mainnet'}), {zcash:'testnet'});
     const failures: unknown[] = [];
