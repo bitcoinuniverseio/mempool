@@ -77,4 +77,19 @@ describe('Fractal HTTP responses', () => {
       expect(body).not.toHaveProperty('height');
     }
   });
+
+  it.each(['mainnet', 'signet', 'fractal-testnet', ['testnet', 'mainnet'], { value: 'testnet' }])('rejects foreign or ambiguous Fractal context %p before all seven source calls', async network => {
+    const gets = mount();
+    const methods = ['$getTip', '$getMempool', '$getBlock', '$getTransaction', '$getCat20Tokens', '$getCat20Token', '$getCat20Holders'] as const;
+    const spies = methods.map(method => jest.spyOn(fractalService, method));
+    try {
+      for (const handler of gets.values()) {
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+        await handler({ query: { network }, params: { hash: '1', txid: 'ab'.repeat(32), tokenId: 'ab'.repeat(32) + '_0' } } as unknown as Request, res as unknown as Response);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].stage).toBe('unsupported-fractal-network');
+      }
+      expect(spies.every(spy => spy.mock.calls.length === 0)).toBe(true);
+    } finally { spies.forEach(spy => spy.mockRestore()); }
+  });
 });

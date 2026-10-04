@@ -2,6 +2,9 @@
 
 These readers require explicit startup wiring. The default service remains unavailable.
 Only the independently qualified Fractal v0.4.0 testnet context is implemented here.
+The optional route query `network` must be the scalar string `testnet` when
+present; mainnet, Signet and ambiguous queries fail before source IO. When absent,
+the explicitly configured Fractal testnet identity remains visible in the response.
 Its `bc` address HRP and Bitcoin mainnet genesis do **not** establish network identity:
 each attempt checks native `chain=test`, version 400, `/Satoshi:0.4.0/`, genesis, and
 Fractal testnet block one `000000000021b22bb6a9718e5db62fca1eb2ac6e34535e70c67b374dcb29c570`.
