@@ -2,6 +2,18 @@
 
 These instructions are mostly intended for developers.
 
+The deployable output of `npm run package` includes the Arkade decoder and its
+locked SDK dependencies in `package/native/arkade-codec`. When launching that
+package outside the supplied Docker image, select its decoder explicitly:
+
+```sh
+UNIVERSE_ARKADE_CODEC="$(pwd)/package/native/arkade-codec/codec.mjs" node package/index.js
+```
+
+The Docker image sets this path itself. Native proof verification also requires
+the independently configured Bitcoin source and native script verifier; packaging
+the decoder does not establish those sources or full Ark lifecycle support.
+
 If you choose to use these instructions for a production setup, be aware that you will still probably need to do additional configuration for your specific OS, environment, use-case, etc. We do our best here to provide a good starting point, but only proceed if you know what you're doing. Mempool only provides support for custom setups to project sponsors through [Mempool Enterprise®](https://mempool.space/enterprise).
 
 See other ways to set up Mempool on [the main README](/../../#installation-methods).
