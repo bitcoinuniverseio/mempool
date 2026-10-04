@@ -148,7 +148,7 @@ export class UniverseApiService {
   }
 
   get network(): ExplorerNetwork {
-    const network = this.stateService.network || 'mainnet';
+    const network = this.stateService.network || this.stateService.env?.ROOT_NETWORK || 'mainnet';
     if (!['mainnet', 'testnet', 'testnet4', 'signet', 'regtest'].includes(network)) {
       throw new Error('unsupported-overlay-network');
     }
