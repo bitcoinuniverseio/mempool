@@ -352,7 +352,7 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
     const type = this.entityType[watchlistId] || 'address';
     let scripts;
     try {
-      if (type === 'descriptor') scripts = descriptorScripts(raw, this.state?.network || 'mainnet', this.descriptorStart[watchlistId] ?? 0, this.descriptorCount[watchlistId] ?? 20);
+      if (type === 'descriptor') scripts = descriptorScripts(raw, this.state?.network || this.state?.env?.ROOT_NETWORK || 'mainnet', this.descriptorStart[watchlistId] ?? 0, this.descriptorCount[watchlistId] ?? 20);
       if (type === 'outpoint' && (!/^[a-f0-9]{64}:(?:0|[1-9][0-9]*)$/i.test(raw) || !Number.isSafeInteger(Number(raw.slice(65))) || Number(raw.slice(65)) > 0xffffffff)) throw Error('Supply an outpoint as transaction ID:output index');
     } catch (error) {
       this.loadError = error instanceof Error ? error.message : 'Invalid watch input';
