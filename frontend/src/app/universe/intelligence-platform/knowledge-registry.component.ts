@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, distinctUntilChanged, map, startWith, timeout } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
+import { StateService } from '@app/services/state.service';
+import { checkedKnowledgeAudit, checkedKnowledgeLabels, KnowledgeAudit, KnowledgeLabel } from './knowledge-evidence';
 
 @Component({
   selector: 'app-knowledge-registry',
@@ -24,11 +26,16 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <p class="subtitle">
           Entity labels with the evidence behind each one.
         </p>
+        <p>Showing up to 200 returned labels and audit entries. This is a bounded view, not a complete attribution catalogue. A reported label status does not establish address ownership or verify a submitted cryptographic proof.</p>
       </header>
 
-      <div *ngIf="loadError" class="alert alert-danger mb-4">
+      <div *ngIf="loadError" class="alert alert-danger mb-4" role="alert">
         {{ loadError }}
       </div>
+      <p *ngIf="auditError" class="alert alert-warning" role="alert">{{ auditError }}</p>
+      <p *ngIf="auditLoading" role="status">Reading the selected network audit trail…</p>
+      <p *ngIf="!auditLoading && !auditError && auditLog.length === 0">No audit entries returned for this network.</p>
+      <button *ngIf="loadError || auditError" type="button" class="btn btn-outline-primary mb-3" (click)="reload()">Retry knowledge reads</button>
 
       <!-- Labels Grid -->
       <section class="card mb-4">
@@ -119,8 +126,9 @@ import { IntelligenceApiService } from './intelligence-api.service';
               <span class="badge badge-secondary font-monospace">{{ ev.evidence_id }}</span>
             </div>
             <p class="small mb-1">{{ ev.description }}</p>
-            <div *ngIf="ev.uri" class="small">
-              <a [href]="ev.uri" target="_blank" rel="noopener" class="text-break">{{ ev.uri }}</a>
+            <div *ngIf="ev.reference_uri" class="small">
+              <a *ngIf="referenceHref(ev.reference_uri) as href; else plainReference" [href]="href" target="_blank" rel="noopener noreferrer" class="text-break">{{ ev.reference_uri }}</a>
+              <ng-template #plainReference><code class="text-break">{{ ev.reference_uri }}</code></ng-template>
             </div>
           </div>
         </div>
@@ -170,14 +178,19 @@ import { IntelligenceApiService } from './intelligence-api.service';
   `],
 })
 export class KnowledgeRegistryComponent implements OnInit, OnDestroy {
-  labels: any[] = [];
-  auditLog: any[] = [];
+  labels: KnowledgeLabel[] = [];
+  auditLog: KnowledgeAudit[] = [];
   searchFilter = '';
-  selectedEvidence: any = null;
+  selectedEvidence: KnowledgeLabel | null = null;
   loading = false;
   loadError: string | null = null;
+  auditError: string | null = null;
+  auditLoading = false;
 
   private subs: Subscription[] = [];
+  private contextSubscription?: Subscription;
+  private revision = 0;
+  private destroyed = false;
 
   visibleCount = 50;
 
@@ -187,7 +200,7 @@ export class KnowledgeRegistryComponent implements OnInit, OnDestroy {
     return this.labels.filter((l) => l.status === 'verified').length;
   }
 
-  get filteredLabels(): any[] {
+  get filteredLabels(): KnowledgeLabel[] {
     const q = this.searchFilter.trim().toLowerCase();
     if (!q) return this.labels;
     return this.labels.filter(
@@ -200,42 +213,73 @@ export class KnowledgeRegistryComponent implements OnInit, OnDestroy {
 
   constructor(
     private api: IntelligenceApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private state: StateService
   ) {}
 
   ngOnInit(): void {
-    this.loading = true;
-    this.subs.push(
-      this.api.getKnowledgeLabels$().subscribe({
-        next: (res) => {
-          this.labels = res?.labels || [];
-          this.loading = false;
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          this.loadError = err?.error?.error || err?.message || 'Failed to fetch knowledge labels';
-          this.loading = false;
-          this.cdr.markForCheck();
-        },
-      })
-    );
+    this.contextSubscription = this.state.networkChanged$.pipe(map(() => this.selectedNetwork()), startWith(this.selectedNetwork()), distinctUntilChanged()).subscribe(() => this.reload());
+  }
 
+  private selectedNetwork(): string { return this.state.network || this.state.env.ROOT_NETWORK || 'mainnet'; }
+
+  referenceHref(value: string): string | null {
+    try { const url=new URL(value);return ['https:','http:'].includes(url.protocol) ? url.href : null; } catch { return null; }
+  }
+
+  reload(): void {
+    if (this.destroyed) { return; }
+    this.subs.forEach(sub => sub.unsubscribe());this.subs=[];
+    const revision=++this.revision, network=this.selectedNetwork();
+    const current=(): boolean => !this.destroyed && revision===this.revision && network===this.selectedNetwork();
+    this.labels=[];this.auditLog=[];this.selectedEvidence=null;this.visibleCount=50;
+    this.loadError=null;this.auditError=null;
+    this.loading = true;
+    this.auditLoading = true;
     this.subs.push(
-      this.api.getKnowledgeAuditLog$().subscribe({
+      this.api.getKnowledgeLabels$().pipe(timeout({first:10000})).subscribe({
         next: (res) => {
-          this.auditLog = res?.audit_events || [];
+          if (!current()) { return; }
+          try { this.labels=checkedKnowledgeLabels(res,network); }
+          catch { this.labels=[];this.selectedEvidence=null;this.loadError='The selected network returned malformed or mismatched knowledge evidence.'; }
+          this.loading = false;
           this.cdr.markForCheck();
         },
         error: () => {
+          if (!current()) { return; }
+          this.labels=[];this.selectedEvidence=null;
+          this.loadError = 'The selected network knowledge labels are unavailable.';
+          this.loading = false;
           this.cdr.markForCheck();
         },
       })
     );
+
+    this.subs.push(
+      this.api.getKnowledgeAuditLog$().pipe(timeout({first:10000})).subscribe({
+        next: (res) => {
+          if (!current()) { return; }
+          try { this.auditLog=checkedKnowledgeAudit(res,network); }
+          catch { this.auditLog=[];this.auditError='The selected network returned malformed or mismatched audit evidence.'; }
+          this.auditLoading=false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          if (!current()) { return; }
+          this.auditLog=[];this.auditError='The selected network audit trail is unavailable.';
+          this.auditLoading=false;
+          this.cdr.markForCheck();
+        },
+      })
+    );
+    this.cdr.markForCheck();
   }
 
   ngOnDestroy(): void {
+    this.destroyed=true;++this.revision;this.contextSubscription?.unsubscribe();
     for (const sub of this.subs) {
       sub.unsubscribe();
     }
+    this.subs=[];this.labels=[];this.auditLog=[];this.selectedEvidence=null;this.loading=false;this.auditLoading=false;
   }
 }
