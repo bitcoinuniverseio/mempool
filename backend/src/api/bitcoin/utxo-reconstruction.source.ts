@@ -10,6 +10,9 @@ const hash = (value: string): string => createHash('sha256').update(value).diges
 export interface CanonicalAnchorProof { heightAtomic: string; blockHash: string }
 export type AnchoredReconstructionSnapshot = ReconstructionSnapshot & { canonicalAnchor?: CanonicalAnchorProof };
 export type ConfirmedReconstructionSnapshot = Omit<AnchoredReconstructionSnapshot, 'mempoolIdentity'> & { mempoolIdentity: null };
+export type GlobalReconstructionSnapshot = AnchoredReconstructionSnapshot & {
+  globalMempool: { transactionCount: number; sequenceAtomic: string; txids: string[] | null };
+};
 export class ReconstructionAcquisitionError extends ReconstructionError {
   constructor(public readonly phase: string, public readonly upstreamStatus: number | undefined, public readonly causeCode: string) {
     super(causeCode === 'DEADLINE' ? 504 : 503, 'Bounded reconstruction source acquisition failed');
@@ -81,12 +84,24 @@ export class EsploraReconstructionSource implements ReconstructionSource {
   async snapshot(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<AnchoredReconstructionSnapshot> {
     return this.acquire(address, signal, true, anchor) as Promise<AnchoredReconstructionSnapshot>;
   }
+  /** Explicit successor acquisition; existing V1/V2/V3 snapshots do not retain these global IDs. @asyncUnsafe */
+  async snapshotWithGlobalMempool(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<GlobalReconstructionSnapshot> {
+    return this.acquire(address, signal, true, anchor, true) as Promise<GlobalReconstructionSnapshot>;
+  }
+  /** Independent exact transaction bytes from both configured native sources. @asyncUnsafe */
+  async readGlobalTransactionHex(txid: string, signal: AbortSignal): Promise<string> {
+    if (!/^[0-9a-f]{64}$/.test(txid)) throw new ReconstructionError(400, 'Invalid global transaction identifier');
+    const [core, indexed] = await Promise.all([this.rpc('getrawtransaction', [txid, false], signal), this.get<string>('/tx/' + txid + '/hex', signal)]);
+    active(signal);
+    if (typeof core !== 'string' || core.length < 20 || core.length > 1048576 || !/^(?:[0-9a-f]{2})+$/.test(core) || indexed !== core) throw new ReconstructionError(409, 'Independent global transaction bytes are unavailable or differ');
+    return core;
+  }
   /** Chain-bound progress deliberately excludes global mempool acquisition. */
   async confirmedSnapshot(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<ConfirmedReconstructionSnapshot> {
     return this.acquire(address, signal, false, anchor) as Promise<ConfirmedReconstructionSnapshot>;
   }
   /** @asyncUnsafe */
-  private async acquire(address: string, signal: AbortSignal, exactMempool: boolean, anchor?: AddressSourceCheckpoint): Promise<AnchoredReconstructionSnapshot | ConfirmedReconstructionSnapshot> {
+  private async acquire(address: string, signal: AbortSignal, exactMempool: boolean, anchor?: AddressSourceCheckpoint, includeGlobal = false): Promise<AnchoredReconstructionSnapshot | ConfirmedReconstructionSnapshot> {
     active(signal);
     const before = await this.rpc('getblockchaininfo', [], signal);
     if (before.initialblockdownload !== false) throw new ReconstructionError(503, 'Owned Core is not ready for exact reconstruction');
@@ -139,7 +154,8 @@ export class EsploraReconstructionSource implements ReconstructionSource {
         exactMempool && (afterMempool.mempool_sequence !== coreMempool.mempool_sequence || JSON.stringify(txids(afterMempool.txids)) !== JSON.stringify(coreIds))) {
       throw new ReconstructionError(409, exactMempool ? 'Active chain or exact mempool identity moved during source acquisition' : 'Active chain moved during confirmed source acquisition');
     }
-    return { checkpoint, sourceId: this.sourceId, mempoolIdentity: exactMempool ? hash(JSON.stringify({ ids: coreIds, sequence: coreMempool.mempool_sequence })) : null, scriptPubKey: addressInfo.scriptPubKey, summary, ...(canonicalAnchor ? { canonicalAnchor } : {}) };
+    return { checkpoint, sourceId: this.sourceId, mempoolIdentity: exactMempool ? hash(JSON.stringify({ ids: coreIds, sequence: coreMempool.mempool_sequence })) : null, scriptPubKey: addressInfo.scriptPubKey, summary, ...(canonicalAnchor ? { canonicalAnchor } : {}),
+      ...(includeGlobal ? { globalMempool: { transactionCount: coreIds.length, sequenceAtomic: String(coreMempool.mempool_sequence), txids: coreIds.length <= 100 ? coreIds : null } } : {}) };
   }
   history(address: string, after: string | undefined, limit: number, signal: AbortSignal): Promise<IEsploraApi.Transaction[]> {
     if (after && !/^[0-9a-f]{64}$/.test(after)) throw new ReconstructionError(400, 'Invalid native history cursor');

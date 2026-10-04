@@ -5,6 +5,7 @@ import { ReconstructionError, UtxoReconstructionService } from './utxo-reconstru
 import { UtxoReconstructionView } from './utxo-reconstruction.types';
 import { initUtxoReconstructionV2Routes } from './utxo-reconstruction-v2.routes';
 import { initUtxoReconstructionV3Routes } from './utxo-reconstruction-v3.routes';
+import { initUtxoReconstructionV4Routes } from './utxo-reconstruction-v4.routes';
 
 let service: UtxoReconstructionService | undefined;
 const getService = (): UtxoReconstructionService => service || (service = new UtxoReconstructionService(new EsploraReconstructionSource(), config.MEMPOOL.NETWORK));
@@ -12,6 +13,7 @@ const getService = (): UtxoReconstructionService => service || (service = new Ut
 export function initUtxoReconstructionRoutes(app: Application): void {
   initUtxoReconstructionV2Routes(app);
   initUtxoReconstructionV3Routes(app);
+  initUtxoReconstructionV4Routes(app);
   const base = config.MEMPOOL.API_URL_PREFIX + 'address/:address/utxo-reconstruction';
   const run = async (req: Request, res: Response, work: (signal: AbortSignal) => Promise<UtxoReconstructionView> | UtxoReconstructionView): Promise<void> => {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 20000);
