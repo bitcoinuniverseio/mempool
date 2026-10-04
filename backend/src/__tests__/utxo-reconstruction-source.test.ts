@@ -15,10 +15,11 @@ beforeEach(() => {
     : url.endsWith('/blocks/tip/hash') ? id(20) : url.endsWith('/block-height/0') ? id(0)
     : url.endsWith('/block-height/20') ? id(20) : url.endsWith('/block-height/19') ? id(19) : url.endsWith('/mempool/txids') ? [id(30)]
     : { address: 'address', chain_stats: {}, mempool_stats: {} } }));
-  rpc.mockImplementation(async (method: string, params: any[]) => method === 'getblockchaininfo' ? { ...info }
+  const answer = (method: string, params: any[]) => method === 'getblockchaininfo' ? { ...info }
     : method === 'getblockhash' ? id(params[0]) : method === 'getrawmempool' ? { txids: [id(30)], mempool_sequence: 5 }
     : method === 'validateaddress' ? { isvalid: true, scriptPubKey: script }
-    : { value: 0.0000007, confirmations: 1, bestblock: id(20), scriptPubKey: { hex: script } });
+    : { value: 0.0000007, confirmations: 1, bestblock: id(20), scriptPubKey: { hex: script } };
+  rpc.mockImplementation(async (method, params) => Array.isArray(method) ? method.map(call => answer(call.method, call.params)) : answer(method, params));
 });
 afterAll(() => { if (originalChallenge === undefined) delete process.env.UNIVERSE_SIGNET_CHALLENGE; else process.env.UNIVERSE_SIGNET_CHALLENGE = originalChallenge; });
 it('pins the configured origin and compares exact Core/index mempool identities', async () => {
@@ -80,9 +81,30 @@ it('requires every index outspend and independently read Core amount/script/stat
   const checkpoint = { network: 'signet', blockHeight: 20, blockHash: id(20), genesisHash: id(0), signetChallenge: '51', verifiedAt: new Date().toISOString() };
   post.mockResolvedValue({ data: [{ spent: false }] });
   await new EsploraReconstructionSource().verifyOutputs([output], new AbortController().signal, checkpoint);
-  expect(rpc).toHaveBeenCalledWith('gettxout', [id(1), 0, true], expect.anything());
-  rpc.mockResolvedValueOnce({ value: 0.00000071, confirmations: 1, bestblock: id(20), scriptPubKey: { hex: script } });
+  expect(rpc).toHaveBeenCalledWith([{ method: 'gettxout', params: [id(1), 0, true] }], [], expect.anything());
+  rpc.mockResolvedValueOnce([id(20)]).mockResolvedValueOnce([{ value: 0.00000071, confirmations: 1, bestblock: id(20), scriptPubKey: { hex: script } }]);
   await expect(new EsploraReconstructionSource().verifyOutputs([output], new AbortController().signal, checkpoint)).rejects.toMatchObject({ status: 409 });
   post.mockResolvedValueOnce({ data: [] });
   await expect(new EsploraReconstructionSource().verifyOutputs([output], new AbortController().signal, checkpoint)).rejects.toMatchObject({ status: 409 });
+});
+it('bounds live Core batches and verifies every one of one hundred outputs', async () => {
+  const outputs = Array.from({ length: 100 }, (_, n) => ({ txid: id(n + 1), vout: 0, value: 70, scriptpubkey: script, status: { confirmed: true, block_height: 20, block_hash: id(20), block_time: 1 } }));
+  const checkpoint = { network: 'signet', blockHeight: 20, blockHash: id(20), genesisHash: id(0), signetChallenge: '51', verifiedAt: new Date().toISOString() };
+  post.mockResolvedValue({ data: outputs.map(() => ({ spent: false })) });
+  await new EsploraReconstructionSource().verifyOutputs(outputs, new AbortController().signal, checkpoint);
+  const calls = rpc.mock.calls.map(([batch]) => batch);
+  expect(calls.every(batch => Array.isArray(batch) && batch.length <= 20)).toBe(true);
+  expect(calls.flat().filter(call => call.method === 'gettxout')).toHaveLength(100);
+  expect(calls.flat().filter(call => call.method === 'getblockhash')).toHaveLength(1);
+});
+it('rejects malformed batch cardinality and never dispatches after an ignored cancellation', async () => {
+  const outputs = Array.from({ length: 21 }, (_, n) => ({ txid: id(n + 1), vout: 0, value: 70, scriptpubkey: script, status: { confirmed: false } }));
+  const checkpoint = { network: 'signet', blockHeight: 20, blockHash: id(20), genesisHash: id(0), signetChallenge: '51', verifiedAt: new Date().toISOString() };
+  post.mockResolvedValue({ data: outputs.map(() => ({ spent: false })) }); rpc.mockResolvedValueOnce([]);
+  await expect(new EsploraReconstructionSource().verifyOutputs(outputs, new AbortController().signal, checkpoint)).rejects.toMatchObject({ status: 409 });
+  const controller = new AbortController(); let release!: () => void; rpc.mockClear();
+  rpc.mockImplementationOnce(() => new Promise(resolve => { release = () => resolve(Array(20).fill({ value: 0.0000007, confirmations: 0, bestblock: id(20), scriptPubKey: { hex: script } })); }));
+  const pending = new EsploraReconstructionSource().verifyOutputs(outputs, controller.signal, checkpoint);
+  await new Promise(resolve => setImmediate(resolve)); controller.abort(); release();
+  await expect(pending).rejects.toMatchObject({ status: 499 }); expect(rpc).toHaveBeenCalledTimes(1);
 });

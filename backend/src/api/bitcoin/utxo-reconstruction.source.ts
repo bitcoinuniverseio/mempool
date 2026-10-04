@@ -61,6 +61,22 @@ export class EsploraReconstructionSource implements ReconstructionSource {
         error instanceof Error && /deadline|timeout|timed out/i.test(error.message) ? 'DEADLINE' : 'UPSTREAM_UNAVAILABLE');
     }
   }
+  /** Bounded read-only batches use the transport's checked response ordering. @asyncUnsafe */
+  private async rpcBatch(calls: { method: 'gettxout' | 'getblockhash'; params: unknown[] }[], signal: AbortSignal): Promise<any[]> {
+    active(signal);
+    if (calls.length < 1 || calls.length > 20) throw new ReconstructionError(400, 'Independent Core verification batch exceeds 20');
+    try {
+      const rows = await bitcoinClient.rpc.call(calls, [], { signal });
+      active(signal);
+      if (!Array.isArray(rows) || rows.length !== calls.length) throw new ReconstructionError(409, 'Independent Core verification batch has an invalid shape');
+      return rows;
+    } catch (error) {
+      active(signal);
+      if (error instanceof ReconstructionError) throw error;
+      throw new ReconstructionAcquisitionError('core-output-verification', undefined,
+        error instanceof Error && /deadline|timeout|timed out/i.test(error.message) ? 'DEADLINE' : 'UPSTREAM_UNAVAILABLE');
+    }
+  }
   /** @asyncUnsafe */
   async snapshot(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<AnchoredReconstructionSnapshot> {
     return this.acquire(address, signal, true, anchor) as Promise<AnchoredReconstructionSnapshot>;
@@ -147,12 +163,21 @@ export class EsploraReconstructionSource implements ReconstructionSource {
     }
     active(signal);
     if (!Array.isArray(response.data) || response.data.length !== outputs.length || response.data.some(row => row?.spent !== false || row.txid != null || row.vin != null || row.status != null)) throw new ReconstructionError(409, 'Index outspend readback does not confirm every candidate output is unspent');
-    // Four live Core reads at a time: no scan, broadcast or unbounded RPC batch.
-    const hashes = new Map<number, Promise<string>>();
-    for (let start = 0; start < outputs.length; start += 4) {
+    // One live read-only batch at a time, at most twenty calls: network latency
+    // cannot multiply across one hundred outputs, and every original fence stays.
+    const heights = [...new Set(outputs.filter(output => output.status.confirmed).map(output => output.status.block_height!))];
+    const hashes = new Map<number, string>();
+    for (let start = 0; start < heights.length; start += 20) {
+      const batch = heights.slice(start, start + 20);
+      const rows = await this.rpcBatch(batch.map(height => ({ method: 'getblockhash', params: [height] })), signal);
+      batch.forEach((height, index) => hashes.set(height, rows[index]));
+    }
+    for (let start = 0; start < outputs.length; start += 20) {
       active(signal);
-      await Promise.all(outputs.slice(start, start + 4).map(/** @asyncUnsafe */ async output => {
-        const live = await this.rpc('gettxout', [output.txid, output.vout, true], signal);
+      const batch = outputs.slice(start, start + 20);
+      const rows = await this.rpcBatch(batch.map(output => ({ method: 'gettxout', params: [output.txid, output.vout, true] })), signal);
+      batch.forEach((output, index) => {
+        const live = rows[index];
         if (!live || typeof live.value !== 'number' || !Number.isFinite(live.value) || live.value < 0 || live.value > 21000000 ||
             Number(live.value.toFixed(8)) !== live.value ||
             live.value.toFixed(8) !== (output.value / 100000000).toFixed(8) ||
@@ -161,10 +186,9 @@ export class EsploraReconstructionSource implements ReconstructionSource {
         if (output.status.confirmed) {
           const height = output.status.block_height!;
           if (live.confirmations !== checkpoint.blockHeight - height + 1) throw new ReconstructionError(409, 'Core confirmations differ from reconstructed funding height');
-          if (!hashes.has(height)) hashes.set(height, this.rpc('getblockhash', [height], signal));
-          if (await hashes.get(height) !== output.status.block_hash) throw new ReconstructionError(409, 'Reconstructed funding block differs from the owned active chain');
+          if (hashes.get(height) !== output.status.block_hash) throw new ReconstructionError(409, 'Reconstructed funding block differs from the owned active chain');
         }
-      }));
+      });
     }
   }
 }
