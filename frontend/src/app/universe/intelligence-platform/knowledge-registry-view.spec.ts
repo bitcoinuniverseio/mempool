@@ -15,9 +15,11 @@ function response(reference='https://example.test/disclosure'):any {
 describe('Knowledge Registry actual template, controlled evidence only',()=>{
   beforeAll(()=>{Object.defineProperty(KnowledgeRegistryComponent,'ctorParameters',{configurable:true,value:()=>[{type:IntelligenceApiService},{type:ChangeDetectorRef},{type:StateService}]});TestBed.initTestEnvironment(BrowserDynamicTestingModule,platformBrowserDynamicTesting());});
   afterEach(()=>TestBed.resetTestingModule());
-  function render(reference?:string,failure=false){
+  function render(reference?:string,failure=false,poolDefinition=false){
     const state:any={network:'',env:{ROOT_NETWORK:'signet'},networkChanged$:new Subject<string>()};
-    TestBed.configureTestingModule({providers:[{provide:IntelligenceApiService,useValue:{getKnowledgeLabels$:()=>of(response(reference)),getKnowledgeAuditLog$:()=>failure?throwError(()=>new Error('controlled source failure')):of({schema:'universe-knowledge-audit-v1',network:'signet',count:0,audit_events:[]})}},{provide:StateService,useValue:state}]});
+    const labels=response(reference);
+    if(poolDefinition){Object.assign(labels.labels[0],{source:'pools_definition',entity_type:'pool',category:'mining_pool'});labels.labels[0].evidence[0].evidence_type='coinbase_tag';}
+    TestBed.configureTestingModule({providers:[{provide:IntelligenceApiService,useValue:{getKnowledgeLabels$:()=>of(labels),getKnowledgeAuditLog$:()=>failure?throwError(()=>new Error('controlled source failure')):of({schema:'universe-knowledge-audit-v1',network:'signet',count:0,audit_events:[]})}},{provide:StateService,useValue:state}]});
     const fixture=TestBed.createComponent(KnowledgeRegistryComponent);fixture.detectChanges();return fixture;
   }
   it('opens actual reference_uri citation and preserves provisional/ownership disclosure',()=>{
@@ -31,6 +33,12 @@ describe('Knowledge Registry actual template, controlled evidence only',()=>{
     const fixture=render('urn:controlled:proof');
     Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b=>b.textContent?.trim()==='Evidence')!.click();fixture.detectChanges();
     const element=fixture.nativeElement as HTMLElement;expect(element.textContent).toContain('urn:controlled:proof');expect(element.querySelector('a[href^="urn:"]')).toBeNull();
+  });
+  it('discloses an uncited pool definition and renders no invented citation link',()=>{
+    const fixture=render('',false,true);const element=fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Controlled provisional label');
+    Array.from(element.querySelectorAll('button')).find(b=>b.textContent?.trim()==='Evidence')!.click();fixture.detectChanges();
+    expect(element.textContent).toContain('No public reference supplied.');expect(element.querySelector('a[href]')).toBeNull();
   });
   it('exposes audit failure and retry while retaining successful labels',()=>{
     const fixture=render(undefined,true);const element=fixture.nativeElement as HTMLElement;

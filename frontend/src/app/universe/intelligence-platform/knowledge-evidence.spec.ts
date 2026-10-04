@@ -5,6 +5,13 @@ function label() { return { label_id:'controlled',entity_type:'entity',entity_id
 describe('bounded Knowledge response validation, controlled fixtures only',()=>{
   const envelope=(items=[label()])=>({schema:'universe-knowledge-labels-v1',network:'signet',count:items.length,labels:items});
   it('preserves provisional evidence without converting it to verification',()=>{expect(checkedKnowledgeLabels(envelope(),'signet')[0]).toMatchObject({status:'provisional',source:'submitted',evidence:[{verified_at_utc:null}]});});
+  it('preserves an uncited first-party pool definition without inventing a public reference',()=>{
+    const pool={...label(),source:'pools_definition',entity_type:'pool',category:'mining_pool',evidence:[{evidence_type:'coinbase_tag',reference_uri:'',description:'Coinbase tag in the first-party definition.',verified_at_utc:null}]};
+    expect(checkedKnowledgeLabels(envelope([pool]),'signet')[0].evidence[0].reference_uri).toBe('');
+  });
+  it('continues rejecting an empty submitted reference',()=>{
+    expect(()=>checkedKnowledgeLabels(envelope([{...label(),evidence:[{...label().evidence[0],reference_uri:''}]}]),'signet')).toThrow();
+  });
   it.each([NaN,Infinity,-0.1,1.1,'0.5'])('rejects malformed confidence %s',score=>{expect(()=>checkedKnowledgeLabels(envelope([{...label(),confidence_score:score as number}]),'signet')).toThrow();});
   it('rejects duplicate label identities',()=>{expect(()=>checkedKnowledgeLabels(envelope([label(),label()]),'signet')).toThrow();});
   it('rejects JSON array enum substitutions without coercion',()=>{expect(()=>checkedKnowledgeLabels(envelope([{...label(),entity_type:['entity'] as any}]),'signet')).toThrow();});
