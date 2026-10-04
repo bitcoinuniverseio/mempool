@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit, HostBinding, NgZone, Input } from '@angular/core';
+import { Subject as ScopeSubject } from 'rxjs';
+import { lightningReadScope } from '../lightning-read-scope';
+import { ChangeDetectionStrategy, Component, OnInit, HostBinding, NgZone, Input , OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { EChartsOption, PieSeriesOption } from '@app/graphs/echarts';
-import { combineLatest, map, Observable, share, startWith, Subject, switchMap, tap } from 'rxjs';
+import { combineLatest, map, Observable, startWith, Subject, tap } from 'rxjs';
 import { originalChartColors as chartColors } from '@app/app.constants';
 import { ApiService } from '@app/services/api.service';
 import { SeoService } from '@app/services/seo.service';
@@ -19,12 +21,16 @@ import { chartChrome } from '@app/shared/chart-theme';
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodesPerISPChartComponent implements OnInit {
+export class NodesPerISPChartComponent implements OnDestroy, OnInit {
   @Input() height: number = 300;
   @Input() widget: boolean = false;
 
   isLoading = true;
   chartOptions: EChartsOption = {};
+  loadError: string | null = null;
+  private readonly retry$ = new ScopeSubject<void>();
+  private readonly destroy$ = new ScopeSubject<void>();
+  private destroyed = false;
   chartInitOptions = {
     renderer: 'svg',
   };
@@ -50,17 +56,18 @@ export class NodesPerISPChartComponent implements OnInit {
   ) {
   }
 
+  retry(): void { if (!this.destroyed && this.loadError && !this.isLoading) { this.retry$.next(); } }
+  ngOnDestroy(): void { this.destroyed = true; this.destroy$.next(); this.destroy$.complete(); this.retry$.complete(); }
+
   ngOnInit(): void {
     if (!this.widget) {
       this.seoService.setTitle($localize`:@@8573a1576789bd2c4faeaed23037c4917812c6cf:Lightning Nodes Per ISP`);
       this.seoService.setDescription($localize`:@@meta.description.lightning.nodes-per-isp:Browse the top 100 ISPs hosting Lightning nodes along with stats like total number of nodes per ISP, aggregate BTC capacity per ISP, and more`);
     }
 
-    this.nodesPerAsObservable$ = combineLatest([
+    this.nodesPerAsObservable$ = lightningReadScope(combineLatest([
       this.sortBySubject.pipe(startWith(true)),
-    ])
-      .pipe(
-        switchMap((selectedFilters) => {
+    ]), this.stateService.networkChanged$, this.retry$, this.destroy$, (selectedFilters) => {
           this.sortBy = selectedFilters[0] ? 'capacity' : 'node-count';
           return this.apiService.getNodesPerIsp()
             .pipe(
@@ -104,8 +111,9 @@ export class NodesPerISPChartComponent implements OnInit {
                 };
               })
             );
-        }),
-        share()
+        }, () => { this.loadError = null; this.isLoading = true; this.chartOptions = {}; if (!this.chartInstance?.isDisposed?.()) { this.chartInstance?.clear(); }   this.indexingInProgress = false; },
+      () => { this.loadError = 'Lightning ISP ranking is unavailable from the selected source. Retry when it is available.'; },
+      () => { this.isLoading = false; }
       );
 
     if (this.widget) {
@@ -259,7 +267,7 @@ export class NodesPerISPChartComponent implements OnInit {
   }
 
   onChartInit(ec): void {
-    if (this.chartInstance !== undefined) {
+    if (this.destroyed || this.chartInstance === ec) {
       return;
     }
     this.chartInstance = ec;
@@ -276,6 +284,7 @@ export class NodesPerISPChartComponent implements OnInit {
   }
 
   onSaveChart(): void {
+    if (this.destroyed || this.isLoading || this.loadError || !this.chartInstance || this.chartInstance.isDisposed?.() || !this.chartOptions.series) { return; }
     const now = new Date();
     this.chartOptions.backgroundColor = 'var(--active-bg)';
     this.chartInstance.setOption(this.chartOptions);
