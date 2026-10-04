@@ -1,0 +1,139 @@
+{
+  "provenance": {
+    "scope": "Historical native compiled proof module public input/verdict. Consumer regression only; not current API/UI acceptance or unilateral-exit proof.",
+    "sourceRevision": "0de74b12dbbbfe5d4cc9df09e3552472f8a64cac",
+    "publicArkadePackageSha256": "f2186f71eb69b4bbc7ad75a9c3a7193f897e2e1fd3aa6b61918c85f5b809dd0d",
+    "publicModuleReceiptSha256": "e0adbaee44ae9817db7d819d394bb45846dc520c9f072a43a7635dadf0bb896a"
+  },
+  "input": {
+    "schema": "universe-ark-native-proof-v1",
+    "network": "signet",
+    "providerId": "universe-owned-custom-signet-ark-v3",
+    "batchOutpoint": "8e224a0bf49792951f47a028bc22fa3e1e3620742a400a5f2488a7d0ea76c2c4:0",
+    "vtxoOutpoint": "8b02aac1e8a438246ddd8a3efaf7e5450598fa5cd31c081f905b765c6b621538:0",
+    "arkade": {
+      "default_vtxo": {
+        "pubkey": "4be2a30ad136463c1ee3f0550ebaab9446c27659168d5b8a146668adf8a35576",
+        "server_pubkey": "63d03d54b486ffb4a8a66009ebe0beeaab91bb749e7336e895bf26f3821faaab",
+        "exit_delay_seconds": 86016,
+        "version": 2
+      },
+      "leaf_outpoint": "8b02aac1e8a438246ddd8a3efaf7e5450598fa5cd31c081f905b765c6b621538:0",
+      "nodes": [
+        {
+          "children": {},
+          "txid": "8b02aac1e8a438246ddd8a3efaf7e5450598fa5cd31c081f905b765c6b621538",
+          "tx": "cHNidP8BAGsDAAAAAcTCdurQp4gkXwpAKnQgNh4++iK8KKBHH5WSl/QLSiKOAAAAAAD/////AhAnAAAAAAAAIlEgoabXto3zP2nCkFHhgUwflqc2e8TONEYItXnygowp4iYAAAAAAAAAAARRAk5zAAAAAAABE0CMzh6kphvjjioBe/iLrovtYQl2e1ggL7sh4keKnmf/oiX+QHWnr2otAUK80sQE7kTQ3njPPvWjpPnpvH08HRT/Dd5jb3NpZ25lcgAAAAAhAkQENU1Ub5oCeO9WoKBUPQfbddZiOo9y2lcbmKlCVE4jDd5jb3NpZ25lcgAAAAEhAtItw9wKvpRGvpT5KU9n6wWd6jcnnNCbRCABTj6ctb8EB95leHBpcnkDnQRAAAAA"
+        }
+      ]
+    }
+  },
+  "selectedSource": {
+    "schema": "universe-ark-native-observation-v1",
+    "profile": {
+      "schema": "universe-ark-native-profile-v1",
+      "dialect": "arkade",
+      "version": "v0.9.16",
+      "sourceRevision": "e2d9ed443df7a0dfb3aa1e5c824de9541ff71047",
+      "providerId": "universe-owned-custom-signet-ark-v3",
+      "providerName": "Owned native Ark custom Signet qualification",
+      "signerPubkey": "0263d03d54b486ffb4a8a66009ebe0beeaab91bb749e7336e895bf26f3821faaab",
+      "forfeitPubkey": "02d4c687916261c6d8760cec9585b0361245275c67d4b9b1b235c450190edf9a3f",
+      "network": "signet",
+      "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+      "signetChallenge": "512103b00fc2175d87d4b34ec38ea136f75c922e1827265dd82f822a4abd2ae20154ff51ae",
+      "blockOneHash": "000001896fb4889c52f5168336ac076cd5b57a1fe008176f26188aa0bfb6bcb5",
+      "publicationIntent": "owned-public-indexer"
+    },
+    "profileSha256": "f9372d08e3b2196d85063c18756df7128a10fcba0423acb6048c4b70b713a650",
+    "anchor": {
+      "height": 3187,
+      "hash": "0000009898d6eb3cbe8305297653c85259dad656a8ecbf6e7e3d3d3e12e6ccc4"
+    },
+    "observedAt": "2026-10-04T18:06:58.502Z",
+    "info": {
+      "version": "v0.9.16",
+      "network": "signet",
+      "signerPubkey": "0263d03d54b486ffb4a8a66009ebe0beeaab91bb749e7336e895bf26f3821faaab",
+      "forfeitPubkey": "02d4c687916261c6d8760cec9585b0361245275c67d4b9b1b235c450190edf9a3f",
+      "sessionDurationSeconds": "30",
+      "scheduledSession": null,
+      "unilateralExitDelay": {
+        "unit": "seconds",
+        "value": "86016"
+      },
+      "boardingExitDelay": {
+        "unit": "seconds",
+        "value": "7775744"
+      },
+      "providerDigest": "2e640d99227ae93ff39f5f7d6a26d98980be41b5cf19c0949da1e96c0850032b"
+    }
+  },
+  "verdict": {
+    "schema": "universe-ark-native-proof-verdict-v1",
+    "valid": true,
+    "stage": "verified-native-proof",
+    "exitViable": null,
+    "protocolVerified": null,
+    "source": {
+      "schema": "universe-ark-native-observation-v1",
+      "profile": {
+        "schema": "universe-ark-native-profile-v1",
+        "dialect": "arkade",
+        "version": "v0.9.16",
+        "sourceRevision": "e2d9ed443df7a0dfb3aa1e5c824de9541ff71047",
+        "providerId": "universe-owned-custom-signet-ark-v3",
+        "providerName": "Owned native Ark custom Signet qualification",
+        "signerPubkey": "0263d03d54b486ffb4a8a66009ebe0beeaab91bb749e7336e895bf26f3821faaab",
+        "forfeitPubkey": "02d4c687916261c6d8760cec9585b0361245275c67d4b9b1b235c450190edf9a3f",
+        "network": "signet",
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "signetChallenge": "512103b00fc2175d87d4b34ec38ea136f75c922e1827265dd82f822a4abd2ae20154ff51ae",
+        "blockOneHash": "000001896fb4889c52f5168336ac076cd5b57a1fe008176f26188aa0bfb6bcb5",
+        "publicationIntent": "owned-public-indexer"
+      },
+      "profileSha256": "f9372d08e3b2196d85063c18756df7128a10fcba0423acb6048c4b70b713a650",
+      "anchor": {
+        "height": 3187,
+        "hash": "0000009898d6eb3cbe8305297653c85259dad656a8ecbf6e7e3d3d3e12e6ccc4"
+      },
+      "observedAt": "2026-10-04T18:06:58.502Z",
+      "info": {
+        "version": "v0.9.16",
+        "network": "signet",
+        "signerPubkey": "0263d03d54b486ffb4a8a66009ebe0beeaab91bb749e7336e895bf26f3821faaab",
+        "forfeitPubkey": "02d4c687916261c6d8760cec9585b0361245275c67d4b9b1b235c450190edf9a3f",
+        "sessionDurationSeconds": "30",
+        "scheduledSession": null,
+        "unilateralExitDelay": {
+          "unit": "seconds",
+          "value": "86016"
+        },
+        "boardingExitDelay": {
+          "unit": "seconds",
+          "value": "7775744"
+        },
+        "providerDigest": "2e640d99227ae93ff39f5f7d6a26d98980be41b5cf19c0949da1e96c0850032b"
+      }
+    },
+    "evidence": {
+      "vtxoOutpoint": "8b02aac1e8a438246ddd8a3efaf7e5450598fa5cd31c081f905b765c6b621538:0",
+      "batchOutpoint": "8e224a0bf49792951f47a028bc22fa3e1e3620742a400a5f2488a7d0ea76c2c4:0",
+      "amountAtomic": "10000",
+      "script": "5120a1a6d7b68df33f69c29051e1814c1f96a7367bc4ce344608b579f2828c29e226",
+      "expiryUnixSeconds": "1791738722",
+      "nativePsbtSha256": [
+        "ca7ecaae4bc7afe15d3d1408022ad6147fbfa70c68fe8221ec57f115a33c9e1f"
+      ],
+      "transactionChecks": [
+        {
+          "txid": "8b02aac1e8a438246ddd8a3efaf7e5450598fa5cd31c081f905b765c6b621538",
+          "input_outpoint": "8e224a0bf49792951f47a028bc22fa3e1e3620742a400a5f2488a7d0ea76c2c4:0",
+          "fee_sats": 0,
+          "signature_valid": true
+        }
+      ]
+    },
+    "scope": "Native provider membership, original signed PSBT identity, independently observed confirmed unspent Bitcoin anchor, public DefaultVtxo policy and reconstructed Taproot key-path signatures. No unilateral exit, spend-policy acceptance, future expiry or whole Ark lifecycle is established."
+  }
+}

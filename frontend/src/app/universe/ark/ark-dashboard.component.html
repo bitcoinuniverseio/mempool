@@ -12,6 +12,19 @@
   </header>
 
   <ng-container *ngIf="vm$ | async as vm">
+    <section class="panel">
+      <h2>Read a completed-round window</h2>
+      <p>Choose a bounded native observation window. No complete batch catalogue or continuation token is supplied.</p>
+      <label for="ark-round-after">After Unix seconds</label>
+      <input id="ark-round-after" class="form-control" [(ngModel)]="afterSeconds" [ngModelOptions]="{standalone:true}" inputmode="numeric">
+      <label for="ark-round-before">Before Unix seconds (blank: now)</label>
+      <input id="ark-round-before" class="form-control" [(ngModel)]="beforeSeconds" [ngModelOptions]="{standalone:true}" inputmode="numeric">
+      <label for="ark-round-limit">Native round limit (1 to 100)</label>
+      <input id="ark-round-limit" class="form-control" [(ngModel)]="windowLimit" [ngModelOptions]="{standalone:true}" type="number" min="1" max="100">
+      <button class="btn btn-primary mt-2" (click)="loadWindow()" [disabled]="vm.kind === 'loading'">Read window</button>
+      <button class="btn btn-outline-secondary mt-2 ms-2" (click)="retry()" [disabled]="vm.kind === 'loading'">Retry current window</button>
+      <p *ngIf="windowError" role="alert">{{ windowError }}</p>
+    </section>
     <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
       <p>Reading Ark ASP round state...</p>
     </div>
@@ -51,8 +64,13 @@
       </div>
 
       <!-- Batches Table -->
-      <section class="panel" *ngIf="vm.batches?.length">
-        <h2>Provider-reported Round Batches</h2>
+      <section class="panel" *ngIf="vm.batchPage as page">
+        <h2>Bounded completed-round window</h2>
+        <p>Total catalogue size: Unknown. Bitcoin confirmation: Unknown.</p>
+        <p>After {{ page.after }}, before {{ page.before }} Unix seconds; limit {{ page.limit }}. Native rounds observed: {{ page.nativeObservedCount }}. Completed rounds exposed: {{ page.observedCount }}.</p>
+        <p>This is an incomplete catalogue observation. No continuation cursor is available; select another interval explicitly.</p>
+        <p *ngIf="!vm.batches?.length">No completed round was observed in this bounded window. This does not establish an empty provider inventory.</p>
+        <div class="table-responsive" role="region" aria-label="Ark completed-round observation table" tabindex="0" *ngIf="vm.batches?.length">
         <table class="data-table">
           <thead>
             <tr>
@@ -66,16 +84,33 @@
           </thead>
           <tbody>
             <tr *ngFor="let b of vm.batches">
-              <td class="mono"><strong>{{ b.batchId }}</strong></td>
+              <td class="mono"><button class="btn btn-link p-0" (click)="readDetail(b)">{{ b.batchId }}</button></td>
               <td class="mono"><a [routerLink]="['/tx' | relativeUrl, b.anchorTxid]">{{ b.anchorTxid.slice(0, 16) }}...</a></td>
-              <td class="mono">{{ b.rootHash.slice(0, 16) }}...</td>
-              <td>{{ b.vtxoCount }}</td>
-              <td>{{ (Number(b.totalAmountSats) / 1e8).toFixed(4) }}</td>
+              <td class="mono">{{ b.rootHash === null ? 'Unknown' : b.rootHash.slice(0, 16) + '...' }}</td>
+              <td>{{ b.vtxoCount === null ? 'Unknown' : b.vtxoCount }}</td>
+              <td>{{ b.totalAmountSats === null ? 'Unknown' : formatAtomicAmount(b.totalAmountSats, 8) }}</td>
               <td><span class="badge badge-secondary">{{ b.status }}</span></td>
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
+      <ng-container *ngIf="detail$ | async as detail">
+        <section class="panel" *ngIf="detail.kind !== 'idle'">
+          <h2>Selected native round detail</h2>
+          <p *ngIf="detail.kind === 'loading'" role="status">Reading the selected native round...</p>
+          <p *ngIf="detail.message" role="alert">{{ detail.message }}. Select the round again to retry.</p>
+          <ng-container *ngIf="detail.batch as batch">
+            <p class="mono">Round {{ batch.batchId }}. Anchor transaction: {{ batch.anchorTxid }}.</p>
+            <p>Root hash: {{ batch.rootHash === null ? 'Unknown' : batch.rootHash }}. Bitcoin confirmation: Unknown.</p>
+            <p>Observed VTXO count: {{ batch.vtxoCount === null ? 'Unknown' : batch.vtxoCount }}.</p>
+            <p>Observed amount: {{ batch.totalAmountSats === null ? 'Unknown' : formatAtomicAmount(batch.totalAmountSats, 8) + ' BTC (' + batch.totalAmountSats + ' sats)' }}.</p>
+            <p>Expiry: {{ batch.expirationTimestamp === null ? 'Unknown' : batch.expirationTimestamp + ' Unix seconds' }}.</p>
+            <p class="mono">Source profile: {{ batch.source?.profileSha256 }}. Checkpoint: {{ batch.source?.anchor?.height }} / {{ batch.source?.anchor?.hash }} at {{ batch.source?.observedAt }}.</p>
+          </ng-container>
+        </section>
+      </ng-container>
+      <app-ark-native-proof [operators]="vm.operators || []"></app-ark-native-proof>
     </ng-container>
   </ng-container>
 </div>

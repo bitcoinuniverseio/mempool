@@ -1277,18 +1277,23 @@ export interface ArkOperator {
   /** Native session duration is distinct from the scheduled round cadence. */
   readonly sessionDurationSeconds?: string;
   readonly status: 'online' | 'degraded' | 'observed';
+  readonly source?: import('./ark/ark-native-view').ArkNativeObservation;
 }
 
 export interface ArkBatch {
   readonly batchId: string;
   readonly operatorId: string;
   readonly anchorTxid: string;
-  readonly rootHash: string;
-  readonly vtxoCount: number;
-  readonly totalAmountSats: string;
+  readonly rootHash: string | null;
+  readonly vtxoCount: number | null;
+  readonly totalAmountSats: string | null;
   readonly roundTimestamp: number;
-  readonly expirationTimestamp: number;
-  readonly status: 'settled' | 'provisional' | 'swept';
+  readonly expirationTimestamp: number | null;
+  readonly status: 'settled' | 'provisional' | 'swept' | 'observed-completed';
+  readonly endedAt?: number;
+  readonly nativeStage?: 'FINALIZATION_STAGE';
+  readonly confirmation?: null;
+  readonly source?: import('./ark/ark-native-view').ArkNativeObservation;
 }
 
 export interface ArkVirtualTx {
