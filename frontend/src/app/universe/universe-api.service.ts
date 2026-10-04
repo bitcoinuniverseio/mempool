@@ -43,7 +43,7 @@ import {
   ArkVirtualTx,
   ArkVtxo,
   BlockTemplateComparison,
-  Bolt12Offer,
+  Bolt12OfferPage,
   Cat20Holder,
   Cat20Token,
   DatasetManifest,
@@ -993,9 +993,13 @@ export class UniverseApiService {
    * References/prerequisite: WP-BE-013. Rollback keeps actual offers and keys at
    *    their authority and restores a compatible DTO without synthetic rows.
    */
-  getBolt12Offers$(): Observable<{ offers: Bolt12Offer[]; total: number }> {
-    return this.httpClient.get<{ offers: Bolt12Offer[]; total: number }>(
-      this.backendBase + '/api/v1/lightning/offers'
+  getBolt12Offers$(limit = 20, cursor?: string): Observable<Bolt12OfferPage> {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50 || cursor !== undefined && (typeof cursor !== 'string' || !cursor.length || cursor.length > 2048)) {
+      return throwError(() => new Error('Invalid bounded offer page request'));
+    }
+    return this.httpClient.get<Bolt12OfferPage>(
+      this.backendBase + '/api/v1/lightning/offers?limit=' + limit + (cursor === undefined ? '' : '&cursor=' + encodeURIComponent(cursor)),
+      { headers: { 'Cache-Control': 'no-store' } },
     );
   }
 
