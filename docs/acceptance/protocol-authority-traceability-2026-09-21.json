@@ -1375,8 +1375,8 @@
     "schemaVersion": "universe-explorer-protocol-manifest-v1",
     "registryVersion": "1.1.0",
     "sourceRepository": "bitcoinuniverseio/backend-apis",
-    "sourceSha": "a7f08fb94b85ead9daf7f4a04f0b6beb4ba7acfa",
-    "sha256": "5a34c59217c4b4797014915359fc8e677029f33698a51825722b5dad83ae94a1",
+    "sourceSha": "1a1a2548a74e419bf7341dd7af1cd57ff98e34c7",
+    "sha256": "1630aeb583cdc839830577a35d9d5f134c51cbb33ecd41d3c25f0e0de9d75afe",
     "protocols": [
       {
         "id": "ordinals",
