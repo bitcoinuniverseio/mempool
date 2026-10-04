@@ -5,6 +5,8 @@ import { coreFilterSource } from '../compact-filters/core-filter-source';
 import { matchesBasicFilter } from '../compact-filters/bip158';
 import { CompactFiltersEvidenceError } from '../compact-filters/compact-filters.service';
 import config from '../../../config';
+import { configuredIncidentMonitor } from './incident-monitor';
+export { ConsensusIncident } from './incident-types';
 export { VerificationEvidenceError } from './verification-errors';
 export interface SpvMerkleProof {
   txid: string;
@@ -37,31 +39,11 @@ export interface SignatureVerificationResult {
   error?: string;
 }
 
-export interface ConsensusIncident {
-  incident_id: string;
-  incident_type: 'reorg' | 'invalid_block' | 'stale_tip' | 'consensus_divergence';
-  title: string;
-  block_height: number;
-  block_hash: string;
-  detected_at_utc: string;
-  resolved_at_utc: string;
-  duration_seconds: number;
-  reorg_depth: number;
-  displaced_tx_count: number;
-  double_spend_attempts_count: number;
-  status: 'resolved' | 'investigating' | 'mitigated';
-  summary: string;
-  technical_postmortem: string;
-}
-
 /**
  * Raised when a read has no source behind it. The routes map the code to a
  * 503, so an absent integration is reported as an absent integration rather
  * than as an answer.
  */
-
-const incidentLedgerUnavailable =
-  'Consensus incident observations are unavailable. Reorg, invalid block and stale tip incidents require the owned consensus incident ledger fed by the owned chain monitor (UNIVERSE_INCIDENT_LEDGER_ORIGIN), which is not connected on this deployment.';
 
 /**
  * Proof, signature and consensus incident evidence.
@@ -71,7 +53,9 @@ const incidentLedgerUnavailable =
  * signature that was valid because it was long enough with the secp256k1
  * generator point as its signer, and two incidents with invented block
  * hashes. SPV inclusion uses owned Core and an independent Merkle decoder.
- * Signature and incident capabilities retain explicit unavailable states.
+ * Incident reads require registered operator-pinned node observations and a
+ * durable bounded ledger. Unknown transaction effects and consensus verdicts
+ * remain unavailable; an empty retained window proves no global agreement.
  */
 export class VerificationService {
   private static instance: VerificationService;
@@ -119,13 +103,18 @@ export class VerificationService {
     return verifyMessageSignature(address, message, signature, format, network);
   }
 
-  public getIncidents(): ConsensusIncident[] {
-    throw new VerificationEvidenceError('unavailable-incident-ledger', incidentLedgerUnavailable);
+  /** @asyncUnsafe Bounded source and ledger errors are normalized by the route. */
+  public async getIncidents(network: string = config.MEMPOOL.NETWORK) {
+    return (await configuredIncidentMonitor()).observe(network);
   }
 
-  public getIncidentById(incidentId: string): ConsensusIncident | null {
-    void incidentId;
-    throw new VerificationEvidenceError('unavailable-incident-ledger', incidentLedgerUnavailable);
+  /** @asyncUnsafe Bounded source and ledger errors are normalized by the route. */
+  public async getIncidentById(incidentId: string, network: string = config.MEMPOOL.NETWORK) {
+    if (!/^[0-9a-f]{64}$/.test(incidentId)) throw new VerificationEvidenceError('invalid-incident-id', 'Supply an observed incident identifier.', 400);
+    const response = await this.getIncidents(network);
+    const incident = response.incidents.find(row => row.incident_id === incidentId);
+    return incident ? { ...incident, schema: response.schema, network: response.network, profile_sha256: response.profile_sha256,
+      profile: response.profile, observed_at_utc: response.observed_at_utc, sources: response.sources, coverage: response.coverage } : null;
   }
 }
 
