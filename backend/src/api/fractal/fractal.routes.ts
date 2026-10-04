@@ -2,6 +2,16 @@ import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
 import { FractalEvidenceError, fractalService } from './fractal.service';
+import { Cat20PageRequest } from './fractal.types';
+
+function page(req: Request): Cat20PageRequest {
+  const { limit, cursor } = req.query || {};
+  if ((limit !== undefined && (typeof limit !== 'string' || !/^[1-9][0-9]{0,2}$/.test(limit)))
+    || (cursor !== undefined && typeof cursor !== 'string')) {
+    throw new FractalEvidenceError('invalid-cat20-input', 'Invalid CAT pagination parameters.', 400);
+  }
+  return { limit: limit === undefined ? undefined : Number(limit), cursor: cursor as string | undefined };
+}
 
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(req: Request, res: Response, e: unknown): void {
@@ -72,8 +82,8 @@ class FractalRoutes {
 
   private async $getCat20Tokens(req: Request, res: Response): Promise<void> {
     try {
-      const tokens = await fractalService.$getCat20Tokens();
-      res.json({ tokens, total: tokens.length });
+      const result = await fractalService.$getCat20Tokens(page(req));
+      res.json({ ...result, tokens: result.items });
     } catch (e) {
       fail(req, res, e);
     }
@@ -94,8 +104,8 @@ class FractalRoutes {
 
   private async $getCat20Holders(req: Request, res: Response): Promise<void> {
     try {
-      const holders = await fractalService.$getCat20Holders(req.params.tokenId);
-      res.json({ holders, total: holders.length });
+      const result = await fractalService.$getCat20Holders(req.params.tokenId, page(req));
+      res.json({ ...result, holders: result.items });
     } catch (e) {
       fail(req, res, e);
     }
