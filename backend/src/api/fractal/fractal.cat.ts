@@ -99,7 +99,9 @@ export class Cat20Projection {
     read: (query: (sql: string, values?: unknown[]) => Promise<Record<string, unknown>[]>, checkpoint: FractalCheckpoint, observation: FractalObservation, signal: AbortSignal) => Promise<T>): Promise<T> {
     return this.native.attempt(/** @asyncUnsafe Connection failures propagate to the native/HTTP boundary. */ async (signal, observation) => {
       evidence(observation.ready, 'cat20-node-not-ready');
-      const connection = await this.pool.connect();
+      let connection: CatSqlConnection;
+      try { connection = await this.pool.connect(); }
+      catch { throw new FractalEvidenceError(signal.aborted ? 'cat20-source-timeout' : 'unavailable-cat20-indexer', 'The native CAT read connection is unavailable.', signal.aborted ? 504 : 503); }
       let begun = false;
       /** @asyncUnsafe SQL failures propagate to snapshot rollback. */
       const query = async (text: string, values: unknown[] = []): Promise<Record<string, unknown>[]> => {
