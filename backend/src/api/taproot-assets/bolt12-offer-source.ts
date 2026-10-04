@@ -159,7 +159,7 @@ export class Bolt12OfferSource {
   }
 
   /** @asyncUnsafe Source failures propagate to page's sanitized boundary. */
-  private async fence(publication: OfferPublication, signal: AbortSignal): Promise<Anchor> {
+  private async fence(publication: OfferPublication, signal: AbortSignal, catalogAnchor?: Anchor): Promise<Anchor & { catalogAnchorHash?: string }> {
     const [core, info, chain] = await Promise.all([
       this.io.core('getblockchaininfo', [], signal), this.io.lightning('getinfo', {}, signal), this.io.lightning('getchaininfo', {}, signal),
     ]);
@@ -172,10 +172,12 @@ export class Bolt12OfferSource {
         chain.blockcount !== info.blockheight || chain.headercount < chain.blockcount || Math.abs(core.blocks - chain.blockcount) > 2 ||
         this.network === 'signet' && core.signet_challenge !== publication.signetChallenge) throw unavailable();
     const common = Math.min(core.blocks, chain.blockcount);
+    if (catalogAnchor && common < catalogAnchor.height) throw restart();
     const hashes = await Promise.all([this.block(0, signal), this.block(common, signal),
-      this.network === 'signet' ? this.block(1, signal) : Promise.resolve(null)]);
+      this.network === 'signet' ? this.block(1, signal) : Promise.resolve(null),
+      catalogAnchor && catalogAnchor.height !== common ? this.block(catalogAnchor.height, signal) : Promise.resolve(null)]);
     if (hashes[0] !== publication.genesisHash || signal.aborted) throw unavailable();
-    return { height: common, hash: hashes[1] };
+    return { height: common, hash: hashes[1], ...(catalogAnchor ? { catalogAnchorHash: catalogAnchor.height === common ? hashes[1] : hashes[3]! } : {}) };
   }
 
   /** @asyncUnsafe Source failures propagate to page's sanitized boundary. */
@@ -201,9 +203,11 @@ export class Bolt12OfferSource {
     const bytes = await this.io.publication(signal);
     const publication = this.parsePublication(bytes), publicationHash = digest(bytes);
     if (cursor && cursor.publication !== publicationHash) throw restart();
-    const before = await this.fence(publication, signal);
-    const anchor = cursor?.anchor || before;
-    if (before.height < anchor.height || await this.block(anchor.height, signal) !== anchor.hash) throw restart();
+    const before = await this.fence(publication, signal, cursor?.anchor);
+    const anchor = cursor?.anchor || { height: before.height, hash: before.hash };
+    // This fence already independently measured Core and CLN at the anchor.
+    // Reuse only this page's observation, never a cached result from a prior page.
+    if (cursor && before.catalogAnchorHash !== anchor.hash) throw restart();
     const rows = await this.catalog(publication, signal);
     const offers: Bolt12Offer[] = [];
     for (const row of rows) {
@@ -225,8 +229,9 @@ export class Bolt12OfferSource {
         invoiceAvailability: 'unverified', paymentVerified: false,
       });
     }
-    const after = await this.fence(publication, signal);
-    if (after.height < anchor.height || await this.block(anchor.height, signal) !== anchor.hash ||
+    const afterFence = await this.fence(publication, signal, anchor);
+    const after = { height: afterFence.height, hash: afterFence.hash };
+    if (afterFence.catalogAnchorHash !== anchor.hash ||
         digest(await this.io.publication(signal)) !== publicationHash ||
         digest(JSON.stringify(await this.catalog(publication, signal))) !== digest(JSON.stringify(rows))) throw restart();
     const observed = this.now();
