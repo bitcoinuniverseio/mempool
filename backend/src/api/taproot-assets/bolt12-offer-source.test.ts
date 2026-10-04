@@ -7,7 +7,7 @@ import { resolve } from 'path';
 
 const digest = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 const genesis = '01000000' + '00'.repeat(32) + '3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a' + 'dae5494dffff7f2002000000';
-function harness() {
+function harness(infoLag = 0) {
   let now = 1800000000000, tip = 10;
   const header = (at: number) => at === 0 ? genesis : Buffer.alloc(80, at).toString('hex');
   const blockHash = (at: number) => createHash('sha256').update(createHash('sha256').update(Buffer.from(header(at), 'hex')).digest()).digest().reverse().toString('hex');
@@ -19,7 +19,7 @@ function harness() {
   const core = jest.fn(async (method: string, params: any[]): Promise<any> => method === 'getblockchaininfo' ?
     { chain: 'regtest', initialblockdownload: false, blocks: tip, bestblockhash: blockHash(tip) } : blockHash(params[0]));
   const lightning = jest.fn(async (method: string, params: any): Promise<any> => {
-    if (method === 'getinfo') return { network: 'regtest', id: publication.nodeId, version: publication.implementationVersion, blockheight: tip };
+    if (method === 'getinfo') return { network: 'regtest', id: publication.nodeId, version: publication.implementationVersion, blockheight: tip - infoLag };
     if (method === 'getchaininfo') return { chain: 'regtest', blockcount: tip, headercount: tip, ibd: false };
     if (method === 'getrawblockbyheight') return { blockhash: blockHash(params.height), block: header(params.height) + '00' };
     return { offers: rows };
@@ -39,6 +39,14 @@ function harness() {
 }
 
 describe('bounded owned public offer catalog', () => {
+  it('independently verifies the common height when native chain and Lightning observations differ within two blocks', async () => {
+    const h = harness(2), page = await h.source.page();
+    expect(page.source.checkpoint.height).toBe(8);
+    expect(h.core).toHaveBeenCalledWith('getblockhash', [8], expect.anything());
+    expect(h.lightning.mock.calls.filter(([method, params]) => method === 'getrawblockbyheight' && params.height === 8)).toHaveLength(2);
+    await expect(harness(3).source.page()).rejects.toMatchObject({ status: 503 });
+    await expect(harness(-3).source.page()).rejects.toMatchObject({ status: 503 });
+  });
   it('projects only published IDs and distinguishes syntax, active, expiry and payment evidence', async () => {
     const h = harness(), page = await h.source.page();
     expect(page.total).toBe(3); expect(page.nextCursor).toBeNull();
