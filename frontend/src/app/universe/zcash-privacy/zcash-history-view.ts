@@ -30,7 +30,8 @@ export function checkedZcashHistory(raw: unknown, network: string, prior?: Zcash
     || !Array.isArray(value.blocks) || value.blocks.length < 1 || value.blocks.length > 144 || JSON.stringify(value).length > 524288
     || ['reorgRecovered', 'priorSnapshotArchivedThisRequest', 'interruptedWriteRecovered'].some(key => typeof value[key] !== 'boolean')) invalid();
   if (value.status === 'PARTIAL' ? value.nextHeight !== value.verifiedThrough.height + 1 || value.verifiedThrough.height >= value.tipHeight
-    : value.nextHeight !== null || value.verifiedThrough.height !== value.tipHeight || value.verifiedThrough.hash !== value.source.tipHash) invalid();
+    : value.nextHeight !== null || value.verifiedThrough.height !== value.tipHeight || value.verifiedThrough.hash !== value.source.tipHash
+      || value.blocks.length !== Math.min(144, value.tipHeight) || value.coverage.fromHeight !== Math.max(1, value.tipHeight - 143)) invalid();
   const last = value.blocks[value.blocks.length - 1];
   if (value.blocks[0].height !== value.coverage.fromHeight || last.height !== value.verifiedThrough.height || last.hash !== value.verifiedThrough.hash) invalid();
   for (let index = 0; index < value.blocks.length; index++) {

@@ -19,6 +19,17 @@ function fixture(read: any) {
   component.ngOnInit(); return {component, networkChanged$};
 }
 describe('Manual canonical Zcash net history consumer', () => {
+  it('rejects a short complete window while preserving a warm partial window and complete cached window', () => {
+    const short=receipt(1,1);short.tipHeight=1000;short.source.tipHash='a'.repeat(64);
+    short.blocks[0]={...short.blocks[0],height:1000,hash:'a'.repeat(64),parent:'b'.repeat(64)};
+    short.verifiedThrough={height:1000,hash:'a'.repeat(64)};short.coverage.fromHeight=1000;short.coverage.throughHeight=1000;
+    expect(()=>checkedZcashHistory(short,'testnet')).toThrow();
+    const partial=receipt(16,1001), hash=(height:number)=>height.toString(16).padStart(64,'0');
+    partial.blocks=partial.blocks.map(block=>({...block,height:block.height+856,hash:hash(block.height+856),parent:hash(block.height+855)}));
+    partial.coverage={...partial.coverage,fromHeight:857,throughHeight:872};partial.verifiedThrough={height:872,hash:hash(872)};partial.nextHeight=873;
+    expect(checkedZcashHistory(partial,'testnet').status).toBe('PARTIAL');
+    expect(checkedZcashHistory(receipt(144,144),'testnet').blocks).toHaveLength(144);
+  });
   it('renders signed atomic values exactly and accepts independent bounded continuation', () => {
     expect(signedZec('-9007199254740993')).toBe('-90071992.54740993'); expect(signedZec('-1')).toBe('-0.00000001');
     const first = checkedZcashHistory(receipt(), 'testnet');
