@@ -56,6 +56,8 @@ describe('Type-specific retained evidence (controlled fixtures)',()=>{
 describe('Node-tip divergence source independence',()=>{
   function divergence():any {const v=reorg();v.profile.sources.push({...v.profile.sources[0],source_id:'core-two',independence_id:'host-two'});v.profile_sha256=createHash('sha256').update(JSON.stringify(v.profile)).digest('hex');v.sources.push({...v.sources[0],source_id:'core-two'});const i=v.incidents[0];i.incident_type='node_tip_divergence';i.reorg_depth=null;i.source_ids.push('core-two');i.evidence.common_ancestor=null;return v;}
   it('accepts two independently registered branches disagreeing at their shared height',()=>expect(validIncidentResponse(divergence(),'signet')).toBe(true));
+  it('rejects an invented reorg depth on node-tip divergence',()=>{const v=divergence();v.incidents[0].reorg_depth=1;expect(validIncidentResponse(v,'signet')).toBe(false);});
+  it('rejects a supplied common ancestor on node-tip divergence',()=>{const v=divergence();v.incidents[0].evidence.common_ancestor=v.incidents[0].evidence.before[0];expect(validIncidentResponse(v,'signet')).toBe(false);});
   it('rejects singleton, shared independence and identical branches',()=>{
     const singleton=divergence();singleton.incidents[0].source_ids=['core-one'];
     const shared=divergence();shared.profile.sources[1].independence_id='host-one';shared.profile_sha256=createHash('sha256').update(JSON.stringify(shared.profile)).digest('hex');

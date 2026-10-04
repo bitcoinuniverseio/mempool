@@ -93,6 +93,7 @@ export function validIncidentResponse(v: any, network: string): v is IncidentRes
     const tip = i.evidence.after[i.evidence.after.length - 1];
     if (tip.height !== i.block_height || tip.hash !== i.block_hash) return false;
     if (i.incident_type === 'node_tip_divergence') {
+      if (i.reorg_depth !== null || i.evidence.common_ancestor !== null) return false;
       const groups = i.source_ids.map(sourceId => p.sources.find(source => source.source_id === sourceId).independence_id);
       const sharedHeight = Math.min(i.evidence.before[i.evidence.before.length - 1].height, tip.height);
       const left = i.evidence.before.find(h => h.height === sharedHeight), right = i.evidence.after.find(h => h.height === sharedHeight);
