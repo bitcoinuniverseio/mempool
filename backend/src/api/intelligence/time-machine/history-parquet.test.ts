@@ -1,7 +1,7 @@
 import { execFileSync } from 'child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { basename, dirname, join } from 'path';
 import ts from 'typescript';
 import { createHash } from 'crypto';
 import type { HistoryParquetCapture } from './history-parquet';
@@ -46,7 +46,11 @@ describe('bounded History Parquet production serialization', () => {
     const source = readFileSync(join(__dirname, 'history-parquet.ts'), 'utf8');
     writeFileSync(modulePath, ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText);
   });
-  afterAll(() => rmSync(directory, { recursive: true, force: true }));
+  afterAll(() => {
+    const selected = realpathSync(directory);
+    if (dirname(selected) !== realpathSync(tmpdir()) || !basename(selected).startsWith('history-parquet-test-')) { throw new Error('Refuse cleanup outside the owned test directory.'); }
+    rmSync(selected, { recursive: true, force: true });
+  });
   interface Row { txid: string | null; membership_index: number | null; summary_json: string | null }
   interface Result { error?: string; rows: Array<Row & Record<string, unknown>>; magic: string; footer: string; metadata: { row_groups: Array<{ columns: Array<{ meta_data: { codec: string } }> }> } }
   function run(input: HistoryParquetCapture, selectedModule = modulePath, selectedNodePath = join(process.cwd(), 'node_modules')): Result {

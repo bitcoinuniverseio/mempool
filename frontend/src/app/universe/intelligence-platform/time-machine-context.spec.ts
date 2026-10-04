@@ -62,7 +62,7 @@ describe('Time Machine selected context and target lifecycle', () => {
     api.exportHistory$('a'.repeat(64)).subscribe();expect(post).toHaveBeenCalledWith('/testnet4/api/v1/intelligence/history/exports',{state_hash:'a'.repeat(64),format:'json'});
   });
   it('rejects unavailable formats and a foreign export state without a download', () => {
-    const {page,api}=setup();page.currentState={state_hash:'b'.repeat(64)};page.exportData('parquet');expect(api.exportHistory$).not.toHaveBeenCalled();
+    const {page,api}=setup();page.currentState={state_hash:'b'.repeat(64)};page.exportData('csv');expect(api.exportHistory$).not.toHaveBeenCalled();
     page.exportData('json');expect(page.exportError).toMatch(/does not match/);page.ngOnDestroy();
   });
   it('downloads the hash-bound JSON state and revokes its local object URL', async () => {

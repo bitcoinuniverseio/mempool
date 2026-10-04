@@ -1,6 +1,10 @@
 import { Application, Request, Response } from 'express';
 import { timeMachineService, TimeMachineUnavailableError } from './time-machine.service';
 import { handleError } from '../../../utils/api';
+import config from '../../../config';
+import { HistoryParquetError, writeHistoryParquet } from './history-parquet';
+
+let parquetExportPending = false;
 
 /** Outside the observed window is a 503 or 404 that says so, never an invented state. */
 function fail(req: Request, res: Response, e: unknown, fallback: string): void {
@@ -105,11 +109,17 @@ class TimeMachineRoutes {
   }
 
   private async $postExport(req: Request, res: Response): Promise<void> {
+    let ownsParquetSlot = false;
     try {
-      const stateHash = String(req.body?.state_hash || '');
-      const format = String(req.body?.format || 'json');
-      if (format !== 'json') {
-        res.status(400).json({ error: 'Only json export is available.', code: 'unsupported_format' });
+      const body = req.body;
+      if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key => !['state_hash', 'format'].includes(key)) || typeof body.state_hash !== 'string' || !/^[0-9a-f]{64}$/.test(body.state_hash)) {
+        res.status(400).json({ error: 'Supply a retained 64-character state hash and an export format.', code: 'invalid_export_request' });
+        return;
+      }
+      const stateHash = body.state_hash;
+      const format = body.format === undefined ? 'json' : body.format;
+      if (format !== 'json' && format !== 'parquet') {
+        res.status(400).json({ error: 'Supported export formats are json and parquet.', code: 'unsupported_format' });
         return;
       }
       const exported = timeMachineService.exportState(stateHash);
@@ -117,11 +127,30 @@ class TimeMachineRoutes {
         res.status(404).json({ error: 'State hash ' + stateHash + ' not found.' });
         return;
       }
+      res.setHeader('cache-control', 'no-store');
+      if (format === 'parquet') {
+        if (parquetExportPending) {
+          res.setHeader('retry-after', '1');
+          res.status(429).json({ error: 'A bounded Parquet export is already running.', code: 'history-parquet-busy' });
+          return;
+        }
+        parquetExportPending = true; ownsParquetSlot = true;
+        const bytes = await writeHistoryParquet({ network: config.MEMPOOL.NETWORK, ...exported });
+        if (req.aborted || res.destroyed) { return; }
+        res.setHeader('content-type', 'application/vnd.apache.parquet');
+        res.setHeader('content-length', String(bytes.length));
+        res.setHeader('content-disposition', 'attachment; filename="mempool-state-' + stateHash.slice(0, 16) + '.parquet"');
+        res.send(bytes);
+        return;
+      }
       res.setHeader('content-disposition', 'attachment; filename="mempool-state-' + stateHash.slice(0, 16) + '.json"');
       res.json({ format, exported_at: new Date().toISOString(), ...exported });
     } catch (e) {
-      handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to start export');
-    }
+      if (e instanceof HistoryParquetError) {
+        const status = e.code === 'history-parquet-invalid-capture' ? 400 : e.code === 'history-parquet-limit' ? 413 : 503;
+        res.status(status).json({ error: 'Retained Parquet export is invalid, exceeds its bound or is unavailable.', code: e.code });
+      } else { handleError(req, res, 500, 'Failed to start retained export'); }
+    } finally { if (ownsParquetSlot) { parquetExportPending = false; } }
   }
 }
 
