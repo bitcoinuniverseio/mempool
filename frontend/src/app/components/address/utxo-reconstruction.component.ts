@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -14,7 +14,7 @@ import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-recons
   template: `
     <section class="box my-3" aria-label="Anchored unspent output reconstruction">
       <h2 class="h5">Reconstruct unspent outputs</h2>
-      <p>The native output list is unavailable. Start an independent read from confirmed history, mempool and outspend checks.
+      <p>{{ nativeReadDisclosure }} Start an independent read from confirmed history, mempool and outspend checks.
         Each Continue reads one bounded page. Outputs become eligible only after every closure check succeeds.</p>
       <label for="reconstruction-version">Reconstruction contract</label>
       <select id="reconstruction-version" class="form-select mb-2" [value]="version" (change)="selectVersion($any($event.target).value)" [disabled]="pending || view?.status === 'PARTIAL'">
@@ -71,6 +71,7 @@ import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-recons
 })
 export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() address = '';
+  @Input() nativeSourceState: 'idle' | 'loading' | 'complete' | 'limit' | 'unavailable' = 'unavailable';
   view: UtxoReconstructionView | UtxoReconstructionV2View | UtxoReconstructionV3View | null = null;
   version: 'v1' | 'v2' | 'v3' = 'v1';
   pending = false;
@@ -84,6 +85,11 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
   readonly btc = atomicBtc;
 
   constructor(private http: HttpClient, private state: StateService, private cd: ChangeDetectorRef) { this.network = state.network || 'mainnet'; }
+  get nativeReadDisclosure(): string {
+    return this.nativeSourceState === 'complete' ? 'The native output read completed. This independent reconstruction retains its own anchors and progress.'
+      : this.nativeSourceState === 'loading' ? 'The native output read is refreshing. This independent reconstruction retains its own anchors and progress.'
+      : 'The native output list is unavailable.';
+  }
   get v2View(): UtxoReconstructionV2View | null { return this.view?.schema === 'universe-address-utxo-reconstruction-v2' ? this.view : null; }
   get v3View(): UtxoReconstructionV3View | null { return this.view?.schema === 'universe-address-utxo-reconstruction-v3' ? this.view : null; }
   get confirmedSource(): UtxoReconstructionView['source'] | UtxoReconstructionV2View['confirmedAnchor'] { return this.v3View?.confirmedAnchor || this.v2View?.confirmedAnchor || (this.view as UtxoReconstructionView)?.source; }
@@ -102,7 +108,7 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
       if (selected !== this.network) { this.abandon(); this.network = selected; }
     }));
   }
-  ngOnChanges(): void { this.abandon(); }
+  ngOnChanges(changes?: SimpleChanges): void { if (!changes || changes['address']) { this.abandon(); } }
   ngOnDestroy(): void { this.destroyed = true; this.abandon(); this.subscriptions.unsubscribe(); }
 
   private base(address = this.address, network = this.network, version = this.version): string {

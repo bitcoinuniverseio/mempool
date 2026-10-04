@@ -149,7 +149,7 @@
     </div>
 
     <app-universe-address-assets [utxos]="utxos" [sourceState]="utxoSourceState"></app-universe-address-assets>
-    <app-utxo-reconstruction *ngIf="address && !address.is_pubkey && (utxoSourceState === 'limit' || utxoSourceState === 'unavailable')" [address]="address.address"></app-utxo-reconstruction>
+    <app-utxo-reconstruction *ngIf="address && !address.is_pubkey && reconstructionOffered" [address]="address.address" [nativeSourceState]="utxoSourceState"></app-utxo-reconstruction>
 
     <p class="universe-portfolio-link" *ngIf="network === ''">
       <a [routerLink]="['/portfolio', 'bitcoin', 'mainnet', addressString]" i18n="address.open-portfolio">
