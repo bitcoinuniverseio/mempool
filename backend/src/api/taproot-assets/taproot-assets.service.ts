@@ -1,8 +1,11 @@
 import { ownedWorkbenchCore } from '../intelligence/workbench/workbench-core';
 import { canonicalProof } from './taproot-proof';
 import config from '../../config';
+import bitcoinClient from '../bitcoin/bitcoin-client';
+import { Bolt12OfferSource, Bolt12SourceError, offerSourceFromEnvironment } from './bolt12-offer-source';
 import {
   Bolt12Offer,
+  Bolt12OfferPage,
   LightningRfqQuote,
   TaprootAssetGroup,
   TaprootAssetItem,
@@ -32,6 +35,7 @@ const rfqUnavailable =
 export interface TaprootAssetsServiceOptions {
   /** The owned tapd, or null when the deployment configured none. */
   authority?: TapdAuthority | null;
+  offerSource?: Bolt12OfferSource | null;
 }
 
 /**
@@ -42,10 +46,11 @@ export interface TaprootAssetsServiceOptions {
  * checked against the owned Bitcoin reader. A deployment that names no tapd
  * gets a 503 that says so: an empty directory and an absent directory are
  * different answers, and this never turns the second into the first. BOLT12
- * offers have no owned source yet and stay unavailable.
+ * reads use an independently bound owned Lightning source and explicit public IDs.
  */
 export class TaprootAssetsService {
   private authority: TapdAuthority | null | undefined;
+  private offerSource: Bolt12OfferSource | null | undefined;
 
   constructor(private readonly options: TaprootAssetsServiceOptions = {}) {}
 
@@ -67,34 +72,25 @@ export class TaprootAssetsService {
     return this.read('unavailable-universe', universeUnavailable, authority => authority.listGroups());
   }
 
-  /** @asyncSafe */
-  /* IMPLEMENTATION-HANDOFF [WP-BE-013]
-   * Defect BE-013; COV-BE-013 public BOLT12 offer listing and validity.
-   * $getOffers always throws even with a configured tapd. The separately
-   * implemented decode and RFQ paths do not complete GET lightning/offers or
-   * the offers table. backend-reproduce.cjs confirms the unconditional branch.
-   * 1. Identify/pin the operated Lightning offer source and its API/version;
-   *    BOLT12 describes offer negotiation, not a global discoverable directory.
-   *    List only intentionally public offers from the authorized owned source.
-   * 2. Implement a bounded, authenticated injected reader with network binding,
-   *    pagination and source freshness. Do not reuse the tapd RFQ response as
-   *    offers or return an empty list when the directory is unavailable.
-   * 3. Reuse bolt12-decoder and the pinned BOLT12 engine/vectors (R-BE-BOLT12)
-   *    to validate encoding/fields and declared chain, expiry and amounts.
-   *    Preserve exact millisatoshis and distinguish syntactic validity from
-   *    live invoice availability; reveal no private offer or node credential.
-   * 4. Update types/routes and lightning-standards table states. Test genuine
-   *    source publication/expiry/revocation on supported Signet Lightning,
-   *    wrong network, malformed offer, empty valid source, outage/recovery and
-   *    adjacent decode/RFQ/proof consumers. No mainnet functional payment.
-   * Acceptance: the existing offer-list journey is source-backed and usable;
-   *    no unrelated payment execution feature is implied by this read repair.
-   * Rollback: restore the compatible source/client contract; retain public
-   *    offer publication intent and do not publish private records on fallback.
-   * Preparation only; no source, offer or executable behavior is changed.
-   */
+  /** @asyncSafe Lists one bounded page; HTTP consumers use the cursor envelope below. */
   public async $getOffers(): Promise<Bolt12Offer[]> {
-    throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
+    return (await this.$getOffersPage()).offers;
+  }
+
+  /** @asyncSafe */
+  public async $getOffersPage(query: Record<string, unknown> = {}): Promise<Bolt12OfferPage> {
+    try {
+      if (this.offerSource === undefined) {
+        this.offerSource = this.options.offerSource !== undefined ? this.options.offerSource : offerSourceFromEnvironment(
+          config.MEMPOOL.NETWORK, (method, params, signal) => bitcoinClient.rpc.call(method, params, { signal }));
+      }
+      if (!this.offerSource) throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
+      return await this.offerSource.page(query);
+    } catch (error) {
+      if (error instanceof TaprootAssetsEvidenceError) throw error;
+      if (error instanceof Bolt12SourceError) throw new TaprootAssetsEvidenceError(error.code, error.message, error.status);
+      throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
+    }
   }
 
   /** @asyncSafe */
