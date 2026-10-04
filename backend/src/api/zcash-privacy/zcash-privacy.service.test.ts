@@ -55,10 +55,11 @@ describe('Zcash privacy HTTP responses', () => {
 
   it('answers the observation reads with a 503 that names the missing node and the catalogue with a 200', /** @asyncUnsafe */ async () => {
     const gets = mount();
-    expect([...gets.keys()].map(path => path.split('/').pop()).sort()).toEqual(['blocks', 'pools', 'summary', 'upgrades']);
+    expect([...gets.keys()].map(path => path.split('/').pop()).sort()).toEqual(['blocks', 'history', 'pools', 'summary', 'upgrades']);
     for (const [path, handler] of gets) {
-      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      await handler({query: {network:'mainnet',start:'415000',end:'415000'}} as unknown as Request, res as unknown as Response);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
+      const query = path.endsWith('history') ? { network: 'mainnet' } : {network:'mainnet',start:'415000',end:'415000'};
+      await handler({query} as unknown as Request, res as unknown as Response);
       if (path.endsWith('upgrades')) {
         expect(res.status).not.toHaveBeenCalled();
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ total: 11 }));
@@ -66,8 +67,18 @@ describe('Zcash privacy HTTP responses', () => {
       }
       expect(res.status).toHaveBeenCalledWith(503);
       const body = res.json.mock.calls[0][0];
-      expect(body.stage).toBe('unavailable-zcash-node');
+      expect(body.stage).toBe(path.endsWith('history') ? 'unavailable-pool-ledger' : 'unavailable-zcash-node');
       expect(body).not.toHaveProperty('pools');
     }
+  });
+  it('rejects arbitrary history query fields before source or persistence access', async () => {
+    const gets = mount(); const history = [...gets].find(([path]) => path.endsWith('history'))![1];
+    const source = jest.spyOn(zcashPrivacyService, '$getHistory');
+    try {
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
+      await history({ query: { network: 'testnet', source: 'http://untrusted' } } as unknown as Request, res as unknown as Response);
+      expect(res.status).toHaveBeenCalledWith(400); expect(source).not.toHaveBeenCalled();
+      expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
+    } finally { source.mockRestore(); }
   });
 });
