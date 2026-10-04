@@ -682,6 +682,7 @@ class Server {
     this.server?.close();
     this.serverUnixSocket?.close();
     templateCollectorService.stopPolling();
+    backendInfo.stopPolling();
     boundedHistoryFlush(/** @asyncUnsafe boundedHistoryFlush catches and reports shutdown rejection. */ async () => {
       await Promise.all([timeMachineService.closeHistory(), eventBus.drain()]);
     }).then(
@@ -696,6 +697,7 @@ class Server {
     );
   }
   exitCleanup(): void {
+    backendInfo.stopPolling();
     if (config.DATABASE.ENABLED) {
       DB.releasePidLock();
     }

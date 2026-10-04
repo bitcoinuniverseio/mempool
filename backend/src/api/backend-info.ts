@@ -6,7 +6,7 @@ import config from '../config';
 import bitcoinClient from './bitcoin/bitcoin-client';
 import logger from '../logger';
 
-class BackendInfo {
+export class BackendInfo {
   private backendInfo: IBackendInfo;
   private timer;
   private syncTimer;
@@ -43,6 +43,7 @@ class BackendInfo {
         logger.err(`Exception in $updateCoreVersion. Reason: ${(e instanceof Error ? e.message : e)}`);
       }
     }, 10 * 60 * 1000); // every 10 minutes
+    this.timer.unref(); // Background metadata polling does not own process lifetime.
     void this.$updateCoreVersion(); // starting immediately
 
     // Sync state changes far more often than the version does, and a stale
@@ -50,7 +51,13 @@ class BackendInfo {
     this.syncTimer = setInterval(async () => {
       await this.$updateChainSync();
     }, 30 * 1000);
+    this.syncTimer.unref();
     void this.$updateChainSync();
+  }
+
+  public stopPolling(): void {
+    clearInterval(this.timer);
+    clearInterval(this.syncTimer);
   }
 
   /** @asyncSafe */
