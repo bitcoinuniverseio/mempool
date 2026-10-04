@@ -1,5 +1,5 @@
 import config from '../../../config';
-import PoolsRepository from '../../../repositories/PoolsRepository';
+import DB from '../../../database';
 import { EventEnvelopeValidator } from '../events/event-envelope';
 import { AuthenticatedOwner, IdentityError } from '../identity/developer-identity';
 import { KnowledgeLabelRow, ownerStore } from '../identity/owner-store';
@@ -65,7 +65,11 @@ export class KnowledgeRegistryService {
   private static instance: KnowledgeRegistryService;
   private poolCache: { at: number; labels: EntityLabel[] } | null = null;
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
-  public poolReader: PoolReader = async () => (config.DATABASE.ENABLED ? PoolsRepository.$getPools() : []);
+  public poolReader: PoolReader = async () => {
+    if (!config.DATABASE.ENABLED) { return []; }
+    const [rows] = await DB.query<any[]>('SELECT name, link, addresses, regexes, slug FROM pools');
+    return rows;
+  };
 
   private constructor() {}
 

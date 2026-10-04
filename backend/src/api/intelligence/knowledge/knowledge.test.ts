@@ -1,8 +1,17 @@
-jest.mock('../../../repositories/PoolsRepository', () => ({ __esModule: true, default: { $getPools: jest.fn(async () => []) } }));
+jest.mock('../../../database', () => ({ __esModule: true, default: { query: jest.fn() } }));
+// Exclude unrelated block/index initialization from the SQL projection regression.
+jest.mock('../../../api/common', () => ({ Common: {} }));
+jest.mock('../../../api/pools-parser', () => ({ __esModule: true, default: {} }));
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import config from '../../../config';
+import DB from '../../../database';
 import { knowledgeRegistryService } from './knowledge-registry.service';
 import { developerIdentity, AuthenticatedOwner } from '../identity/developer-identity';
 import { MemoryOwnerStore, useOwnerStore } from '../identity/owner-store';
+
+const defaultPoolReader = knowledgeRegistryService.poolReader;
 
 /**
  * Pool labels come from a pools definition fixture; submitted labels come
@@ -62,5 +71,32 @@ describe('knowledge registry: evidence is what the sources actually hold', () =>
     const log = await knowledgeRegistryService.getAuditLog();
     expect(log.map(entry => entry.action)).toEqual(['challenged', 'created']);
     expect(log.every(entry => entry.actor_id === owner.owner_id)).toBe(true);
+  });
+});
+
+describe('Knowledge native definition citation projection', () => {
+  const enabled = config.DATABASE.ENABLED;
+  afterEach(() => { config.DATABASE.ENABLED = enabled; knowledgeRegistryService.resetForTests(); jest.clearAllMocks(); });
+  it('preserves real tracked citations and genuinely uncited definitions through the production SQL reader', async () => {
+    const definitions = JSON.parse(readFileSync(join(__dirname, '../../../tasks/pools/pools-v2.json'), 'utf8'));
+    const cited = definitions.find((pool: any) => pool.link && (pool.tags?.length || pool.addresses?.length));
+    const uncited = definitions.find((pool: any) => !pool.link && (pool.tags?.length || pool.addresses?.length));
+    expect(cited).toBeDefined(); expect(uncited).toBeDefined();
+    const rows = [cited, uncited].map(pool => ({ name: pool.name, link: pool.link || '', slug: pool.name.replace(/[^a-z0-9]/gi, '').toLowerCase(), addresses: JSON.stringify(pool.addresses || []), regexes: JSON.stringify(pool.tags || []) }));
+    // The controlled driver returns only the projected columns, as native SQL does.
+    (DB.query as jest.Mock).mockImplementation(async (sql: string) => [rows.map(row => sql.split(/\bFROM\b/i)[0].includes('link') ? row : (({ link: _link, ...rest }) => rest)(row))]);
+    config.DATABASE.ENABLED = true; useOwnerStore(new MemoryOwnerStore());
+    knowledgeRegistryService.resetForTests(); knowledgeRegistryService.poolReader = defaultPoolReader;
+    const labels = await knowledgeRegistryService.getLabels('mining_pool');
+    const known = labels.find(label => label.name === cited.name)!;
+    expect(known.evidence.length).toBeGreaterThan(0);
+    expect(known.evidence.every(item => item.reference_uri === cited.link && item.verified_at_utc === null)).toBe(true);
+    expect(labels.find(label => label.name === uncited.name)!.evidence.every(item => item.reference_uri === '')).toBe(true);
+    expect(DB.query).toHaveBeenCalledWith('SELECT name, link, addresses, regexes, slug FROM pools');
+  });
+  it('does not read SQL definitions when database support is disabled', async () => {
+    config.DATABASE.ENABLED = false;
+    expect(await defaultPoolReader()).toEqual([]);
+    expect(DB.query).not.toHaveBeenCalled();
   });
 });
