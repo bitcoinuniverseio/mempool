@@ -1,11 +1,13 @@
 import { checkedReconstructionOutputs, UtxoReconstructionView } from './utxo-reconstruction-view';
 
 type Stats = { funded_txo_count: number; spent_txo_count: number; funded_txo_sum: number; spent_txo_sum: number; tx_count: number };
+type Checkpoint = Omit<UtxoReconstructionView['source'], 'mempoolIdentity' | 'sourceId' | 'scriptPubKey'>;
 export interface UtxoReconstructionV2View {
   schema: 'universe-address-utxo-reconstruction-v2'; sessionId: string; cursor: number; address: string; network: string;
   status: UtxoReconstructionView['status']; reason?: string; observedAt: string; expiresAt: string;
   confirmedAnchor: Omit<UtxoReconstructionView['source'], 'mempoolIdentity'> & { chainStats: Stats };
-  mempoolAnchor: { identity: string; observedAt: string; addressMempoolStats: Stats } | null;
+  latestObservedTip: Checkpoint;
+  mempoolAnchor: { identity: string; observedAt: string; checkpoint: Checkpoint; addressMempoolStats: Stats } | null;
   progress: Omit<UtxoReconstructionView['progress'], 'phase' | 'mempoolTransactionsExpected'> & {
     phase: 'confirmed' | 'acquire-mempool' | 'mempool' | 'outspends' | 'complete'; pageLimit: 100;
     mempoolEpoch: number; mempoolTransactionsExpected: number | null;
@@ -19,7 +21,11 @@ const stats = (value: Stats) => value && ['funded_txo_count','spent_txo_count','
   && value.funded_txo_sum <= 2100000000000000 && value.spent_txo_sum <= 2100000000000000;
 const identity = (view: UtxoReconstructionV2View) => JSON.stringify([view.confirmedAnchor.genesisHash,view.confirmedAnchor.blockHash,
   view.confirmedAnchor.blockHeight,view.confirmedAnchor.network,view.confirmedAnchor.signetChallenge,view.confirmedAnchor.sourceId,
-  view.confirmedAnchor.scriptPubKey,view.confirmedAnchor.chainStats]);
+  view.confirmedAnchor.scriptPubKey,view.confirmedAnchor.chainStats,view.confirmedAnchor.verifiedAt]);
+const checkpointKey = (value: Checkpoint) => JSON.stringify([value.genesisHash,value.blockHash,value.blockHeight,value.network,value.signetChallenge]);
+const checkpoint = (value: Checkpoint, anchor: UtxoReconstructionV2View['confirmedAnchor']) => value && hash(value.blockHash)
+  && count(value.blockHeight) && value.blockHeight >= anchor.blockHeight && date(value.verifiedAt)
+  && value.genesisHash === anchor.genesisHash && value.network === anchor.network && value.signetChallenge === anchor.signetChallenge;
 
 export function checkedReconstructionV2(value: unknown, address: string, network: string,
   previous?: UtxoReconstructionV2View, action: 'create'|'next'|'cancel' = 'create'): UtxoReconstructionV2View {
@@ -34,6 +40,7 @@ export function checkedReconstructionV2(value: unknown, address: string, network
     || !count(anchor.blockHeight) || !date(anchor.verifiedAt) || !stats(anchor.chainStats)
     || typeof anchor.scriptPubKey !== 'string' || !/^(?:[a-f0-9]{2}){1,10000}$/.test(anchor.scriptPubKey)
     || (network === 'signet' ? typeof anchor.signetChallenge !== 'string' || !/^(?:[a-f0-9]{2}){1,10000}$/.test(anchor.signetChallenge) : anchor.signetChallenge !== null)) throw Error('V2 confirmed anchor is invalid.');
+  if (!checkpoint(view.latestObservedTip, anchor) || view.latestObservedTip.blockHeight === anchor.blockHeight && view.latestObservedTip.blockHash !== anchor.blockHash) throw Error('V2 latest shared tip is inconsistent with its immutable confirmed anchor.');
   if (!p || !['confirmed','acquire-mempool','mempool','outspends','complete'].includes(p.phase) || p.pageLimit !== 100 || !count(p.mempoolEpoch)
     || ![p.confirmedTransactionsProcessed,p.confirmedTransactionsExpected,p.mempoolTransactionsProcessed,p.candidateOutputs,p.verifiedOutputs,p.retainedBytes].every(count)
     || p.mempoolTransactionsExpected !== null && !count(p.mempoolTransactionsExpected)
@@ -44,6 +51,7 @@ export function checkedReconstructionV2(value: unknown, address: string, network
     || p.retainedBytes > 32 * 1024 * 1024) throw Error('V2 progress exceeds its bounded contract.');
   const terminal = ['INVALIDATED','CANCELLED','BLOCKED'].includes(view.status);
   if (m !== null && (!m || !hash(m.identity) || !date(m.observedAt) || !stats(m.addressMempoolStats)
+    || !checkpoint(m.checkpoint, anchor)
     || p.mempoolTransactionsExpected !== m.addressMempoolStats.tx_count)) throw Error('V2 mempool anchor is invalid.');
   if (!terminal && (['confirmed','acquire-mempool'].includes(p.phase)
     ? m !== null || p.mempoolTransactionsExpected !== null || p.mempoolTransactionsProcessed !== 0 || p.verifiedOutputs !== 0
@@ -52,7 +60,8 @@ export function checkedReconstructionV2(value: unknown, address: string, network
     || p.confirmedTransactionsProcessed !== 0 || p.candidateOutputs !== 0 || m !== null)) throw Error('A new V2 session must start partial with no asserted mempool closure.');
   if (previous) {
     if (view.sessionId !== previous.sessionId || view.expiresAt !== previous.expiresAt || identity(view) !== identity(previous)) throw Error('V2 immutable confirmed anchor/session changed.');
-    const reset = view.status === 'PARTIAL' && view.reason === 'MEMPOOL_CHANGED' && p.mempoolEpoch === previous.progress.mempoolEpoch + 1;
+    if (view.latestObservedTip.blockHeight < previous.latestObservedTip.blockHeight || view.latestObservedTip.blockHeight === previous.latestObservedTip.blockHeight && view.latestObservedTip.blockHash !== previous.latestObservedTip.blockHash) throw Error('V2 latest tip moved backwards or changed at the same height.');
+    const reset = view.status === 'PARTIAL' && ['MEMPOOL_CHANGED','FINAL_TIP_CHANGED'].includes(view.reason) && p.mempoolEpoch === previous.progress.mempoolEpoch + 1;
     if (action === 'cancel') {
       if (view.status !== 'CANCELLED' || view.cursor < previous.cursor || view.cursor > previous.cursor + 1) throw Error('V2 cancellation cursor is invalid.');
     } else if (action === 'next' && (terminal ? view.cursor !== previous.cursor : reset
@@ -71,6 +80,7 @@ export function checkedReconstructionV2(value: unknown, address: string, network
   }
   if (view.status !== 'COMPLETE_AT_OBSERVED_TIP') { if (view.result !== undefined) throw Error('V2 partial or terminal failure cannot publish eligible outputs.'); return view; }
   if (m === null || p.mempoolTransactionsExpected === null) throw Error('V2 complete result has no final mempool anchor.');
-  checkedReconstructionOutputs(view.result,p,anchor.blockHeight);
+  if (checkpointKey(m.checkpoint) !== checkpointKey(view.latestObservedTip)) throw Error('V2 final output closure is not bound to its latest shared tip.');
+  checkedReconstructionOutputs(view.result,p,view.latestObservedTip.blockHeight);
   return view;
 }

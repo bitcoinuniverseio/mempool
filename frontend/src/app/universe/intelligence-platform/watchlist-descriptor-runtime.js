@@ -4,9 +4,15 @@ import { Output, networks } from '@bitcoinerlab/descriptors';
 // ../../../dist/bitcoinLib. This small runtime boundary keeps our contract
 // explicit without suppressing project or dependency type checking.
 export function derivePublicScript(descriptor, index, testnet) {
-  return new Output({ descriptor, index, checksumRequired: true, network: testnet ? networks.testnet : networks.bitcoin }).getScriptPubKey();
+  return publicOutput(descriptor, index, testnet).getScriptPubKey();
 }
 
 export function derivePublicAddress(descriptor, index, testnet) {
-  return new Output({ descriptor, index, checksumRequired: true, network: testnet ? networks.testnet : networks.bitcoin }).getAddress();
+  return publicOutput(descriptor, index, testnet).getAddress();
+}
+
+function publicOutput(descriptor, index, testnet) {
+  const ranged = descriptor.includes('*');
+  if (!ranged && index !== 0) throw Error('A fixed descriptor has one output at index zero');
+  return new Output({ descriptor, ...(ranged ? { index } : {}), checksumRequired: true, network: testnet ? networks.testnet : networks.bitcoin });
 }

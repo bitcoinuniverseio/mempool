@@ -32,6 +32,8 @@ import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-recons
           Verified outputs: {{ view.progress.verifiedOutputs | number }} / {{ view.progress.candidateOutputs | number }}.</p>
         <p *ngIf="v2View">V2 page limit: {{ v2View.progress.pageLimit }} transactions. Mempool epoch: {{ v2View.progress.mempoolEpoch }}.</p>
         <p *ngIf="view.reason === 'MEMPOOL_CHANGED'">Mempool changed. Confirmed progress is retained; mempool verification and eligible outputs were cleared. Continue explicitly to acquire a new mempool anchor.</p>
+        <p *ngIf="view.reason === 'FINAL_TIP_CHANGED'">The final shared tip changed. Confirmed progress is retained; final verification and eligible outputs were cleared. Continue explicitly to acquire a new tip and mempool anchor.</p>
+        <p *ngIf="v2View as v2">Original confirmed anchor: {{ v2.confirmedAnchor.blockHeight }} · {{ v2.confirmedAnchor.blockHash }}. Latest observed shared tip: {{ v2.latestObservedTip.blockHeight }} · {{ v2.latestObservedTip.blockHash }}. Final mempool checkpoint: {{ v2.mempoolAnchor?.checkpoint?.blockHash || 'not acquired' }}. Continuity of the original anchor is verified by the selected source; tip growth alone does not prove final output closure.</p>
         <p class="small text-break">Selected network: {{ view.network }}. Observed block {{ confirmedSource.blockHeight }}: <code>{{ confirmedSource.blockHash }}</code>.
           Source: <code>{{ confirmedSource.sourceId }}</code>. Mempool identity: <code>{{ mempoolIdentity }}</code>.
           Observed {{ view.observedAt }}; session expires {{ view.expiresAt }}.</p>

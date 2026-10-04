@@ -10,6 +10,7 @@ function initial(): UtxoReconstructionV2View {
     confirmedAnchor: { genesisHash: '1'.repeat(64), blockHash: '2'.repeat(64), blockHeight: 10, network: 'signet', signetChallenge: '51',
       sourceId: '3'.repeat(64), scriptPubKey: '51', verifiedAt: '2026-10-03T00:00:00Z',
       chainStats: { funded_txo_count: 1, spent_txo_count: 0, funded_txo_sum: 66135, spent_txo_sum: 0, tx_count: 1 } },
+    latestObservedTip: { genesisHash: '1'.repeat(64), blockHash: '2'.repeat(64), blockHeight: 10, network: 'signet', signetChallenge: '51', verifiedAt: '2026-10-03T00:00:00Z' },
     mempoolAnchor: null, progress: { phase: 'confirmed', pageLimit: 100, mempoolEpoch: 0, confirmedTransactionsProcessed: 0,
       confirmedTransactionsExpected: 1, mempoolTransactionsProcessed: 0, mempoolTransactionsExpected: null,
       candidateOutputs: 0, verifiedOutputs: 0, retainedBytes: 0 } };
@@ -17,7 +18,7 @@ function initial(): UtxoReconstructionV2View {
 function acquired(): UtxoReconstructionV2View {
   const v = initial(); v.cursor = 1; v.progress = { ...v.progress, phase: 'outspends', confirmedTransactionsProcessed: 1,
     mempoolTransactionsExpected: 0, candidateOutputs: 1 };
-  v.mempoolAnchor = { identity: '4'.repeat(64), observedAt: v.observedAt,
+  v.mempoolAnchor = { identity: '4'.repeat(64), observedAt: v.observedAt, checkpoint: { ...v.latestObservedTip },
     addressMempoolStats: { funded_txo_count: 0, spent_txo_count: 0, funded_txo_sum: 0, spent_txo_sum: 0, tx_count: 0 } };
   return v;
 }
@@ -36,6 +37,23 @@ function setup() {
     { markForCheck: vi.fn() } as any); c.address = address; c.ngOnInit(); c.selectVersion('v2'); return { c, http, network };
 }
 describe('explicit v2 anchored reconstruction', () => {
+  it('preserves the complete original anchor while accepting separately observed canonical tip growth', () => {
+    const previous = initial(), next = acquired(); next.latestObservedTip = {...next.latestObservedTip, blockHeight: 11, blockHash: 'a'.repeat(64)}; next.mempoolAnchor.checkpoint = {...next.latestObservedTip};
+    expect(checkedReconstructionV2(next,address,'signet',previous,'next').confirmedAnchor.blockHeight).toBe(10);
+    for (const mutate of [v => v.latestObservedTip = undefined, v => v.latestObservedTip.signetChallenge = '52', v => v.latestObservedTip.blockHeight = 9,
+      v => v.confirmedAnchor.verifiedAt = '2026-10-03T00:01:00Z']) {
+      const value = structuredClone(next); mutate(value); expect(() => checkedReconstructionV2(value,address,'signet',previous,'next')).toThrow();
+    }
+  });
+  it('requires final output closure at the latest captured tip and explicit final-tip epoch resets', () => {
+    const previous = acquired(), next = reset(); next.reason = 'FINAL_TIP_CHANGED'; next.latestObservedTip = {...next.latestObservedTip,blockHeight: 11,blockHash:'a'.repeat(64)};
+    expect(checkedReconstructionV2(next,address,'signet',previous,'next').progress.mempoolEpoch).toBe(1);
+    const value = complete(); value.latestObservedTip = {...value.latestObservedTip,blockHeight:11,blockHash:'a'.repeat(64)};
+    expect(() => checkedReconstructionV2(value,address,'signet',previous,'next')).toThrow();
+    value.mempoolAnchor.checkpoint = {...value.latestObservedTip};
+    const fresh = acquired(); fresh.latestObservedTip = {...value.latestObservedTip}; fresh.mempoolAnchor.checkpoint = {...value.latestObservedTip};
+    expect(checkedReconstructionV2(value,address,'signet',fresh,'next').result.outputCount).toBe(1);
+  });
   it('starts without asserting any mempool evidence and uses only the opt-in endpoint', () => {
     const { c, http } = setup(); c.start();
     expect(http.post).toHaveBeenCalledWith(`/signet/api/v1/address/${address}/utxo-reconstruction/v2`, {});
