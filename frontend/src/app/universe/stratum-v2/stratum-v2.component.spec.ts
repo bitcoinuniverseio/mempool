@@ -1,45 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
-import { SeoService } from '@app/services/seo.service';
-import { UniverseApiService } from '@app/universe/universe-api.service';
 import { StratumV2Component } from './stratum-v2.component';
-
-const unavailable = () => throwError(() => new HttpErrorResponse({ status: 503 }));
-
-describe('Stratum V2 observatory on an absent source', () => {
-  it('shows the error state with the reason rather than empty role and template tables', () => {
-    const api = {
-      getStratumV2Network$: unavailable, getStratumV2Templates$: unavailable, getStratumV2Declarations$: unavailable,
-    } as unknown as UniverseApiService;
-    const view = new StratumV2Component(api, { setTitle: vi.fn() } as unknown as SeoService, {network:'signet',networkChanged$:new Subject()} as any);
-    view.ngOnInit();
-    let observed: any;
-    view.vm$.subscribe((value) => { observed = value; }).unsubscribe();
-    expect(observed.kind).toBe('error');
-    expect(observed.message).toBeTruthy();
-    expect(observed.roles).toBeUndefined();
-    expect(observed.templates).toBeUndefined();
-    view.ngOnDestroy();
-  });
-
-  it('retains rejected declarations and pool modifications without converting acceptance', () => {
-    const declaration = {jobId:'job',templateId:'template',declaratorId:'miner',minerDeclaredTxids:['a'],poolModifiedTxids:['b'],acceptedByPool:false,poolRejectionCode:'invalid-job',latencyMs:25};
-    const view = new StratumV2Component({getStratumV2Network$:()=>of({roles:[]}),getStratumV2Templates$:()=>of({templates:[]}),getStratumV2Declarations$:()=>of({declarations:[declaration]})} as any, {setTitle:vi.fn()} as any, {network:'signet',networkChanged$:new Subject()} as any);
-    let observed:any;view.vm$.subscribe(value=>observed=value);view.ngOnInit();
-    expect(observed.declarations).toEqual([declaration]);expect(observed.declarations[0].acceptedByPool).toBe(false);view.ngOnDestroy();
-  });
-
-  it('clears old network telemetry and cancels pending reads on network change and destroy', () => {
-    const networkChanged$ = new Subject<string>(); const reads:Subject<any>[]=[];
-    const view = new StratumV2Component({getStratumV2Network$:()=>of({roles:[]}),getStratumV2Templates$:()=>of({templates:[]}),getStratumV2Declarations$:()=>{const read=new Subject();reads.push(read);return read;}} as any,{setTitle:vi.fn()} as any,{network:'signet',networkChanged$} as any);
-    let observed:any;view.vm$.subscribe(value=>observed=value);view.ngOnInit();reads[0].next({declarations:[]});expect(observed.kind).toBe('ready');
-    networkChanged$.next('testnet');expect(observed.kind).toBe('loading');expect(observed.declarations).toBeUndefined();expect(reads[0].observed).toBe(false);
-    reads[0].next({declarations:[{jobId:'obsolete'}]});expect(observed.kind).toBe('loading');view.ngOnDestroy();expect(reads[1].observed).toBe(false);
-  });
-
-  it('reports missing transaction lists as incomplete telemetry', () => {
-    const view = new StratumV2Component({getStratumV2Network$:()=>of({roles:[]}),getStratumV2Templates$:()=>of({templates:[]}),getStratumV2Declarations$:()=>of({declarations:[{jobId:'incomplete'}]})} as any,{setTitle:vi.fn()} as any,{network:'signet',networkChanged$:new Subject()} as any);
-    let observed:any;view.vm$.subscribe(value=>observed=value);view.ngOnInit();expect(observed.kind).toBe('error');view.ngOnDestroy();
-  });
+import { configuredFixture,pagesFixture } from './stratum-v2.fixtures';
+const copy=<T>(v:T):T=>JSON.parse(JSON.stringify(v));
+function setup(read:any=(family:keyof typeof pagesFixture)=>of(copy(pagesFixture[family])),configured:any=configuredFixture){const changed=new Subject<string>();const api={getStratumV2Page$:vi.fn(read)};const network={network:'signet',networkChanged$:changed,env:{SV2_SOURCE_PROFILE:configured}};const view=new StratumV2Component(api as any,{setTitle:vi.fn()} as any,network as any);let value:any;view.vm$.subscribe(v=>value=v);return{view,api,network,changed,get value(){return value;}};}
+describe('Versioned bounded SV2 observations',()=>{
+ it('accepts actual nullable unavailable facts without inventing transaction arrays or total coinbase',()=>{const s=setup();s.view.ngOnInit();expect(s.value.kind).toBe('ready');expect(s.value.panels.declarations.items[0].minerDeclaredTxids).toBeNull();expect(s.value.panels.templates.items[0].coinbaseTxValueSats).toBeNull();expect(s.value.configured.profile.network).toBe('regtest');expect(s.network.network).toBe('signet');s.view.ngOnDestroy();});
+ it('rejects absent independent profile before source I/O',()=>{const s=setup(undefined,null);s.view.ngOnInit();expect(s.value.kind).toBe('error');expect(s.api.getStratumV2Page$).not.toHaveBeenCalled();s.view.ngOnDestroy();});
+ it('retains verified role facts when declarations are unavailable, and retries only that panel',()=>{let failed=true;const s=setup((f:keyof typeof pagesFixture)=>f==='declarations'&&failed?throwError(()=>new HttpErrorResponse({status:503})):of(copy(pagesFixture[f])));s.view.ngOnInit();expect(s.value.kind).toBe('ready');expect(s.value.panels.roles.items).toHaveLength(4);expect(s.value.panels.declarations.error).toBeTruthy();failed=false;s.view.load('declarations');expect(s.value.panels.declarations.items).toHaveLength(2);expect(s.api.getStratumV2Page$).toHaveBeenCalledTimes(4);s.view.ngOnDestroy();});
+ it('pending guards prevent duplicate reads and actual context/destroy cancel all pending scopes',()=>{const reads:Subject<any>[]=[];const s=setup(()=>{const r=new Subject();reads.push(r);return r;});s.view.ngOnInit();s.view.load('roles');expect(reads).toHaveLength(3);s.changed.next('testnet');expect(reads.slice(0,3).every(r=>!r.observed)).toBe(true);expect(s.value.panels.roles.items).toEqual([]);reads[0].next(pagesFixture.roles);expect(s.value.panels.roles.items).toEqual([]);s.view.ngOnDestroy();expect(reads.every(r=>!r.observed)).toBe(true);});
+ it('preserves accepted rows on cursor expiry and demands an explicit restart',()=>{const first=copy(pagesFixture.templates);first.items=first.items.slice(0,1);first.nextCursor='captured-cursor';const s=setup((f:keyof typeof pagesFixture,cursor?:string)=>f==='templates'?cursor?throwError(()=>new HttpErrorResponse({status:409})):of(first):of(copy(pagesFixture[f])));s.view.ngOnInit();s.view.load('templates',true);expect(s.api.getStratumV2Page$).toHaveBeenLastCalledWith('templates','captured-cursor');expect(s.value.panels.templates.items).toHaveLength(1);expect(s.value.panels.templates.restartRequired).toBe(true);const calls=s.api.getStratumV2Page$.mock.calls.length;s.view.load('templates',true);expect(s.api.getStratumV2Page$.mock.calls.length).toBe(calls);s.view.load('templates');expect(s.api.getStratumV2Page$).toHaveBeenLastCalledWith('templates',undefined);s.view.ngOnDestroy();});
+ it('continuation closes the captured retained total without duplicate events',()=>{const first=copy(pagesFixture.declarations),second=copy(first);first.items=first.items.slice(0,1);first.nextCursor='one';second.items=second.items.slice(1);const s=setup((f:keyof typeof pagesFixture,c?:string)=>of(f==='declarations'?c?second:first:copy(pagesFixture[f])));s.view.ngOnInit();s.view.load('declarations',true);expect(s.value.panels.declarations.items).toHaveLength(2);expect(s.value.panels.declarations.page.nextCursor).toBeNull();s.view.ngOnDestroy();});
+ it('source generation change refuses append and retains the accepted prefix',()=>{const first=copy(pagesFixture.templates),second=copy(first);first.items=first.items.slice(0,1);first.nextCursor='one';second.items=second.items.slice(1);second.source.sourceGenerationAtomic=String(BigInt(second.source.sourceGenerationAtomic)+1n);const s=setup((f:keyof typeof pagesFixture,c?:string)=>of(f==='templates'?c?second:first:copy(pagesFixture[f])));s.view.ngOnInit();s.view.load('templates',true);expect(s.value.panels.templates.items).toHaveLength(1);expect(s.value.panels.templates.restartRequired).toBe(true);expect(s.value.panels.templates.error).toContain('source changed');s.view.ngOnDestroy();});
+ it('a panel restart unsubscribes an earlier retained response scope before accepting its successor',()=>{const reads:Subject<any>[]=[];const s=setup((f:keyof typeof pagesFixture)=>{if(f!=='roles')return of(copy(pagesFixture[f]));const read=new Subject();reads.push(read);return read;});s.view.ngOnInit();reads[0].next(copy(pagesFixture.roles));expect(reads[0].observed).toBe(true);s.view.load('roles');expect(reads[0].observed).toBe(false);expect(s.value.panels.roles.items).toEqual([]);reads[0].next(copy(pagesFixture.roles));expect(s.value.panels.roles.items).toEqual([]);reads[1].next(copy(pagesFixture.roles));expect(s.value.panels.roles.items).toHaveLength(4);s.view.ngOnDestroy();});
 });

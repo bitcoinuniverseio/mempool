@@ -1,3 +1,5 @@
+import { Sv2Family, Sv2Page } from './stratum-v2/stratum-v2.types';
+import { configuredSv2Profile, validateSv2Page } from './stratum-v2/stratum-v2.evidence';
 import { LiquidAssetPage, LiquidPegPage, LiquidNetwork, LiquidObservatoryCoverage } from './liquid-observatory/liquid-observatory.types';
 import { liquidProfile, requireLiquid, validateLiquidRead } from './liquid-observatory/liquid-evidence';
 import { Injectable } from '@angular/core';
@@ -1049,23 +1051,17 @@ export class UniverseApiService {
    * Sources/prerequisite: WP-BE-011. Rollback preserves collector state and
    *    restores matching DTOs; production mining endpoints are not fault targets.
    */
-  getStratumV2Network$(): Observable<{ roles: StratumV2RoleStatus[]; total: number }> {
-    return this.httpClient.get<{ roles: StratumV2RoleStatus[]; total: number }>(
-      this.backendBase + '/api/v1/stratum-v2/network'
-    );
+  getStratumV2Page$(family: Sv2Family, cursor?: string): Observable<Sv2Page<any>> {
+    return defer(() => {
+      const configured = configuredSv2Profile(this.stateService.env.SV2_SOURCE_PROFILE);
+      const params: Record<string,string> = {network:configured.profile.network,limit:'100'};
+      if(cursor!==undefined) params.cursor=cursor;
+      return this.httpClient.get<Sv2Page<any>>(this.backendBase+'/api/v1/stratum-v2/'+({roles:'network',templates:'templates',declarations:'declarations'} as const)[family], {params,headers:{'Cache-Control':'no-store'}}).pipe(timeout(20000),map(page=>validateSv2Page(page,configured,family)));
+    });
   }
-
-  getStratumV2Templates$(): Observable<{ templates: StratumV2Template[]; total: number }> {
-    return this.httpClient.get<{ templates: StratumV2Template[]; total: number }>(
-      this.backendBase + '/api/v1/stratum-v2/templates'
-    );
-  }
-
-  getStratumV2Declarations$(): Observable<{ declarations: StratumV2JobDeclaration[]; total: number }> {
-    return this.httpClient.get<{ declarations: StratumV2JobDeclaration[]; total: number }>(
-      this.backendBase + '/api/v1/stratum-v2/declarations'
-    );
-  }
+  getStratumV2Network$(): Observable<Sv2Page<StratumV2RoleStatus>> { return this.getStratumV2Page$('roles'); }
+  getStratumV2Templates$(): Observable<Sv2Page<StratumV2Template>> { return this.getStratumV2Page$('templates'); }
+  getStratumV2Declarations$(): Observable<Sv2Page<StratumV2JobDeclaration>> { return this.getStratumV2Page$('declarations'); }
 
   /**
    * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-009 / WP-BE-009 | C-FE-OFFERED-L2.
