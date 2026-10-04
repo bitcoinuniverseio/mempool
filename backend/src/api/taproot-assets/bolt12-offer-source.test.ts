@@ -56,6 +56,13 @@ describe('bounded owned public offer catalog', () => {
     expect(third.nextCursor).toBeNull(); expect(second.source.catalogAnchor).toEqual(first.source.catalogAnchor);
     expect(second.source.checkpoint.height).toBe(11);
   });
+  it('uses only the two independently measured fences for the current anchor, while re-observing an older cursor anchor', async () => {
+    const h = harness(), first = await h.source.page({ limit: '1' });
+    expect(h.lightning.mock.calls.filter(([method, params]) => method === 'getrawblockbyheight' && params.height === 10)).toHaveLength(2);
+    h.advance(); h.lightning.mockClear();
+    await h.source.page({ limit: '1', cursor: first.nextCursor! });
+    for (const at of [10, 11]) expect(h.lightning.mock.calls.filter(([method, params]) => method === 'getrawblockbyheight' && params.height === at)).toHaveLength(2);
+  });
   it.each([{ limit: '0' }, { limit: '51' }, { limit: ['1'] }, { source: '/secret' }, { cursor: ['x'] }])('rejects unsupported query before source I/O: %j', async query => {
     const h = harness(); await expect(h.source.page(query)).rejects.toMatchObject({ status: 400 }); expect(h.core).not.toHaveBeenCalled();
   });
