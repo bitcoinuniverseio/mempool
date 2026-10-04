@@ -1265,11 +1265,14 @@ export interface ArkOperator {
   readonly id: string;
   readonly name: string;
   readonly aspPubkey: string;
-  readonly roundIntervalSec: number;
-  readonly currentBatchHeight: number;
-  readonly activeVtxoCount: number;
-  readonly totalVolumeSats: string;
-  readonly status: 'online' | 'degraded';
+  readonly roundIntervalSec: number | null;
+  readonly currentBatchHeight: number | null;
+  readonly activeVtxoCount: number | null;
+  readonly totalVolumeSats: string | null;
+  readonly providerVersion?: string;
+  /** Native session duration is distinct from the scheduled round cadence. */
+  readonly sessionDurationSeconds?: string;
+  readonly status: 'online' | 'degraded' | 'observed';
 }
 
 export interface ArkBatch {

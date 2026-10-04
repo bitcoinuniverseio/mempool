@@ -7,6 +7,7 @@ import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { formatAtomicAmount } from '@app/universe/universe-evidence';
 
 import {
   ArkBatch,
@@ -33,6 +34,7 @@ interface ArkViewModel {
 export class ArkDashboardComponent implements OnInit, OnDestroy {
   // Templates format raw strings through the Number global; AOT needs it bound.
   protected readonly Number = Number;
+  protected readonly formatAtomicAmount = formatAtomicAmount;
   private readonly destroyed = new Subject<void>();
   vm$: Observable<ArkViewModel>;
 
