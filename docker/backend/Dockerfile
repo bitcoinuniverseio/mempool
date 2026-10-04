@@ -42,6 +42,9 @@ RUN node --version | grep -x v24.19.0 && npm --version | grep -x 11.17.0
 
 WORKDIR /backend
 
+# The package contains the exact locked SDK used by the native proof decoder.
+ENV UNIVERSE_ARKADE_CODEC=/backend/package/native/arkade-codec/codec.mjs
+
 RUN chown 1000:1000 ./
 COPY --from=builder --chown=1000:1000 /build/package ./package/
 COPY --from=builder --chown=1000:1000 /build/GeoIP ./GeoIP/
