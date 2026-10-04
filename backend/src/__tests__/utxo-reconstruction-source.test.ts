@@ -13,7 +13,7 @@ beforeEach(() => {
   process.env.UNIVERSE_SIGNET_CHALLENGE = '51'; get.mockReset(); post.mockReset(); rpc.mockReset();
   get.mockImplementation(async (url: string) => ({ data: url.endsWith('/blocks/tip/height') ? '20'
     : url.endsWith('/blocks/tip/hash') ? id(20) : url.endsWith('/block-height/0') ? id(0)
-    : url.endsWith('/block-height/20') ? id(20) : url.endsWith('/mempool/txids') ? [id(30)]
+    : url.endsWith('/block-height/20') ? id(20) : url.endsWith('/block-height/19') ? id(19) : url.endsWith('/mempool/txids') ? [id(30)]
     : { address: 'address', chain_stats: {}, mempool_stats: {} } }));
   rpc.mockImplementation(async (method: string, params: any[]) => method === 'getblockchaininfo' ? { ...info }
     : method === 'getblockhash' ? id(params[0]) : method === 'getrawmempool' ? { txids: [id(30)], mempool_sequence: 5 }
@@ -32,6 +32,23 @@ it('acquires a chain-only anchor without asserting global mempool stability', as
   expect(snapshot.mempoolIdentity).toBeNull(); expect(snapshot.checkpoint.blockHash).toBe(id(20));
   expect(rpc.mock.calls.some(([method]) => method === 'getrawmempool')).toBe(false);
   expect(get.mock.calls.some(([url]) => url.endsWith('/mempool/txids'))).toBe(false);
+});
+it('independently checks the original confirmed anchor in both real source interfaces', async () => {
+  const anchor = { network: 'signet', genesisHash: id(0), blockHeight: 19, blockHash: id(19), signetChallenge: '51', verifiedAt: new Date().toISOString() };
+  const snapshot = await new EsploraReconstructionSource().confirmedSnapshot('address', new AbortController().signal, anchor);
+  expect(snapshot.canonicalAnchor).toEqual({ heightAtomic: '19', blockHash: id(19) }); expect(snapshot.checkpoint.blockHeight).toBe(20);
+  expect(rpc).toHaveBeenCalledWith('getblockhash', [19], expect.anything());
+  expect(get).toHaveBeenCalledWith('http://127.0.0.1:38300/block-height/19', expect.anything());
+});
+it.each(['core', 'index'])('rejects original-anchor reorg in %s even when the latest shared tip matches', async side => {
+  const anchor = { network: 'signet', genesisHash: id(0), blockHeight: 19, blockHash: id(19), signetChallenge: '51', verifiedAt: new Date().toISOString() };
+  if (side === 'core') rpc.mockImplementation(async (method, params) => method === 'getblockchaininfo' ? { ...info } : method === 'getblockhash' ? id(params[0] === 19 ? 99 : params[0]) : {});
+  else {
+    const implementation = get.getMockImplementation()!;
+    get.mockImplementation(async (url, options) => url.endsWith('/block-height/19') ? { data: id(99) } : implementation(url, options));
+  }
+  await expect(new EsploraReconstructionSource().confirmedSnapshot('address', new AbortController().signal, anchor)).rejects.toThrow('Original confirmed anchor is no longer canonical');
+  expect(get.mock.calls.some(([url]) => url.includes('/address/'))).toBe(false);
 });
 it('captures the actual history acquisition phase and timeout without leaking raw diagnostics', async () => {
   get.mockRejectedValueOnce(Object.assign(new Error('private configured origin diagnostic'), { isAxiosError: true, code: 'ECONNABORTED', response: { status: 429 } }));

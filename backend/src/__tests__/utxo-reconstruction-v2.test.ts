@@ -18,6 +18,13 @@ function setup() {
     history: jest.fn(async (_address, after) => after ? [] : [transaction(2, 70, 1), transaction(1, 100)]), mempool: jest.fn(async () => []), verifyOutputs: jest.fn(async () => undefined) };
   return { service: new UtxoReconstructionV2Service(source, 'signet'), source, snapshot };
 }
+function canonicalGrowth(source: ReconstructionV2Source, snapshot: ReconstructionSnapshot, height = 21): void {
+  const original = { ...snapshot.checkpoint };
+  snapshot.checkpoint = { ...snapshot.checkpoint, blockHeight: height, blockHash: hash(height) };
+  const copy = () => ({ ...JSON.parse(JSON.stringify(snapshot)), canonicalAnchor: { heightAtomic: String(original.blockHeight), blockHash: original.blockHash } });
+  (source.confirmedSnapshot as jest.Mock).mockImplementation(async () => ({ ...copy(), mempoolIdentity: null }));
+  (source.snapshot as jest.Mock).mockImplementation(async () => copy());
+}
 const signal = () => new AbortController().signal;
 async function advance(service: UtxoReconstructionV2Service, view: Awaited<ReturnType<UtxoReconstructionV2Service['create']>>, count: number) {
   for (let i = 0; i < count; i++) view = await service.next('address', view.sessionId, view.cursor, signal());
@@ -110,4 +117,65 @@ it('rejects a provider page exceeding the explicit hundred-transaction bound', a
   const { service, source } = setup(); const start = await service.create('address', signal());
   (source.history as jest.Mock).mockResolvedValueOnce(Array.from({ length: 101 }, (_, i) => transaction(i + 1, 1)));
   const invalid = await service.next('address', start.sessionId, 0, signal()); expect(invalid.status).toBe('INVALIDATED'); expect(invalid.result).toBeUndefined();
+});
+it('preserves immutable confirmed progress across canonical tip growth and verifies at the final captured tip', async () => {
+  const { service, source, snapshot } = setup(); const start = await service.create('address', signal());
+  canonicalGrowth(source, snapshot);
+  const page = await advance(service, start, 1);
+  expect(page.confirmedAnchor.blockHeight).toBe(20); expect(page.confirmedAnchor.blockHash).toBe(hash(6));
+  expect(page.confirmedAnchor.verifiedAt).toBe(start.confirmedAnchor.verifiedAt);
+  expect(page.latestObservedTip).toMatchObject({ blockHeight: 21, blockHash: hash(21) });
+  expect(source.confirmedSnapshot).toHaveBeenLastCalledWith('address', expect.anything(), expect.objectContaining({ blockHeight: 20, blockHash: hash(6) }));
+  const complete = await advance(service, page, 4);
+  expect(complete.status).toBe('COMPLETE_AT_OBSERVED_TIP'); expect(complete.mempoolAnchor?.checkpoint.blockHeight).toBe(21);
+  expect(source.verifyOutputs).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ blockHeight: 21, blockHash: hash(21) }));
+});
+it.each(['missing', 'wrong-height', 'wrong-hash', 'changed-stats', 'changed-source', 'changed-genesis', 'changed-script', 'changed-challenge'])('rejects tip growth with %s original-anchor provenance', async fault => {
+  const { service, source, snapshot } = setup(); const start = await service.create('address', signal()); canonicalGrowth(source, snapshot);
+  const implementation = source.confirmedSnapshot as jest.Mock;
+  const valid = await implementation('address', signal());
+  if (fault === 'missing') delete valid.canonicalAnchor;
+  if (fault === 'wrong-height') valid.canonicalAnchor.heightAtomic = '19';
+  if (fault === 'wrong-hash') valid.canonicalAnchor.blockHash = hash(77);
+  if (fault === 'changed-stats') valid.summary.chain_stats.tx_count++;
+  if (fault === 'changed-source') valid.sourceId = hash(77);
+  if (fault === 'changed-genesis') valid.checkpoint.genesisHash = hash(77);
+  if (fault === 'changed-script') valid.scriptPubKey = '51';
+  if (fault === 'changed-challenge') valid.checkpoint.signetChallenge = '52';
+  implementation.mockResolvedValue(valid);
+  const failed = await advance(service, start, 1); expect(failed.status).toBe('INVALIDATED'); expect(failed.result).toBeUndefined();
+  expect(source.history).not.toHaveBeenCalled();
+});
+it('withdraws a cached completed result on final tip growth while retaining original confirmed closure', async () => {
+  const { service, source, snapshot } = setup(); const complete = await advance(service, await service.create('address', signal()), 5);
+  canonicalGrowth(source, snapshot);
+  const reset = await service.next('address', complete.sessionId, complete.cursor - 1, signal());
+  expect(reset).toMatchObject({ status: 'PARTIAL', reason: 'FINAL_TIP_CHANGED', mempoolAnchor: null,
+    progress: { phase: 'acquire-mempool', mempoolEpoch: 1, confirmedTransactionsProcessed: 2, candidateOutputs: 0, verifiedOutputs: 0 } });
+  expect(reset.result).toBeUndefined(); expect(reset.confirmedAnchor.blockHeight).toBe(20); expect(reset.latestObservedTip.blockHeight).toBe(21);
+  expect((await advance(service, reset, 3)).result?.balanceAtomic).toBe('70');
+});
+it('keeps a moving shared-tip acquisition retryable without accepting unproved page progress', async () => {
+  const { service, source, snapshot } = setup(); const start = await service.create('address', signal());
+  (source.confirmedSnapshot as jest.Mock).mockRejectedValueOnce(new ReconstructionError(409, 'Active chain moved during confirmed source acquisition'));
+  await expect(service.next('address', start.sessionId, 0, signal())).rejects.toMatchObject({ status: 503 });
+  expect(source.history).not.toHaveBeenCalled(); canonicalGrowth(source, snapshot);
+  const retry = await service.next('address', start.sessionId, 0, signal()); expect(retry.cursor).toBe(1); expect(retry.progress.confirmedTransactionsProcessed).toBe(2);
+});
+it('has a fixed sixty-minute V2 expiry which does not slide when progress is read', async () => {
+  const { source } = setup(); let now = 100000;
+  const service = new UtxoReconstructionV2Service(source, 'signet', () => now); const start = await service.create('address', signal());
+  expect(Date.parse(start.expiresAt) - now).toBe(60 * 60 * 1000);
+  now += 31 * 60 * 1000; const page = await advance(service, start, 1); expect(page.expiresAt).toBe(start.expiresAt);
+  now = Date.parse(start.expiresAt);
+  await expect(service.next('address', start.sessionId, page.cursor, signal())).rejects.toMatchObject({ status: 404 });
+});
+it('does not commit acquired history rows when the after-read shared-tip proof moves', async () => {
+  const { service, source } = setup(); const start = await service.create('address', signal());
+  const implementation = (source.confirmedSnapshot as jest.Mock).getMockImplementation()!;
+  (source.confirmedSnapshot as jest.Mock).mockImplementationOnce(implementation).mockRejectedValueOnce(new ReconstructionError(409, 'Active chain moved during confirmed source acquisition'));
+  await expect(service.next('address', start.sessionId, 0, signal())).rejects.toMatchObject({ status: 503 });
+  const retry = await service.next('address', start.sessionId, 0, signal());
+  expect(retry.cursor).toBe(1); expect(retry.progress.confirmedTransactionsProcessed).toBe(2);
+  expect(source.history).toHaveBeenCalledTimes(2); expect(retry.result).toBeUndefined();
 });

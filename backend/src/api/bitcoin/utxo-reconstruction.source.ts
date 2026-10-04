@@ -7,7 +7,9 @@ import { IEsploraApi } from './esplora-api.interface';
 import { ReconstructionError, ReconstructionOutput, ReconstructionSnapshot, ReconstructionSource } from './utxo-reconstruction.service';
 
 const hash = (value: string): string => createHash('sha256').update(value).digest('hex');
-export type ConfirmedReconstructionSnapshot = Omit<ReconstructionSnapshot, 'mempoolIdentity'> & { mempoolIdentity: null };
+export interface CanonicalAnchorProof { heightAtomic: string; blockHash: string }
+export type AnchoredReconstructionSnapshot = ReconstructionSnapshot & { canonicalAnchor?: CanonicalAnchorProof };
+export type ConfirmedReconstructionSnapshot = Omit<AnchoredReconstructionSnapshot, 'mempoolIdentity'> & { mempoolIdentity: null };
 export class ReconstructionAcquisitionError extends ReconstructionError {
   constructor(public readonly phase: string, public readonly upstreamStatus: number | undefined, public readonly causeCode: string) {
     super(causeCode === 'DEADLINE' ? 504 : 503, 'Bounded reconstruction source acquisition failed');
@@ -60,15 +62,15 @@ export class EsploraReconstructionSource implements ReconstructionSource {
     }
   }
   /** @asyncUnsafe */
-  async snapshot(address: string, signal: AbortSignal): Promise<ReconstructionSnapshot> {
-    return this.acquire(address, signal, true) as Promise<ReconstructionSnapshot>;
+  async snapshot(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<AnchoredReconstructionSnapshot> {
+    return this.acquire(address, signal, true, anchor) as Promise<AnchoredReconstructionSnapshot>;
   }
   /** Chain-bound progress deliberately excludes global mempool acquisition. */
-  async confirmedSnapshot(address: string, signal: AbortSignal): Promise<ConfirmedReconstructionSnapshot> {
-    return this.acquire(address, signal, false) as Promise<ConfirmedReconstructionSnapshot>;
+  async confirmedSnapshot(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<ConfirmedReconstructionSnapshot> {
+    return this.acquire(address, signal, false, anchor) as Promise<ConfirmedReconstructionSnapshot>;
   }
   /** @asyncUnsafe */
-  private async acquire(address: string, signal: AbortSignal, exactMempool: boolean): Promise<ReconstructionSnapshot | ConfirmedReconstructionSnapshot> {
+  private async acquire(address: string, signal: AbortSignal, exactMempool: boolean, anchor?: AddressSourceCheckpoint): Promise<AnchoredReconstructionSnapshot | ConfirmedReconstructionSnapshot> {
     active(signal);
     const before = await this.rpc('getblockchaininfo', [], signal);
     if (before.initialblockdownload !== false) throw new ReconstructionError(503, 'Owned Core is not ready for exact reconstruction');
@@ -91,6 +93,18 @@ export class EsploraReconstructionSource implements ReconstructionSource {
       throw error;
     }
     active(signal);
+    let canonicalAnchor: CanonicalAnchorProof | undefined;
+    if (anchor) {
+      if (checkpoint.network !== anchor.network || checkpoint.genesisHash !== anchor.genesisHash ||
+          checkpoint.signetChallenge !== anchor.signetChallenge || checkpoint.blockHeight < anchor.blockHeight) {
+        throw new ReconstructionError(409, 'Original confirmed anchor context changed');
+      }
+      const [coreHash, indexHash] = await Promise.all([
+        this.rpc('getblockhash', [anchor.blockHeight], signal), this.get('/block-height/' + anchor.blockHeight, signal),
+      ]);
+      if (coreHash !== anchor.blockHash || indexHash !== anchor.blockHash) throw new ReconstructionError(409, 'Original confirmed anchor is no longer canonical');
+      canonicalAnchor = { heightAtomic: String(anchor.blockHeight), blockHash: anchor.blockHash };
+    }
     const [summary, indexMempool, coreMempool, addressInfo] = await Promise.all([
       this.get<IEsploraApi.Address>('/address/' + encodeURIComponent(address), signal),
       exactMempool ? this.get<unknown>('/mempool/txids', signal) : Promise.resolve(null),
@@ -109,7 +123,7 @@ export class EsploraReconstructionSource implements ReconstructionSource {
         exactMempool && (afterMempool.mempool_sequence !== coreMempool.mempool_sequence || JSON.stringify(txids(afterMempool.txids)) !== JSON.stringify(coreIds))) {
       throw new ReconstructionError(409, exactMempool ? 'Active chain or exact mempool identity moved during source acquisition' : 'Active chain moved during confirmed source acquisition');
     }
-    return { checkpoint, sourceId: this.sourceId, mempoolIdentity: exactMempool ? hash(JSON.stringify({ ids: coreIds, sequence: coreMempool.mempool_sequence })) : null, scriptPubKey: addressInfo.scriptPubKey, summary };
+    return { checkpoint, sourceId: this.sourceId, mempoolIdentity: exactMempool ? hash(JSON.stringify({ ids: coreIds, sequence: coreMempool.mempool_sequence })) : null, scriptPubKey: addressInfo.scriptPubKey, summary, ...(canonicalAnchor ? { canonicalAnchor } : {}) };
   }
   history(address: string, after: string | undefined, limit: number, signal: AbortSignal): Promise<IEsploraApi.Transaction[]> {
     if (after && !/^[0-9a-f]{64}$/.test(after)) throw new ReconstructionError(400, 'Invalid native history cursor');
