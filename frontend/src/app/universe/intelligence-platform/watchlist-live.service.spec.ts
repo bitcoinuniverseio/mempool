@@ -16,6 +16,20 @@ class Socket {
 }
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); Socket.sockets = []; });
 describe('owner live notification transport', () => {
+  it('accepts only the configured root ready context when the selector is empty', () => {
+    vi.stubGlobal('WebSocket', Socket);
+    vi.stubGlobal('location', { protocol: 'https:', host: 'owned.example' });
+    const key = new BehaviorSubject<string | null>('uip_live_root_fixture');
+    const service = new WatchlistLiveService({ isBrowser: true, network: '', env: { ROOT_NETWORK: 'signet' } } as any, { key$: key } as any);
+    const rows: unknown[] = [];
+    const sub = service.stream().subscribe(update => { if (update.notification) rows.push(update.notification); });
+    const socket = Socket.sockets[0];
+    expect(socket.url).toBe('wss://owned.example/api/v1/ws');
+    socket.message({ 'watchlist-ready': { network: 'mainnet' } }); socket.message({ 'watchlist-notification': { notification_id: 'foreign' } });
+    expect(rows).toEqual([]);
+    socket.message({ 'watchlist-ready': { network: 'signet' } }); socket.message({ 'watchlist-notification': { notification_id: 'native-root' } });
+    expect(rows).toHaveLength(1); sub.unsubscribe(); expect(socket.closed).toBe(true);
+  });
   it('authenticates in the message, validates ready network, resumes persisted IDs and closes on key removal', () => {
     vi.useFakeTimers();
     vi.stubGlobal('WebSocket', Socket);

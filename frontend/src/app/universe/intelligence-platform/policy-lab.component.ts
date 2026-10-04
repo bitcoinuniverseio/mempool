@@ -220,7 +220,7 @@ export class PolicyLabComponent implements OnInit, OnDestroy {
   rawTransactionsInput = ''; loading = false; errorMessage: string | null = null; evaluationResult: any = null; nodeProfile: any = null;
   private attempt = 0; private destroyed = false; private request?: Subscription; private profileRequest?: Subscription; private networkRequest?: Subscription;
   constructor(private api: IntelligenceApiService, private cdr: ChangeDetectorRef, private state: StateService) {}
-  private get network(): string { return this.state.network || 'mainnet'; }
+  private get network(): string { return this.state.network || this.state.env?.ROOT_NETWORK || 'mainnet'; }
   ngOnInit(): void {
     this.loadProfile();
     this.networkRequest = this.state.networkChanged$?.subscribe(() => { this.invalidate(); this.nodeProfile = null; this.loadProfile(); });
