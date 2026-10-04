@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { defer, finalize, Subscription, timeout } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { atomicBtc, checkedReconstruction, UtxoReconstructionView } from './utxo-reconstruction-view';
+import { checkedReconstructionV4, UtxoReconstructionV4View } from './utxo-reconstruction-v4-view';
 import { checkedReconstructionV3, UtxoReconstructionV3View } from './utxo-reconstruction-v3-view';
 import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-reconstruction-v2-view';
 
@@ -21,6 +22,7 @@ import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-recons
         <option value="v1">V1: single confirmed and mempool anchor</option>
         <option value="v2">V2: confirmed anchor, then independently acquired mempool epoch</option>
         <option value="v3">V3: original confirmed prefix, reconciled live tail and final mempool closure</option>
+        <option value="v4">V4: live tail with independently proved unrelated global mempool transitions</option>
       </select>
       <button class="btn btn-primary me-2" (click)="start()" [disabled]="pending || view?.status === 'PARTIAL'">{{ view ? 'Start new reconstruction' : 'Start reconstruction' }}</button>
       <button *ngIf="view?.status === 'PARTIAL'" class="btn btn-primary me-2" (click)="advance()" [disabled]="pending">{{ error ? 'Retry page' : 'Continue reconstruction' }}</button>
@@ -32,10 +34,19 @@ import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-recons
         <p>Phase: {{ view.progress.phase }}. Confirmed transactions: {{ view.progress.confirmedTransactionsProcessed | number }} / {{ view.progress.confirmedTransactionsExpected | number }}.
           Mempool transactions: {{ view.progress.mempoolTransactionsProcessed | number }} / {{ view.progress.mempoolTransactionsExpected === null ? 'not acquired' : (view.progress.mempoolTransactionsExpected | number) }}.
           Verified outputs: {{ view.progress.verifiedOutputs | number }} / {{ view.progress.candidateOutputs | number }}.</p>
-        <p *ngIf="v3View as v3">V3 page limit: {{ v3.progress.pageLimit }} transactions. Confirmed epoch: {{ v3.progress.confirmedEpoch }}.
+        <p *ngIf="v3View as v3">{{ version.toUpperCase() }} page limit: {{ v3.progress.pageLimit }} transactions. Confirmed epoch: {{ v3.progress.confirmedEpoch }}.
           Confirmed tail: {{ v3.progress.confirmedTailTransactionsProcessed }} / {{ v3.progress.confirmedTailTransactionsExpected === null ? 'not acquired' : v3.progress.confirmedTailTransactionsExpected }}.
           Mempool epoch: {{ v3.progress.mempoolEpoch }}. Closed live tail checkpoint: {{ v3.confirmedTailAnchor?.checkpoint?.blockHash || 'not closed' }}.
-          Latest observed shared tip: {{ v3.latestObservedTip.blockHeight }} · {{ v3.latestObservedTip.blockHash }}. Final mempool checkpoint: {{ v3.mempoolAnchor?.checkpoint?.blockHash || 'not acquired' }}.</p>
+          Latest observed shared tip: {{ v3.latestObservedTip.blockHeight }} / {{ v3.latestObservedTip.blockHash }}. Final mempool checkpoint: {{ v3.mempoolAnchor?.checkpoint?.blockHash || 'not acquired' }}.</p>
+        <div *ngIf="v4View as v4" class="small text-break">
+          <p>Global mempool proof: {{ v4.globalMempoolProof.mode }}. {{ v4.globalMempoolProof.fallbackReason }}
+            Verified unrelated transitions: {{ v4.globalMempoolProof.transitionCount }} / {{ v4.globalMempoolProof.maximumTransitions }}.
+            Bounded proof cache: {{ v4.globalMempoolProof.transactionCount === null ? 'not acquired' : v4.globalMempoolProof.transactionCount }} transactions / {{ v4.globalMempoolProof.maximumTransactions }};
+            {{ v4.globalMempoolProof.retainedBytes }} / {{ v4.globalMempoolProof.maximumRetainedBytes }} bytes.</p>
+          <p>Only independently proved unrelated global changes can retain output verification. Relevant, unknown or over-bound changes reset final progress; strict fallback may remain partial under churn.</p>
+          <p *ngIf="v4.globalMempoolProof.verifiedOutputContext as proof">Current verified output context: {{ proof.identity }};
+            {{ proof.outputCount }} checked outputs; ordered output digest {{ proof.outpointsSha256 }}.</p>
+        </div>
         <p *ngIf="v3View?.confirmedTailAnchor as tail">Closed live confirmed observation: {{ tail.chainStats.tx_count }} transactions;
           {{ tail.chainStats.funded_txo_count }} funded outputs / {{ tail.chainStats.spent_txo_count }} spent outputs;
           exact funded {{ tail.chainStats.funded_txo_sum }} sat / spent {{ tail.chainStats.spent_txo_sum }} sat.
@@ -72,8 +83,8 @@ import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-recons
 export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() address = '';
   @Input() nativeSourceState: 'idle' | 'loading' | 'complete' | 'limit' | 'unavailable' = 'unavailable';
-  view: UtxoReconstructionView | UtxoReconstructionV2View | UtxoReconstructionV3View | null = null;
-  version: 'v1' | 'v2' | 'v3' = 'v1';
+  view: UtxoReconstructionView | UtxoReconstructionV2View | UtxoReconstructionV3View | UtxoReconstructionV4View | null = null;
+  version: 'v1' | 'v2' | 'v3' | 'v4' = 'v1';
   pending = false;
   error: string | null = null;
   private network: string;
@@ -91,12 +102,13 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
       : 'The native output list is unavailable.';
   }
   get v2View(): UtxoReconstructionV2View | null { return this.view?.schema === 'universe-address-utxo-reconstruction-v2' ? this.view : null; }
-  get v3View(): UtxoReconstructionV3View | null { return this.view?.schema === 'universe-address-utxo-reconstruction-v3' ? this.view : null; }
+  get v3View(): UtxoReconstructionV3View | UtxoReconstructionV4View | null { return this.view?.schema === 'universe-address-utxo-reconstruction-v3' || this.view?.schema === 'universe-address-utxo-reconstruction-v4' ? this.view : null; }
+  get v4View(): UtxoReconstructionV4View | null { return this.view?.schema === 'universe-address-utxo-reconstruction-v4' ? this.view : null; }
   get confirmedSource(): UtxoReconstructionView['source'] | UtxoReconstructionV2View['confirmedAnchor'] { return this.v3View?.confirmedAnchor || this.v2View?.confirmedAnchor || (this.view as UtxoReconstructionView)?.source; }
   get mempoolIdentity(): string { return this.v3View || this.v2View ? (this.v3View || this.v2View).mempoolAnchor?.identity || 'not acquired' : (this.view as UtxoReconstructionView)?.source.mempoolIdentity; }
   selectVersion(value: string): void {
-    if (this.destroyed || this.pending || this.view?.status === 'PARTIAL' || !['v1', 'v2', 'v3'].includes(value)) { return; }
-    this.abandon(); this.version = value as 'v1' | 'v2' | 'v3';
+    if (this.destroyed || this.pending || this.view?.status === 'PARTIAL' || !['v1', 'v2', 'v3', 'v4'].includes(value)) { return; }
+    this.abandon(); this.version = value as 'v1' | 'v2' | 'v3' | 'v4';
   }
   get visibleOutputs(): NonNullable<UtxoReconstructionView['result']>['items'] { return this.view?.result?.items.slice(0, this.shown) || []; }
   private prefix(network = this.network): string { return network === 'mainnet' || network === this.state.env.ROOT_NETWORK ? '' : '/' + network; }
@@ -120,7 +132,7 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
     this.pending = false; this.view = null; this.error = null; this.shown = 100;
     if (old && old.status !== 'CANCELLED') {
       // Cleanup is bound to the old address/network; it never writes the next scope's UI.
-      this.http.delete(this.base(old.address, old.network, old.schema === 'universe-address-utxo-reconstruction-v3' ? 'v3' : old.schema === 'universe-address-utxo-reconstruction-v2' ? 'v2' : 'v1') + '/' + old.sessionId).pipe(timeout(5000)).subscribe({ error: () => {} });
+      this.http.delete(this.base(old.address, old.network, old.schema === 'universe-address-utxo-reconstruction-v4' ? 'v4' : old.schema === 'universe-address-utxo-reconstruction-v3' ? 'v3' : old.schema === 'universe-address-utxo-reconstruction-v2' ? 'v2' : 'v1') + '/' + old.sessionId).pipe(timeout(5000)).subscribe({ error: () => {} });
     }
     if (!this.destroyed) { this.cd.markForCheck(); }
   }
@@ -145,7 +157,7 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
   private read(action: 'create' | 'next' | 'cancel', previous = this.view): void {
     const revision = this.revision, address = this.address, network = this.network;
     this.pending = true; this.error = null;
-    const version = previous ? previous.schema === 'universe-address-utxo-reconstruction-v3' ? 'v3' : previous.schema === 'universe-address-utxo-reconstruction-v2' ? 'v2' : 'v1' : this.version;
+    const version = previous ? previous.schema === 'universe-address-utxo-reconstruction-v4' ? 'v4' : previous.schema === 'universe-address-utxo-reconstruction-v3' ? 'v3' : previous.schema === 'universe-address-utxo-reconstruction-v2' ? 'v2' : 'v1' : this.version;
     const path = this.base(address, network, version);
     this.request = defer(() => action === 'create' ? this.http.post(path, {}) : action === 'next'
       ? this.http.post(`${path}/${previous.sessionId}/next`, { cursor: previous.cursor })
@@ -153,7 +165,8 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
         if (!this.destroyed && revision === this.revision) { this.pending = false; this.cd.markForCheck(); }
       })).subscribe({ next: value => {
         if (this.destroyed || revision !== this.revision) { return; }
-        try { this.view = version === 'v3' ? checkedReconstructionV3(value, address, network, previous as UtxoReconstructionV3View || undefined, action)
+        try { this.view = version === 'v4' ? checkedReconstructionV4(value, address, network, previous as UtxoReconstructionV4View || undefined, action)
+          : version === 'v3' ? checkedReconstructionV3(value, address, network, previous as UtxoReconstructionV3View || undefined, action)
           : version === 'v2' ? checkedReconstructionV2(value, address, network, previous as UtxoReconstructionV2View || undefined, action)
           : checkedReconstruction(value, address, network, previous as UtxoReconstructionView || undefined, action); }
         catch (error) { this.error = error.message; }
