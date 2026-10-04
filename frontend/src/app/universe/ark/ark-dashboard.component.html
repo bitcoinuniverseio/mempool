@@ -28,20 +28,22 @@
           <span class="metric-label">ASP Operator</span>
           <span class="metric-value" style="font-size: 1rem;">{{ vm.operators[0].name }}</span>
           <span class="metric-sub">{{ vm.operators[0].status | uppercase }}</span>
+          <span class="metric-sub" *ngIf="vm.operators[0].providerVersion">Provider version: {{ vm.operators[0].providerVersion }}</span>
+          <span class="metric-sub" *ngIf="vm.operators[0].sessionDurationSeconds !== undefined">Session duration: {{ vm.operators[0].sessionDurationSeconds }} seconds</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Active VTXOs</span>
-          <span class="metric-value">{{ vm.operators[0].activeVtxoCount.toLocaleString() }}</span>
-          <span class="metric-sub">Cadence: {{ vm.operators[0].roundIntervalSec }}s</span>
+          <span class="metric-value">{{ vm.operators[0].activeVtxoCount === null ? 'Unknown' : vm.operators[0].activeVtxoCount.toLocaleString() }}</span>
+          <span class="metric-sub">Cadence: {{ vm.operators[0].roundIntervalSec === null ? 'Unknown' : vm.operators[0].roundIntervalSec + ' seconds' }}</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Total Volume</span>
-          <span class="metric-value">{{ (Number(vm.operators[0].totalVolumeSats) / 1e8).toFixed(2) }} BTC</span>
-          <span class="metric-sub">{{ vm.operators[0].totalVolumeSats }} sats</span>
+          <span class="metric-value">{{ vm.operators[0].totalVolumeSats === null ? 'Unknown' : formatAtomicAmount(vm.operators[0].totalVolumeSats, 8) + ' BTC' }}</span>
+          <span class="metric-sub" *ngIf="vm.operators[0].totalVolumeSats !== null">{{ vm.operators[0].totalVolumeSats }} sats</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Settlement Batch</span>
-          <span class="metric-value">#{{ vm.operators[0].currentBatchHeight }}</span>
+          <span class="metric-value">{{ vm.operators[0].currentBatchHeight === null ? 'Unknown' : '#' + vm.operators[0].currentBatchHeight }}</span>
           <span class="metric-sub">Provider-reported batch height</span>
         </div>
       </div>
