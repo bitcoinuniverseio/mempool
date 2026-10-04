@@ -210,7 +210,7 @@ export class TransactionGraphComponent implements OnInit, OnDestroy {
     this.edited();
     if (!this.rootEntity.trim()) return;
     const root = normalizedEntity(this.rootEntity);
-    const hops = this.hops, direction = this.direction, network = this.network.network || 'mainnet';
+    const hops = this.hops, direction = this.direction, network = this.network.network || this.network.env?.ROOT_NETWORK || 'mainnet';
     if (!root || !Number.isInteger(hops) || hops < 1 || hops > 3 || !['upstream','downstream','both'].includes(direction)) {this.queryError = 'Enter a bounded transaction ID or address and supported query options.';return;}
     this.loading = true;
     this.queryError = null;
@@ -240,7 +240,7 @@ export class TransactionGraphComponent implements OnInit, OnDestroy {
   }
   findPath(): void {
     this.pathEdited();
-    const from = this.pathFrom.trim().toLowerCase(), to = this.pathTo.trim().toLowerCase(), network = this.network.network || 'mainnet';
+    const from = this.pathFrom.trim().toLowerCase(), to = this.pathTo.trim().toLowerCase(), network = this.network.network || this.network.env?.ROOT_NETWORK || 'mainnet';
     if (!/^[0-9a-f]{64}$/.test(from) || !/^[0-9a-f]{64}$/.test(to)) {this.pathError = 'Enter two complete 32-byte transaction IDs.';return;}
     this.pathLoading = true;
     this.pathSubscription = this.api.findShortestPath$(from, to).subscribe({
