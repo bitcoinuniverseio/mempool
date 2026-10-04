@@ -22,6 +22,14 @@ function pendingSource() {
 }
 
 describe('L2 selected source ownership', () => {
+  it('preserves every supplied atomic reserve digit and keeps unknown or malformed quantities explicit', () => {
+    const fixture = pendingSource();
+    expect(fixture.view.lockedReserve('1')).toBe('0.00000001 BTC');
+    expect(fixture.view.lockedReserve('9007199254740993')).toBe('90071992.54740993 BTC');
+    expect(fixture.view.lockedReserve('0')).toBe('0 BTC');
+    for (const value of [null, undefined, '01', '-1', '1.5', '18446744073709551616']) { expect(fixture.view.lockedReserve(value)).toBe('Not reported'); }
+    fixture.view.ngOnDestroy(); fixture.read.unsubscribe();
+  });
   it('clears accepted rows and cancels old source reads immediately when the selected network changes', () => {
     const fixture = pendingSource();
     fixture.systems[0].next({ systems: [{ id: 'old' }] }); fixture.challenges[0].next({ challenges: [] });
