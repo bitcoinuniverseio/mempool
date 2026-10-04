@@ -14,10 +14,10 @@ describe('ArkService', () => {
 
   it('reports the missing Ark provider rather than invented operators, rounds and VTXOs', async () => {
     await expect(arkService.$getOperators()).rejects.toThrow(unavailable('unavailable-ark-provider'));
-    await expect(arkService.$getBatches()).rejects.toThrow(unavailable('unavailable-ark-provider'));
-    await expect(arkService.$getBatch('batch-860142-01')).rejects.toThrow(unavailable('unavailable-ark-provider'));
-    await expect(arkService.$getVtxo('vtxo-78192a83918273918273918273918273')).rejects.toThrow(unavailable('unavailable-ark-provider'));
-    await expect(arkService.$getVirtualTxs()).rejects.toThrow(unavailable('unavailable-ark-provider'));
+    await expect(arkService.$getBatches()).rejects.toThrow(unavailable('unavailable-ark-projection'));
+    await expect(arkService.$getBatch('batch-860142-01')).rejects.toThrow(unavailable('unavailable-ark-projection'));
+    await expect(arkService.$getVtxo('vtxo-78192a83918273918273918273918273')).rejects.toThrow(unavailable('unavailable-ark-projection'));
+    await expect(arkService.$getVirtualTxs()).rejects.toThrow(unavailable('unavailable-ark-projection'));
   });
 
   it('never resolves an absent source as an empty directory', async () => {
