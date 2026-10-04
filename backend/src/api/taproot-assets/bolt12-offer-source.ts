@@ -169,9 +169,12 @@ export class Bolt12OfferSource {
         info?.network !== lightningNetwork || info.id !== publication.nodeId || info.version !== publication.implementationVersion ||
         !height(info.blockheight) || info.warning_bitcoind_sync || info.warning_lightningd_sync ||
         chain?.chain !== chainName || chain.ibd !== false || !height(chain.blockcount) || !height(chain.headercount) ||
-        chain.blockcount !== info.blockheight || chain.headercount < chain.blockcount || Math.abs(core.blocks - chain.blockcount) > 2 ||
+        chain.headercount < chain.blockcount ||
+        Math.max(core.blocks, chain.blockcount, info.blockheight) - Math.min(core.blocks, chain.blockcount, info.blockheight) > 2 ||
         this.network === 'signet' && core.signet_challenge !== publication.signetChallenge) throw unavailable();
-    const common = Math.min(core.blocks, chain.blockcount);
+    // Native getinfo and getchaininfo advance independently. Verify the lowest
+    // observed height while retaining the bounded lag and both fresh readers.
+    const common = Math.min(core.blocks, chain.blockcount, info.blockheight);
     if (catalogAnchor && common < catalogAnchor.height) throw restart();
     const hashes = await Promise.all([this.block(0, signal), this.block(common, signal),
       this.network === 'signet' ? this.block(1, signal) : Promise.resolve(null),
