@@ -58,6 +58,8 @@
         <p>{{ vm.summary.network }} · Observed branch {{ vm.summary.source.branchId }} · {{ vm.summary.source.observedAt }}</p>
         <p class="mono">Checkpoint: {{ vm.summary.source.tipHash }}</p>
         <p>Historical pool flows, transaction counts and circulating supply are unavailable from this observation.</p>
+        <p>Focus the table and use Left and Right arrow keys to view all columns.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Zcash value pool table">
         <table class="data-table">
           <thead>
             <tr>
@@ -80,11 +82,14 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
 
       <section class="panel">
         <h2>Network Upgrade Milestones</h2>
         <p>Protocol reference heights; observed activation is determined separately by the node branch.</p>
+        <p>Focus the table and use Left and Right arrow keys to view all columns.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Zcash network upgrade table">
         <table class="data-table">
           <thead>
             <tr>
@@ -105,6 +110,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>
