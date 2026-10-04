@@ -84,7 +84,7 @@
     "@ng-bootstrap/ng-bootstrap": "^19.0.0",
     "@noble/secp256k1": "^3.0.0",
     "@noble/curves": "~1.9.7",
-    "@noble/hashes": "~1.8.0",
+    "@noble/hashes": "~2.4.0",
     "@scure/base": "1.2.6",
     "@scure/bip32": "^1.7.0",
     "@scure/bip39": "^1.6.0",

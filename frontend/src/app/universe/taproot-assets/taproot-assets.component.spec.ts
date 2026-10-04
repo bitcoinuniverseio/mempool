@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, Subject, of } from 'rxjs';
 import { convertToParamMap } from '@angular/router';
 import { TaprootAssetsComponent } from './taproot-assets.component';
-import { sha256 } from '@noble/hashes/sha256';
-import { bytesToHex } from '@noble/hashes/utils';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 
 function setup() {
   const route = new BehaviorSubject(convertToParamMap({}));

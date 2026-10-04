@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { LightningStandardsComponent } from './lightning-standards.component';
-import { sha256 } from '@noble/hashes/sha256';
-import { bytesToHex } from '@noble/hashes/utils';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 
 function component(failedOffers = false) {
   const api = {

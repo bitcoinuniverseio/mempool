@@ -1,6 +1,6 @@
 import {base64url,base64urlnopad,bech32,bech32m} from '@scure/base';
 import {secp256k1} from '@noble/curves/secp256k1';
-import {bytesToHex} from '@noble/hashes/utils';
+import {bytesToHex} from '@noble/hashes/utils.js';
 const MAX=65536;
 const utf8=new TextDecoder('utf-8',{fatal:true});
 function fail():never {throw new Error('Malformed or unsupported artifact encoding.');}
