@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -85,4 +86,26 @@ it.each(['calendar-rollover', 'timeline', 'header', 'title', 'resolution'])('ref
   writeFileSync(file, JSON.stringify(stored), { mode: 0o600 });
   const original = readFileSync(file);
   expect(() => new IncidentLedger(file, profile())).toThrow(); expect(readFileSync(file)).toEqual(original);
+});
+
+it.each(['singleton-divergence', 'same-branches', 'false-terminal', 'false-stale', 'old-tip-canonical'])('rejects semantically contradictory rehashed persisted %s', mutation => {
+  const file = join(directory, 'ledger.json'), p = profile(2), ledger = new IncidentLedger(file, p);
+  ledger.record([observation([1, 2, 3]), observation([1, 2, 4], 'node1')]); ledger.close();
+  const stored = JSON.parse(readFileSync(file, 'utf8')), record = stored.incidents[0];
+  if (mutation === 'singleton-divergence') record.source_ids = ['node0'];
+  if (mutation === 'same-branches') record.evidence.before = record.evidence.after;
+  if (mutation === 'false-terminal') record.block_hash = hash(99);
+  if (mutation === 'false-stale') { record.incident_type = 'stale_tip'; record.source_ids = ['node0']; record.timeline[0].source_ids = ['node0']; record.evidence.common_ancestor = null; }
+  if (mutation === 'old-tip-canonical') { record.incident_type = 'reorg'; record.source_ids = ['node0']; record.timeline[0].source_ids = ['node0']; record.evidence.after = observation([1, 2, 3, 5]).headers; record.evidence.common_ancestor = record.evidence.before[1]; record.reorg_depth = 1; record.block_height = 3; record.block_hash = hash(5); }
+  if (mutation === 'singleton-divergence') record.timeline[0].source_ids = ['node0'];
+  const { integrity_sha256: ignored, ...payload } = stored; void ignored;
+  stored.integrity_sha256 = createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+  writeFileSync(file, JSON.stringify(stored), { mode: 0o600 }); const bytes = readFileSync(file);
+  expect(() => new IncidentLedger(file, p)).toThrow(); expect(readFileSync(file)).toEqual(bytes);
+});
+it('labels ancestor-only rollback separately from an observed replacement suffix', () => {
+  const ledger = new IncidentLedger(join(directory, 'ledger.json'), profile());
+  try { ledger.record([observation([1, 2, 3])]);
+    expect(ledger.record([observation([1, 2])]).incidents[0].title).toBe('Observed canonical tip rollback');
+  } finally { ledger.close(); }
 });

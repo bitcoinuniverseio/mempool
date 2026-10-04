@@ -114,6 +114,19 @@ export class IncidentLedger {
       });
       const ancestor = x.evidence.common_ancestor;
       if (ancestor !== null && (!x.evidence.before.some(h => JSON.stringify(h) === JSON.stringify(ancestor)) || !x.evidence.after.some(h => JSON.stringify(h) === JSON.stringify(ancestor)))) throw incidentFailure('invalid-incident-ledger');
+      const beforeTip = x.evidence.before[x.evidence.before.length - 1], afterTip = x.evidence.after[x.evidence.after.length - 1];
+      if (!beforeTip || !afterTip || x.block_height !== afterTip.height || x.block_hash !== afterTip.hash) throw incidentFailure('invalid-incident-ledger');
+      if (x.incident_type === 'node_tip_divergence') {
+        const selected = x.source_ids.map(id => this.profile.sources.find(p => p.source_id === id)!);
+        const sharedHeight = Math.min(beforeTip.height, afterTip.height);
+        const left = x.evidence.before.find(h => h.height === sharedHeight), right = x.evidence.after.find(h => h.height === sharedHeight);
+        if (selected.length !== 2 || selected[0].independence_id === selected[1].independence_id || !left || !right || left.hash === right.hash
+          || ancestor !== null || x.reorg_depth !== null) throw incidentFailure('invalid-incident-ledger');
+      }
+      if (x.incident_type === 'stale_tip' && (x.source_ids.length !== 1 || beforeTip.height !== afterTip.height || beforeTip.hash !== afterTip.hash
+        || !ancestor || JSON.stringify(ancestor) !== JSON.stringify(afterTip) || x.reorg_depth !== null)) throw incidentFailure('invalid-incident-ledger');
+      if (x.incident_type === 'reorg' && (x.source_ids.length !== 1 || beforeTip.hash === afterTip.hash
+        || x.evidence.after.some(h => h.hash === beforeTip.hash))) throw incidentFailure('invalid-incident-ledger');
       if (x.incident_type === 'reorg' && (!ancestor || !x.evidence.before.length || !x.evidence.after.length || x.reorg_depth !== x.evidence.before[x.evidence.before.length - 1].height - ancestor.height || x.reorg_depth < 1)) throw incidentFailure('invalid-incident-ledger');
       if (x.reorg_depth !== null && (!Number.isSafeInteger(x.reorg_depth) || x.reorg_depth < 0) || x.duration_seconds !== null && (!Number.isSafeInteger(x.duration_seconds) || x.duration_seconds < 0)) throw incidentFailure('invalid-incident-ledger');
     });
@@ -144,11 +157,12 @@ export class IncidentLedger {
       const key = createHash('sha256').update(JSON.stringify([type, ids, before.map(h => h.hash), after.map(h => h.hash)])).digest('hex');
       if (next.incidents.some(i => i.incident_id === key)) return;
       if (next.incidents.length >= 256) throw incidentFailure('incident-ledger-capacity');
-      next.incidents.push({ incident_id: key, incident_type: type, title: type === 'reorg' ? 'Observed canonical chain replacement' : type === 'stale_tip' ? 'Registered node tip unchanged beyond selected threshold' : 'Registered nodes disagree at a shared height',
+      next.incidents.push({ incident_id: key, incident_type: type, title: type === 'reorg' ? (ancestor?.hash === tip.hash ? 'Observed canonical tip rollback' : 'Observed canonical chain replacement') : type === 'stale_tip' ? 'Registered node tip unchanged beyond selected threshold' : 'Registered nodes disagree at a shared height',
         block_height: tip.height, block_hash: tip.hash, detected_at_utc: observed, resolved_at_utc: null, duration_seconds: null,
         reorg_depth: type === 'reorg' && ancestor ? before[before.length - 1].height - ancestor.height : null,
         displaced_tx_count: null, double_spend_attempts_count: null, status: 'investigating', source_ids: ids,
-        summary: 'Bounded independently pinned node observations. This is not a global consensus or invalid-block verdict.',
+        summary: (type === 'reorg' && ancestor?.hash === tip.hash ? 'Observed prior tip rollback to the retained ancestor; no competing replacement suffix was observed. ' : '')
+          + 'Bounded independently pinned node observations. This is not a global consensus or invalid-block verdict.',
         technical_postmortem: 'Transaction effects and protocol resolution have not been measured.',
         evidence: { before, after, common_ancestor: ancestor }, timeline: [{ observed_at_utc: observed, stage: 'detected', source_ids: ids }] });
     };
