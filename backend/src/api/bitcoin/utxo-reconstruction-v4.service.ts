@@ -149,7 +149,8 @@ export class UtxoReconstructionV4Service {
   }
   private checkGlobal(snapshot: GlobalReconstructionSnapshot): void {
     const global = snapshot.globalMempool;
-    if (!global || !Number.isSafeInteger(global.transactionCount) || global.transactionCount < 0 || global.transactionCount > 50000 ||
+    if (typeof snapshot.mempoolIdentity !== 'string' || !/^[0-9a-f]{64}$/.test(snapshot.mempoolIdentity) ||
+        !global || !Number.isSafeInteger(global.transactionCount) || global.transactionCount < 0 || global.transactionCount > 50000 ||
         !/^(0|[1-9][0-9]{0,15})$/.test(global.sequenceAtomic) || !Number.isSafeInteger(Number(global.sequenceAtomic)) ||
         (global.txids === null ? global.transactionCount <= MAX_GLOBAL_TRANSACTIONS : !Array.isArray(global.txids) || global.txids.length !== global.transactionCount ||
           global.txids.length > MAX_GLOBAL_TRANSACTIONS || global.txids.some((txid, index) => !/^[0-9a-f]{64}$/.test(txid) || index > 0 && txid <= global.txids![index - 1]))) {

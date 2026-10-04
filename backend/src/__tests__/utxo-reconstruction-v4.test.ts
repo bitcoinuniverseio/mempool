@@ -47,6 +47,19 @@ async function outspends(f: ReturnType<typeof setup>) {
 const state = (f: ReturnType<typeof setup>, id: string): any => (f.service as any).sessions.get(id);
 const view = (f: ReturnType<typeof setup>, id: string): any => (f.service as any).view(state(f, id));
 
+it.each([null, '', 'unknown'])('rejects malformed large-pool fallback identity %s before committing acquisition', async identity => {
+  const f = setup(); f.setPool(Array.from({ length: 101 }, (_, n) => globalTx(n)));
+  const original = f.source.snapshot;
+  f.source.snapshot = jest.fn(async (...args) => ({ ...await original(...args), mempoolIdentity: identity as any }));
+  let current = await f.service.create('address', signal());
+  for (let i = 0; i < 6 && current.progress.phase !== 'acquire-mempool'; i++) current = await f.service.next('address', current.sessionId, current.cursor, signal());
+  expect(current.progress.phase).toBe('acquire-mempool');
+  const cursor = current.cursor;
+  await expect(f.service.next('address', current.sessionId, cursor, signal())).rejects.toMatchObject({ status: 503 });
+  expect(state(f, current.sessionId).cursor).toBe(cursor);
+  expect(view(f, current.sessionId).globalMempoolProof.verifiedOutputContext).toBeNull();
+});
+
 it('binds a complete empty output set to its independently fenced context and revalidates retries', async () => {
   const f = setup(); f.snapshot.summary.chain_stats = { ...zero };
   (f.source.history as jest.Mock).mockResolvedValue([]);
