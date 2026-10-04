@@ -22,6 +22,22 @@ beforeEach(() => {
   rpc.mockImplementation(async (method, params) => Array.isArray(method) ? method.map(call => answer(call.method, call.params)) : answer(method, params));
 });
 afterAll(() => { if (originalChallenge === undefined) delete process.env.UNIVERSE_SIGNET_CHALLENGE; else process.env.UNIVERSE_SIGNET_CHALLENGE = originalChallenge; });
+it('checks all distinct confirmed history heights in independent ordered batches of at most twenty', async () => {
+  const rows = Array.from({ length: 100 }, (_, i) => ({ status: { confirmed: true, block_height: i, block_hash: id(i) } })) as any[];
+  await new EsploraReconstructionSource().verifyHistoryBlocks(rows, new AbortController().signal);
+  expect(rpc).toHaveBeenCalledTimes(5);
+  expect(rpc.mock.calls.every(([calls]) => calls.length === 20 && calls.every(call => call.method === 'getblockhash'))).toBe(true);
+});
+it('rejects a history block that differs from independently observed canonical Core', async () => {
+  await expect(new EsploraReconstructionSource().verifyHistoryBlocks([{ status: { confirmed: true, block_height: 1, block_hash: id(99) } }] as any[], new AbortController().signal)).rejects.toMatchObject({ status: 409 });
+});
+it('rejects oversized or inconsistent history proofs before any independent Core request', async () => {
+  const source = new EsploraReconstructionSource(), controller = new AbortController();
+  await expect(source.verifyHistoryBlocks(Array.from({ length: 101 }, () => ({ status: { confirmed: true, block_height: 1, block_hash: id(1) } })) as any[], controller.signal)).rejects.toMatchObject({ status: 422 });
+  await expect(source.verifyHistoryBlocks([{ status: { confirmed: true, block_height: 1, block_hash: id(1) } }, { status: { confirmed: true, block_height: 1, block_hash: id(2) } }] as any[], controller.signal)).rejects.toMatchObject({ status: 409 });
+  controller.abort(); await expect(source.verifyHistoryBlocks([], controller.signal)).rejects.toMatchObject({ status: 499 });
+  expect(rpc).not.toHaveBeenCalled();
+});
 it('pins the configured origin and compares exact Core/index mempool identities', async () => {
   const snapshot = await new EsploraReconstructionSource().snapshot('address', new AbortController().signal);
   expect(snapshot.checkpoint.blockHash).toBe(id(20)); expect(snapshot.scriptPubKey).toBe(script);
