@@ -123,7 +123,6 @@ import { checkedKnowledgeAudit, checkedKnowledgeLabels, KnowledgeAudit, Knowledg
           <div *ngFor="let ev of selectedEvidence.evidence" class="p-3 rounded bg-dark-subtle mb-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <strong>{{ ev.evidence_type }}</strong>
-              <span class="badge badge-secondary font-monospace">{{ ev.evidence_id }}</span>
             </div>
             <p class="small mb-1">{{ ev.description }}</p>
             <div *ngIf="ev.reference_uri" class="small">
