@@ -238,14 +238,16 @@ class BitcoinApi implements AbstractBitcoinApi {
 
   async $testMempoolAccept(rawTransactions: string[], maxfeerate?: number): Promise<TestMempoolAcceptResult[]> {
     if (rawTransactions.length) {
-      return this.bitcoindClient.testMempoolAccept(rawTransactions, maxfeerate ?? undefined);
+      return maxfeerate === undefined ? this.bitcoindClient.testMempoolAccept(rawTransactions) : this.bitcoindClient.testMempoolAccept(rawTransactions, maxfeerate);
     } else {
       return [];
     }
   }
 
   $submitPackage(rawTransactions: string[], maxfeerate?: number, maxburnamount?: number): Promise<SubmitPackageResult> {
-    return this.bitcoindClient.submitPackage(rawTransactions, maxfeerate ?? undefined, maxburnamount ?? undefined);
+    return maxburnamount === undefined
+      ? maxfeerate === undefined ? this.bitcoindClient.submitPackage(rawTransactions) : this.bitcoindClient.submitPackage(rawTransactions, maxfeerate)
+      : this.bitcoindClient.rpc.call('submitpackage', { package: rawTransactions, ...(maxfeerate === undefined ? {} : { maxfeerate }), maxburnamount });
   }
 
   /** @asyncUnsafe */

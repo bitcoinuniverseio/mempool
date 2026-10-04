@@ -34,6 +34,20 @@ const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
 const ADDRESS_REGEX = /^[a-z0-9]{2,120}$/i;
 const SCRIPT_HASH_REGEX = /^[a-f0-9]{64}$/i;
 
+/** Optional Core amounts are exact, finite, nonnegative and bounded; zero stays explicit. */
+function optionalRpcAmount(value: unknown, maximum: number): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.length > 64) throw new Error('Invalid optional RPC amount');
+  const match = /^(0|[1-9][0-9]*)(?:\.([0-9]+))?(?:[eE]([+-]?[0-9]{1,3}))?$/.exec(value);
+  if (!match) throw new Error('Invalid optional RPC amount');
+  const coefficient = BigInt(match[1] + (match[2] || '')), scale = 8 + Number(match[3] || 0) - (match[2]?.length || 0);
+  const divisor = scale < 0 ? 10n ** BigInt(-scale) : 1n;
+  if (coefficient % divisor !== 0n) throw new Error('Invalid optional RPC amount precision');
+  const atomic = scale < 0 ? coefficient / divisor : coefficient * 10n ** BigInt(scale);
+  if (atomic > BigInt(maximum * 100000000)) throw new Error('Optional RPC amount exceeds its bound');
+  return Number(atomic) / 100000000;
+}
+
 class BitcoinRoutes {
   public initRoutes(app: Application) {
     initUtxoReconstructionRoutes(app);
@@ -1118,7 +1132,7 @@ class BitcoinRoutes {
   private async $testTransactions(req: Request, res: Response) {
     try {
       const rawTxs = Common.getTransactionsFromRequest(req);
-      const maxfeerate = parseFloat(req.query.maxfeerate as string);
+      const maxfeerate = optionalRpcAmount(req.query.maxfeerate, 1);
       const result = await bitcoinApi.$testMempoolAccept(rawTxs, maxfeerate);
       res.send(result);
     } catch (e: any) {
@@ -1130,9 +1144,11 @@ class BitcoinRoutes {
   private async $submitPackage(req: Request, res: Response) {
     try {
       const rawTxs = Common.getTransactionsFromRequest(req);
-      const maxfeerate = parseFloat(req.query.maxfeerate as string);
-      const maxburnamount = parseFloat(req.query.maxburnamount as string);
-      const result = await bitcoinClient.submitPackage(rawTxs, maxfeerate ?? undefined, maxburnamount ?? undefined);
+      const maxfeerate = optionalRpcAmount(req.query.maxfeerate, 1);
+      const maxburnamount = optionalRpcAmount(req.query.maxburnamount, 21000000);
+      const result = maxburnamount === undefined
+        ? maxfeerate === undefined ? await bitcoinClient.submitPackage(rawTxs) : await bitcoinClient.submitPackage(rawTxs, maxfeerate)
+        : await bitcoinClient.rpc.call('submitpackage', { package: rawTxs, ...(maxfeerate === undefined ? {} : { maxfeerate }), maxburnamount });
       res.send(result);
     } catch (e: any) {
       handleError(req, res, 400, (e.message && e.code) ? 'submitpackage RPC error: ' + JSON.stringify({ code: e.code })
