@@ -147,6 +147,12 @@ export class IntelligenceApiService {
     });
   }
 
+  exportHistoryParquet$(stateHash: string): Observable<ArrayBuffer> {
+    return this.httpClient.post(`${this.apiBaseUrl}/api/v1/intelligence/history/exports`, {
+      state_hash: stateHash, format: 'parquet',
+    }, { responseType: 'arraybuffer' });
+  }
+
   compareStates$(stateHashA: string, stateHashB: string): Observable<any> {
     return this.httpClient.get<any>(
       `${this.apiBaseUrl}/api/v1/intelligence/history/compare?state_a=${encodeURIComponent(stateHashA)}&state_b=${encodeURIComponent(stateHashB)}`

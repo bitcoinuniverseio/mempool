@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subscription, map, switchMap } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
 import { StateService } from '@app/services/state.service';
 import { atomicToDisplay } from '../portfolio/shared/exact';
+import { HistoryParquetService } from './history-parquet.service';
 
 function canonicalHistoryState(value: unknown): unknown {
   if (Array.isArray(value)) { return value.map(canonicalHistoryState); }
@@ -141,6 +142,7 @@ function validHistoryCoverage(value: any, network: string): boolean {
             </div>
             <div class="btn-group">
               <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="exporting" (click)="exportData('json')">Export JSON</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="exporting" (click)="exportData('parquet')">Export Parquet</button>
             </div>
           </div>
           <div class="card-body">
@@ -231,6 +233,7 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
     private api: IntelligenceApiService,
     private cdr: ChangeDetectorRef,
     @Optional() private state: StateService = null,
+    @Optional() private parquet: HistoryParquetService = null,
   ) {}
 
   ngOnInit(): void {
@@ -316,25 +319,31 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
   }
 
   exportData(format: string): void {
-    if (!this.currentState || format !== 'json' || this.exporting || !this.state?.isBrowser) { return; }
+    if (!this.currentState || !['json', 'parquet'].includes(format) || this.exporting || !this.state?.isBrowser) { return; }
+    if (format === 'parquet' && !this.parquet) { this.exportError = 'The isolated Parquet reader is unavailable.'; this.cdr.markForCheck(); return; }
     const hash = this.currentState.state_hash, revision = this.revision, network = this.network;
     // The producer may cache another replay summary under the same membership hash.
     const capturedSummary = JSON.stringify(canonicalHistoryState(this.currentState));
     const checkpointHash = this.currentState.checkpoint_block_hash, transactionCount = this.currentState.total_transactions;
     this.exporting = true; this.exportError = null;
-    this.exportRead = this.api.exportHistory$(hash).subscribe({next: async result => {
+    const request = format === 'json' ? this.api.exportHistory$(hash) : this.api.exportHistoryParquet$(hash).pipe(
+      switchMap(file => this.parquet.read(file, network).pipe(map(result => ({ ...result, parquetBytes: file })))),
+    );
+    this.exportRead = request.subscribe({next: async result => {
       if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }
-      if (result?.format !== 'json' || result?.state?.state_hash !== hash || JSON.stringify(canonicalHistoryState(result.state)) !== capturedSummary || !Array.isArray(result.txids) || result.txids.length !== transactionCount || new Set(result.txids).size !== transactionCount || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id))) { this.exporting = false; this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
+      if (result?.format !== format || result?.state?.state_hash !== hash || JSON.stringify(canonicalHistoryState(result.state)) !== capturedSummary || !Array.isArray(result.txids) || result.txids.length !== transactionCount || new Set(result.txids).size !== transactionCount || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id)) || format === 'parquet' && !(result.parquetBytes instanceof ArrayBuffer)) { this.exporting = false; this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
       try {
         const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(checkpointHash + ':' + [...result.txids].sort().join(','))));
         if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }
         this.exporting = false;
         if (Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('') !== hash) { this.exportError = 'Export membership does not match the selected retained state.'; this.cdr.markForCheck(); return; }
-        const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], {type: 'application/json'}));
-        const link = document.createElement('a'); link.href = url; link.download = 'mempool-state-' + hash + '.json'; link.click(); URL.revokeObjectURL(url);
-      } catch { if (this.destroyed || revision !== this.revision || network !== this.network) { return; } this.exporting = false; this.exportError = 'Unable to verify or download the retained JSON state.'; }
+        const blob = format === 'json' ? new Blob([JSON.stringify(result, null, 2)], {type: 'application/json'}) : new Blob([result.parquetBytes], {type: 'application/vnd.apache.parquet'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.href = url; link.download = 'mempool-state-' + hash + '.' + format;
+        try { link.click(); } finally { URL.revokeObjectURL(url); }
+      } catch { if (this.destroyed || revision !== this.revision || network !== this.network) { return; } this.exporting = false; this.exportError = 'Unable to verify or download the retained ' + format + ' state.'; }
       this.cdr.markForCheck();
-    }, error: () => { if (revision === this.revision && !this.destroyed) { this.exporting = false; this.exportError = 'Retained JSON export unavailable.'; this.cdr.markForCheck(); } }});
+    }, error: () => { if (revision === this.revision && !this.destroyed && network === this.network) { this.exporting = false; this.exportError = 'Retained ' + format + ' export unavailable or verification failed.'; this.cdr.markForCheck(); } }});
   }
 
   ngOnDestroy(): void {
