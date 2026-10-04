@@ -22,6 +22,8 @@
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready'">
+      <p *ngIf="vm.operatorFailure" class="alert alert-warning" role="alert">Operator identity unavailable: {{ vm.operatorFailure }}</p>
+      <p *ngIf="vm.batchFailure" class="alert alert-warning" role="alert">Batch directory unavailable: {{ vm.batchFailure }}. Displayed operator observations do not establish batch or VTXO availability.</p>
       <!-- Operator Stats -->
       <div class="metrics-grid" *ngIf="vm.operators?.length">
         <div class="metric-card">
