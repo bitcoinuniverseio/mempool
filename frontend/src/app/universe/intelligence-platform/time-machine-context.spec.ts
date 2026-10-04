@@ -7,12 +7,13 @@ import { networkScopedUrl } from '@app/services/network-prefix.interceptor';
 afterEach(() => {vi.unstubAllGlobals(); vi.restoreAllMocks();});
 
 function summary() { return {state_hash:'b'.repeat(64),target_block_height:10,target_timestamp_utc:'2026-10-04T12:00:00Z',nearest_checkpoint_id:'chk-signet-10-'+ 'c'.repeat(12),checkpoint_block_hash:'c'.repeat(64),applied_events_count:0,total_transactions:0,total_vsize:0,total_weight:0,total_fees_sats:0,median_feerate_sats_vb:0,fee_distribution:[],projected_blocks_count:0,coverage_status:'partial',gap_intervals:[]}; }
+function coverage() {return {network:'signet',observer_id:'controlled-component-fixture',observing_since_utc:'2026-10-04T12:00:00Z',earliest_recorded_event_utc:null,latest_recorded_event_utc:null,persistence:{enabled:true,pending:false,error:null},observed_through_utc:null,total_events:0,total_checkpoints:1,earliest_checkpoint_height:0,latest_checkpoint_height:0,coverage_gaps:[]};}
 async function membershipHash(blockHash: string, txids: string[]) {const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(blockHash+':'+[...txids].sort().join(','))));return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');}
 
 function setup() {
   const state: any = { network: '', networkChanged$: new Subject<string>(), env: {ROOT_NETWORK: 'signet', BASE_MODULE: 'mempool'}, isBrowser: true };
   const replay = new Subject<any>();
-  const api = { getTimeMachineCoverage$: vi.fn(() => of({total_checkpoints: 1, latest_checkpoint_height: 0})), replayHistory$: vi.fn(() => replay), exportHistory$: vi.fn(() => of({format:'json',state:{state_hash:'a'.repeat(64)},txids:[]})) };
+  const api = { getTimeMachineCoverage$: vi.fn(() => of(coverage())), replayHistory$: vi.fn(() => replay), exportHistory$: vi.fn(() => of({format:'json',state:{state_hash:'a'.repeat(64)},txids:[]})) };
   const page: TimeMachineComponent = new (TimeMachineComponent as any)(api, {markForCheck: () => {}}, state);
   page.ngOnInit();return {page, state, api, replay};
 }
@@ -87,5 +88,9 @@ describe('Time Machine selected context and target lifecycle', () => {
     let finish: (value: ArrayBuffer) => void;vi.spyOn(crypto.subtle,'digest').mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
     page.exportData('json');expect(page.exporting).toBe(true);state.network='testnet4';state.networkChanged$.next('testnet4');finish(new Uint8Array(32).buffer);await Promise.resolve();
     expect(click).not.toHaveBeenCalled();expect(page.currentState).toBeNull();expect(page.exporting).toBe(false);page.ngOnDestroy();
+  });
+  it('rejects foreign-network coverage and recovers on a matching native-shaped DTO', () => {
+    const {page,api,state}=setup();state.network='testnet4';state.networkChanged$.next('testnet4');expect(page.coverage).toBeNull();expect((page as any).coverageError).toMatch(/selected network/);
+    api.getTimeMachineCoverage$.mockReturnValue(of({...coverage(),network:'testnet4'}));state.networkChanged$.next('testnet4');expect(page.coverage.network).toBe('testnet4');expect((page as any).coverageError).toBeNull();page.ngOnDestroy();
   });
 });
