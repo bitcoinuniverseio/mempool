@@ -24,9 +24,10 @@ const PAGE = 100, MEMPOOL_PAGE = 500, OUTPUT_PAGE = 100, MAX_TRANSACTIONS = 1000
 const MAX_BYTES = 32 * 1024 * 1024, MAX_SESSIONS = 8, TTL = 60 * 60 * 1000;
 const MAX_MONEY = 2100000000000000n;
 type Stats = { transactions: number; funded: number; spent: number; fundedSum: bigint; spentSum: bigint };
+type CachedGlobalProof = { txid: string; rawBytes: Buffer; rawSha256: string };
 const emptyStats = (): Stats => ({ transactions: 0, funded: 0, spent: 0, fundedSum: 0n, spentSum: 0n });
 interface GlobalState {
-  proofs: Map<string, GlobalTransactionProof>; bytes: number;
+  proofs: Map<string, CachedGlobalProof>; bytes: number;
   mode: 'uninitialized' | 'strict-global-fallback' | 'irrelevant-delta-proof'; fallbackReason: string | null;
   initialIdentity: string | null; transitionCount: number; transitions: IrrelevantGlobalTransition[]; verifiedIdentity?: string;
 }
@@ -159,23 +160,43 @@ export class UtxoReconstructionV4Service {
     if (global.txids && snapshot.mempoolIdentity !== digest({ ids: global.txids, sequence: Number(global.sequenceAtomic) })) throw new ReconstructionError(503, 'Global mempool identifiers do not bind their observed identity');
   }
   private proofBytes(state: GlobalState): number {
-    return 512 + [...state.proofs.values()].reduce((sum, proof) => sum + 1024 + Buffer.byteLength(proof.rawHex) * 4, 0) +
+    return 512 + [...state.proofs.values()].reduce((sum, proof) => sum + 1024 + proof.rawBytes.length * 4, 0) +
       state.transitions.reduce((sum, transition) => sum + 256 + Buffer.byteLength(JSON.stringify(transition)) * 4, 0);
   }
-  private proofRelevant(session: Session, proof: GlobalTransactionProof, globalFunding = new Set<string>()): boolean {
-    if (!proof || !/^[0-9a-f]{64}$/.test(proof.txid) || typeof proof.rawHex !== 'string' || proof.rawHex.length > 1048576 ||
-        !/^(?:[0-9a-f]{2})+$/.test(proof.rawHex) || createHash('sha256').update(Buffer.from(proof.rawHex, 'hex')).digest('hex') !== proof.rawSha256) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
+  private proofRelevant(session: Session, proof: CachedGlobalProof, globalFunding = new Set<string>()): boolean {
+    if (!proof || !/^[0-9a-f]{64}$/.test(proof.txid) || !Buffer.isBuffer(proof.rawBytes) || !proof.rawBytes.length || proof.rawBytes.length > 524288 ||
+        proof.rawBytes.byteOffset !== 0 || proof.rawBytes.buffer.byteLength !== proof.rawBytes.length ||
+        createHash('sha256').update(proof.rawBytes).digest('hex') !== proof.rawSha256) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
     let transaction: Transaction;
-    try { transaction = Transaction.fromHex(proof.rawHex); } catch { throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN'); }
+    try { transaction = Transaction.fromBuffer(proof.rawBytes); } catch { throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN'); }
     if (transaction.getId() !== proof.txid) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
     return transaction.outs.some(output => Buffer.from(output.script).toString('hex') === session.snapshot.scriptPubKey) ||
       transaction.ins.some(input => { const key = point(Buffer.from(input.hash).reverse().toString('hex'), input.index); return session.outputs.has(key) || globalFunding.has(key); });
   }
-  private globalFunding(session: Session, proofs: Map<string, GlobalTransactionProof>): Set<string> {
+  /** Fold bounded native waves into exact-size unpooled bytes; never accumulate baseline hex strings. @asyncUnsafe */
+  private async acquireGlobal(session: Session, ids: string[], signal: AbortSignal): Promise<Map<string, CachedGlobalProof>> {
+    const proofs = new Map<string, CachedGlobalProof>(); let bytes = 512;
+    const consume = (proof: GlobalTransactionProof): void => {
+      requireActive(signal);
+      if (!proof || !ids.includes(proof.txid) || proofs.has(proof.txid) || typeof proof.rawHex !== 'string' ||
+          proof.rawHex.length > 1048576 || !/^(?:[0-9a-f]{2})+$/.test(proof.rawHex)) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
+      const length = proof.rawHex.length / 2, charged = 1024 + length * 4;
+      if (bytes + charged > MAX_GLOBAL_BYTES) throw new MempoolAnchorChanged('GLOBAL_PROOF_BYTE_CAPACITY');
+      const rawBytes = Buffer.allocUnsafeSlow(length); rawBytes.write(proof.rawHex, 'hex');
+      const cached = { txid: proof.txid, rawSha256: proof.rawSha256, rawBytes };
+      this.proofRelevant(session, cached); proofs.set(proof.txid, cached); bytes += charged;
+    };
+    const returned = await this.source.globalTransactions(ids, signal, consume);
+    requireActive(signal);
+    for (const proof of returned) consume(proof);
+    if (proofs.size !== ids.length) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
+    return proofs;
+  }
+  private globalFunding(session: Session, proofs: Map<string, CachedGlobalProof>): Set<string> {
     const result = new Set<string>();
     for (const proof of proofs.values()) {
       this.proofRelevant(session, proof);
-      const transaction = Transaction.fromHex(proof.rawHex);
+      const transaction = Transaction.fromBuffer(proof.rawBytes);
       transaction.outs.forEach((output, index) => { if (Buffer.from(output.script).toString('hex') === session.snapshot.scriptPubKey) result.add(point(proof.txid, index)); });
     }
     return result;
@@ -198,13 +219,11 @@ export class UtxoReconstructionV4Service {
     state.mode = 'strict-global-fallback'; state.fallbackReason = anchor.globalMempool.txids === null ? 'GLOBAL_POOL_EXCEEDS_PROOF_CAPACITY' : 'GLOBAL_BASELINE_PROOF_UNAVAILABLE';
     if (anchor.globalMempool.txids) {
       try {
-        const proofs = await this.source.globalTransactions(anchor.globalMempool.txids, signal); requireActive(signal);
-        if (proofs.length !== anchor.globalMempool.txids.length || new Set(proofs.map(proof => proof.txid)).size !== proofs.length || proofs.some(proof => !anchor.globalMempool.txids!.includes(proof.txid))) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
-        for (const proof of proofs) { this.proofRelevant(session, proof); state.proofs.set(proof.txid, proof); }
+        state.proofs = await this.acquireGlobal(session, anchor.globalMempool.txids, signal); requireActive(signal);
         state.bytes = this.proofBytes(state);
         if (state.bytes <= MAX_GLOBAL_BYTES && session.bytes + state.bytes <= MAX_BYTES) { state.mode = 'irrelevant-delta-proof'; state.fallbackReason = null; }
         else { state.proofs.clear(); state.bytes = 512; state.fallbackReason = 'GLOBAL_PROOF_BYTE_CAPACITY'; }
-      } catch (error) { requireActive(signal); state.proofs.clear(); state.bytes = 512; }
+      } catch (error) { requireActive(signal); state.proofs.clear(); state.bytes = 512; if (error instanceof MempoolAnchorChanged && error.reason === 'GLOBAL_PROOF_BYTE_CAPACITY') state.fallbackReason = error.reason; }
     } else state.bytes = 512;
     const after = await this.source.snapshot(session.address, signal, session.snapshot.checkpoint);
     this.sameGlobal(session, anchor, after); requireActive(signal);
@@ -239,18 +258,18 @@ export class UtxoReconstructionV4Service {
     const removed = old.globalMempool.txids.filter(txid => !snapshot.globalMempool.txids!.includes(txid));
     if (!added.length && !removed.length || added.length + removed.length > MAX_GLOBAL_TRANSACTIONS) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
     const missingRemoved = removed.filter(txid => !previous.proofs.has(txid));
-    let acquired: GlobalTransactionProof[];
-    try { acquired = await this.source.globalTransactions([...added, ...missingRemoved], signal); }
-    catch { requireActive(signal); throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNAVAILABLE'); }
+    let acquired: Map<string, CachedGlobalProof>;
+    try { acquired = await this.acquireGlobal(session, [...added, ...missingRemoved], signal); }
+    catch (error) { requireActive(signal); if (error instanceof MempoolAnchorChanged && error.reason === 'GLOBAL_PROOF_BYTE_CAPACITY') throw error; throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNAVAILABLE'); }
     requireActive(signal);
     const expected = [...added, ...missingRemoved];
-    if (acquired.length !== expected.length || new Set(acquired.map(proof => proof.txid)).size !== acquired.length || acquired.some(proof => !expected.includes(proof.txid))) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
-    const byId = new Map(acquired.map(proof => [proof.txid, proof]));
+    if (acquired.size !== expected.length || [...acquired.keys()].some(txid => !expected.includes(txid))) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
+    const byId = acquired;
     const changed = [...added, ...removed].map(txid => byId.get(txid) || previous.proofs.get(txid));
     const combined = new Map([...previous.proofs, ...byId]);
     const globalFunding = this.globalFunding(session, combined);
     if (changed.some(proof => !proof || this.proofRelevant(session, proof, globalFunding))) throw new MempoolAnchorChanged('ADDRESS_RELEVANT_GLOBAL_TRANSACTION');
-    const proofs = new Map(previous.proofs); removed.forEach(txid => proofs.delete(txid)); acquired.filter(proof => added.includes(proof.txid)).forEach(proof => proofs.set(proof.txid, proof));
+    const proofs = new Map(previous.proofs); removed.forEach(txid => proofs.delete(txid)); [...acquired.values()].filter(proof => added.includes(proof.txid)).forEach(proof => proofs.set(proof.txid, proof));
     if (proofs.size !== snapshot.globalMempool.transactionCount || snapshot.globalMempool.txids.some(txid => !proofs.has(txid))) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
     const after = await this.source.snapshot(session.address, signal, session.snapshot.checkpoint);
     this.sameGlobal(session, snapshot, after); requireActive(signal);

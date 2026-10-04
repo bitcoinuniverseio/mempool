@@ -12,6 +12,23 @@ function transaction(n = 1): Transaction {
   const tx = new Transaction(); tx.addInput(Buffer.alloc(32, n), 0); tx.addOutput(Buffer.from('51', 'hex'), 1); return tx;
 }
 beforeEach(() => { get.mockReset(); rpc.mockReset(); });
+it('folds native waves into the consumer without retaining a baseline hex array and stops on admission failure', async () => {
+  const txs = Array.from({ length: 5 }, (_, n) => transaction(n + 1)), map = new Map(txs.map(tx => [tx.getId(), tx.toHex()]));
+  rpc.mockImplementation(async (_method, [id]) => map.get(id)); get.mockImplementation(async url => ({ data: map.get(url.split('/')[4]) }));
+  const consume = jest.fn();
+  expect(await new EsploraReconstructionV4Source().globalTransactions(txs.map(tx => tx.getId()), new AbortController().signal, consume)).toEqual([]);
+  expect(consume).toHaveBeenCalledTimes(5);
+  rpc.mockClear(); get.mockClear();
+  await expect(new EsploraReconstructionV4Source().globalTransactions(txs.map(tx => tx.getId()), new AbortController().signal, () => { throw Error('bounded cache full'); })).rejects.toThrow('bounded cache full');
+  expect(rpc).toHaveBeenCalledTimes(4); expect(get).toHaveBeenCalledTimes(4);
+});
+it('cancels streaming consumption without emitting later proofs or dispatching a new wave', async () => {
+  const txs = Array.from({ length: 5 }, (_, n) => transaction(n + 1)), map = new Map(txs.map(tx => [tx.getId(), tx.toHex()])), controller = new AbortController();
+  rpc.mockImplementation(async (_method, [id]) => map.get(id)); get.mockImplementation(async url => ({ data: map.get(url.split('/')[4]) }));
+  const consume = jest.fn(() => controller.abort());
+  await expect(new EsploraReconstructionV4Source().globalTransactions(txs.map(tx => tx.getId()), controller.signal, consume)).rejects.toMatchObject({ status: 499 });
+  expect(consume).toHaveBeenCalledTimes(1); expect(rpc).toHaveBeenCalledTimes(4);
+});
 it('binds requested IDs to byte-identical independent native payloads and their raw-byte digest', async () => {
   const tx = transaction(), raw = tx.toHex(); rpc.mockResolvedValue(raw); get.mockResolvedValue({ data: raw });
   const signal = new AbortController().signal, result = await new EsploraReconstructionV4Source().globalTransactions([tx.getId()], signal);
