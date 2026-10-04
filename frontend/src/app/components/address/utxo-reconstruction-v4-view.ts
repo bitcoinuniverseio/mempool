@@ -16,6 +16,8 @@ export interface UtxoReconstructionV4View extends Omit<UtxoReconstructionV3View,
 const hash = (v: unknown) => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
 const count = (v: unknown) => Number.isSafeInteger(v) && Number(v) >= 0;
 const date = (v: unknown) => typeof v === 'string' && v.length <= 64 && Number.isFinite(Date.parse(v));
+const canonicalCheckpoint = (value: UtxoReconstructionV3View['latestObservedTip']) => value && JSON.stringify(
+  Object.keys(value).filter(key => key !== 'verifiedAt').sort().map(key => [key, value[key]]));
 const terminal = (v: UtxoReconstructionV4View) => ['INVALIDATED', 'CANCELLED', 'BLOCKED'].includes(v.status);
 const resetReasons = ['STRICT_GLOBAL_MEMPOOL_CHANGED', 'VERIFIED_OUTPUT_CONTEXT_UNKNOWN', 'GLOBAL_TRANSACTION_PROOF_UNKNOWN',
   'GLOBAL_TRANSACTION_PROOF_UNAVAILABLE', 'ADDRESS_RELEVANT_GLOBAL_TRANSACTION', 'GLOBAL_PROOF_BYTE_CAPACITY'];
@@ -71,15 +73,19 @@ export function checkedReconstructionV4(value: unknown, address: string, network
         const bridge = g.transitions.filter(t => t.transition > old.transitionCount);
         if (g.mode !== 'irrelevant-delta-proof' || old.mode !== g.mode || !bridge.length || bridge[0].transition !== old.transitionCount + 1
           || bridge[0].fromIdentity !== previous.mempoolAnchor.identity || bridge.length !== g.transitionCount - old.transitionCount
-          || JSON.stringify(v.mempoolAnchor?.checkpoint) !== JSON.stringify(previous.mempoolAnchor.checkpoint)
+          || canonicalCheckpoint(v.mempoolAnchor?.checkpoint) !== canonicalCheckpoint(previous.mempoolAnchor.checkpoint)
+          || !date(v.mempoolAnchor?.checkpoint?.verifiedAt) || !date(v.observedAt)
+          || Date.parse(v.mempoolAnchor.checkpoint.verifiedAt) < Date.parse(previous.mempoolAnchor.checkpoint.verifiedAt)
+          || Date.parse(v.mempoolAnchor.checkpoint.verifiedAt) > Date.parse(v.observedAt)
           || JSON.stringify(v.mempoolAnchor?.addressMempoolStats) !== JSON.stringify(previous.mempoolAnchor.addressMempoolStats)
           || v.mempoolAnchor?.observedAt !== last.observedAt) throw Error('V4 changed identity has no bounded irrelevant-transition bridge.');
         for (const known of old.transitions) {
           const retained = g.transitions.find(t => t.transition === known.transition);
           if (retained && JSON.stringify(retained) !== JSON.stringify(known)) throw Error('V4 rewrote a retained transition receipt.');
         }
-        // Only these independently bound identity/time fields may advance without clearing V3 closure progress.
-        prior = { ...prior, mempoolAnchor: { ...prior.mempoolAnchor, identity: v.mempoolAnchor.identity, observedAt: v.mempoolAnchor.observedAt } };
+        // Canonical/source fields stay fixed; only the independently bridged identity and fresh measurement times may advance.
+        prior = { ...prior, mempoolAnchor: { ...prior.mempoolAnchor, identity: v.mempoolAnchor.identity, observedAt: v.mempoolAnchor.observedAt,
+          checkpoint: { ...prior.mempoolAnchor.checkpoint, verifiedAt: v.mempoolAnchor.checkpoint.verifiedAt } } };
       } else if (g.transitionCount !== old.transitionCount) throw Error('V4 transition advanced without a changed identity.');
     }
   }

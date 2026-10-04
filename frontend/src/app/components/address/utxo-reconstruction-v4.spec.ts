@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import { checkedReconstructionV4, reconstructionOutputDigest, UtxoReconstructionV4View } from './utxo-reconstruction-v4-view';
 import { UtxoReconstructionComponent } from './utxo-reconstruction.component';
+import { readFileSync } from 'node:fs';
 const address = 'tb1qpublictestaddress';
 function initial(): UtxoReconstructionV4View {
   const cp = { genesisHash:'1'.repeat(64), blockHash:'2'.repeat(64), blockHeight:10, network:'signet', signetChallenge:'51', verifiedAt:'2026-10-03T00:00:00Z' };
@@ -27,11 +28,19 @@ function complete(): UtxoReconstructionV4View {
 }
 function transition(): UtxoReconstructionV4View {
   const v=complete();v.mempoolAnchor={...v.mempoolAnchor,identity:'5'.repeat(64),observedAt:'2026-10-03T00:00:01Z'};
+  v.observedAt='2026-10-03T00:00:01Z';
   v.globalMempoolProof.transitionCount=1;v.globalMempoolProof.transactionCount=1;v.globalMempoolProof.sequenceAtomic='1';
   v.globalMempoolProof.transitions=[{transition:1,fromIdentity:'4'.repeat(64),toIdentity:'5'.repeat(64),addedTxids:['b'.repeat(64)],removedTxids:[],proofSha256:'c'.repeat(64),observedAt:v.mempoolAnchor.observedAt,verifiedOutputsRetained:0}];
   v.globalMempoolProof.verifiedOutputContext.identity=v.mempoolAnchor.identity;return v;
 }
 describe('explicit bounded V4 global transition consumer',()=>{
+  it('accepts the preserved actual native complete-zero receipt with refreshed canonical measurement',()=>{
+    const fixture=JSON.parse(readFileSync('src/app/components/address/utxo-reconstruction-v4-native-measurement.fixture.json','utf8'));
+    const result=checkedReconstructionV4(fixture.value,fixture.address,'signet',fixture.previous,'next');
+    expect(result.result.items).toEqual([]);expect(result.globalMempoolProof.transitionCount).toBe(1);
+    expect(result.mempoolAnchor.checkpoint.blockHash).toBe(fixture.previous.mempoolAnchor.checkpoint.blockHash);
+    expect(result.mempoolAnchor.checkpoint.verifiedAt).not.toBe(fixture.previous.mempoolAnchor.checkpoint.verifiedAt);
+  });
   it('requires all V3 closures plus exact ordered eligible output digest/current context',()=>{
     expect(checkedReconstructionV4(complete(),address,'signet',acquired(),'next').result.balanceAtomic).toBe('66135');
     for(const mutate of [v=>v.globalMempoolProof.verifiedOutputContext=null,v=>v.globalMempoolProof.verifiedOutputContext.outpointsSha256='f'.repeat(64),
@@ -53,9 +62,22 @@ describe('explicit bounded V4 global transition consumer',()=>{
     v.globalMempoolProof.transitions.push({...first,transition:2,fromIdentity:first.toIdentity,toIdentity:first.fromIdentity,
       addedTxids:[],removedTxids:first.addedTxids,observedAt:'2026-10-03T00:00:02Z'});
     v.mempoolAnchor.identity=first.fromIdentity;v.mempoolAnchor.observedAt='2026-10-03T00:00:02Z';
+    v.observedAt='2026-10-03T00:00:02Z';
     v.globalMempoolProof.verifiedOutputContext.identity=first.fromIdentity;
     expect(checkedReconstructionV4(v,address,'signet',acquired(),'next').globalMempoolProof.transitionCount).toBe(2);
     v.globalMempoolProof.transitions.shift();expect(()=>checkedReconstructionV4(v,address,'signet',acquired(),'next')).toThrow();
+  });
+  it('accepts a freshly measured same-canonical checkpoint only through the proved bridge and rejects source/time changes',()=>{
+    const v=transition();v.mempoolAnchor.checkpoint.verifiedAt='2026-10-03T00:00:01Z';
+    v.globalMempoolProof.verifiedOutputContext.checkpoint={...v.mempoolAnchor.checkpoint};
+    expect(checkedReconstructionV4(v,address,'signet',acquired(),'next').mempoolAnchor.checkpoint.verifiedAt).toBe(v.observedAt);
+    for(const mutate of [next=>next.mempoolAnchor.checkpoint.blockHash='f'.repeat(64),next=>next.mempoolAnchor.checkpoint.blockHeight++,
+      next=>next.mempoolAnchor.checkpoint.network='mainnet',next=>next.mempoolAnchor.checkpoint.genesisHash='f'.repeat(64),
+      next=>next.mempoolAnchor.checkpoint.signetChallenge='52',next=>next.mempoolAnchor.checkpoint.sourceId='f'.repeat(64),
+      next=>next.mempoolAnchor.checkpoint.verifiedAt='2026-10-02T23:59:59Z',next=>next.mempoolAnchor.checkpoint.verifiedAt='2026-10-03T00:00:02Z']) {
+      const next=structuredClone(v);mutate(next);next.globalMempoolProof.verifiedOutputContext.checkpoint={...next.mempoolAnchor.checkpoint};
+      expect(()=>checkedReconstructionV4(next,address,'signet',acquired(),'next')).toThrow();
+    }
   });
   it('requires a fenced empty output digest even when the complete balance is zero',()=>{
     const v=complete();v.confirmedTailAnchor.chainStats={...v.confirmedTailAnchor.chainStats,spent_txo_count:1,spent_txo_sum:66135,tx_count:2};
