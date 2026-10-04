@@ -4,23 +4,28 @@ import { addressHistoryProblems, addressSummaryProblems, utxoListProblems } from
 import { UtxoReconstructionV2View } from './utxo-reconstruction-v2.types';
 
 import { ReconstructionError, ReconstructionOutput, ReconstructionSnapshot, ReconstructionSource } from './utxo-reconstruction.service';
-import { ConfirmedReconstructionSnapshot } from './utxo-reconstruction.source';
+import { AnchoredReconstructionSnapshot, ConfirmedReconstructionSnapshot } from './utxo-reconstruction.source';
+import { AddressSourceCheckpoint } from './address-source-checkpoint';
 export interface ReconstructionV2Source extends ReconstructionSource {
-  confirmedSnapshot(address: string, signal: AbortSignal): Promise<ConfirmedReconstructionSnapshot>;
+  snapshot(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<AnchoredReconstructionSnapshot>;
+  confirmedSnapshot(address: string, signal: AbortSignal, anchor?: AddressSourceCheckpoint): Promise<ConfirmedReconstructionSnapshot>;
 }
 class ConfirmedAnchorChanged extends ReconstructionError {
   constructor() { super(409, 'Confirmed chain, address statistics or source identity changed'); }
 }
 class MempoolAnchorChanged extends ReconstructionError {
-  constructor() { super(409, 'MEMPOOL_CHANGED'); }
+  constructor(public reason = 'MEMPOOL_CHANGED') { super(409, reason); }
 }
 const PAGE = 100, MEMPOOL_PAGE = 500, OUTPUT_PAGE = 100, MAX_TRANSACTIONS = 100000, MAX_OUTPUTS = 100000;
-const MAX_BYTES = 32 * 1024 * 1024, MAX_SESSIONS = 8, TTL = 30 * 60 * 1000;
+// Fixed V2 lifetime covers bounded cold history paging plus manual continuation;
+// it never slides and does not raise the retained memory or session limits.
+const MAX_BYTES = 32 * 1024 * 1024, MAX_SESSIONS = 8, TTL = 60 * 60 * 1000;
 const MAX_MONEY = 2100000000000000n;
 type Stats = { transactions: number; funded: number; spent: number; fundedSum: bigint; spentSum: bigint };
 const emptyStats = (): Stats => ({ transactions: 0, funded: 0, spent: 0, fundedSum: 0n, spentSum: 0n });
 interface Session {
   id: string; address: string; snapshot: ConfirmedReconstructionSnapshot; mempoolAnchor?: ReconstructionSnapshot; mempoolObservedAt?: string; mempoolEpoch: number; expires: number; cursor: number;
+  latestObservedTip: AddressSourceCheckpoint;
   phase: 'confirmed' | 'acquire-mempool' | 'mempool' | 'outspends' | 'complete';
   status: UtxoReconstructionV2View['status']; reason?: string; lastTx?: string;
   lastHeight?: number;
@@ -39,7 +44,7 @@ const exactSummary = (s: IEsploraApi.Address): IEsploraApi.Address => ({
 });
 const identity = (s: ReconstructionSnapshot | ConfirmedReconstructionSnapshot): string => JSON.stringify({
   sourceId: s.sourceId, scriptPubKey: s.scriptPubKey,
-  checkpoint: [s.checkpoint.genesisHash, s.checkpoint.blockHeight, s.checkpoint.blockHash, s.checkpoint.network, s.checkpoint.signetChallenge],
+  checkpoint: [s.checkpoint.genesisHash, s.checkpoint.network, s.checkpoint.signetChallenge],
   summary: exactStats(s.summary.chain_stats),
 });
 const validAmount = (v: unknown): v is number => Number.isSafeInteger(v) && (v as number) >= 0 && BigInt(v as number) <= MAX_MONEY;
@@ -80,7 +85,7 @@ export class UtxoReconstructionV2Service {
       // Retain only the specified fixed-size summary, never arbitrary upstream fields.
       snapshot.summary = exactSummary(snapshot.summary);
       if (snapshot.summary.chain_stats.tx_count > MAX_TRANSACTIONS || snapshot.summary.chain_stats.funded_txo_count > MAX_OUTPUTS) throw new ReconstructionError(422, 'Address exceeds bounded reconstruction capacity');
-      const session: Session = { id: randomUUID(), address, snapshot, expires: this.now() + TTL, cursor: 0,
+      const session: Session = { id: randomUUID(), address, snapshot, latestObservedTip: { ...snapshot.checkpoint }, expires: this.now() + TTL, cursor: 0,
         phase: 'confirmed', status: 'PARTIAL', confirmed: emptyStats(), mempool: emptyStats(), mempoolEpoch: 0,
         mempoolTxids: new Set(), mempoolSpent: new Set(), mempoolOutputs: new Set(), mempoolBytes: 0,
         txids: new Set(), spent: new Set(), outputs: new Map(), candidates: [], verified: 0, bytes: 0, busy: false };
@@ -98,16 +103,23 @@ export class UtxoReconstructionV2Service {
   }
   private release(session: Session): void { session.outputs.clear(); session.txids.clear(); session.spent.clear(); session.candidates = []; session.bytes = 0; session.lastResponse = undefined; session.mempoolTxids.clear(); session.mempoolSpent.clear(); session.mempoolOutputs.clear(); session.mempoolBytes = 0; }
   private cancelled(session: Session): boolean { return session.status === 'CANCELLED'; }
-  private matches(session: Session, snapshot: ReconstructionSnapshot | ConfirmedReconstructionSnapshot): void {
+  private matches(session: Session, snapshot: AnchoredReconstructionSnapshot | ConfirmedReconstructionSnapshot): void {
     this.checkSnapshot(snapshot, session.address);
     if (identity(snapshot) !== identity(session.snapshot)) throw new ConfirmedAnchorChanged();
+    const original = session.snapshot.checkpoint, latest = snapshot.checkpoint;
+    if (latest.blockHeight < session.latestObservedTip.blockHeight || latest.blockHeight < original.blockHeight ||
+      latest.blockHeight === original.blockHeight && latest.blockHash !== original.blockHash ||
+      latest.blockHeight !== original.blockHeight && (snapshot.canonicalAnchor?.heightAtomic !== String(original.blockHeight) || snapshot.canonicalAnchor?.blockHash !== original.blockHash)) throw new ConfirmedAnchorChanged();
+    session.latestObservedTip = { ...latest };
   }
-  private matchesMempool(session: Session, snapshot: ReconstructionSnapshot): void {
+  private matchesMempool(session: Session, snapshot: AnchoredReconstructionSnapshot): void {
     this.matches(session, snapshot);
+    if (session.mempoolAnchor && (snapshot.checkpoint.blockHeight !== session.mempoolAnchor.checkpoint.blockHeight ||
+        snapshot.checkpoint.blockHash !== session.mempoolAnchor.checkpoint.blockHash)) throw new MempoolAnchorChanged('FINAL_TIP_CHANGED');
     if (!session.mempoolAnchor || snapshot.mempoolIdentity !== session.mempoolAnchor.mempoolIdentity ||
       JSON.stringify(exactStats(snapshot.summary.mempool_stats)) !== JSON.stringify(exactStats(session.mempoolAnchor.summary.mempool_stats))) throw new MempoolAnchorChanged();
   }
-  private resetMempool(session: Session): void {
+  private resetMempool(session: Session, reason = 'MEMPOOL_CHANGED'): void {
     for (const txid of session.mempoolTxids) session.txids.delete(txid);
     for (const key of session.mempoolSpent) session.spent.delete(key);
     for (const key of session.mempoolOutputs) session.outputs.delete(key);
@@ -115,7 +127,7 @@ export class UtxoReconstructionV2Service {
     session.mempoolTxids.clear(); session.mempoolSpent.clear(); session.mempoolOutputs.clear(); session.mempoolBytes = 0;
     session.mempool = emptyStats(); session.mempoolAnchor = undefined; session.mempoolObservedAt = undefined;
     session.candidates = []; session.verified = 0; session.phase = 'acquire-mempool';
-    session.status = 'PARTIAL'; session.reason = 'MEMPOOL_CHANGED'; session.mempoolEpoch++;
+    session.status = 'PARTIAL'; session.reason = reason; session.mempoolEpoch++;
     session.lastResponse = undefined;
   }
   async next(address: string, id: string, cursor: number, signal: AbortSignal): Promise<UtxoReconstructionV2View> {
@@ -130,16 +142,15 @@ export class UtxoReconstructionV2Service {
     session.busy = true; session.controller = controller;
     try {
       requireActive(controller.signal);
-      const before = await this.source.confirmedSnapshot(address, controller.signal);
+      const before = await this.source.confirmedSnapshot(address, controller.signal, session.snapshot.checkpoint);
       this.matches(session, before);
       requireActive(controller.signal);
-      if (session.mempoolAnchor) this.matchesMempool(session, await this.source.snapshot(address, controller.signal));
+      if (session.mempoolAnchor) this.matchesMempool(session, await this.source.snapshot(address, controller.signal, session.snapshot.checkpoint));
       if (replay || session.status === 'COMPLETE_AT_OBSERVED_TIP') {
-        session.snapshot.checkpoint.verifiedAt = before.checkpoint.verifiedAt;
         session.lastResponse = this.view(session); return session.lastResponse;
       }
       if (session.phase === 'acquire-mempool') {
-        const anchor = await this.source.snapshot(address, controller.signal);
+        const anchor = await this.source.snapshot(address, controller.signal, session.snapshot.checkpoint);
         this.matches(session, anchor); requireActive(controller.signal);
         if (anchor.summary.mempool_stats.tx_count > MEMPOOL_PAGE ||
           session.confirmed.transactions + anchor.summary.mempool_stats.tx_count > MAX_TRANSACTIONS ||
@@ -149,14 +160,13 @@ export class UtxoReconstructionV2Service {
         session.phase = 'mempool'; session.reason = undefined;
       } else if (session.phase === 'outspends') {
         const outputs = session.candidates.slice(session.verified, session.verified + OUTPUT_PAGE);
-        await this.source.verifyOutputs(outputs, controller.signal, session.snapshot.checkpoint);
+        await this.source.verifyOutputs(outputs, controller.signal, session.mempoolAnchor!.checkpoint);
         requireActive(controller.signal);
-        const after = await this.source.snapshot(address, controller.signal);
+        const after = await this.source.snapshot(address, controller.signal, session.snapshot.checkpoint);
         this.matchesMempool(session, after);
         requireActive(controller.signal);
         if (this.cancelled(session)) return this.view(session);
         session.verified += outputs.length;
-        session.snapshot.checkpoint.verifiedAt = after.checkpoint.verifiedAt;
         if (session.verified === session.candidates.length) { session.phase = 'complete'; session.status = 'COMPLETE_AT_OBSERVED_TIP'; }
       } else {
         const mempool = session.phase === 'mempool';
@@ -164,7 +174,7 @@ export class UtxoReconstructionV2Service {
           : await this.source.history(address, session.lastTx, PAGE, controller.signal);
         requireActive(controller.signal);
         const delta = this.readPage(session, rows, mempool);
-        const after = mempool ? await this.source.snapshot(address, controller.signal) : await this.source.confirmedSnapshot(address, controller.signal);
+        const after = mempool ? await this.source.snapshot(address, controller.signal, session.snapshot.checkpoint) : await this.source.confirmedSnapshot(address, controller.signal, session.snapshot.checkpoint);
         if (mempool) this.matchesMempool(session, after as ReconstructionSnapshot); else this.matches(session, after);
         requireActive(controller.signal);
         if (this.cancelled(session)) return this.view(session);
@@ -182,7 +192,6 @@ export class UtxoReconstructionV2Service {
           for (const key of delta.spent) session.mempoolSpent.add(key);
           for (const key of delta.outputs.keys()) session.mempoolOutputs.add(key);
         }
-        session.snapshot.checkpoint.verifiedAt = after.checkpoint.verifiedAt;
         if (!mempool && rows.length) session.lastTx = rows[rows.length - 1].txid;
         if (!mempool && rows.length) session.lastHeight = rows[rows.length - 1].status.block_height;
         if (mempool) { this.assertStats(stats, session.mempoolAnchor!.summary.mempool_stats); this.finishHistory(session); }
@@ -194,26 +203,33 @@ export class UtxoReconstructionV2Service {
       if (this.cancelled(session)) return this.view(session);
       // Transport cancellation/deadline leaves the original cursor retryable.
       if (controller.signal.aborted) throw error;
+      if (error instanceof ReconstructionError && error.status === 409 && session.phase === 'confirmed' && [
+        'Core and index must share the exact active tip for reconstruction',
+        'Active chain moved during confirmed source acquisition',
+        'Owned checkpoint moved during address source verification',
+      ].includes(error.message)) throw new ReconstructionError(503, 'Shared tip moved during acquisition; original cursor remains retryable pending fresh canonical anchor proof');
       if (error instanceof ReconstructionError && error.status === 409 && !(error instanceof ConfirmedAnchorChanged) && session.phase !== 'confirmed') {
         // Only retain confirmed progress after a separate fresh chain check.
         try {
-          const confirmed = await this.source.confirmedSnapshot(address, controller.signal);
+          const confirmed = await this.source.confirmedSnapshot(address, controller.signal, session.snapshot.checkpoint);
           this.matches(session, confirmed); requireActive(controller.signal);
           if (error instanceof MempoolAnchorChanged || !session.mempoolAnchor) {
-            this.resetMempool(session);
+            this.resetMempool(session, error instanceof MempoolAnchorChanged ? error.reason : 'MEMPOOL_CHANGED');
           } else {
             // A genuine output mismatch with unchanged mempool remains invalid.
             let latest: ReconstructionSnapshot | undefined;
-            try { latest = await this.source.snapshot(address, controller.signal); }
+            try { latest = await this.source.snapshot(address, controller.signal, session.snapshot.checkpoint); }
             catch (failure) { if (!(failure instanceof ReconstructionError) || failure.status !== 409) throw failure; }
             if (latest) {
               this.matches(session, latest);
-              if (latest.mempoolIdentity === session.mempoolAnchor.mempoolIdentity &&
+              if (latest.checkpoint.blockHeight === session.mempoolAnchor.checkpoint.blockHeight &&
+                latest.checkpoint.blockHash === session.mempoolAnchor.checkpoint.blockHash &&
+                latest.mempoolIdentity === session.mempoolAnchor.mempoolIdentity &&
                 JSON.stringify(exactStats(latest.summary.mempool_stats)) === JSON.stringify(exactStats(session.mempoolAnchor.summary.mempool_stats))) throw error;
             }
-            this.resetMempool(session);
+            this.resetMempool(session, latest && (latest.checkpoint.blockHeight !== session.mempoolAnchor!.checkpoint.blockHeight ||
+              latest.checkpoint.blockHash !== session.mempoolAnchor!.checkpoint.blockHash) ? 'FINAL_TIP_CHANGED' : 'MEMPOOL_CHANGED');
           }
-          session.snapshot.checkpoint.verifiedAt = confirmed.checkpoint.verifiedAt;
           session.cursor++; session.lastInput = cursor; session.lastResponse = this.view(session); return session.lastResponse;
         } catch (failure) {
           if (controller.signal.aborted) throw failure;
@@ -288,8 +304,9 @@ export class UtxoReconstructionV2Service {
       address: session.address, network: this.network, status: session.status, reason: session.reason,
       confirmedAnchor: { ...session.snapshot.checkpoint, sourceId: session.snapshot.sourceId,
         scriptPubKey: session.snapshot.scriptPubKey, chainStats: exactStats(session.snapshot.summary.chain_stats) },
+      latestObservedTip: { ...session.latestObservedTip },
       mempoolAnchor: session.mempoolAnchor ? { identity: session.mempoolAnchor.mempoolIdentity,
-        observedAt: session.mempoolObservedAt!, addressMempoolStats: exactStats(session.mempoolAnchor.summary.mempool_stats) } : null,
+        observedAt: session.mempoolObservedAt!, checkpoint: { ...session.mempoolAnchor.checkpoint }, addressMempoolStats: exactStats(session.mempoolAnchor.summary.mempool_stats) } : null,
       observedAt: new Date(this.now()).toISOString(), expiresAt: new Date(session.expires).toISOString(),
       progress: { phase: session.phase, pageLimit: PAGE, mempoolEpoch: session.mempoolEpoch, confirmedTransactionsProcessed: session.confirmed.transactions,
         confirmedTransactionsExpected: session.snapshot.summary.chain_stats.tx_count,

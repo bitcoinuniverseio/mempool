@@ -12,7 +12,9 @@ export interface UtxoReconstructionV2View {
   status: UtxoReconstructionView['status'];
   reason?: string;
   confirmedAnchor: AddressSourceCheckpoint & { sourceId: string; scriptPubKey: string; chainStats: IEsploraApi.ChainStats };
-  mempoolAnchor: { identity: string; observedAt: string; addressMempoolStats: IEsploraApi.ChainStats } | null;
+  /** Original confirmed anchor remains immutable; this separately records the latest verified shared tip. */
+  latestObservedTip: AddressSourceCheckpoint;
+  mempoolAnchor: { identity: string; observedAt: string; checkpoint: AddressSourceCheckpoint; addressMempoolStats: IEsploraApi.ChainStats } | null;
   observedAt: string;
   expiresAt: string;
   progress: {
