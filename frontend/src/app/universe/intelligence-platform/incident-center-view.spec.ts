@@ -25,8 +25,8 @@ function response():any {
 describe('Incident Center actual template with controlled observations',()=>{
   beforeAll(()=>{Object.defineProperty(IncidentCenterComponent,'ctorParameters',{configurable:true,value:()=>[{type:IntelligenceApiService},{type:ChangeDetectorRef},{type:StateService}]});TestBed.initTestEnvironment(BrowserDynamicTestingModule,platformBrowserDynamicTesting());});
   afterEach(()=>TestBed.resetTestingModule());
-  function render(failure=false){const state:any={network:'',env:{ROOT_NETWORK:'signet'},networkChanged$:new Subject<string>()};
-    const getIncidents$=vi.fn(()=>failure?throwError(()=>({status:503})):of(response()));
+  function render(failure=false, observations=response()){const state:any={network:'',env:{ROOT_NETWORK:'signet'},networkChanged$:new Subject<string>()};
+    const getIncidents$=vi.fn(()=>failure?throwError(()=>({status:503})):of(observations));
     TestBed.configureTestingModule({providers:[{provide:IntelligenceApiService,useValue:{getIncidents$}},{provide:StateService,useValue:state}]});
     const fixture=TestBed.createComponent(IncidentCenterComponent);fixture.detectChanges();return {fixture,state,getIncidents$};}
   it('renders source identities, checkpoint and restart gap without claiming consensus validation',()=>{
@@ -39,5 +39,16 @@ describe('Incident Center actual template with controlled observations',()=>{
     const {fixture,getIncidents$}=render(true);const element=fixture.nativeElement as HTMLElement;
     expect(element.querySelector('[role="alert"]')?.textContent).toBeTruthy();expect(element.textContent).not.toContain('No incident records returned');
     element.querySelector('button')!.click();fixture.detectChanges();expect(getIncidents$).toHaveBeenCalledTimes(2);
+  });
+  it('preserves the historical replacement title while disclosing an ancestor-only tip rollback',()=>{
+    const observations=response();const incident=observations.incidents[0];
+    incident.incident_type='reorg';incident.title='Observed canonical chain replacement';incident.source_ids=['controlled-core'];
+    incident.block_height=1;incident.block_hash='4'.repeat(64);incident.reorg_depth=1;
+    const ancestor={height:1,hash:'4'.repeat(64),parent:'3'.repeat(64),timestamp:1};
+    incident.evidence={before:[ancestor,incident.evidence.before[0]],after:[ancestor],common_ancestor:ancestor};
+    const {fixture}=render(false,observations);const text=fixture.nativeElement.textContent;
+    expect(text).toContain('Observed canonical chain replacement');
+    expect(text).toContain('Retained headers show a tip rollback to the ancestor; no competing replacement branch is shown.');
+    expect(fixture.componentInstance.incidents[0].title).toBe('Observed canonical chain replacement');
   });
 });
