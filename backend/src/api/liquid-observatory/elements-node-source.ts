@@ -1,17 +1,19 @@
 import axios from 'axios';
-import { readFileSync } from 'fs';
-import { LiquidObservatoryEvidenceError as EvidenceError } from './liquid-observatory.service';
+import { LiquidObservatoryEvidenceError as EvidenceError } from './liquid-evidence-error';
+import { readLiquidRpcCredentials } from './liquid-paired-source';
 export interface ElementsReader { call(method: string, params: unknown[]): Promise<any>; }
 export const ownedElementsReader: ElementsReader = {
  async call(method, params) {
+  if (!['getblockchaininfo','getblockheader','getblockhash'].includes(method)) throw new EvidenceError('unsupported-elements-method','Only public Elements checkpoint reads are supported.',400);
   const origin = process.env.UNIVERSE_ELEMENTS_RPC_ORIGIN;
   if (!origin) throw new EvidenceError('unavailable-elements-node','An owned Elements RPC source is not configured.');
   try {
    const url = new URL(origin);
    if (!['http:','https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw Error('Invalid source');
    const cookie = process.env.UNIVERSE_ELEMENTS_RPC_COOKIE_FILE;
-   const credentials = cookie ? readFileSync(cookie,'utf8').trim() : `${process.env.UNIVERSE_ELEMENTS_RPC_USER || ''}:${process.env.UNIVERSE_ELEMENTS_RPC_PASSWORD || ''}`;
-   const response = await axios.post(url.toString(),{jsonrpc:'1.0',id:'public-elements-evidence',method,params},{headers:{Authorization:'Basic '+Buffer.from(credentials).toString('base64')},timeout:3000,maxContentLength:100000,maxBodyLength:1000,maxRedirects:0,proxy:false});
+   const signal = AbortSignal.timeout(3000);
+   const credentials = cookie ? await readLiquidRpcCredentials(cookie,signal) : `${process.env.UNIVERSE_ELEMENTS_RPC_USER || ''}:${process.env.UNIVERSE_ELEMENTS_RPC_PASSWORD || ''}`;
+   const response = await axios.post(url.toString(),{jsonrpc:'1.0',id:'public-elements-evidence',method,params},{headers:{Authorization:'Basic '+Buffer.from(credentials).toString('base64')},signal,timeout:3000,maxContentLength:100000,maxBodyLength:1000,maxRedirects:0,proxy:false});
    if (response.data?.error || !Object.prototype.hasOwnProperty.call(response.data || {},'result')) throw Error('RPC failure');
    return response.data.result;
   } catch { throw new EvidenceError('unavailable-elements-node','The owned Elements node could not return public chain evidence.'); }
