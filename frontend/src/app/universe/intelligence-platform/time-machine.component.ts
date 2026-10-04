@@ -288,15 +288,19 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
     const hash = this.currentState.state_hash, revision = this.revision, network = this.network;
     // The producer may cache another replay summary under the same membership hash.
     const capturedSummary = JSON.stringify(canonicalHistoryState(this.currentState));
+    const checkpointHash = this.currentState.checkpoint_block_hash, transactionCount = this.currentState.total_transactions;
     this.exporting = true; this.exportError = null;
-    this.exportRead = this.api.exportHistory$(hash).subscribe({next: result => {
+    this.exportRead = this.api.exportHistory$(hash).subscribe({next: async result => {
       if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }
-      this.exporting = false;
-      if (result?.format !== 'json' || result?.state?.state_hash !== hash || JSON.stringify(canonicalHistoryState(result.state)) !== capturedSummary || !Array.isArray(result.txids) || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id))) { this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
+      if (result?.format !== 'json' || result?.state?.state_hash !== hash || JSON.stringify(canonicalHistoryState(result.state)) !== capturedSummary || !Array.isArray(result.txids) || result.txids.length !== transactionCount || new Set(result.txids).size !== transactionCount || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id))) { this.exporting = false; this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
       try {
+        const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(checkpointHash + ':' + [...result.txids].sort().join(','))));
+        if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }
+        this.exporting = false;
+        if (Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('') !== hash) { this.exportError = 'Export membership does not match the selected retained state.'; this.cdr.markForCheck(); return; }
         const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], {type: 'application/json'}));
         const link = document.createElement('a'); link.href = url; link.download = 'mempool-state-' + hash + '.json'; link.click(); URL.revokeObjectURL(url);
-      } catch { this.exportError = 'Unable to download the retained JSON state.'; }
+      } catch { if (this.destroyed || revision !== this.revision || network !== this.network) { return; } this.exporting = false; this.exportError = 'Unable to verify or download the retained JSON state.'; }
       this.cdr.markForCheck();
     }, error: () => { if (revision === this.revision && !this.destroyed) { this.exporting = false; this.exportError = 'Retained JSON export unavailable.'; this.cdr.markForCheck(); } }});
   }
