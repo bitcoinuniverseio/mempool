@@ -26,7 +26,7 @@ function setup(){const network=new BehaviorSubject('signet'),http={post:vi.fn().
 describe('explicit V3 live confirmed tail',()=>{
   it('requires exact original/tail/mempool closure before eligible outputs',()=>{
     expect(checkedReconstructionV3(complete(),address,'signet',acquired(),'next').result.balanceAtomic).toBe('0');
-    for(const mutate of [v=>v.confirmedAnchor.verifiedAt='2026-10-03T00:01:00Z',v=>v.confirmedTailAnchor=null,v=>v.progress.confirmedTailTransactionsProcessed=0,v=>v.confirmedTailAnchor.chainStats.tx_count=3,v=>v.mempoolAnchor.checkpoint.blockHash='b'.repeat(64),v=>v.result.balanceAtomic='1']){
+    for(const mutate of [v=>v.confirmedAnchor.verifiedAt='2026-10-03T00:01:00Z',v=>v.confirmedTailAnchor=null,v=>v.progress.confirmedTailTransactionsProcessed=0,v=>v.confirmedTailAnchor.chainStats.tx_count=3,v=>v.mempoolAnchor.checkpoint.blockHash='b'.repeat(64),v=>v.result.balanceAtomic='1',v=>{v.mempoolAnchor.addressMempoolStats.tx_count=1;v.progress.mempoolTransactionsExpected=1;}]){
       const v=complete();mutate(v);expect(()=>checkedReconstructionV3(v,address,'signet',acquired(),'next')).toThrow();}
   });
   it('retains only closed original prefix on tail reset and explicit lost-response reset replay',()=>{

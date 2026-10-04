@@ -69,6 +69,7 @@ export function checkedReconstructionV3(value: unknown, address: string, network
     ? tail !== null || p.confirmedTailTransactionsProcessed !== 0 || p.confirmedTailTransactionsExpected !== null
     : p.confirmedTransactionsProcessed !== p.confirmedTransactionsExpected
       || (p.phase === 'reconcile-confirmed' ? tail !== null : tail === null))) throw Error('V3 phase has no matching original and tail closure.');
+  if (!terminal && ['outspends','complete'].includes(p.phase) && p.mempoolTransactionsProcessed !== p.mempoolTransactionsExpected) throw Error('V3 output verification began before mempool transaction closure.');
   if (!terminal && tail && checkpointKey(tail.checkpoint) !== checkpointKey(view.latestObservedTip)) throw Error('V3 closed tail is not bound to the latest shared tip.');
   if (!terminal && m && tail && checkpointKey(m.checkpoint) !== checkpointKey(tail.checkpoint)) throw Error('V3 mempool and confirmed tail checkpoints disagree.');
   if (!previous && action === 'create' && (view.status !== 'PARTIAL' || view.cursor !== 0 || p.phase !== 'confirmed' || p.mempoolEpoch !== 0 || p.confirmedEpoch !== 0 || tail !== null || p.confirmedTailTransactionsExpected !== null || p.confirmedTailTransactionsProcessed !== 0
