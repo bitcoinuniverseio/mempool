@@ -107,8 +107,11 @@ export interface Env {
    * chains read mainnet; Bitcoin always follows the network selector.
    */
   UNIVERSE_CHAIN_NETWORKS?: Record<string, string> | string;
-  /** Public operator expectations for explicitly qualified watch-only Bitcoin sources. Empty means unavailable. */
+  /** Independent public native Elements/Bitcoin pair expectations. Empty means unavailable. */
+  LIQUID_SOURCE_PROFILES?: Partial<Record<import('@app/universe/liquid-observatory/liquid-observatory.types').LiquidNetwork, import('@app/universe/liquid-observatory/liquid-observatory.types').LiquidConfiguredPair>> | string;
+  /** Independent public Fractal testnet authority expectation. */
   FRACTAL_SOURCE_PROFILE?: import('@app/universe/universe.types').FractalSourceProfile | string | null;
+  /** Public operator expectations for explicitly qualified watch-only Bitcoin sources. */
   WATCH_ONLY_SOURCE_PROFILES?: Record<string, { releaseSha: string; configurationSha256: string; genesisHash: string; signetChallenge: string | null }> | string;
   customize?: Customization;
   PROD_DOMAINS: string[];
@@ -124,6 +127,7 @@ const defaultEnv: Env = {
   'LIQUID_TESTNET_ENABLED': false,
   'BASE_MODULE': 'mempool',
   'ROOT_NETWORK': '',
+  'LIQUID_SOURCE_PROFILES': {},
   'FRACTAL_SOURCE_PROFILE': null,
   'WATCH_ONLY_SOURCE_PROFILES': {},
   'ITEMS_PER_PAGE': 10,
