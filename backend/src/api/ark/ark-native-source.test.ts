@@ -32,7 +32,7 @@ describe('native Ark provider source fencing', () => {
       providerVersion: 'v0.9.16', sessionDurationSeconds: '30', activeVtxoCount: null, currentBatchHeight: null,
       totalVolumeSats: null, roundIntervalSec: null })]);
     await expect(service.$getBatches()).rejects.toMatchObject({ code: 'unavailable-ark-projection', status: 503 });
-    await expect(service.$getBatches()).rejects.toThrow('Observed provider identity alone does not establish their inventory or proofs.');
+    await expect(service.$getBatches()).rejects.toThrow('The bounded completed-round observation could not be validated.');
   });
   it('maps failed provider identity to the public unavailable boundary', async () => {
     const f = fixture(); f.read.mockResolvedValue({ ...info, network: 'bitcoin' });
@@ -75,10 +75,64 @@ describe('native Ark provider source fencing', () => {
   });
   it('preserves bounded admin payload without declaring global completeness', async () => {
     const f = fixture(); f.read.mockImplementation(async path => path === '/v1/info' ? { ...info } : { rounds: [], summaries: [] });
-    const result = await f.source.observe('/v1/admin/rounds?after=1&before=100&limit=10', true);
+    const result = await f.source.observe('/v1/admin/rounds?after=1&before=100&limit=10&withCompleted=true', true);
     expect(result.payload).toEqual({ rounds: [], summaries: [] });
     expect(result.observation).not.toHaveProperty('globalInventoryComplete');
   });
+  it('requires the exact completed inclusion flag, never arbitrary native filter expansion', () => {
+    expect(allowedArkReadPath('/v1/admin/rounds?after=0&before=100&limit=10&withCompleted=true', true)).toBe(true);
+    for (const suffix of ['', '&withCompleted=false', '&withCompleted=true&withFailed=true', '&withCompleted=true&withCompleted=true']) {
+      expect(allowedArkReadPath('/v1/admin/rounds?after=0&before=100&limit=10' + suffix, true)).toBe(false);
+    }
+  });
+  it('requests completed rounds and maps actual summary fields without inventing root, amounts or confirmation', async () => {
+    const f = fixture();
+    const roundId = '13b42434-ef46-4c68-b367-2aecb01f7b2a';
+    const summary = { roundId, commitmentTxid: '8'.repeat(64), startedAt: '50', endedAt: '60', stage: 'FINALIZATION_STAGE',
+      ended: true, failed: false, swept: false, totalIntents: '1' };
+    f.read.mockImplementation(async path => path === '/v1/info' ? { ...info } : path.endsWith('&withCompleted=true')
+      ? { rounds: [roundId], summaries: [summary] } : { rounds: [], summaries: [] });
+    const service = new ArkService({ nativeSource: f.source });
+    const result = await service.$getBatchPage({ after: '0', before: '100', limit: '10' });
+    expect(result.nativeObservedCount).toBe(1);
+    expect(result.batches).toEqual([expect.objectContaining({ batchId: roundId, anchorTxid: '8'.repeat(64),
+      status: 'observed-completed', rootHash: null, totalAmountSats: null, vtxoCount: null, expirationTimestamp: null, confirmation: null })]);
+    expect(f.read).toHaveBeenCalledWith('/v1/admin/rounds?after=0&before=100&limit=10&withCompleted=true', true, expect.any(AbortSignal));
+  });
+  it('preserves bounded native ongoing rows without presenting them as completed batches', async () => {
+    const f = fixture(); const roundId = '13b42434-ef46-4c68-b367-2aecb01f7b2a';
+    f.read.mockImplementation(async path => path === '/v1/info' ? { ...info } : { rounds: [roundId], summaries: [{
+      roundId, startedAt: '50', endedAt: '0', ended: false, failed: false, swept: false, totalIntents: '0' }] });
+    expect(await new ArkService({ nativeSource: f.source }).$getBatchPage({ before: '100' }))
+      .toEqual({ batches: [], nativeObservedCount: 1 });
+  });
+  it('maps a native round detail with exact BTC-string arithmetic and no invented root or expiry', async () => {
+    const f = fixture(); const roundId = '13b42434-ef46-4c68-b367-2aecb01f7b2a';
+    f.read.mockImplementation(async path => path === '/v1/info' ? { ...info } : {
+      roundId, commitmentTxid: '8'.repeat(64), startedAt: '50', endedAt: '60', stage: 'FINALIZATION_STAGE',
+      ended: true, failed: false, swept: false, outputsVtxos: ['9'.repeat(64) + ':0'], totalVtxosAmount: '90071992.54740993' });
+    expect(await new ArkService({ nativeSource: f.source }).$getBatch(roundId)).toEqual(expect.objectContaining({
+      batchId: roundId, totalAmountSats: '9007199254740993', vtxoCount: 1, rootHash: null,
+      expirationTimestamp: null, confirmation: null, status: 'observed-completed' }));
+    expect(f.read).toHaveBeenCalledWith('/v1/admin/round/' + roundId, true, expect.any(AbortSignal));
+  });
+  it.each([0.0001, '0.000000001', '-1', '1e4', '01.0'])('rejects rounded or noncanonical native monetary detail %s', async value => {
+    const f = fixture(); const roundId = '13b42434-ef46-4c68-b367-2aecb01f7b2a';
+    f.read.mockImplementation(async path => path === '/v1/info' ? { ...info } : {
+      roundId, commitmentTxid: '8'.repeat(64), startedAt: '50', endedAt: '60', stage: 'FINALIZATION_STAGE',
+      ended: true, failed: false, swept: false, outputsVtxos: [], totalVtxosAmount: value });
+    await expect(new ArkService({ nativeSource: f.source }).$getBatch(roundId)).rejects.toMatchObject({ code: 'unavailable-ark-projection' });
+  });
+  it.each([{ ended: false }, { failed: true }, { stage: 'REGISTRATION_STAGE' }, { commitmentTxid: '' }, { startedAt: '100' }])(
+    'rejects malformed completed summaries or withholds non-ended rows %j', async patch => {
+      const f = fixture(); const roundId = '13b42434-ef46-4c68-b367-2aecb01f7b2a';
+      f.read.mockImplementation(async path => path === '/v1/info' ? { ...info } : { rounds: [roundId], summaries: [{
+        roundId, commitmentTxid: '8'.repeat(64), startedAt: '50', endedAt: '60', stage: 'FINALIZATION_STAGE',
+        ended: true, failed: false, swept: false, totalIntents: '1', ...patch }] });
+      const read = new ArkService({ nativeSource: f.source }).$getBatches({ before: '100' });
+      if (patch.ended === false) await expect(read).resolves.toEqual([]);
+      else await expect(read).rejects.toMatchObject({ code: 'unavailable-ark-projection' });
+    });
   it.each(['/v1/wallet/seed', '/v1/wallet/unlock', 'http://mainnet/v1/info', '/v1/info?x=1', '/v1/indexer/script/subscription/x'])( 'rejects arbitrary or private path %s', path => {
     expect(allowedArkReadPath(path, false)).toBe(false);
   });

@@ -20,12 +20,16 @@ export interface ArkBatch {
   readonly batchId: string;
   readonly operatorId: string;
   readonly anchorTxid: string;
-  readonly rootHash: string;
-  readonly vtxoCount: number;
-  readonly totalAmountSats: string;
+  readonly rootHash: string | null;
+  readonly vtxoCount: number | null;
+  readonly totalAmountSats: string | null;
   readonly roundTimestamp: number;
-  readonly expirationTimestamp: number;
-  readonly status: 'settled' | 'provisional' | 'swept';
+  readonly expirationTimestamp: number | null;
+  readonly status: 'settled' | 'provisional' | 'swept' | 'observed-completed';
+  readonly endedAt?: number;
+  readonly source?: import('./ark-native-source').ArkNativeObservation;
+  readonly nativeStage?: 'FINALIZATION_STAGE';
+  readonly confirmation?: null;
 }
 
 export interface ArkVtxo {
