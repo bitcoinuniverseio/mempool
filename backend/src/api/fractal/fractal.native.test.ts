@@ -132,4 +132,10 @@ describe('CAT repeatable snapshot boundaries (component qualification)', () => {
     await expect(cat.tokens({ limit: 501 })).rejects.toMatchObject({ status: 400 });
     expect(queries).toHaveLength(0);
   });
+  test('a lost SQL connection is named unavailable, never a generic HTTP500 or empty page', async () => {
+    const native = new FractalNativeReader(profile, rpcFixture());
+    const cat = new Cat20Projection(native, { connect: async (): Promise<never> => { throw new Error('Connection refused'); } },
+      { sourceRevision: '8d5aeee7484bacc33d0014b44503c0b59d39aaff', schemaSha256: catSchemaDigest(schema), configurationSha256: 'f'.repeat(64) }, Buffer.alloc(32, 1));
+    await expect(cat.tokens()).rejects.toMatchObject({ code: 'unavailable-cat20-indexer', status: 503 });
+  });
 });
