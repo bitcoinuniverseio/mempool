@@ -7,7 +7,7 @@
     </nav>
     <h1>Fractal Bitcoin Explorer</h1>
     <p class="summary">
-      Fractal Bitcoin consensus chain, block templates, sub-30-second cadence, and native CAT-20 covenants.
+      Observed Fractal testnet chain and native mempool facts. CAT-20 projection readiness is separate.
     </p>
   </header>
 
@@ -23,36 +23,44 @@
 
     <div *ngIf="vm.kind === 'error'" class="panel">
       <h2>Fractal Node Unavailable</h2>
-      <p>Could not connect to Universe first-party Fractal Bitcoin node.</p>
+      <p>The configured Fractal source could not establish this read.</p>
       <p role="alert">{{ vm.message }}</p>
     </div>
 
-    <ng-container *ngIf="vm.kind === 'ready' && vm.tip && vm.mempool && vm.latestBlock">
+    <ng-container *ngIf="vm.kind === 'ready' && vm.tip">
+      <section class="panel">
+        <p>Source: {{ vm.tip.observation.network }} · release {{ vm.tip.observation.source.release }} · observed {{ vm.tip.observation.observedAt }}</p>
+        <details><summary>Native source provenance</summary><p class="mono">Source revision {{ vm.tip.observation.source.sourceRevision }}<br>Binary SHA256 {{ vm.tip.observation.source.binarySha256 }}<br>Configuration SHA256 {{ vm.tip.observation.source.configurationSha256 }}<br>Genesis {{ vm.tip.observation.genesisHash }}<br>Block one {{ vm.tip.observation.blockOneHash }}</p></details>
+        <p>Checkpoint #{{ vm.tip.observation.checkpoint.height }} <span class="mono">{{ vm.tip.observation.checkpoint.hash }}</span></p>
+        <p>{{ vm.tip.observation.ready ? 'Node reports ready at this observation; CAT-20 has a separate projection.' : 'Node is still syncing. This observed tip does not establish a ready CAT-20 projection.' }}</p>
+        <p role="alert" *ngIf="vm.mempoolFailure">Mempool unavailable: {{ vm.mempoolFailure }}</p>
+        <p role="alert" *ngIf="vm.blockFailure">Block unavailable: {{ vm.blockFailure }}</p>
+      </section>
       <div class="metrics-grid">
         <div class="metric-card">
           <span class="metric-label">Chain Tip</span>
           <span class="metric-value">#{{ vm.tip.height }}</span>
           <span class="metric-sub">{{ vm.tip.network }}</span>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" *ngIf="vm.mempool">
           <span class="metric-label">Mempool Count</span>
           <span class="metric-value">{{ vm.mempool.count }} txs</span>
-          <span class="metric-sub">{{ vm.mempool.pendingCat20TxCount }} CAT-20</span>
+          <span class="metric-sub">CAT-20 pending count: {{ vm.mempool.pendingCat20TxCount === null ? 'Unknown' : vm.mempool.pendingCat20TxCount }}</span>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" *ngIf="vm.mempool">
           <span class="metric-label">Median Fee Rate</span>
-          <span class="metric-value">{{ vm.mempool.medianFeeRate }} sat/vB</span>
-          <span class="metric-sub">Min: {{ vm.mempool.minFeeRate }} | Max: {{ vm.mempool.maxFeeRate }}</span>
+          <span class="metric-value">{{ vm.mempool.medianFeeRate === null ? 'Unknown' : vm.mempool.medianFeeRate + ' sat/vB' }}</span>
+          <span class="metric-sub">Fee distribution and transaction weights are not observed by this source.</span>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" *ngIf="vm.latestBlock">
           <span class="metric-label">Difficulty</span>
           <span class="metric-value">{{ vm.latestBlock.difficulty }}</span>
-          <span class="metric-sub">Cadence: ~30s</span>
+          <span class="metric-sub">No measured block cadence</span>
         </div>
       </div>
 
-      <section class="panel">
-        <h2>Latest Confirmed Block</h2>
+      <section class="panel" *ngIf="vm.latestBlock">
+        <h2>Block at the observed tip</h2>
         <table class="data-table">
           <tbody>
             <tr>
@@ -69,15 +77,16 @@
             </tr>
             <tr>
               <td><strong>Weight</strong></td>
-              <td>{{ vm.latestBlock.weight }} WU ({{ (vm.latestBlock.size / 1000).toFixed(1) }} kB)</td>
+              <td>{{ vm.latestBlock.weight }} WU ({{ vm.latestBlock.size }} bytes)</td>
             </tr>
             <tr>
               <td><strong>Miner</strong></td>
-              <td>{{ vm.latestBlock.miner }}</td>
+              <td>{{ vm.latestBlock.miner || 'Unknown' }}</td>
             </tr>
           </tbody>
         </table>
       </section>
     </ng-container>
+    <button type="button" (click)="retry()" [disabled]="vm.kind === 'loading'">Retry reads</button>
   </ng-container>
 </div>

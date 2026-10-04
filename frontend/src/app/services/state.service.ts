@@ -108,6 +108,7 @@ export interface Env {
    */
   UNIVERSE_CHAIN_NETWORKS?: Record<string, string> | string;
   /** Public operator expectations for explicitly qualified watch-only Bitcoin sources. Empty means unavailable. */
+  FRACTAL_SOURCE_PROFILE?: import('@app/universe/universe.types').FractalSourceProfile | string | null;
   WATCH_ONLY_SOURCE_PROFILES?: Record<string, { releaseSha: string; configurationSha256: string; genesisHash: string; signetChallenge: string | null }> | string;
   customize?: Customization;
   PROD_DOMAINS: string[];
@@ -123,6 +124,7 @@ const defaultEnv: Env = {
   'LIQUID_TESTNET_ENABLED': false,
   'BASE_MODULE': 'mempool',
   'ROOT_NETWORK': '',
+  'FRACTAL_SOURCE_PROFILE': null,
   'WATCH_ONLY_SOURCE_PROFILES': {},
   'ITEMS_PER_PAGE': 10,
   'KEEP_BLOCKS_AMOUNT': 8,

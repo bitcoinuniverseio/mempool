@@ -864,7 +864,18 @@ export interface ExplorerProtocolObjectsPage {
 // Product Verticals Type Declarations
 // ---------------------------------------------------------------------------
 
+export interface FractalSourceProfile { readonly network: 'fractal-testnet'; readonly release: '0.4.0'; readonly sourceRevision: '8c22167f04250c7dd03afe46af4158bd08001183'; readonly configurationSha256: string; readonly binarySha256: string; }
+export interface FractalCheckpoint { readonly height: number; readonly hash: string; }
+export interface FractalObservation { readonly schema: 'fractal-observation-v1'; readonly network: 'fractal-testnet'; readonly genesisHash: string; readonly blockOneHash: string; readonly checkpoint: FractalCheckpoint; readonly ready: boolean; readonly observedAt: string; readonly source: FractalSourceProfile; }
+export interface FractalTip {
+  readonly schema: 'fractal-tip-v1';
+  readonly observation: FractalObservation;
+  readonly height: number; readonly hash: string; readonly time: number; readonly network: 'fractal-testnet';
+}
+
 export interface FractalBlockSummary {
+  readonly schema: 'fractal-block-v1';
+  readonly observation: FractalObservation;
   readonly hash: string;
   readonly height: number;
   readonly time: number;
@@ -877,42 +888,71 @@ export interface FractalBlockSummary {
 }
 
 export interface FractalTransactionView {
+  readonly schema: 'fractal-transaction-v1';
+  readonly observation: FractalObservation;
   readonly txid: string;
   readonly hash: string;
   readonly version: number;
   readonly size: number;
   readonly weight: number;
   readonly locktime: number;
-  readonly vin: readonly any[];
-  readonly vout: readonly any[];
+  readonly vin: readonly FractalVin[];
+  readonly vout: readonly FractalVout[];
   readonly blockHash?: string;
   readonly blockHeight?: number;
   readonly blockTime?: number;
-  readonly feeAtomic: string;
+  readonly feeAtomic: string | null;
+  readonly feeState: 'unknown-prevouts';
+  readonly cat20State: 'not-joined';
   readonly cat20Operations?: readonly Cat20Operation[];
 }
 
+export interface FractalVin {
+  readonly txid?: string;
+  readonly vout?: number;
+  readonly coinbase?: string;
+  readonly sequence: number;
+  readonly scriptSig?: string;
+  readonly witness?: readonly string[];
+  readonly prevout?: FractalVout;
+}
+
+export interface FractalVout {
+  readonly valueAtomic: string;
+  readonly n: number;
+  readonly scriptPubKey: {
+    readonly asm: string;
+    readonly hex: string;
+    readonly type: string;
+    readonly address?: string;
+  };
+}
+
 export interface Cat20Token {
+  readonly schema: 'cat20-token-v1';
   readonly tokenId: string;
   readonly name: string;
   readonly symbol: string;
   readonly decimals: number;
-  readonly maxSupplyAtomic: string;
+  readonly maxSupplyAtomic: string | null;
   readonly circulatingSupplyAtomic: string;
-  readonly mintLimitAtomic: string;
+  readonly mintLimitAtomic: string | null;
   readonly deployTxid: string;
   readonly deployHeight: number;
-  readonly minterAddress: string;
-  readonly minterType: 'open' | 'closed' | 'covenant';
+  readonly minterAddress: string | null;
+  readonly minterPubKey: string;
+  readonly minterType: 'open' | 'closed' | 'covenant' | null;
   readonly holderCount: number;
-  readonly transferCount: number;
-  readonly state: 'active' | 'minting' | 'capped';
+  readonly transferCount: number | null;
+  readonly state: 'active' | 'minting' | 'capped' | null;
+  readonly unavailable: readonly string[];
 }
 
 export interface Cat20Holder {
-  readonly address: string;
+  readonly address: string | null;
+  readonly ownerPubKeyHash: string;
   readonly balanceAtomic: string;
-  readonly percentage: string;
+  readonly percentage: string | null;
 }
 
 export interface Cat20Operation {
@@ -926,14 +966,30 @@ export interface Cat20Operation {
 }
 
 export interface FractalMempoolOverview {
+  readonly schema: 'fractal-mempool-v1';
+  readonly observation: FractalObservation;
   readonly count: number;
   readonly totalBytes: number;
-  readonly totalWeight: number;
-  readonly minFeeRate: number;
-  readonly maxFeeRate: number;
-  readonly medianFeeRate: number;
-  readonly pendingCat20TxCount: number;
+  readonly totalWeight: number | null;
+  readonly minFeeRate: number | null;
+  readonly maxFeeRate: number | null;
+  readonly medianFeeRate: number | null;
+  readonly pendingCat20TxCount: number | null;
+  readonly unavailable: readonly string[];
 }
+
+export interface Cat20Page<T> {
+  readonly schema: 'cat20-page-v1';
+  readonly observation: FractalObservation;
+  readonly trackerSourceRevision: string;
+  readonly checkpoint: FractalCheckpoint;
+  readonly items: readonly T[];
+  readonly total: number;
+  readonly nextCursor: string | null;
+}
+export interface Cat20PageRequest { limit?: number; cursor?: string; }
+
+export interface Cat20TokenDetail extends Cat20Token { readonly observation: FractalObservation; readonly checkpoint: FractalCheckpoint; readonly trackerSourceRevision: string; }
 
 export interface ZcashValuePool {
   readonly id: 'transparent' | 'sprout' | 'sapling' | 'orchard' | 'lockbox' | 'ironwood';
