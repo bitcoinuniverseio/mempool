@@ -47,12 +47,33 @@ async function outspends(f: ReturnType<typeof setup>) {
 const state = (f: ReturnType<typeof setup>, id: string): any => (f.service as any).sessions.get(id);
 const view = (f: ReturnType<typeof setup>, id: string): any => (f.service as any).view(state(f, id));
 
+it('binds a complete empty output set to its independently fenced context and revalidates retries', async () => {
+  const f = setup(); f.snapshot.summary.chain_stats = { ...zero };
+  (f.source.history as jest.Mock).mockResolvedValue([]);
+  let current = await f.service.create('address', signal());
+  expect(current.globalMempoolProof.verifiedOutputContext).toBeNull();
+  for (let i = 0; i < 8 && current.status === 'PARTIAL'; i++) current = await f.service.next('address', current.sessionId, current.cursor, signal());
+  expect(current.status).toBe('COMPLETE_AT_OBSERVED_TIP');
+  expect(current.result).toMatchObject({ outputCount: 0, balanceAtomic: '0', items: [] });
+  expect(current.globalMempoolProof.verifiedOutputContext).toMatchObject({ identity: f.currentIdentity(), outputCount: 0, outpointsSha256: digest([]) });
+  f.setPool([f.original, globalTx(1)]);
+  current = await f.service.next('address', current.sessionId, current.cursor, signal());
+  expect(current.status).toBe('COMPLETE_AT_OBSERVED_TIP');
+  expect(current.globalMempoolProof.verifiedOutputContext).toMatchObject({ identity: f.currentIdentity(), outputCount: 0, outpointsSha256: digest([]) });
+  expect(current.mempoolAnchor!.observedAt).toBe(current.globalMempoolProof.transitions[0].observedAt);
+  state(f, current.sessionId).global.verifiedIdentity = undefined;
+  const rejected = await f.service.next('address', current.sessionId, current.cursor, signal());
+  expect(rejected.reason).toBe('VERIFIED_OUTPUT_CONTEXT_UNKNOWN');
+  expect(rejected.result).toBeUndefined(); expect(rejected.globalMempoolProof.verifiedOutputContext).toBeNull();
+});
+
 it('retains independently verified outputs only across byte-proved unrelated additions/removals and closes current context', async () => {
   const f = setup(); let current = await outspends(f);
   current = await f.service.next('address', current.sessionId, current.cursor, signal()); expect(current.progress.verifiedOutputs).toBe(100); expect(current.result).toBeUndefined();
   const added = globalTx(1); f.setPool([f.original, added]);
   current = await f.service.next('address', current.sessionId, current.cursor, signal());
   expect(current.progress).toMatchObject({ verifiedOutputs: 200, mempoolEpoch: 0 }); expect(current.globalMempoolProof.transitions[0]).toMatchObject({ fromIdentity: current.globalMempoolProof.initialIdentity, addedTxids: [added.txid], verifiedOutputsRetained: 100 });
+  expect(current.mempoolAnchor!.observedAt).toBe(current.globalMempoolProof.transitions[0].observedAt);
   f.setPool([added]); current = await f.service.next('address', current.sessionId, current.cursor, signal());
   expect(current.status).toBe('COMPLETE_AT_OBSERVED_TIP'); expect(current.result).toMatchObject({ outputCount: 220, balanceAtomic: '22000' });
   expect(current.globalMempoolProof.verifiedOutputContext).toMatchObject({ identity: f.currentIdentity(), outputCount: 220, checkpoint: { blockHeight: 20 } });

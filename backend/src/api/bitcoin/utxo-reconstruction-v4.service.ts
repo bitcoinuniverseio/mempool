@@ -214,6 +214,11 @@ export class UtxoReconstructionV4Service {
     const pending = session.pendingGlobal;
     if (!pending) return;
     if (session.bytes - session.global.bytes + pending.state.bytes > MAX_BYTES) throw new ReconstructionError(422, 'Reconstruction retained memory capacity exceeded');
+    if (session.mempoolAnchor && session.mempoolAnchor.mempoolIdentity !== pending.anchor.mempoolIdentity) {
+      const observed = pending.state.transitions[pending.state.transitions.length - 1];
+      if (!observed || observed.toIdentity !== pending.anchor.mempoolIdentity) throw new MempoolAnchorChanged('GLOBAL_TRANSACTION_PROOF_UNKNOWN');
+      session.mempoolObservedAt = observed.observedAt;
+    }
     session.bytes += pending.state.bytes - session.global.bytes;
     session.global = pending.state; session.mempoolAnchor = pending.anchor;
     session.pendingGlobal = undefined;
@@ -225,7 +230,7 @@ export class UtxoReconstructionV4Service {
     const old = session.pendingGlobal?.anchor || session.mempoolAnchor, previous = session.pendingGlobal?.state || session.global;
     if (old && (snapshot.checkpoint.blockHeight !== old.checkpoint.blockHeight || snapshot.checkpoint.blockHash !== old.checkpoint.blockHash)) throw new MempoolAnchorChanged('FINAL_TIP_CHANGED');
     if (!old || JSON.stringify(exactStats(snapshot.summary.mempool_stats)) !== JSON.stringify(exactStats(old.summary.mempool_stats))) throw new MempoolAnchorChanged();
-    if (session.verified > 0 && previous.verifiedIdentity !== old.mempoolIdentity) throw new MempoolAnchorChanged('VERIFIED_OUTPUT_CONTEXT_UNKNOWN');
+    if ((session.verified > 0 || session.phase === 'complete') && previous.verifiedIdentity !== old.mempoolIdentity) throw new MempoolAnchorChanged('VERIFIED_OUTPUT_CONTEXT_UNKNOWN');
     if (snapshot.mempoolIdentity === old.mempoolIdentity) return;
     if (previous.mode !== 'irrelevant-delta-proof' || !old.globalMempool.txids || !snapshot.globalMempool.txids) throw new MempoolAnchorChanged('STRICT_GLOBAL_MEMPOOL_CHANGED');
     if (previous.transitionCount >= MAX_GLOBAL_TRANSITIONS) throw new ReconstructionError(422, 'Global mempool proof transition capacity exceeded');
@@ -255,7 +260,7 @@ export class UtxoReconstructionV4Service {
         globalFundingOutpoints: [...globalFunding].sort(),
         verifiedOutpoints: session.candidates.slice(0, session.verified).map(output => point(output.txid, output.vout)),
         from: old.globalMempool, to: after.globalMempool, transactions: changed.map(proof => ({ txid: proof!.txid, rawSha256: proof!.rawSha256, relevant: false })) }) };
-    const state: GlobalState = { ...previous, proofs, transitionCount: transition.transition, transitions: [...previous.transitions, transition].slice(-8), verifiedIdentity: session.verified > 0 ? after.mempoolIdentity : undefined };
+    const state: GlobalState = { ...previous, proofs, transitionCount: transition.transition, transitions: [...previous.transitions, transition].slice(-8), verifiedIdentity: session.verified > 0 || session.phase === 'complete' ? after.mempoolIdentity : undefined };
     state.bytes = this.proofBytes(state);
     if (state.bytes > MAX_GLOBAL_BYTES || session.bytes - session.global.bytes + state.bytes > MAX_BYTES) throw new MempoolAnchorChanged('GLOBAL_PROOF_BYTE_CAPACITY');
     session.pendingGlobal = { state, anchor: after };
@@ -551,7 +556,7 @@ export class UtxoReconstructionV4Service {
         retainedBytes: session.global.bytes, transactionCount: session.mempoolAnchor?.globalMempool.transactionCount ?? null, sequenceAtomic: session.mempoolAnchor?.globalMempool.sequenceAtomic ?? null,
         initialIdentity: session.global.initialIdentity, transitionCount: session.global.transitionCount, maximumTransitions: 128, maximumRetainedTransitions: 8,
         transitions: session.global.transitions.map(transition => ({ ...transition, addedTxids: [...transition.addedTxids], removedTxids: [...transition.removedTxids] })),
-        verifiedOutputContext: session.verified > 0 && session.global.verifiedIdentity && session.mempoolAnchor ? { identity: session.global.verifiedIdentity,
+        verifiedOutputContext: (session.verified > 0 || complete) && session.global.verifiedIdentity && session.mempoolAnchor ? { identity: session.global.verifiedIdentity,
           checkpoint: { ...session.mempoolAnchor.checkpoint }, outpointsSha256: digest(session.candidates.slice(0, session.verified).map(output => ({ txid: output.txid, vout: output.vout, valueAtomic: String(output.value), scriptPubKey: output.scriptpubkey }))), outputCount: session.verified } : null },
       progress: { phase: session.phase, pageLimit: PAGE, mempoolEpoch: session.mempoolEpoch, confirmedEpoch: session.confirmedEpoch, confirmedTransactionsProcessed: session.confirmed.transactions,
         confirmedTransactionsExpected: session.snapshot.summary.chain_stats.tx_count,
