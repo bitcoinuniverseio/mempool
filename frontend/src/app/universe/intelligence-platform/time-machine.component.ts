@@ -234,8 +234,13 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    let selectedNetwork = this.network;
     this.loadCoverage();
-    this.networkRead = this.state?.networkChanged$.subscribe(() => { this.invalidate(); this.coverage = null; this.loadCoverage(); });
+    this.networkRead = this.state?.networkChanged$.subscribe(() => {
+      if (selectedNetwork === this.network) { return; }
+      selectedNetwork = this.network;
+      this.invalidate(); this.coverage = null; this.loadCoverage();
+    });
   }
 
   private get network(): string { return this.state?.network || this.state?.env?.ROOT_NETWORK || 'mainnet'; }
