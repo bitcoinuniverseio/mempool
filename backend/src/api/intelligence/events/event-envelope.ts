@@ -10,8 +10,8 @@ export interface IntelligenceEventEnvelope<T = Record<string, unknown>> {
   source_software: string;
   source_version: string;
   observed_at_utc: string;
-  clock_offset_ms: number;
-  clock_uncertainty_ms: number;
+  clock_offset_ms: number | null;
+  clock_uncertainty_ms: number | null;
   ingested_at_utc: string;
   entity_type: string;
   entity_id: string;
@@ -29,8 +29,8 @@ export interface EventEnvelopeInput<T = Record<string, unknown>> {
   source_software?: string;
   source_version?: string;
   observed_at_utc?: string;
-  clock_offset_ms?: number;
-  clock_uncertainty_ms?: number;
+  clock_offset_ms?: number | null;
+  clock_uncertainty_ms?: number | null;
   entity_type: string;
   entity_id: string;
   correlation_id?: string;
@@ -77,14 +77,22 @@ export class EventEnvelopeValidator {
 
   public static createEnvelope<T extends Record<string, unknown>>(
     input: EventEnvelopeInput<T>,
-    schemaVersion = '1.1.0'
+    schemaVersion = '1.2.0'
   ): IntelligenceEventEnvelope<T> {
     this.assertIntegerAmounts(input.payload);
     if (input.source_sequence !== undefined && (!Number.isSafeInteger(input.source_sequence) || input.source_sequence < 0)) {
       throw new Error('source_sequence must be a nonnegative safe integer.');
     }
-    if (!['1.0.0', '1.1.0'].includes(schemaVersion) || schemaVersion === '1.0.0' && this.hasNestedObject(input.payload)) {
+    if (!['1.0.0', '1.1.0', '1.2.0'].includes(schemaVersion) || schemaVersion === '1.0.0' && this.hasNestedObject(input.payload)) {
       throw new Error('Nested event payloads require the complete version 1.1 digest contract.');
+    }
+    const offset = input.clock_offset_ms ?? null, uncertainty = input.clock_uncertainty_ms ?? null;
+    if ((offset === null) !== (uncertainty === null) || offset !== null && !Number.isSafeInteger(offset) ||
+        uncertainty !== null && (!Number.isSafeInteger(uncertainty) || uncertainty < 0)) {
+      throw new Error('Clock measurements must be a paired safe integer offset and nonnegative uncertainty, or both unknown.');
+    }
+    if (schemaVersion !== '1.2.0' && offset === null) {
+      throw new Error('Unknown clock measurements require version 1.2.');
     }
 
     const now = new Date();
@@ -109,8 +117,8 @@ export class EventEnvelopeValidator {
       source_software: input.source_software || 'Universe Explorer event producer',
       source_version: input.source_version || 'unknown',
       observed_at_utc: observedAt,
-      clock_offset_ms: Math.trunc(input.clock_offset_ms ?? 0),
-      clock_uncertainty_ms: Math.trunc(input.clock_uncertainty_ms ?? 1),
+      clock_offset_ms: offset,
+      clock_uncertainty_ms: uncertainty,
       ingested_at_utc: ingestedAt,
       entity_type: input.entity_type,
       entity_id: input.entity_id,
@@ -198,11 +206,10 @@ export class EventEnvelopeValidator {
     if (!envelope.observed_at_utc || Number.isNaN(Date.parse(envelope.observed_at_utc))) {
       return { valid: false, error: 'observed_at_utc must be a valid UTC timestamp' };
     }
-    if (typeof envelope.clock_offset_ms !== 'number' || !Number.isInteger(envelope.clock_offset_ms)) {
-      return { valid: false, error: 'clock_offset_ms must be an integer' };
-    }
-    if (typeof envelope.clock_uncertainty_ms !== 'number' || !Number.isInteger(envelope.clock_uncertainty_ms)) {
-      return { valid: false, error: 'clock_uncertainty_ms must be an integer' };
+    const unknownClock = envelope.schema_version === '1.2.0' && envelope.clock_offset_ms === null && envelope.clock_uncertainty_ms === null;
+    if (!unknownClock && (typeof envelope.clock_offset_ms !== 'number' || !Number.isSafeInteger(envelope.clock_offset_ms) ||
+        typeof envelope.clock_uncertainty_ms !== 'number' || !Number.isSafeInteger(envelope.clock_uncertainty_ms) || envelope.clock_uncertainty_ms < 0)) {
+      return { valid: false, error: 'Clock measurements must be paired safe integers with nonnegative uncertainty, or explicit version1.2 unknowns' };
     }
     if (!envelope.entity_type || typeof envelope.entity_type !== 'string') {
       return { valid: false, error: 'Missing or invalid entity_type' };
@@ -216,7 +223,7 @@ export class EventEnvelopeValidator {
 
     try {
       this.assertIntegerAmounts(envelope.payload);
-      if (!['1.0.0', '1.1.0'].includes(envelope.schema_version)) {
+      if (!['1.0.0', '1.1.0', '1.2.0'].includes(envelope.schema_version)) {
         return { valid: false, error: 'Unsupported event digest schema.' };
       }
       if (envelope.schema_version === '1.0.0' && this.hasNestedObject(envelope.payload)) {

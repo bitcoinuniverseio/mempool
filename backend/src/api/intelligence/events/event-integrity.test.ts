@@ -23,9 +23,11 @@ describe('complete versioned event payload integrity', () => {
   it('retains verifiable flat version1.0 compatibility and refuses unverifiable historical nested records', () => {
     const envelope = make({ value_sats: 100, label: 'old' });
     envelope.schema_version = '1.0.0';
+    envelope.clock_offset_ms = 0; envelope.clock_uncertainty_ms = 1;
     expect(validator.validateEnvelope(envelope).valid).toBe(true);
     const oldNested = make({ template: { height: 1 } });
     oldNested.schema_version = '1.0.0';
+    oldNested.clock_offset_ms = 0; oldNested.clock_uncertainty_ms = 1;
     expect(validator.validateEnvelope(oldNested)).toMatchObject({ valid: false, error: expect.stringContaining('unverifiable') });
     expect(() => validator.createEnvelope({ network: 'signet', source_id: 'old', event_type: 'observed', entity_type: 'template', entity_id: 'old', payload: oldNested.payload }, '1.0.0')).toThrow(/version 1.1/);
   });
@@ -45,5 +47,19 @@ describe('complete versioned event payload integrity', () => {
 
   it('does not invent a Core version for an unspecified event producer', () => {
     expect(make({ label: 'unknown' })).toMatchObject({ source_software: 'Universe Explorer event producer', source_version: 'unknown' });
+  });
+
+  it('preserves unknown clocks explicitly and never rounds or fabricates measurements', () => {
+    expect(make({ label: 'unmeasured' })).toMatchObject({ schema_version: '1.2.0', clock_offset_ms: null, clock_uncertainty_ms: null });
+    const input = { network: 'signet', source_id: 'controlled', event_type: 'observed', entity_type: 'template', entity_id: 'controlled', payload: {} };
+    for (const measurement of [{ clock_offset_ms: 0 }, { clock_offset_ms: 0, clock_uncertainty_ms: -1 },
+      { clock_offset_ms: 0.5, clock_uncertainty_ms: 1 }, { clock_offset_ms: 0, clock_uncertainty_ms: Number.MAX_SAFE_INTEGER + 1 }]) {
+      expect(() => validator.createEnvelope({ ...input, ...measurement })).toThrow(/Clock measurements/);
+    }
+    expect(() => validator.createEnvelope(input, '1.1.0')).toThrow(/version 1.2/);
+    const measured = validator.createEnvelope({ ...input, clock_offset_ms: -2, clock_uncertainty_ms: 3 });
+    expect(validator.validateEnvelope(measured).valid).toBe(true);
+    measured.clock_uncertainty_ms = null;
+    expect(validator.validateEnvelope(measured).valid).toBe(false);
   });
 });
