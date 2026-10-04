@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'crypto';
 import config from '../../../config';
 import bitcoinClient from '../../bitcoin/bitcoin-client';
 import { globalNetworkService } from '../global-network/global-network.service';
+import { btcToSats } from '../utxo/utxo-evidence';
 
 export class RelayEvidenceError extends Error {
   constructor(public readonly code: string, message: string, public readonly status = 503) { super(message); }
@@ -110,7 +111,13 @@ export class RelayCollectorService {
     return{network:this.network,total_peers:total,bip324_peers:v2,legacy_peers:v1,unknown_transport_peers:total-v2-v1,known_transport_peers:v1+v2,bip324_percent:v1+v2?Math.round(10000*v2/(v1+v2))/100:null,erlay_status:'not_observed',observed_at_utc:snapshot.observed_at_utc,age_ms:snapshot.age_ms,scope:'Connected peers of the owned node only; percentage denominator excludes unknown transport metadata. Per-transaction transport is not observed.'};
   }
   private sensor(snapshot:OwnedSnapshot,policy:{value:{fullrbf?:boolean};available:boolean}){
-    return{id:this.sourceId,network:this.network,name:'Owned Bitcoin Core node',region:null,client_version:snapshot.info.subversion,protocol_version:snapshot.info.protocolversion??null,full_rbf:typeof policy.value.fullrbf==='boolean'?policy.value.fullrbf:null,min_relay_feerate:typeof snapshot.info.relayfee==='number'&&Number.isFinite(snapshot.info.relayfee)&&snapshot.info.relayfee>=0?snapshot.info.relayfee*100000:null,clock_offset_ms:null,clock_uncertainty_ms:null,connected_peers_count:snapshot.peers.length,bip324_peers_count:this.transport(snapshot).bip324_peers,erlay_supported:null,status:'online',last_heartbeat:snapshot.observed_at_utc,policy_source_available:policy.available,scope:SCOPE};
+    return{id:this.sourceId,network:this.network,name:'Owned Bitcoin Core node',region:null,client_version:snapshot.info.subversion,protocol_version:snapshot.info.protocolversion??null,full_rbf:typeof policy.value.fullrbf==='boolean'?policy.value.fullrbf:null,min_relay_feerate:this.relayFee(snapshot.info.relayfee),clock_offset_ms:null,clock_uncertainty_ms:null,connected_peers_count:snapshot.peers.length,bip324_peers_count:this.transport(snapshot).bip324_peers,erlay_supported:null,status:'online',last_heartbeat:snapshot.observed_at_utc,policy_source_available:policy.available,scope:SCOPE};
+  }
+  private relayFee(value:unknown):number|null{
+    if(typeof value!=='number'||!Number.isFinite(value)||value<0)return null;
+    // Core reports an exact BTC amount per1000 virtual bytes. Convert to
+    // integer satoshis before division, avoiding floating BTC multiplication.
+    try{return btcToSats(value)/1000;}catch{return null;}
   }
   /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   public async getSensors(){const now=this.now();const [snapshot,policy]=await Promise.all([this.snapshot(now),this.policy(now)]);return[this.sensor(snapshot,policy)];}
