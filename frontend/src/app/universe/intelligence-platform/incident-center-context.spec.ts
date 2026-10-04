@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Subject } from 'rxjs';
+import { ReplaySubject, Subject } from 'rxjs';
 import { IncidentCenterComponent } from './incident-center.component';
 
 function setup() {
@@ -15,6 +15,14 @@ describe('Incident observations selected-context lifecycle', () => {
   const record = () => ({ incident_id: 'controlled-record', title: 'Controlled parser fixture', summary: 'Controlled fixture only', technical_postmortem: '',
     incident_type: 'reorg', status: 'resolved', block_hash: 'a'.repeat(64), detected_at_utc: '2026-10-04T12:00:00Z', resolved_at_utc: '2026-10-04T12:01:00Z',
     block_height: 1, duration_seconds: 60, reorg_depth: 1, displaced_tx_count: 0, double_spend_attempts_count: 0 });
+  it('starts one read when the actual replayed context signal is already available', () => {
+    const changed = new ReplaySubject<string>(1); changed.next('');
+    const state: any = { network: '', env: { ROOT_NETWORK: 'signet' }, networkChanged$: changed };
+    const api = { getIncidents$: vi.fn(() => new Subject<any>()) };
+    const page = new (IncidentCenterComponent as any)(api, { markForCheck() {} }, state);
+    page.ngOnInit(); expect(api.getIncidents$).toHaveBeenCalledTimes(1);
+    changed.next(''); expect(api.getIncidents$).toHaveBeenCalledTimes(1); page.ngOnDestroy();
+  });
   it('cancels the old context and reloads without retaining incident records', () => {
     const { page, requests, state, api } = setup();
     page.incidents = [{ status: 'resolved' }];

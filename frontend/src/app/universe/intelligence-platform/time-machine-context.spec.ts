@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Subject, of } from 'rxjs';
+import { ReplaySubject, Subject, of } from 'rxjs';
 import { TimeMachineComponent } from './time-machine.component';
 import { IntelligenceApiService } from './intelligence-api.service';
 import { networkScopedUrl } from '@app/services/network-prefix.interceptor';
@@ -18,6 +18,14 @@ function setup() {
   page.ngOnInit();return {page, state, api, replay};
 }
 describe('Time Machine selected context and target lifecycle', () => {
+  it('does not replace retained coverage for the replayed or unchanged canonical context', () => {
+    const changed = new ReplaySubject<string>(1); changed.next('');
+    const state: any = { network: '', env: { ROOT_NETWORK: 'signet' }, networkChanged$: changed };
+    const api = { getTimeMachineCoverage$: vi.fn(() => of(coverage())) };
+    const page = new (TimeMachineComponent as any)(api, { markForCheck() {} }, state);
+    page.ngOnInit(); expect(api.getTimeMachineCoverage$).toHaveBeenCalledTimes(1);
+    changed.next(''); expect(api.getTimeMachineCoverage$).toHaveBeenCalledTimes(1); page.ngOnDestroy();
+  });
   it('preserves one-satoshi fees and rejects unsafe or absent reported quantities', () => {
     const {page}=setup();expect(page.formatFees(1)).toBe('0.00000001 BTC');expect(page.formatFees(0)).toBe('0 BTC');
     for(const value of [null,undefined,-1,0.5,Number.MAX_SAFE_INTEGER+1])expect(page.formatFees(value)).toBe('Not reported');page.ngOnDestroy();
@@ -91,6 +99,7 @@ describe('Time Machine selected context and target lifecycle', () => {
   });
   it('rejects foreign-network coverage and recovers on a matching native-shaped DTO', () => {
     const {page,api,state}=setup();state.network='testnet4';state.networkChanged$.next('testnet4');expect(page.coverage).toBeNull();expect((page as any).coverageError).toMatch(/selected network/);
-    api.getTimeMachineCoverage$.mockReturnValue(of({...coverage(),network:'testnet4'}));state.networkChanged$.next('testnet4');expect(page.coverage.network).toBe('testnet4');expect((page as any).coverageError).toBeNull();page.ngOnDestroy();
+    state.network='';state.networkChanged$.next('');
+    api.getTimeMachineCoverage$.mockReturnValue(of({...coverage(),network:'testnet4'}));state.network='testnet4';state.networkChanged$.next('testnet4');expect(page.coverage.network).toBe('testnet4');expect((page as any).coverageError).toBeNull();page.ngOnDestroy();
   });
 });

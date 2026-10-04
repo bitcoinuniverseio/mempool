@@ -116,6 +116,7 @@ export class IncidentCenterComponent implements OnInit, OnDestroy {
   private networkSub?: Subscription;
   private revision = 0;
   private destroyed = false;
+  private selectedNetwork: string;
 
   get activeIncidentsCount(): number {
     return this.incidents.filter((i) => i.status !== 'resolved').length;
@@ -128,7 +129,12 @@ export class IncidentCenterComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.networkSub = this.stateService?.networkChanged$?.subscribe(() => this.load());
+    this.selectedNetwork = this.network;
+    this.networkSub = this.stateService?.networkChanged$?.subscribe(() => {
+      if (this.selectedNetwork === this.network) return;
+      this.selectedNetwork = this.network;
+      this.load();
+    });
     this.load();
   }
 
