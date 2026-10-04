@@ -31,7 +31,8 @@ describe('native Ark provider source fencing', () => {
     expect(await service.$getOperators()).toEqual([expect.objectContaining({ id: 'owned-signet', status: 'observed',
       providerVersion: 'v0.9.16', sessionDurationSeconds: '30', activeVtxoCount: null, currentBatchHeight: null,
       totalVolumeSats: null, roundIntervalSec: null })]);
-    await expect(service.$getBatches()).rejects.toMatchObject({ code: 'unavailable-ark-provider' });
+    await expect(service.$getBatches()).rejects.toMatchObject({ code: 'unavailable-ark-projection', status: 503 });
+    await expect(service.$getBatches()).rejects.toThrow('Observed provider identity alone does not establish their inventory or proofs.');
   });
   it('maps failed provider identity to the public unavailable boundary', async () => {
     const f = fixture(); f.read.mockResolvedValue({ ...info, network: 'bitcoin' });

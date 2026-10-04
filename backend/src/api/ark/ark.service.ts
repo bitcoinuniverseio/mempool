@@ -26,7 +26,10 @@ export interface ArkProofVerdict {
 }
 
 const aspUnavailable =
-  'Ark observations are unavailable. Operator, batch, VTXO and virtual-transaction reads require the owned Ark service provider (arkd) with its Bitcoin anchor reader, which is not connected on this deployment.';
+  'Ark provider identity is unavailable. A selected native Ark provider and its independent Bitcoin anchor reader are required.';
+
+const projectionUnavailable =
+  'The verified Ark batch, VTXO and virtual-transaction projections are unavailable on this deployment. Observed provider identity alone does not establish their inventory or proofs.';
 
 /**
  * Ark operator, round, VTXO and virtual-mempool evidence.
@@ -90,22 +93,22 @@ export class ArkService {
 
   /** @asyncSafe */
   public async $getBatches(): Promise<ArkBatch[]> {
-    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
+    throw new ArkEvidenceError('unavailable-ark-projection', projectionUnavailable);
   }
 
   /** @asyncSafe */
   public async $getBatch(_batchId: string): Promise<ArkBatch | null> {
-    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
+    throw new ArkEvidenceError('unavailable-ark-projection', projectionUnavailable);
   }
 
   /** @asyncSafe */
   public async $getVtxo(_vtxoId: string): Promise<ArkVtxo | null> {
-    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
+    throw new ArkEvidenceError('unavailable-ark-projection', projectionUnavailable);
   }
 
   /** @asyncSafe */
   public async $getVirtualTxs(): Promise<ArkVirtualTx[]> {
-    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
+    throw new ArkEvidenceError('unavailable-ark-projection', projectionUnavailable);
   }
 
   /** @asyncSafe */
@@ -117,7 +120,7 @@ export class ArkService {
     }
     return {
       valid: false, stage: 'unavailable-verifier',
-      error: 'The Ark exit proof verifier (owned arkd) and Bitcoin anchor reader are not connected. No VTXO tree path or batch root was verified.',
+      error: 'The Ark exit proof verifier is unavailable. No VTXO tree path, batch root or Bitcoin anchor was verified.',
     };
   }
 }
