@@ -11,7 +11,7 @@ import { FractalEvidenceError, fractalService } from './fractal.service';
  * had been observed.
  */
 describe('FractalService', () => {
-  const unavailable = (code: string) => expect.objectContaining({ code, status: 503 });
+  const unavailable = (code: string): ReturnType<typeof expect.objectContaining> => expect.objectContaining({ code, status: 503 });
 
   it('reports the missing Fractal node rather than an invented chain state', async () => {
     await expect(fractalService.$getTip()).rejects.toThrow(unavailable('unavailable-fractal-node'));
@@ -30,13 +30,13 @@ describe('FractalService', () => {
 
   it('never resolves an absent source as an empty directory', async () => {
     for (const read of [
-      () => fractalService.$getTip(),
-      () => fractalService.$getMempool(),
-      () => fractalService.$getBlock('0'),
-      () => fractalService.$getTransaction('ab'.repeat(32)),
-      () => fractalService.$getCat20Tokens(),
-      () => fractalService.$getCat20Token('unknown'),
-      () => fractalService.$getCat20Holders('unknown'),
+      (): Promise<unknown> => fractalService.$getTip(),
+      (): Promise<unknown> => fractalService.$getMempool(),
+      (): Promise<unknown> => fractalService.$getBlock('0'),
+      (): Promise<unknown> => fractalService.$getTransaction('ab'.repeat(32)),
+      (): Promise<unknown> => fractalService.$getCat20Tokens(),
+      (): Promise<unknown> => fractalService.$getCat20Token('unknown'),
+      (): Promise<unknown> => fractalService.$getCat20Holders('unknown'),
     ]) {
       let resolved: unknown = 'unresolved';
       try {
@@ -56,7 +56,7 @@ describe('Fractal HTTP responses', () => {
   function mount(): Map<string, Handler> {
     const gets = new Map<string, Handler>();
     const app = {
-      get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
+      get: jest.fn((path: string, callback: Handler): unknown => { gets.set(path, callback); return app; }),
     };
     fractalRoutes.initRoutes(app as unknown as Application);
     return gets;
