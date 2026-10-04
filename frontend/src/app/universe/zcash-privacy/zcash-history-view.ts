@@ -31,7 +31,8 @@ export function checkedZcashHistory(raw: unknown, network: string, prior?: Zcash
     || ['reorgRecovered', 'priorSnapshotArchivedThisRequest', 'interruptedWriteRecovered'].some(key => typeof value[key] !== 'boolean')) invalid();
   if (value.status === 'PARTIAL' ? value.nextHeight !== value.verifiedThrough.height + 1 || value.verifiedThrough.height >= value.tipHeight
     : value.nextHeight !== null || value.verifiedThrough.height !== value.tipHeight || value.verifiedThrough.hash !== value.source.tipHash) invalid();
-  if (value.blocks[0].height !== value.coverage.fromHeight || value.blocks.at(-1).height !== value.verifiedThrough.height || value.blocks.at(-1).hash !== value.verifiedThrough.hash) invalid();
+  const last = value.blocks[value.blocks.length - 1];
+  if (value.blocks[0].height !== value.coverage.fromHeight || last.height !== value.verifiedThrough.height || last.hash !== value.verifiedThrough.hash) invalid();
   for (let index = 0; index < value.blocks.length; index++) {
     const block = value.blocks[index], previous = value.blocks[index - 1];
     if (!block || !height(block.height) || !hash(block.hash) || !hash(block.parent) || !height(block.timestamp) || !atomic(block.supplyZat)
