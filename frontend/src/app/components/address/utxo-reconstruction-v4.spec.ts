@@ -88,4 +88,11 @@ describe('explicit bounded V4 global transition consumer',()=>{
     expect(http.delete).toHaveBeenLastCalledWith(`/signet/api/v1/address/${address}/utxo-reconstruction/v4/${initial().sessionId}`);
     pending.next(complete());expect(c.visibleOutputs).toEqual([]);c.ngOnDestroy();
   });
+  it('binds an empty route prefix to independently configured Signet root rather than Mainnet',()=>{
+    const network=new BehaviorSubject(''),http={post:vi.fn().mockReturnValue(of(initial())),delete:vi.fn().mockReturnValue(of({}))};
+    const c=new UtxoReconstructionComponent(http as any,{network:'',networkChanged$:network,env:{ROOT_NETWORK:'signet'}} as any,{markForCheck:vi.fn()} as any);
+    c.address=address;c.ngOnInit();c.selectVersion('v4');c.start();expect(http.post).toHaveBeenLastCalledWith(`/api/v1/address/${address}/utxo-reconstruction/v4`,{});
+    expect(c.view?.network).toBe('signet');expect(c.error).toBeNull();network.next('');expect(c.view?.sessionId).toBe(initial().sessionId);
+    network.next('testnet4');expect(c.view).toBeNull();expect(http.delete).toHaveBeenLastCalledWith(`/api/v1/address/${address}/utxo-reconstruction/v4/${initial().sessionId}`);c.ngOnDestroy();
+  });
 });

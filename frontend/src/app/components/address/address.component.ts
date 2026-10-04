@@ -124,6 +124,15 @@ export class AddressComponent implements OnInit, OnDestroy {
     if (value === 'limit' || value === 'unavailable') { this.reconstructionOfferScope = scope; }
   }
   get reconstructionOffered(): boolean { return this.reconstructionOfferScope === this.reconstructionScope; }
+  get canOfferIndependentReconstruction(): boolean {
+    const network = this.network || this.stateService.env?.ROOT_NETWORK || 'mainnet';
+    return ['mainnet', 'signet', 'testnet', 'testnet4', 'regtest'].includes(network)
+      && !this.isLoadingAddress && this.nativeOutputScope === this.reconstructionScope && this.nativeOutputState === 'complete'
+      && !!this.address && !this.address.is_pubkey && this.address.address === this.addressString && !this.reconstructionOffered;
+  }
+  offerIndependentReconstruction(): void {
+    if (this.canOfferIndependentReconstruction) { this.reconstructionOfferScope = this.reconstructionScope; }
+  }
   isLoadingTransactions = true;
   retryLoadMore = false;
   error: any;

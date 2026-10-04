@@ -24,4 +24,17 @@ describe('independent reconstruction offer lifetime',()=>{
     c.network='testnet4';expect(offered(c)).toBe(false);c.utxoSourceState='idle';
     c.network='signet';c.utxoSourceState='loading';expect(offered(c)).toBe(false);
   });
+  it('offers an independent read only after an explicit validated completed-scope opt-in, without source calls or false native failure',()=>{
+    const c=setup();c.address={address:c.addressString,is_pubkey:false};c.isLoadingAddress=false;c.utxoSourceState='complete';
+    expect(c.canOfferIndependentReconstruction).toBe(true);expect(offered(c)).toBe(false);
+    c.offerIndependentReconstruction();expect(offered(c)).toBe(true);expect(c.utxoSourceState).toBe('complete');
+    c.utxoSourceState='loading';expect(offered(c)).toBe(true);c.network='testnet4';expect(offered(c)).toBe(false);
+    c.offerIndependentReconstruction();expect(offered(c)).toBe(false);c.utxoSourceState='idle';c.network='signet';c.utxoSourceState='loading';expect(offered(c)).toBe(false);
+  });
+  it('rejects loading, stale address, pubkey and non-Bitcoin scope opt-in',()=>{
+    for(const mutate of [c=>c.isLoadingAddress=true,c=>c.address.address='tb1qother',c=>c.address.is_pubkey=true,c=>c.network='liquidtestnet',c=>c.utxoSourceState='loading']){
+      const c=setup();c.address={address:c.addressString,is_pubkey:false};c.isLoadingAddress=false;c.utxoSourceState='complete';mutate(c);
+      expect(c.canOfferIndependentReconstruction).toBe(false);c.offerIndependentReconstruction();expect(offered(c)).toBe(false);
+    }
+  });
 });
