@@ -27,8 +27,14 @@ export function decodeArkade(pkg) {
   const [leafId, leafIndexText] = pkg.leaf_outpoint.split(':'); const leafIndex = Number(leafIndexText);
   const leaf = graph.find(leafId); if (!leaf || leaf.children.size || leafIndex >= leaf.root.outputsLength) throw Error('selected leaf output is unavailable');
   const options = pkg.default_vtxo;
-  if (!options || Object.keys(options).some(key => !['pubkey', 'server_pubkey', 'exit_delay_blocks'].includes(key)) || !Number.isSafeInteger(options.exit_delay_blocks) || options.exit_delay_blocks < 1 || options.exit_delay_blocks > 65535) throw Error('a complete DefaultVtxo public policy is required');
-  const policy = new DefaultVtxo.Script({ pubKey: decodeHex(options.pubkey, 32), serverPubKey: decodeHex(options.server_pubkey, 32), csvTimelock: { type: 'blocks', value: BigInt(options.exit_delay_blocks) } });
+  const seconds = options?.version === 2;
+  const fields = seconds ? ['version', 'pubkey', 'server_pubkey', 'exit_delay_seconds'] : ['pubkey', 'server_pubkey', 'exit_delay_blocks'];
+  const delay = seconds ? options.exit_delay_seconds : options?.exit_delay_blocks;
+  if (!options || Object.keys(options).some(key => !fields.includes(key)) || !Number.isSafeInteger(delay) || delay < 1
+    || (seconds ? delay > 65535 * 512 || delay % 512 !== 0 : delay > 65535)) throw Error('a complete versioned DefaultVtxo public policy is required');
+  const timelock = { type: seconds ? 'seconds' : 'blocks', value: BigInt(delay) };
+  const exitSequence = seconds ? 0x400000 | delay / 512 : delay;
+  const policy = new DefaultVtxo.Script({ pubKey: decodeHex(options.pubkey, 32), serverPubKey: decodeHex(options.server_pubkey, 32), csvTimelock: timelock });
   const output = leaf.root.getOutput(leafIndex);
   if (hex(output.script) !== hex(policy.pkScript)) throw Error('DefaultVtxo policy does not match the actual leaf output');
   function findPath(node) {
@@ -44,8 +50,9 @@ export function decodeArkade(pkg) {
   const rootInput = graph.root.getInput(0);
   return { engine: '@arkade-os/sdk 0.4.72', arkade: pkg, vtxo_id: pkg.leaf_outpoint.toLowerCase(),
     anchor_outpoint: hex(rootInput.txid) + ':' + rootInput.index, amount_sats: Number(output.amount), script_pub_key: hex(output.script),
-    user_pubkey: '02' + options.pubkey.toLowerCase(), asp_pubkey: '02' + options.server_pubkey.toLowerCase(), exit_delta: options.exit_delay_blocks,
-    exit_path: { script_hex: hex(scriptFromTapLeafScript(policy.exit())), control_block_hex: hex(TaprootControlBlock.encode(policy.exit()[0])), leaf_version: 192, sequence: options.exit_delay_blocks, signature_bytes: 64 },
+    user_pubkey: '02' + options.pubkey.toLowerCase(), asp_pubkey: '02' + options.server_pubkey.toLowerCase(), exit_delta: seconds ? null : delay,
+    ...(seconds ? { exit_locktime: { version: 2, unit: 'seconds', value: delay } } : {}),
+    exit_path: { script_hex: hex(scriptFromTapLeafScript(policy.exit())), control_block_hex: hex(TaprootControlBlock.encode(policy.exit()[0])), leaf_version: 192, sequence: exitSequence, signature_bytes: 64 },
     sequence: leaf.root.getInput(0).sequence ?? 0xffffffff, expiry: null, transactions, finalized,
     signature_verification: null, exit_viable: null, scope: 'Official Arkade native TxTree and DefaultVtxo public policy decoding. Original PSBT nodes preserved; selected path reconstructed without signing. Batch expiry and full protocol validity are not established.' };
 }
