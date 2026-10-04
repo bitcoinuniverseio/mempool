@@ -65,6 +65,15 @@ describe('explicit V3 live confirmed tail',()=>{
     invalid.progress.retainedBytes=1;expect(()=>checkedReconstructionV3(invalid,address,'signet',acquired(),'next')).toThrow();
     const tooMany=initial();tooMany.progress.confirmedEpoch=17;expect(()=>checkedReconstructionV3(tooMany,address,'signet')).toThrow();
   });
+  it('keeps active transport and accepted progress through native refresh, but abandons an actual address change',()=>{
+    const {c,http}=setup();c.start();const accepted=c.view;const pending=new Subject();http.post.mockReturnValueOnce(pending);c.advance();
+    c.nativeSourceState='loading';c.ngOnChanges({nativeSourceState:{firstChange:false,currentValue:'loading',previousValue:'limit',isFirstChange:()=>false}});
+    expect(c.view).toBe(accepted);expect(pending.observed).toBe(true);expect(c.pending).toBe(true);expect(http.delete).not.toHaveBeenCalled();
+    expect(c.nativeReadDisclosure).toContain('refreshing');c.nativeSourceState='complete';c.ngOnChanges({nativeSourceState:{firstChange:false,currentValue:'complete',previousValue:'loading',isFirstChange:()=>false}});
+    expect(c.nativeReadDisclosure).toContain('read completed');expect(c.nativeReadDisclosure).not.toContain('unavailable');expect(c.view).toBe(accepted);
+    c.address='tb1qotherpublicaddress';c.ngOnChanges({address:{firstChange:false,currentValue:c.address,previousValue:address,isFirstChange:()=>false}});
+    expect(pending.observed).toBe(false);expect(c.view).toBeNull();expect(http.delete).toHaveBeenCalledWith(`/signet/api/v1/address/${address}/utxo-reconstruction/v3/${initial().sessionId}`);c.ngOnDestroy();
+  });
   it('uses only opt-in V3 endpoint, bounded retry/pending guard and old-context cleanup',()=>{
     const {c,http,network}=setup();c.start();expect(http.post).toHaveBeenLastCalledWith(`/signet/api/v1/address/${address}/utxo-reconstruction/v3`,{});
     http.post.mockReturnValueOnce(of(acquired()));c.advance();http.post.mockReturnValueOnce(throwError(()=>({error:{error:'Unavailable',phase:'reconcile-confirmed'}})));c.advance();expect(c.view.cursor).toBe(1);expect(c.error).toContain('Failed phase: reconcile-confirmed');
