@@ -6,6 +6,34 @@ import config from '../../../config';
 const integration = process.env.NATS_QUALIFICATION_URL ? describe : describe.skip;
 integration('actual JetStream qualification', () => {
   jest.setTimeout(25000);
+  it('refuses an existing stream with unbounded age or a changed duplicate retry window without rewriting its data', async () => {
+    const { connect } = require('@nats-io/transport-node'), { jetstreamManager } = require('@nats-io/jetstream');
+    const initial = new NatsJetStreamEventBusProvider(process.env.NATS_QUALIFICATION_URL!);
+    expect(await initial.connect()).toBe(true);
+    await initial.drain();
+    const client = await connect({ servers: process.env.NATS_QUALIFICATION_URL, user: process.env.NATS_USER, pass: process.env.NATS_PASSWORD });
+    const manager = await jetstreamManager(client), name = 'INTELLIGENCE_' + config.MEMPOOL.NETWORK.toUpperCase();
+    const originalInfo = await manager.streams.info(name), original = originalInfo.config;
+    const retained = originalInfo.state.last_seq ? await manager.streams.getMessage(name, { seq: originalInfo.state.last_seq }) : null;
+    try {
+      for (const mutation of [{ max_age: 0 }, { duplicate_window: 1e9 }]) {
+        await manager.streams.update(name, { ...original, ...mutation });
+        const refused = new NatsJetStreamEventBusProvider(process.env.NATS_QUALIFICATION_URL!);
+        try { expect(await refused.connect()).toBe(false); }
+        finally { await refused.drain(); }
+      }
+      const after = await manager.streams.info(name);
+      expect(after.state.messages).toBe(originalInfo.state.messages);
+      expect(after.state.last_seq).toBe(originalInfo.state.last_seq);
+      if (retained) {
+        const preserved = await manager.streams.getMessage(name, { seq: originalInfo.state.last_seq });
+        expect(Buffer.from(preserved.data).equals(Buffer.from(retained.data))).toBe(true);
+      }
+    } finally { await manager.streams.update(name, original); await client.drain(); }
+    const restored = new NatsJetStreamEventBusProvider(process.env.NATS_QUALIFICATION_URL!);
+    try { expect(await restored.connect()).toBe(true); }
+    finally { await restored.drain(); }
+  });
   it('refuses altered persisted nested events without silently omitting or deleting their history', async () => {
     const { connect } = require('@nats-io/transport-node'), { jetstream, jetstreamManager } = require('@nats-io/jetstream');
     const client = await connect({ servers: process.env.NATS_QUALIFICATION_URL, user: process.env.NATS_USER, pass: process.env.NATS_PASSWORD });

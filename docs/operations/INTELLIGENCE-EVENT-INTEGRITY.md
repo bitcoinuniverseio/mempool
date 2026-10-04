@@ -10,4 +10,6 @@ Version `1.0.0` remains readable when its payload has no nested object members a
 
 Broker replay fails explicitly when a matching retained record is invalid or unverifiable. It does not silently omit the record and report a complete replay. Live durable consumers retain their existing bounded retry and digest-only quarantine policy. The broker's original records and dead-letter receipts are preserved. SSE consumers receive the existing unavailable or replay-gap state and can request a fresh observation.
 
+JetStream message-ID deduplication lasts 120 seconds. A late retry can be stored again, including after broker restart; it must not cause repeated downstream effects. Required downstream effects need durable event-ID deduplication independent of the broker window. Existing streams must retain a positive age bound of at most 72 hours and the configured 120-second duplicate window; mismatched contracts return unavailable without altering the stream or its history.
+
 Before rollout, qualify new publication and consumption together, check affected consumers, exercise malformed retained data and restart/replay, and preserve the original broker store. A rollback must retain the newer records and report unsupported data explicitly; it must not erase history or accept nested records under the weaker digest contract.
