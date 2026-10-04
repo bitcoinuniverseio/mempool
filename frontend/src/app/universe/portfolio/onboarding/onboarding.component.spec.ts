@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { OnboardingComponent } from './onboarding.component';
 import { deriveAccountXpubFromSeed } from '../shared/derivation';
+import { checksumCreate } from 'utxo-descriptors';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => { TestBed.resetTestingModule(); vi.restoreAllMocks(); });
@@ -415,6 +416,29 @@ describe('address portfolio save lifecycle', () => {
     finish(definition); await vi.waitFor(() => expect(f.store.updatePortfolio).toHaveBeenCalledOnce());
     await vi.waitFor(() => expect(f.view.componentInstance.saving()).toBe(false));
     expect(f.router.navigate).toHaveBeenCalledOnce();
+  });
+
+  it.each(['testnet', 'signet', 'testnet4'])('stores the explicitly selected %s context for test-family public material', async network => {
+    const { view, store } = setup(vi.fn().mockResolvedValue(definition));
+    view.componentInstance.stepChoice.set('watch-only'); view.detectChanges();
+    const enter = (value: string): HTMLButtonElement => {
+      const input = view.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+      input.value = value; input.dispatchEvent(new Event('input')); view.detectChanges();
+      return view.nativeElement.querySelector('button.primary') as HTMLButtonElement;
+    };
+    const codec = createBase58check(bytes => createHash('sha256').update(bytes).digest());
+    const payload = codec.decode(deriveAccountXpubFromSeed(new Uint8Array(32).fill(1), 'p2wpkh', 0));
+    new DataView(payload.buffer, payload.byteOffset, payload.byteLength).setUint32(0, 0x043587cf);
+    const key = codec.encode(payload);
+    expect(enter(key).disabled).toBe(true);
+    const select = view.nativeElement.querySelector('#watch-network') as HTMLSelectElement;
+    select.value = network; select.dispatchEvent(new Event('change')); view.detectChanges();
+    expect(enter(key).disabled).toBe(false);
+    const descriptor = `wpkh(${key}/0/*)`; const button = enter(descriptor + '#' + checksumCreate(descriptor));
+    expect(button.disabled).toBe(false); button.click();
+    await vi.waitFor(() => expect(store.updatePortfolio).toHaveBeenCalledOnce());
+    const saved = store.updatePortfolio.mock.calls[0][1]({ accounts: [] });
+    expect(saved.accounts[0].network).toBe(network); expect(saved.accounts[0].kind).toBe('descriptor');
   });
   it('renders a failed save and retries the same already prepared definition', async () => {
     const f = setup(vi.fn().mockResolvedValue(definition)); f.store.updatePortfolio.mockRejectedValueOnce(Error('private failure payload'));

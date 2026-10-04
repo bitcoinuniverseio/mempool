@@ -150,6 +150,14 @@ function addressContext(address: string): { chain: string; network: string } | n
                 <option value="zcash:mainnet">Zcash mainnet (transparent)</option>
               </select>
             }
+            @if (stepChoice() === 'watch-only') {
+              <label for="watch-network">Bitcoin network</label>
+              <select id="watch-network" #watchNetworkInput [disabled]="saving()" [value]="watchNetwork()" (change)="selectWatchNetwork(watchNetworkInput.value)">
+                <option value="mainnet">Mainnet</option><option value="testnet">Testnet</option>
+                <option value="signet">Signet</option><option value="testnet4">Testnet4</option>
+              </select>
+              <p class="soft">Select the exact source network. Test-family public key encoding does not distinguish Testnet, Signet and Testnet4.</p>
+            }
             <label>
               <span>{{ inputLabel() }}</span>
               @if (stepChoice() === 'watch-only') {
@@ -225,6 +233,7 @@ export class OnboardingComponent implements OnInit {
   readonly validation = signal('');
   readonly valid = signal(false);
   readonly ephemeralContext = signal('bitcoin:mainnet');
+  readonly watchNetwork = signal<'mainnet' | 'testnet' | 'signet' | 'testnet4'>('mainnet');
 
   private portfolio: LocalPortfolio | null = null;
   private importedEntries: ImportEntry[] = [];
@@ -328,6 +337,7 @@ export class OnboardingComponent implements OnInit {
         ? classifyExtendedKey(text)
         : null;
       if (extended !== null) {
+        if (extended.testnet !== (this.watchNetwork() !== 'mainnet')) { this.rejection.set('Public key encoding does not match the selected Bitcoin network family.'); return; }
         this.validation.set(
           $localize`:@@universe.portfolio.onboarding.xpub-ok:Extended public key accepted (${extended.script}:SCRIPT:).`,
         );
@@ -336,6 +346,7 @@ export class OnboardingComponent implements OnInit {
       }
       const descriptor = looksLikeDescriptor(text) ? classifyDescriptor(text) : null;
       if (descriptor !== null) {
+        if (descriptor.testnet !== (this.watchNetwork() !== 'mainnet')) { this.rejection.set('Descriptor key encoding does not match the selected Bitcoin network family.'); return; }
         this.validation.set(
           descriptor.checksumValid === false
             ? $localize`:@@universe.portfolio.onboarding.descriptor-bad-checksum:The descriptor parses but its checksum is not valid - check for typos.`
@@ -386,6 +397,11 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
+  protected selectWatchNetwork(network: string): void {
+    if (this.saving() || !['mainnet', 'testnet', 'signet', 'testnet4'].includes(network)) return;
+    this.watchNetwork.set(network as 'mainnet' | 'testnet' | 'signet' | 'testnet4'); this.validateMaterial(this.material);
+  }
+
   protected selectEphemeralContext(context: string): void {
     this.ephemeralContext.set(context);
     this.validateMaterial(this.material);
@@ -432,7 +448,7 @@ export class OnboardingComponent implements OnInit {
     try {
       this.validateMaterial(this.material);
       if (!this.valid()) return;
-      const choice = this.stepChoice(), material = this.material, ephemeralContext = this.ephemeralContext();
+      const choice = this.stepChoice(), material = this.material, ephemeralContext = this.ephemeralContext(), watchNetwork = this.watchNetwork();
       if (choice === 'ephemeral') {
         this.validateMaterial(this.material);
         if (!this.valid()) {return;}
@@ -454,7 +470,7 @@ export class OnboardingComponent implements OnInit {
             id: crypto.randomUUID(),
             name: $localize`:@@universe.portfolio.onboarding.watch-account:Watch-only wallet`,
             chain: 'bitcoin',
-            network: extended.testnet ? 'testnet' : 'mainnet',
+            network: watchNetwork,
             kind: 'xpub',
             xpub: { key: extended.key, script: extended.script as ScriptKind, account: 0, gapLimit: 20, branches: ['external'] },
             tags: [],
@@ -465,7 +481,7 @@ export class OnboardingComponent implements OnInit {
             id: crypto.randomUUID(),
             name: $localize`:@@universe.portfolio.onboarding.descriptor-account:Descriptor wallet`,
             chain: 'bitcoin',
-            network: descriptor.testnet ? 'testnet' : 'mainnet',
+            network: watchNetwork,
             kind: 'descriptor',
             descriptor: { value: descriptor.value, gapLimit: 20 },
             tags: [],

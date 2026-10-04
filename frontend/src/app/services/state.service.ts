@@ -107,6 +107,8 @@ export interface Env {
    * chains read mainnet; Bitcoin always follows the network selector.
    */
   UNIVERSE_CHAIN_NETWORKS?: Record<string, string> | string;
+  /** Public operator expectations for explicitly qualified watch-only Bitcoin sources. Empty means unavailable. */
+  WATCH_ONLY_SOURCE_PROFILES?: Record<string, { releaseSha: string; configurationSha256: string; genesisHash: string; signetChallenge: string | null }> | string;
   customize?: Customization;
   PROD_DOMAINS: string[];
 }
@@ -121,6 +123,7 @@ const defaultEnv: Env = {
   'LIQUID_TESTNET_ENABLED': false,
   'BASE_MODULE': 'mempool',
   'ROOT_NETWORK': '',
+  'WATCH_ONLY_SOURCE_PROFILES': {},
   'ITEMS_PER_PAGE': 10,
   'KEEP_BLOCKS_AMOUNT': 8,
   'OFFICIAL_MEMPOOL_SPACE': false,

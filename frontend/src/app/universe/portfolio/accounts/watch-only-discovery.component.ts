@@ -15,6 +15,14 @@ import { WatchOnlyDiscoveryService } from '../data/watch-only-discovery.service'
             Each action checks at most 20 addresses. A declared gap limit does not prove addresses beyond that range are unused.</p>
           <p>External index {{ account.discovery?.lastIndexExternal ?? -1 }}; internal index {{ account.discovery?.lastIndexInternal ?? -1 }}.
             {{ account.discovery?.complete ? 'Declared range scanned' : 'Discovery partial or not started' }}.</p>
+          @if (account.discovery?.sourceIdentity; as source) {
+            <details><summary>Observed discovery source</summary>
+              <p>{{ source.network }} at block {{ source.checkpoint.heightAtomic }}: <code>{{ source.checkpoint.blockHash }}</code>.</p>
+              <p>Genesis: <code>{{ source.genesisHash }}</code>. Build: <code>{{ source.releaseSha }}</code>.</p>
+              <p>Configuration: <code>{{ source.configurationSha256 }}</code>. Observed {{ source.observedAt }}.</p>
+              @if (source.signetChallenge) { <p>Signet challenge: <code>{{ source.signetChallenge }}</code>.</p> }
+            </details>
+          }
           @if (!account.discovery?.complete) {
             <button type="button" [disabled]="discovery.busy() || store.vaultKind() !== 'unlocked'" (click)="discovery.advance(selectedPortfolio()!.id, account)">Check next address batch</button>
           }

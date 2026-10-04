@@ -50,6 +50,7 @@ export interface LocalAccount {
     readonly unusedExternal?: number;
     readonly unusedInternal?: number;
     readonly observedTipHash?: string;
+    readonly sourceIdentity?: import('../data/discovery-source-identity').DiscoverySourceIdentity;
   };
   readonly groupId?: string;
   readonly tags: readonly string[];

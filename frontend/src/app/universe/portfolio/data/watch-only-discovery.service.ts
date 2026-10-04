@@ -6,6 +6,7 @@ import { PortfoliosStore } from '../stores/portfolios.store';
 import type { LocalAccount } from '../stores/portfolio-model';
 import type { DiscoveryRequest, DiscoveryResponse } from '../workers/discovery.worker';
 import { Address, NETWORK, TEST_NETWORK } from '@scure/btc-signer';
+import { checkedDiscoveryIdentity, discoveryIdentityKey, discoveryProfile } from './discovery-source-identity';
 
 /** Manual bounded public-address discovery. Key material stays in the browser. */
 @Injectable()
@@ -50,8 +51,8 @@ export class WatchOnlyDiscoveryService implements OnDestroy {
   }
 
   private prefix(network: string): string {
-    if (!['mainnet', 'testnet'].includes(network)) throw Error('Choose an explicitly supported Bitcoin mainnet or testnet account context.');
-    if (network === 'mainnet' && this.state.env.ROOT_NETWORK !== 'mainnet') throw Error('This frontend profile does not declare a mainnet root origin.');
+    if (!['mainnet', 'testnet', 'signet', 'testnet4'].includes(network)) throw Error('Choose an explicitly supported Bitcoin account network context.');
+    if (network === 'mainnet' && !['', 'mainnet'].includes(this.state.env.ROOT_NETWORK)) throw Error('This frontend profile does not declare a mainnet root origin.');
     return network === this.state.env.ROOT_NETWORK || network === 'mainnet' ? '' : '/' + network;
   }
 
@@ -84,12 +85,12 @@ export class WatchOnlyDiscoveryService implements OnDestroy {
       const deadline = Date.now() + 60000;
       const remaining = () => { const budget = Math.min(15000, deadline - Date.now()); if (budget <= 0) throw Error('This batch deadline was reached. Continue with a fresh attempt.'); return budget; };
       const get = <T>(url: string) => firstValueFrom(this.http.get<T>(url).pipe(timeout(remaining()), takeUntil(this.cancelled$)));
-      const tip = () => firstValueFrom(this.http.get(prefix + '/api/blocks/tip/hash', { responseType: 'text' }).pipe(timeout(remaining()), takeUntil(this.cancelled$)));
-      const metadata = await get<{ chainSync?: { chain?: string } }>(prefix + '/api/v1/backend-info');
-      if (metadata.chainSync?.chain !== (account.network === 'mainnet' ? 'main' : 'test')) throw Error('The configured source does not match this account network.');
-      const before = (await tip()).trim(); if (!/^[a-f0-9]{64}$/.test(before)) throw Error('Confirmed source checkpoint unavailable.');
+      const profile = discoveryProfile(this.state.env.WATCH_ONLY_SOURCE_PROFILES ?? {}, account.network);
+      const observe = async () => checkedDiscoveryIdentity(await get(prefix + '/api/v1/chain-source/identity'), account.network, profile);
+      const source = await observe(), before = source.checkpoint.blockHash;
       const prior = account.discovery;
       if (prior?.observedTipHash && prior.observedTipHash !== before) throw Error('The confirmed checkpoint changed since this range was saved. Restart the address range before continuing.');
+      if (prior?.sourceIdentity && discoveryIdentityKey(prior.sourceIdentity) !== discoveryIdentityKey(source)) throw Error('The saved source identity changed. Restart the address range before continuing.');
       const external = [...(prior?.derivedExternal ?? [])], internal = [...(prior?.derivedInternal ?? [])];
       const gap = account.xpub?.gapLimit ?? account.descriptor?.gapLimit;
       if (!Number.isSafeInteger(gap) || gap < 1 || gap > 100) throw Error('Choose a gap limit between 1 and 100.');
@@ -125,7 +126,8 @@ export class WatchOnlyDiscoveryService implements OnDestroy {
         this.checked.update(value => value + 1);
         if (fixed || (branch === 'external' ? unusedExternal : unusedInternal) >= gap) break;
       }
-      if ((await tip()).trim() !== before) throw Error('The confirmed source moved during this batch. Retry; no new discovery progress was saved.');
+      const after = await observe();
+      if (discoveryIdentityKey(after) !== discoveryIdentityKey(source)) throw Error('The confirmed source moved during this batch. Retry; no new discovery progress was saved.');
       if (!sameScope()) return;
       const complete = fixed || branches.every(value => (value === 'external' ? unusedExternal : unusedInternal) >= gap);
       persisting = true;
@@ -134,7 +136,7 @@ export class WatchOnlyDiscoveryService implements OnDestroy {
         if (JSON.stringify(value) !== JSON.stringify(account)) throw Error('The account changed during discovery.');
         return { ...value, discovery: { lastIndexExternal: lastExternal, lastIndexInternal: lastInternal, highestUsedExternal: usedExternal,
           highestUsedInternal: usedInternal, derivedExternal: external, derivedInternal: internal, unusedExternal, unusedInternal,
-          complete, boundary: fixed ? 'fixed-descriptor' : 'gap-limit', observedTipHash: before } };
+          complete, boundary: fixed ? 'fixed-descriptor' : 'gap-limit', observedTipHash: before, sourceIdentity: after } };
       }) }));
       if (sameScope()) this.message.set(complete ? 'Saved the declared gap-limit or fixed-descriptor range. Addresses beyond that boundary are unknown.' : 'Saved this public-address batch. Continue manually; discovery is partial.');
     } catch (error) {
