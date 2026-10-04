@@ -1,3 +1,5 @@
+import { LiquidAssetPage, LiquidPegPage, LiquidNetwork, LiquidObservatoryCoverage } from './liquid-observatory/liquid-observatory.types';
+import { liquidProfile, requireLiquid, validateLiquidRead } from './liquid-observatory/liquid-evidence';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take, timeout } from 'rxjs';
@@ -57,7 +59,6 @@ import {
   LiquidAssetRecord,
   LiquidFederationEpoch,
   LiquidObservatorySummary,
-  LiquidPegRecord,
   McpToolDeclaration,
   ObserverNode,
   PropagationObservation,
@@ -863,7 +864,13 @@ export class UniverseApiService {
   }
 
   getLiquidNode$(network: string): Observable<import('./liquid-observatory/liquid-node-view').LiquidNodeView> {
-    return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl + '/api/v1/liquid/observatory/node?network=' + encodeURIComponent(network));
+    return defer(()=>{
+      requireLiquid(['liquidv1','liquidtestnet','elementsregtest'].includes(network),'Unsupported Elements network.');
+      liquidProfile(this.stateService.env.LIQUID_SOURCE_PROFILES ?? {},network as LiquidNetwork);
+      return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl+'/api/v1/liquid/observatory/node?network='+network,{headers:{'Cache-Control':'no-store'}}).pipe(timeout(20_000),map(node=>{
+        requireLiquid(node?.network===network && Number.isSafeInteger(node.blockHeight) && node.blockHeight>=0 && /^[0-9a-f]{64}$/.test(node.blockHash) && typeof node.initialBlockDownload==='boolean' && node.source==='owned-elements-rpc' && node.scope==='checkpoint-and-policy-only' && [node.signblockScript,node.fedpegScript,node.fedpegProgram].every(s=>typeof s==='string'&&/^(?:[0-9a-f]{2})*$/.test(s)&&s.length<=20000) && node.reserveSats===null && node.activeAssetCount===null && node.signersOnline===null,'The independent node read does not match the selected checkpoint-only contract.');return node;
+      }));
+    });
   }
 
   /**
@@ -881,34 +888,24 @@ export class UniverseApiService {
    * Dependency/references: WP-BE-010 and frontend-research-register.json. Rollback
    *    preserves local proof work and source state; no placeholder success data.
    */
-  getLiquidObservatorySummary$(): Observable<LiquidObservatorySummary> {
-    return this.httpClient.get<LiquidObservatorySummary>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/summary'
-    );
+  private liquidRead<T>(network: LiquidNetwork, path: string, kind: string, offset=0, limit=50, cursor?: LiquidObservatoryCoverage['cursor']): Observable<T> {
+    return defer(() => {
+      const expected=liquidProfile(this.stateService.env.LIQUID_SOURCE_PROFILES ?? {},network);
+      requireLiquid(Number.isSafeInteger(offset) && offset>=0 && offset<=100000 && Number.isSafeInteger(limit) && limit>=1 && limit<=100);
+      const url=this.apiBaseUrl+'/api/v1/liquid/observatory/'+path+'?network='+network+(['assets','pegs'].includes(kind)?'&offset='+offset+'&limit='+limit:'');
+      const options={headers:{'Cache-Control':'no-store'}};
+      const request=cursor?this.httpClient.post<T>(url,{height:cursor.height,blockHash:cursor.blockHash},options):this.httpClient.get<T>(url,options);
+      return request.pipe(timeout(20_000),map(data=>validateLiquidRead(data,kind,expected,offset,limit)));
+    });
   }
-
-  getLiquidAssets$(): Observable<{ assets: LiquidAssetRecord[]; total: number }> {
-    return this.httpClient.get<{ assets: LiquidAssetRecord[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/assets'
-    );
-  }
-
-  getLiquidAsset$(assetId: string): Observable<LiquidAssetRecord> {
-    return this.httpClient.get<LiquidAssetRecord>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/assets/' + encodeURIComponent(assetId)
-    );
-  }
-
-  getLiquidPegs$(): Observable<{ pegs: LiquidPegRecord[]; total: number }> {
-    return this.httpClient.get<{ pegs: LiquidPegRecord[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/pegs'
-    );
-  }
-
-  getLiquidFederation$(): Observable<LiquidFederationEpoch> {
-    return this.httpClient.get<LiquidFederationEpoch>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/federation'
-    );
+  getLiquidObservatorySummary$(network: LiquidNetwork='liquidv1'): Observable<LiquidObservatorySummary> { return this.liquidRead(network,'summary','summary'); }
+  getLiquidAssets$(network: LiquidNetwork='liquidv1',offset=0,limit=50): Observable<LiquidAssetPage> { return this.liquidRead(network,'assets','assets',offset,limit); }
+  getLiquidAsset$(assetId:string,network: LiquidNetwork='liquidv1'): Observable<LiquidAssetRecord> { return defer(()=>{ requireLiquid(/^[0-9a-f]{64}$/.test(assetId));return this.liquidRead<LiquidAssetRecord>(network,'assets/'+assetId,'asset').pipe(map(asset=>{requireLiquid(asset.assetId===assetId);return asset;})); }); }
+  getLiquidPegs$(network: LiquidNetwork='liquidv1',offset=0,limit=50): Observable<LiquidPegPage> { return this.liquidRead(network,'pegs','pegs',offset,limit); }
+  getLiquidFederation$(network: LiquidNetwork='liquidv1'): Observable<LiquidFederationEpoch> { return this.liquidRead(network,'federation','federation'); }
+  getLiquidProjection$(network: LiquidNetwork): Observable<LiquidObservatoryCoverage> { return this.liquidRead(network,'projection','projection'); }
+  advanceLiquidProjection$(network: LiquidNetwork,cursor: LiquidObservatoryCoverage['cursor']): Observable<LiquidObservatoryCoverage> {
+    return defer(()=>{requireLiquid(Number.isSafeInteger(cursor.height)&&cursor.height>=-1 && (cursor.height===-1?cursor.blockHash===null:/^[0-9a-f]{64}$/.test(cursor.blockHash ?? '')));return this.liquidRead<LiquidObservatoryCoverage>(network,'projection/advance','projection',0,50,cursor);});
   }
 
   getDataCatalog$(): Observable<{ datasets: DatasetManifest[]; streams: StreamManifest[]; mcpTools: McpToolDeclaration[] }> {
