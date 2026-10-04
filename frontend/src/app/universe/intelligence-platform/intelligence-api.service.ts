@@ -141,6 +141,12 @@ export class IntelligenceApiService {
     });
   }
 
+  exportHistory$(stateHash: string): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/history/exports`, {
+      state_hash: stateHash, format: 'json',
+    });
+  }
+
   compareStates$(stateHashA: string, stateHashB: string): Observable<any> {
     return this.httpClient.get<any>(
       `${this.apiBaseUrl}/api/v1/intelligence/history/compare?state_a=${encodeURIComponent(stateHashA)}&state_b=${encodeURIComponent(stateHashB)}`

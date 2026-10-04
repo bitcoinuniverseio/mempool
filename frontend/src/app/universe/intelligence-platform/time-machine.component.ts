@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { IntelligenceApiService } from './intelligence-api.service';
+import { StateService } from '@app/services/state.service';
+import { atomicToDisplay } from '../portfolio/shared/exact';
 
 @Component({
   selector: 'app-time-machine',
@@ -35,7 +37,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
       <section class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h4 class="mb-0">Replay Target</h4>
-          <button type="button" class="btn btn-sm btn-outline-secondary" *ngIf="coverage?.latest_checkpoint_height" (click)="loadLatestCheckpoint()">
+          <button type="button" class="btn btn-sm btn-outline-secondary" *ngIf="coverage?.latest_checkpoint_height != null" (click)="loadLatestCheckpoint()">
             Latest checkpoint ({{ coverage.latest_checkpoint_height | number }})
           </button>
         </div>
@@ -48,6 +50,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 type="number"
                 class="form-control font-monospace"
                 [(ngModel)]="targetHeight"
+                (ngModelChange)="invalidate()"
                 [placeholder]="coverage?.latest_checkpoint_height ? 'e.g. ' + coverage.latest_checkpoint_height : 'height'"
               />
             </div>
@@ -58,6 +61,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
                 type="text"
                 class="form-control font-monospace"
                 [(ngModel)]="targetTimestamp"
+                (ngModelChange)="invalidate()"
                 [placeholder]="coverage?.latest_recorded_event_utc || 'YYYY-MM-DDTHH:MM:SSZ'"
               />
             </div>
@@ -65,7 +69,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
               <button
                 type="button"
                 class="btn btn-primary w-100"
-                [disabled]="loading || (!targetHeight && !targetTimestamp.trim())"
+                [disabled]="loading || (targetHeight == null && !targetTimestamp.trim())"
                 (click)="runReplay()"
               >
                 {{ loading ? 'Replaying Events...' : 'Replay Mempool State' }}
@@ -73,7 +77,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
             </div>
           </div>
 
-          <div *ngIf="replayError" class="alert alert-danger mt-3 mb-0">
+          <div *ngIf="replayError" role="alert" class="alert alert-danger mt-3 mb-0">
             {{ replayError }}
           </div>
         </div>
@@ -89,15 +93,17 @@ import { IntelligenceApiService } from './intelligence-api.service';
         <div class="card mb-4 border-primary">
           <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-              <span class="badge badge-primary">STATE RECONSTRUCTED</span>
+              <span class="badge badge-primary">RETAINED OBSERVATIONS: {{ currentState.coverage_status }}</span>
+              <p>Coverage describes this node's retained observation window. Observation gaps and events outside that window remain unknown.</p>
               <h4 class="mt-1 mb-0 font-monospace text-break">{{ currentState.state_hash }}</h4>
             </div>
             <div class="btn-group">
-              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="exportData('json')">Export JSON</button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="exportData('parquet')">Export Parquet</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="exporting" (click)="exportData('json')">Export JSON</button>
             </div>
           </div>
           <div class="card-body">
+            <p *ngIf="exportError" role="alert">{{ exportError }}</p>
+            <p *ngIf="currentState.gap_intervals?.length">Recorded observation gaps: {{ currentState.gap_intervals | json }}</p>
             <div class="row text-center g-3 mb-4">
               <div class="col-md-3 col-6">
                 <div class="p-3 rounded bg-dark-subtle h-100">
@@ -116,7 +122,7 @@ import { IntelligenceApiService } from './intelligence-api.service';
               <div class="col-md-3 col-6">
                 <div class="p-3 rounded bg-dark-subtle h-100">
                   <div class="small text-muted">Total Unconfirmed Fees</div>
-                  <div class="h3 my-1">{{ (currentState.total_fees_sats / 100000000).toFixed(4) }} BTC</div>
+                  <div class="h3 my-1">{{ formatFees(currentState.total_fees_sats) }}</div>
                   <div class="small text-muted">{{ currentState.total_fees_sats | number }} sats</div>
                 </div>
               </div>
@@ -130,23 +136,21 @@ import { IntelligenceApiService } from './intelligence-api.service';
             </div>
 
             <!-- Historical Fee Histogram -->
-            <h5 class="mb-3" *ngIf="currentState.histogram">Fee Rate Histogram At State</h5>
-            <div class="table-responsive" *ngIf="currentState.histogram" tabindex="0">
+            <h5 class="mb-3" *ngIf="currentState.fee_distribution">Fee Rate Distribution At State</h5>
+            <div class="table-responsive" *ngIf="currentState.fee_distribution" tabindex="0">
               <table class="table table-sm table-hover mb-0">
                 <thead>
                   <tr>
                     <th>Feerate Band</th>
                     <th>Transactions</th>
-                    <th>Weight</th>
-                    <th>Share</th>
+                    <th>Virtual bytes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let h of currentState.histogram">
-                    <td class="fw-bold font-monospace">{{ h.feerate_band }} sat/vB</td>
-                    <td>{{ h.tx_count | number }}</td>
-                    <td>{{ (h.weight / 4000).toFixed(1) }} kvB</td>
-                    <td>{{ h.share_percent }}%</td>
+                  <tr *ngFor="let h of currentState.fee_distribution">
+                    <td class="fw-bold font-monospace">{{ h.feerate_bucket }} sat/vB</td>
+                    <td>{{ h.count | number }}</td>
+                    <td>{{ h.total_vsize | number }} vB</td>
                   </tr>
                 </tbody>
               </table>
@@ -176,65 +180,101 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
   targetTimestamp = '';
   loading = false;
   replayError: string | null = null;
-
-  private subs: Subscription[] = [];
+  exporting = false; exportError: string | null = null;
+  private revision = 0; private destroyed = false;
+  private replay?: Subscription; private coverageRead?: Subscription; private networkRead?: Subscription; private exportRead?: Subscription;
 
   constructor(
     private api: IntelligenceApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    @Optional() private state: StateService = null,
   ) {}
 
   ngOnInit(): void {
-    this.subs.push(
-      this.api.getTimeMachineCoverage$().subscribe({
+    this.loadCoverage();
+    this.networkRead = this.state?.networkChanged$.subscribe(() => { this.invalidate(); this.coverage = null; this.loadCoverage(); });
+  }
+
+  private get network(): string { return this.state?.network || this.state?.env?.ROOT_NETWORK || 'mainnet'; }
+  private loadCoverage(): void {
+    this.coverageRead?.unsubscribe(); const network = this.network;
+    this.coverageRead = this.api.getTimeMachineCoverage$().subscribe({
         next: (res) => {
+          if (this.destroyed || this.network !== network) { return; }
           this.coverage = res;
           this.cdr.markForCheck();
         },
         error: () => {
+          this.coverage = null;
           this.cdr.markForCheck();
         },
-      })
-    );
+      });
+  }
+
+  invalidate(): void {
+    this.revision++; this.replay?.unsubscribe(); this.exportRead?.unsubscribe();
+    this.currentState = null; this.loading = false; this.replayError = null; this.exporting = false; this.exportError = null;
+    this.cdr.markForCheck();
+  }
+
+  formatFees(value: unknown): string {
+    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) { return 'Not reported'; }
+    return atomicToDisplay(String(value), 8) + ' BTC';
   }
 
   loadLatestCheckpoint(): void {
-    if (!this.coverage?.latest_checkpoint_height) { return; }
+    if (!Number.isSafeInteger(this.coverage?.latest_checkpoint_height) || this.coverage.latest_checkpoint_height < 0) { return; }
     this.targetHeight = this.coverage.latest_checkpoint_height;
     this.targetTimestamp = '';
     this.runReplay();
   }
 
   runReplay(): void {
-    if (!this.targetHeight && !this.targetTimestamp.trim()) return;
+    this.invalidate(); const height = this.targetHeight, timestamp = this.targetTimestamp.trim(), revision = this.revision, network = this.network;
+    if (height == null && !timestamp) { return; }
+    if ((height != null && timestamp) || (height != null && (!Number.isSafeInteger(height) || height < 0)) || (timestamp && (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(timestamp) || !Number.isFinite(Date.parse(timestamp))))) {
+      this.replayError = 'Supply one nonnegative integer block height or one ISO 8601 UTC timestamp.'; return;
+    }
     this.loading = true;
     this.replayError = null;
     this.cdr.markForCheck();
 
-    this.subs.push(
-      this.api.replayHistory$(this.targetTimestamp || undefined, this.targetHeight || undefined).subscribe({
+    this.replay = this.api.replayHistory$(timestamp || undefined, height ?? undefined).subscribe({
         next: (res) => {
+          if (this.destroyed || revision !== this.revision || network !== this.network || height !== this.targetHeight || timestamp !== this.targetTimestamp.trim()) { return; }
+          if (!res || !/^[0-9a-f]{64}$/.test(res.state_hash) || !['complete', 'partial', 'gap_detected'].includes(res.coverage_status) || (height != null && res.target_block_height !== height) || (timestamp && Date.parse(res.target_timestamp_utc) !== Date.parse(timestamp))) {
+            this.replayError = 'Historical evidence does not match the selected target.'; this.loading = false; this.cdr.markForCheck(); return;
+          }
           this.currentState = res;
           this.loading = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
+          if (this.destroyed || revision !== this.revision || network !== this.network) { return; }
           this.replayError = err?.error?.error || err?.message || 'Historical replay failed for target';
           this.loading = false;
           this.cdr.markForCheck();
         },
-      })
-    );
+      });
   }
 
   exportData(format: string): void {
-    if (!this.currentState) return;
-    window.open(`/api/v1/intelligence/history/states/${this.currentState.state_hash}?format=${format}`, '_blank');
+    if (!this.currentState || format !== 'json' || this.exporting || !this.state?.isBrowser) { return; }
+    const hash = this.currentState.state_hash, revision = this.revision, network = this.network;
+    this.exporting = true; this.exportError = null;
+    this.exportRead = this.api.exportHistory$(hash).subscribe({next: result => {
+      if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }
+      this.exporting = false;
+      if (result?.format !== 'json' || result?.state?.state_hash !== hash || !Array.isArray(result.txids) || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id))) { this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
+      try {
+        const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], {type: 'application/json'}));
+        const link = document.createElement('a'); link.href = url; link.download = 'mempool-state-' + hash + '.json'; link.click(); URL.revokeObjectURL(url);
+      } catch { this.exportError = 'Unable to download the retained JSON state.'; }
+      this.cdr.markForCheck();
+    }, error: () => { if (revision === this.revision && !this.destroyed) { this.exporting = false; this.exportError = 'Retained JSON export unavailable.'; this.cdr.markForCheck(); } }});
   }
 
   ngOnDestroy(): void {
-    for (const sub of this.subs) {
-      sub.unsubscribe();
-    }
+    this.destroyed = true; this.invalidate(); this.coverageRead?.unsubscribe(); this.networkRead?.unsubscribe();
   }
 }
