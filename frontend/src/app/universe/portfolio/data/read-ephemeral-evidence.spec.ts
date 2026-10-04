@@ -16,8 +16,9 @@ describe('bounded ephemeral evidence read', () => {
     const assetId = 'op_names:name:b64.' + Buffer.from('b'.repeat(251) + '.btc', 'utf8').toString('base64url');
     expect(assetId).toHaveLength(358);
     const row = holding(assetId);
-    row.holding.identity = {...row.holding.identity, protocol:'op-names', assetType:'name'};
-    row.holding.assetKey = `bitcoin:signet:op-names:name:${assetId}`;
+    row.holding.identity = {...row.holding.identity, protocol:'op_names', assetType:'name'};
+    row.holding.quantityAtomic = '1';
+    row.holding.assetKey = `bitcoin:signet:op_names:name:${assetId}`;
     const service = api(); service.getHoldings$.mockReturnValue(of(page([row], null)));
     const result = await firstValueFrom(readEphemeralEvidence(service as any, 'bitcoin', 'signet', 'a'));
     expect(result.holdings?.holdings).toEqual([row]);
