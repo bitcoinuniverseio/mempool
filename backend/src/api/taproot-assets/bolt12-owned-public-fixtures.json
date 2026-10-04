@@ -1,0 +1,20 @@
+[
+  {
+    "role": "active",
+    "offerId": "ba1b96dd0704c59b4e930c9048df52e4c36c3d1d18b09897fe28a827fe54a828",
+    "offerString": "lno1qgs0v8hw8d368q9yw7sx8tejk2aujlyll8cp7tzzyh5h8xyppqqqqqqgqgp7sz3724hxjan9wfek2gz90pcxcmmjv4ezqmmhdejkggznd9nkuet5ypskxarfwejjqmmxvejhygrjv4skggr3w4skc6txd93kzarfdahpvggrmegdkgln4m5xy7x330sv2vhqy32zlp5wp75ew8lp7tvxghqk5ctq",
+    "sourceActive": true
+  },
+  {
+    "role": "expiry",
+    "offerId": "7d5770faa87dfc2a01071aa59333ab2865b8c611a48b3a881a8be8c801c962cb",
+    "offerString": "lno1qgs0v8hw8d368q9yw7sx8tejk2aujlyll8cp7tzzyh5h8xyppqqqqqqgqgp7sz3724hxjan9wfek2gz90pcxcmmjv4ezqmmhdejkggznd9nkuet5ypjhsurfwfujqmmxvejhygrjv4skggr3w4skc6txd93kzarfdahqupr2cxueg93pq009pker7whwscnc6x97p3fjuqj9gtux3c86n9clu8edsezuz6npv",
+    "sourceActive": true
+  },
+  {
+    "role": "revoked",
+    "offerId": "d4731449ea4f1c75d653648f49b9012cde4d1731742cc6505444e98172d3f3ae",
+    "offerString": "lno1qgs0v8hw8d368q9yw7sx8tejk2aujlyll8cp7tzzyh5h8xyppqqqqqqgqgp7sz3l24hxjan9wfek2gz90pcxcmmjv4ezqmmhdejkggznd9nkuet5ypex2an0ddjkggr0venx2u3qwfjkzepqw96kzmrfve5kxct5d9hku93pq009pker7whwscnc6x97p3fjuqj9gtux3c86n9clu8edsezuz6npv",
+    "sourceActive": false
+  }
+]
