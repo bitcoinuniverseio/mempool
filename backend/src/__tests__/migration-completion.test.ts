@@ -1,4 +1,4 @@
-import {isolatedBackend,defaultMock,quietLogger} from './isolated-backend-helper';
+import {isolatedBackend,defaultMock,quietLogger} from '../../test-support/isolated-backend-helper';
 describe('ordered migration completion',()=>{
   function setup(initial: number,fail=false){
     let version=initial;let key='height';const markers: number[]=[];const statements: string[]=[];
