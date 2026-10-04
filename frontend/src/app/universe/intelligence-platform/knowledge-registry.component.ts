@@ -125,9 +125,9 @@ import { checkedKnowledgeAudit, checkedKnowledgeLabels, KnowledgeAudit, Knowledg
               <strong>{{ ev.evidence_type }}</strong>
             </div>
             <p class="small mb-1">{{ ev.description }}</p>
-            <div *ngIf="ev.reference_uri" class="small">
+            <div class="small">
               <a *ngIf="referenceHref(ev.reference_uri) as href; else plainReference" [href]="href" target="_blank" rel="noopener noreferrer" class="text-break">{{ ev.reference_uri }}</a>
-              <ng-template #plainReference><code class="text-break">{{ ev.reference_uri }}</code></ng-template>
+              <ng-template #plainReference><code class="text-break">{{ ev.reference_uri || 'No public reference supplied.' }}</code></ng-template>
             </div>
           </div>
         </div>

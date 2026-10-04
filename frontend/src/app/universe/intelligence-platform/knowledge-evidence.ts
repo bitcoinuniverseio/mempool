@@ -23,7 +23,7 @@ export function checkedKnowledgeLabels(value: unknown, network: string): Knowled
         typeof item.confidence_level !== 'number' || ![1,2,3].includes(item.confidence_level) || typeof item.confidence_score !== 'number' || !Number.isFinite(item.confidence_score) || item.confidence_score < 0 || item.confidence_score > 1 ||
         !member(item.status,['verified','contested','provisional']) || !member(item.source,['pools_definition','submitted']) ||
         !utc(item.created_at) || !utc(item.updated_at) || !Array.isArray(item.evidence) || item.evidence.length > 1024 ||
-        item.evidence.some(e=>!object(e) || !member(e.evidence_type,['bip322_signature','proof_of_reserves','public_disclosure','on_chain_multisig','coinbase_tag','payout_address']) || !text(e.reference_uri) || !text(e.description) || !(e.verified_at_utc === null || utc(e.verified_at_utc)))) { throw new Error('Malformed knowledge attribution evidence.'); }
+        item.evidence.some(e=>!object(e) || !member(e.evidence_type,['bip322_signature','proof_of_reserves','public_disclosure','on_chain_multisig','coinbase_tag','payout_address']) || typeof e.reference_uri !== 'string' || e.reference_uri.length > 1024 || (e.reference_uri.length === 0 && item.source !== 'pools_definition') || !text(e.description) || !(e.verified_at_utc === null || utc(e.verified_at_utc)))) { throw new Error('Malformed knowledge attribution evidence.'); }
     ids.add(item.label_id);
   }
   return result as KnowledgeLabel[];
