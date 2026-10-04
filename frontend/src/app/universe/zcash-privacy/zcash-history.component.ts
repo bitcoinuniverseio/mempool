@@ -21,9 +21,12 @@ import { checkedZcashHistory, signedZec, ZcashPoolHistory } from './zcash-histor
       <p>Source {{ history.source.implementation }} · Genesis {{ history.source.genesis }} · Observed {{ history.source.observedAt }}</p>
       <p>Observed tip: <code>{{ history.source.tipHash }}</code>. Verified through: <code>{{ history.verifiedThrough.hash }}</code>.</p>
       <p *ngIf="history.reorgRecovered || history.priorSnapshotArchivedThisRequest || history.interruptedWriteRecovered">The source reports recovered or archived prior ledger state. This window is a new observation.</p>
+      <p>Scroll the history table horizontally to read all columns. Keyboard users can focus the table region and use the arrow keys.</p>
+      <div class="table-responsive" tabindex="0" role="region" aria-label="Zcash net pool history table">
       <table class="data-table"><thead><tr><th>Block</th><th>Pool</th><th>Net change (ZEC)</th><th>Balance (ZEC)</th></tr></thead><tbody>
         <ng-container *ngFor="let block of history.blocks"><tr *ngFor="let pool of block.pools"><td>{{ block.height }}</td><td>{{ pool.id }}</td><td>{{ zec(pool.netChangeZat) }}</td><td>{{ zec(pool.balanceZat) }}</td></tr></ng-container>
       </tbody></table>
+      </div>
     </ng-container>
   </section>` })
 export class ZcashHistoryComponent implements OnInit, OnDestroy {
