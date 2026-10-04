@@ -4,6 +4,9 @@ import {
   ArkVirtualTx,
   ArkVtxo,
 } from './ark.types';
+import config from '../../config';
+import bitcoinClient from '../bitcoin/bitcoin-client';
+import { ArkNativeSource, ArkNativeSourceError, arkNativeSourceFromEnvironment } from './ark-native-source';
 
 /**
  * Raised when a read has no source behind it. The routes map the code to a
@@ -28,19 +31,19 @@ const aspUnavailable =
 /**
  * Ark operator, round, VTXO and virtual-mempool evidence.
  *
- * Every read here needs an owned arkd whose round anchors are checked against
- * the owned Bitcoin reader. None is connected, so each read reports the absent
- * source. The revision this replaces answered from constants: one operator
- * marked online with an invented pubkey and volume, a settled batch whose
- * timestamps were computed at request time, a spendable VTXO, and a verifier
- * that called any proof path valid because an array length is never negative.
+ * Provider identity comes from an explicitly selected native Arkade reader and
+ * an independent Bitcoin checkpoint. Inventory, batch and proof reads still
+ * require their owning projections and verifier; a provider response alone
+ * cannot establish those facts. Unsupported reads retain their unavailable boundary.
  */
 export class ArkService {
+  private nativeSource: ArkNativeSource | null | undefined;
+  constructor(private readonly options: { nativeSource?: ArkNativeSource | null } = {}) {}
   /* IMPLEMENTATION-HANDOFF [WP-BE-006]
    * Defect BE-006; COV-BE-006 operators, batches/list/detail, VTXO detail,
    * virtual transactions and proof verification. All six offered operations
-   * unconditionally fail for well-formed requests; configuring arkd alone
-   * cannot change these functions. backend-reproduce.cjs records each path.
+   * require provider observations, inventory projections and real exit proofs.
+   * Provider identity is connected; the remaining five journeys are not complete.
    * 1. Resolve the operated provider identity, Ark dialect, supported network
    *    and exact arkd/API revision. R-BE-ARK points to the retrieved official
    *    implementation; its current branch is not evidence of the deployed
@@ -68,7 +71,21 @@ export class ArkService {
    */
   /** @asyncSafe */
   public async $getOperators(): Promise<ArkOperator[]> {
-    throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
+    try {
+      if (this.nativeSource === undefined) {
+        this.nativeSource = this.options.nativeSource !== undefined ? this.options.nativeSource : arkNativeSourceFromEnvironment(
+          config.MEMPOOL.NETWORK, (method, params, signal) => bitcoinClient.rpc.call(method, params, { signal }));
+      }
+      if (!this.nativeSource) throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
+      const { observation } = await this.nativeSource.observe();
+      return [{ id: observation.profile.providerId, name: observation.profile.providerName, aspPubkey: observation.info.signerPubkey,
+        roundIntervalSec: null, currentBatchHeight: null, activeVtxoCount: null, totalVolumeSats: null, status: 'observed',
+        providerVersion: observation.info.version, sessionDurationSeconds: observation.info.sessionDurationSeconds, source: observation }];
+    } catch (error) {
+      if (error instanceof ArkEvidenceError) throw error;
+      if (error instanceof ArkNativeSourceError) throw new ArkEvidenceError(error.code, error.message, error.status);
+      throw new ArkEvidenceError('unavailable-ark-provider', aspUnavailable);
+    }
   }
 
   /** @asyncSafe */
