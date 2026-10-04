@@ -106,7 +106,10 @@ export class NatsJetStreamEventBusProvider implements IEventBusProvider {
       this.manager = await jetstreamManager(this.natsClient);
       try {
         const info = await this.manager.streams.info(this.stream);
-        if (info.config.storage !== 'file' || info.config.subjects?.length !== 1 || info.config.subjects[0] !== `btc.${config.MEMPOOL.NETWORK}.>` || info.config.max_bytes <= 0 || info.config.max_bytes > 268435456 || info.config.max_msg_size <= 0 || info.config.max_msg_size > 262144) throw new Error('Incompatible intelligence stream');
+        if (info.config.storage !== 'file' || info.config.subjects?.length !== 1 || info.config.subjects[0] !== `btc.${config.MEMPOOL.NETWORK}.>` ||
+            info.config.max_bytes <= 0 || info.config.max_bytes > 268435456 || info.config.max_msg_size <= 0 || info.config.max_msg_size > 262144 ||
+            !Number.isSafeInteger(info.config.max_age) || info.config.max_age <= 0 || info.config.max_age > 72 * 3600 * 1e9 ||
+            info.config.duplicate_window !== 120 * 1e9) throw new Error('Incompatible intelligence stream');
       }
       catch (error) {
         if ((error as any).code !== '404' && (error as any).apiError?.()?.code !== 404) throw error;
