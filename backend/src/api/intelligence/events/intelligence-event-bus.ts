@@ -191,7 +191,10 @@ export class NatsJetStreamEventBusProvider implements IEventBusProvider {
         if (!message) continue;
         if(!subjectMatches(subject,message.subject))continue;
         const envelope=JSON.parse(Buffer.from(message.data).toString());
-        if(EventEnvelopeValidator.validateEnvelope(envelope).valid&&envelope.network===config.MEMPOOL.NETWORK)events.push(envelope);
+        if (!EventEnvelopeValidator.validateEnvelope(envelope).valid || envelope.network !== config.MEMPOOL.NETWORK) {
+          throw new Error('Stored event replay contains an invalid or unverifiable envelope.');
+        }
+        events.push(envelope);
       } catch(error) { if((error as any).apiError?.()?.code!==404)throw error; }
     }
     return events;
