@@ -8,6 +8,22 @@ import { ChainNetworkUnavailableError, configuredChainNetworks } from '@app/univ
 // Owner-scoped calls read a bearer header from this; the specs here make none.
 const ownerKeyStub = { headers: () => ({}), key: null };
 
+describe('Owned BOLT12 offer page request', () => {
+  it('serializes the exact selected backend prefix, bounded limit and opaque cursor with no-store', () => {
+    const get = vi.fn(() => of({})), state = {isBrowser:true,network:'signet',env:{ROOT_NETWORK:'mainnet'}};
+    const service = new UniverseApiService({get} as any,state as any,ownerKeyStub as never);
+    service.getBolt12Offers$(20,'opaque+cursor/=?').subscribe();
+    expect(get).toHaveBeenCalledWith('/signet/api/v1/lightning/offers?limit=20&cursor=opaque%2Bcursor%2F%3D%3F',{headers:{'Cache-Control':'no-store'}});
+    state.env.ROOT_NETWORK='signet';service.getBolt12Offers$(50).subscribe();
+    expect(get.mock.calls[1][0]).toBe('/api/v1/lightning/offers?limit=50');
+  });
+  it.each([[0,undefined],[51,undefined],[1.5,undefined],[20,''],[20,'a'.repeat(2049)]])('rejects invalid page inputs before HTTP %j', (limit,cursor) => {
+    const get=vi.fn(),service=new UniverseApiService({get} as any,{isBrowser:true,network:'signet',env:{}} as any,ownerKeyStub as never);
+    let failure:unknown;service.getBolt12Offers$(limit as number,cursor as string | undefined).subscribe({error:error=>failure=error});
+    expect(failure).toBeInstanceOf(Error);expect(get).not.toHaveBeenCalled();
+  });
+});
+
 interface Recorder {
   service: UniverseApiService;
   urls: string[];
@@ -460,7 +476,7 @@ describe('UniverseApiService backend route network prefix', () => {
     expect(urls).toEqual([
       '/signet/api/v1/taproot-assets/assets',
       '/signet/api/v1/taproot-assets/groups',
-      '/signet/api/v1/lightning/offers',
+      '/signet/api/v1/lightning/offers?limit=20',
       '/signet/api/v1/lightning/rfq',
       '/signet/api/v1/taproot-assets/assets/' + 'ab'.repeat(32),
     ]);

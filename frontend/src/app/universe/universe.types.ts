@@ -1215,6 +1215,7 @@ export interface TaprootAssetGroup {
 
 export interface Bolt12Offer {
   readonly offerId: string;
+  readonly decoderOfferId: string;
   readonly offerString: string;
   readonly description: string;
   readonly issuer?: string;
@@ -1223,6 +1224,30 @@ export interface Bolt12Offer {
   readonly blindRoutesCount: number;
   readonly valid: boolean;
   readonly expiry?: number;
+  readonly currencyAmountAtomic?: string;
+  readonly expiryAtomic: string | null;
+  readonly syntaxValid: true;
+  readonly sourceActive: boolean;
+  readonly sourceUsed: boolean;
+  readonly singleUse: boolean;
+  readonly networkCompatible: boolean;
+  readonly unknownRequiredFeatures: boolean;
+  readonly validity: 'usable-unverified' | 'source-disabled' | 'already-used' | 'expired' | 'wrong-chain' | 'unsupported-required-features';
+  readonly invoiceAvailability: 'unverified';
+  readonly paymentVerified: false;
+}
+
+export interface Bolt12OfferPage {
+  readonly offers: Bolt12Offer[];
+  readonly total: number;
+  readonly nextCursor: string | null;
+  readonly source: {
+    readonly implementation: 'CoreLightning'; readonly version: string; readonly nodeId: string;
+    readonly network: string; readonly genesisHash: string; readonly signetChallenge?: string;
+    readonly publicationSha256: string; readonly observedAt: string; readonly scope: string;
+    readonly checkpoint: { readonly height: number; readonly hash: string };
+    readonly catalogAnchor: { readonly height: number; readonly hash: string };
+  };
 }
 
 export interface LightningRfqQuote {
