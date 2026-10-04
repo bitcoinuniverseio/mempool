@@ -6,6 +6,25 @@ import config from '../../../config';
 const integration = process.env.NATS_QUALIFICATION_URL ? describe : describe.skip;
 integration('actual JetStream qualification', () => {
   jest.setTimeout(25000);
+  it('refuses altered persisted nested events without silently omitting or deleting their history', async () => {
+    const { connect } = require('@nats-io/transport-node'), { jetstream, jetstreamManager } = require('@nats-io/jetstream');
+    const client = await connect({ servers: process.env.NATS_QUALIFICATION_URL, user: process.env.NATS_USER, pass: process.env.NATS_PASSWORD });
+    const provider = new NatsJetStreamEventBusProvider(process.env.NATS_QUALIFICATION_URL!);
+    const network = config.MEMPOOL.NETWORK, subject = `btc.${network}.integrity_${Date.now().toString(36)}.observed`;
+    const envelope = EventEnvelopeValidator.createEnvelope({ network, source_id: 'controlled-integrity', event_type: 'observed',
+      entity_type: 'template', entity_id: 'controlled', payload: { template: { height: 3186, total_fees_sats: 100 } } });
+    envelope.payload.template.height = 3187;
+    try {
+      expect(await provider.connect()).toBe(true);
+      expect(await provider.publish(subject, envelope)).toBe(false);
+      const bytes = Buffer.from(JSON.stringify(envelope));
+      await jetstream(client).publish(subject, bytes);
+      await expect(provider.replayRecent(subject)).rejects.toThrow(/invalid or unverifiable/);
+      const manager = await jetstreamManager(client);
+      const retained = await manager.streams.getMessage('INTELLIGENCE_' + network.toUpperCase(), { last_by_subj: subject });
+      expect(Buffer.from(retained.data).equals(bytes)).toBe(true);
+    } finally { await provider.drain(); await client.drain(); }
+  });
   it('refuses an existing durable whose acknowledgement contract can discard consumer effects', async () => {
     const {connect}=require('@nats-io/transport-node'),{jetstreamManager}=require('@nats-io/jetstream');
     const client=await connect({servers:process.env.NATS_QUALIFICATION_URL,user:process.env.NATS_USER,pass:process.env.NATS_PASSWORD});

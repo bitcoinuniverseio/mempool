@@ -164,7 +164,9 @@ export class TemplateCollectorService {
      * Isolated Core/Signet stream acceptance is NOT TESTED. Rollback retains published
      *    envelopes/cursors and stops producers before an incompatible schema downgrade.
      */
-    const envelope = EventEnvelopeValidator.createEnvelope({ network: config.MEMPOOL.NETWORK, event_type: 'observed', entity_type: 'template', entity_id: template.template_id, source_id: template.source_id, observed_at_utc: template.observed_at_utc, payload: { template } });
+    const envelope = EventEnvelopeValidator.createEnvelope({ network: config.MEMPOOL.NETWORK, event_type: 'observed', entity_type: 'template', entity_id: template.template_id, source_id: template.source_id,
+      source_software: template.source_type === 'core_gbt' ? 'Bitcoin Core getblocktemplate' : 'Universe Explorer next-block projection',
+      source_version: 'unknown', observed_at_utc: template.observed_at_utc, payload: { template } });
     if (!await eventBus.publish(EventEnvelopeValidator.buildSubject(envelope.network, 'template', 'observed'), envelope)) throw new Error('Template publication unavailable');
     this.templates.push(template);
     if (this.templates.length > TEMPLATE_LIMITS.templates) { this.templates.shift(); }
