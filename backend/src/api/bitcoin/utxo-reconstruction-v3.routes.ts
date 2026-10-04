@@ -1,19 +1,16 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
-import { EsploraReconstructionSource } from './utxo-reconstruction.source';
-import { ReconstructionError, UtxoReconstructionService } from './utxo-reconstruction.service';
-import { UtxoReconstructionView } from './utxo-reconstruction.types';
-import { initUtxoReconstructionV2Routes } from './utxo-reconstruction-v2.routes';
-import { initUtxoReconstructionV3Routes } from './utxo-reconstruction-v3.routes';
+import { EsploraReconstructionSource, ReconstructionAcquisitionError } from './utxo-reconstruction.source';
+import { ReconstructionError } from './utxo-reconstruction.service';
+import { UtxoReconstructionV3Service } from './utxo-reconstruction-v3.service';
+import { UtxoReconstructionV3View } from './utxo-reconstruction-v3.types';
 
-let service: UtxoReconstructionService | undefined;
-const getService = (): UtxoReconstructionService => service || (service = new UtxoReconstructionService(new EsploraReconstructionSource(), config.MEMPOOL.NETWORK));
+let service: UtxoReconstructionV3Service | undefined;
+const getService = (): UtxoReconstructionV3Service => service || (service = new UtxoReconstructionV3Service(new EsploraReconstructionSource(), config.MEMPOOL.NETWORK));
 
-export function initUtxoReconstructionRoutes(app: Application): void {
-  initUtxoReconstructionV2Routes(app);
-  initUtxoReconstructionV3Routes(app);
-  const base = config.MEMPOOL.API_URL_PREFIX + 'address/:address/utxo-reconstruction';
-  const run = async (req: Request, res: Response, work: (signal: AbortSignal) => Promise<UtxoReconstructionView> | UtxoReconstructionView): Promise<void> => {
+export function initUtxoReconstructionV3Routes(app: Application): void {
+  const base = config.MEMPOOL.API_URL_PREFIX + 'address/:address/utxo-reconstruction/v3';
+  const run = async (req: Request, res: Response, work: (signal: AbortSignal) => Promise<UtxoReconstructionV3View> | UtxoReconstructionV3View): Promise<void> => {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 20000);
     const close = (): void => { if (!res.writableEnded) controller.abort(); };
     req.once('aborted', close); res.once('close', close);
@@ -31,6 +28,7 @@ export function initUtxoReconstructionRoutes(app: Application): void {
         res.status(controller.signal.aborted ? 504 : error instanceof ReconstructionError ? error.status : 503).json({
           error: controller.signal.aborted ? 'Reconstruction cancelled or exceeded its bounded deadline; progress cursor remains retryable'
             : error instanceof ReconstructionError ? error.message : 'Configured reconstruction source could not be verified or reached',
+          ...(error instanceof ReconstructionAcquisitionError ? { phase: error.phase, sourceFailure: { code: error.causeCode, upstreamStatus: error.upstreamStatus } } : {}),
         });
       }
     } finally { clearTimeout(timer); controller.abort(); req.removeListener('aborted', close); res.removeListener('close', close); }

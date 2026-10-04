@@ -145,6 +145,25 @@ export class EsploraReconstructionSource implements ReconstructionSource {
     if (after && !/^[0-9a-f]{64}$/.test(after)) throw new ReconstructionError(400, 'Invalid native history cursor');
     return this.get(`/address/${encodeURIComponent(address)}/txs/chain${after ? '/' + after : ''}?max_txs=${limit}`, signal);
   }
+  /** Independent canonical block hashes for a bounded confirmed history page. @asyncUnsafe */
+  async verifyHistoryBlocks(rows: IEsploraApi.Transaction[], signal: AbortSignal): Promise<void> {
+    active(signal);
+    if (!Array.isArray(rows) || rows.length > 100) throw new ReconstructionError(422, 'Confirmed canonical history page exceeds 100');
+    const heights = new Map<number, string>();
+    for (const row of rows) {
+      const { block_height: height, block_hash: blockHash, confirmed } = row.status || {};
+      if (confirmed !== true || !Number.isSafeInteger(height) || height! < 0 || !/^[0-9a-f]{64}$/.test(blockHash || '')) throw new ReconstructionError(422, 'Invalid confirmed history block identity');
+      if (heights.has(height!) && heights.get(height!) !== blockHash) throw new ReconstructionError(409, 'History page disagrees at one canonical height');
+      heights.set(height!, blockHash!);
+    }
+    const entries = [...heights.entries()];
+    for (let offset = 0; offset < entries.length; offset += 20) {
+      const batch = entries.slice(offset, offset + 20);
+      const hashes = await this.rpcBatch(batch.map(([height]) => ({ method: 'getblockhash', params: [height] })), signal);
+      active(signal);
+      hashes.forEach((blockHash, index) => { if (blockHash !== batch[index][1]) throw new ReconstructionError(409, 'History block differs from independently observed canonical Core block'); });
+    }
+  }
   mempool(address: string, limit: number, signal: AbortSignal): Promise<IEsploraApi.Transaction[]> {
     return this.get(`/address/${encodeURIComponent(address)}/txs/mempool?max_txs=${limit}`, signal);
   }
