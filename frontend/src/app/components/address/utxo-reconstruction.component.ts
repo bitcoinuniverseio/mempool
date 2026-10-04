@@ -95,7 +95,7 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
   private shown = 100;
   readonly btc = atomicBtc;
 
-  constructor(private http: HttpClient, private state: StateService, private cd: ChangeDetectorRef) { this.network = state.network || 'mainnet'; }
+  constructor(private http: HttpClient, private state: StateService, private cd: ChangeDetectorRef) { this.network = state.network || state.env.ROOT_NETWORK || 'mainnet'; }
   get nativeReadDisclosure(): string {
     return this.nativeSourceState === 'complete' ? 'The native output read completed. This independent reconstruction retains its own anchors and progress.'
       : this.nativeSourceState === 'loading' ? 'The native output read is refreshing. This independent reconstruction retains its own anchors and progress.'
@@ -116,7 +116,7 @@ export class UtxoReconstructionComponent implements OnInit, OnChanges, OnDestroy
   showMore(): void { this.shown += 100; }
   ngOnInit(): void {
     this.subscriptions.add(this.state.networkChanged$.subscribe(network => {
-      const selected = network || 'mainnet';
+      const selected = network || this.state.env.ROOT_NETWORK || 'mainnet';
       if (selected !== this.network) { this.abandon(); this.network = selected; }
     }));
   }
