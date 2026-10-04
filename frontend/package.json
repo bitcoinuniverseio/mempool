@@ -82,9 +82,9 @@
     "@fortawesome/fontawesome-svg-core": "~6.7.2",
     "@fortawesome/free-solid-svg-icons": "~6.7.2",
     "@ng-bootstrap/ng-bootstrap": "^19.0.0",
-    "@noble/secp256k1": "^3.0.0",
     "@noble/curves": "~1.9.7",
     "@noble/hashes": "~2.4.0",
+    "@noble/secp256k1": "^3.0.0",
     "@scure/base": "1.2.6",
     "@scure/bip32": "^1.7.0",
     "@scure/bip39": "^1.6.0",
@@ -95,6 +95,7 @@
     "domino": "^2.1.6",
     "echarts": "~6.1.0",
     "hash-wasm": "^4.12.0",
+    "hyparquet": "1.31.1",
     "ngx-echarts": "~20.0.2",
     "ngx-infinite-scroll": "^20.0.0",
     "qrcode": "1.5.1",
@@ -146,10 +147,10 @@
     "enabled": false
   },
   "allowScripts": {
-      "@parcel/watcher@2.6.0": true,
-      "cypress@15.21.1": true,
-      "esbuild@0.28.1": true,
-      "lmdb@3.4.2": true,
-      "msgpackr-extract@3.0.4": true
+    "@parcel/watcher@2.6.0": true,
+    "cypress@15.21.1": true,
+    "esbuild@0.28.1": true,
+    "lmdb@3.4.2": true,
+    "msgpackr-extract@3.0.4": true
   }
 }
