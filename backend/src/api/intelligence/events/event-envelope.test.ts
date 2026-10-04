@@ -48,8 +48,8 @@ describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
     });
 
     expect(envelope.event_id).toBeDefined();
-    expect(envelope.schema_version).toBe('1.1.0');
-    expect(envelope.clock_uncertainty_ms).toBeGreaterThanOrEqual(0);
+    expect(envelope.schema_version).toBe('1.2.0');
+    expect(envelope.clock_uncertainty_ms).toBeNull();
 
     const subject = EventEnvelopeValidator.buildSubject(
       envelope.network,

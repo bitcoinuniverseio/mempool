@@ -1,6 +1,8 @@
 # Intelligence event payload integrity
 
-New events use envelope schema `1.1.0`. `payload_hash` is lowercase SHA-256 of the UTF-8 JSON representation of the complete payload. Object member names are sorted recursively using JavaScript's default string ordering; arrays retain their order. Serialization uses `JSON.stringify` semantics. This is the explorer's versioned serialization contract, not a claim of compliance with a different canonical JSON standard.
+New events use envelope schema `1.2.0`. The complete payload digest contract introduced in `1.1.0` is unchanged: `payload_hash` is lowercase SHA-256 of the UTF-8 JSON representation of the complete payload. Object member names are sorted recursively using JavaScript's default string ordering; arrays retain their order. Serialization uses `JSON.stringify` semantics. This is the explorer's versioned serialization contract, not a claim of compliance with a different canonical JSON standard.
+
+Version `1.2.0` represents unmeasured clock offset and uncertainty as paired `null` values. The producer does not default to a zero offset or a one-millisecond uncertainty. Explicit measurements must be paired safe integer milliseconds with nonnegative uncertainty; fractional values are rejected instead of rounded. A supplied measurement is the source's assertion, not independent synchronization proof. Historical `1.0.0`/`1.1.0` records retain their numeric clock contract and are never rewritten or promoted to independently measured evidence.
 
 Publication, broker consumption and replay recompute the digest. A changed nested template, changed array order, malformed digest or unsupported schema is rejected. Satoshi and weight numbers must be safe integers. Explicit source sequences must be nonnegative safe integers and are not rounded. An unspecified producer version is reported as `unknown`; a getblocktemplate response does not establish the node's software version.
 
