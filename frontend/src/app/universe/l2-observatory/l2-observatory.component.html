@@ -42,7 +42,7 @@
               <td class="l2-primary" data-label="System"><strong>{{ s.name }}</strong></td>
               <td data-label="Architecture"><span class="badge badge-info">{{ s.architecture }}</span></td>
               <td data-label="Trust model">{{ s.trustModel }}</td>
-              <td class="mono" data-label="Locked reserves"><strong>{{ (Number(s.lockedBtcSats) / 1e8).toFixed(2) }} BTC</strong></td>
+              <td class="mono" data-label="Locked reserves"><strong>{{ lockedReserve(s.lockedBtcSats) }}</strong></td>
               <td data-label="Operators">{{ s.operatorCount }}</td>
               <td data-label="Challenge period">{{ s.challengePeriodBlocks }} blocks</td>
               <td data-label="Status"><span class="badge badge-success">{{ s.status }}</span></td>
