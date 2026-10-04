@@ -6,6 +6,7 @@ import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state'
 import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { templateWeight, validTemplateContext } from '../intelligence-platform/mining-template-observation';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 import {
@@ -68,7 +69,7 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
       ]).pipe(
         map(([nodesData, propagation, templates]): NetworkViewModel => {
           if (!Array.isArray(nodesData?.nodes) || nodesData.nodes.some(node => node.network !== expectedNetwork) ||
-              propagation?.network !== expectedNetwork || templates?.network !== expectedNetwork) {
+              propagation?.network !== expectedNetwork || templates?.network !== expectedNetwork || !Array.isArray(templates?.candidateTemplates) || templates.candidateTemplates.some(t => t.configuredNetwork != null && t.configuredNetwork !== expectedNetwork || t.observationContext != null && (!validTemplateContext(t.observationContext,expectedNetwork) || t.observationContext.checkpoint.block_hash !== t.prevBlockHash || t.observationContext.checkpoint.height + 1 !== templates.blockHeight || t.observationContext.provenance !== (t.sourceType === 'core_gbt' ? 'bitcoin-core-gbt' : 'backend-mempool-projection')) || t.weightBasis != null && (t.weightBasis !== (t.sourceType === 'core_gbt' ? 'core-transaction-weights' : 'vsize-derived-estimate') || templateWeight(t.totalWeight,t.estimatedWeight,t.weightBasis) === 'Not reported'))) {
             throw new Error('Observer facts do not match the selected network. Retry on the intended source.');
           }
           return { kind: 'ready', nodes: nodesData.nodes, propagation, templates };
@@ -97,6 +98,8 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
     const message = typeof error?.error?.error === 'string' ? error.error.error : error instanceof Error && !(error as any).status ? error.message : loadFailureMessage(reason);
     return { kind: reason === 'unavailable' || reason === 'timeout' || reason === 'network' ? 'unavailable' : 'error', message, stage };
   }
+
+  templateWeight = templateWeight;
 
   /** A value one local observer did not measure is shown as exactly that. */
   measured(value: number | null | undefined, unit: string): string {

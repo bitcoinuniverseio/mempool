@@ -1172,7 +1172,11 @@ export interface CandidateTemplate {
   readonly observedAtUtc: string;
   readonly prevBlockHash: string;
   readonly txCount: number;
-  readonly totalWeight: number;
+  readonly totalWeight: number | null;
+  readonly estimatedWeight?: number | null;
+  readonly weightBasis?: 'core-transaction-weights' | 'vsize-derived-estimate' | null;
+  readonly configuredNetwork?: string | null;
+  readonly observationContext?: import('./intelligence-platform/mining-template-observation').TemplateObservationContext | null;
   readonly totalFeesSats: string;
   readonly expectedMedianFeeRate: number | null;
   readonly uniqueTxids: readonly string[];

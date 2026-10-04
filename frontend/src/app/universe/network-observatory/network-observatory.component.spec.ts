@@ -159,3 +159,23 @@ describe('Network observatory selected source fences', () => {
     let vm: any; view.vm$.subscribe(v => vm = v).unsubscribe(); expect(vm.kind).toBe('ready'); view.ngOnDestroy();
   });
 });
+
+describe('Network template measured and estimated weight', () => {
+  it('renders unknown measured weight separately from an explicit vsize-derived estimate', () => {
+    const view = build({ getObserverNodes$: () => of({ nodes: [node], total: 1 }), getPropagationObservation$: () => of({ network: 'signet' } as any), getBlockTemplateComparison$: () => of(noTemplates as any) });
+    expect(view.templateWeight(null,null,null)).toBe('Not reported'); expect(view.templateWeight(1,null,'core-transaction-weights')).toBe('1 WU'); expect(view.templateWeight(null,4,'vsize-derived-estimate')).toContain('vsize-derived estimate; measured weight unavailable'); view.ngOnDestroy();
+  });
+  it('rejects a template from a foreign source context instead of presenting a ready telemetry aggregate', () => {
+    const templates: any = { ...noTemplates, state: 'observed', candidateTemplates: [{ configuredNetwork: 'mainnet', totalWeight: null, estimatedWeight: 4, weightBasis: 'vsize-derived-estimate' }] };
+    const vm = observe({ getObserverNodes$: () => of({ nodes: [node], total: 1 }), getPropagationObservation$: () => of({ network: 'signet' } as any), getBlockTemplateComparison$: () => of(templates) }); expect(vm.kind).toBe('error'); expect(vm.templates).toBeUndefined();
+  });
+  it('rejects a foreign observation height or provenance while preserving root Signet context', () => {
+    const context = { schema: 'universe-template-observation-context-v1', chain: 'bitcoin', network: 'signet', genesis_hash: 'a'.repeat(64), block_one_hash: 'b'.repeat(64), signet_challenge: '51', checkpoint: { height: 3187, block_hash: 'c'.repeat(64) }, observed_at_utc: '2026-10-04T19:00:00Z', provenance: 'bitcoin-core-gbt', input_core_template_id: null };
+    const template = { configuredNetwork: 'signet', sourceType: 'core_gbt', prevBlockHash: 'c'.repeat(64), observationContext: context, totalWeight: 0, estimatedWeight: null, weightBasis: 'core-transaction-weights' };
+    for (const changed of [{ ...context, checkpoint: { ...context.checkpoint, height: 3186 } }, { ...context, provenance: 'backend-mempool-projection' }]) {
+      const templates: any = { ...noTemplates, state: 'observed', blockHeight: 3188, candidateTemplates: [{ ...template, observationContext: changed }] };
+      const vm = observe({ getObserverNodes$: () => of({ nodes: [node], total: 1 }), getPropagationObservation$: () => of({ network: 'signet' } as any), getBlockTemplateComparison$: () => of(templates) }); expect(vm.kind).toBe('error');
+    }
+  });
+
+});
