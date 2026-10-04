@@ -60,6 +60,7 @@ import { adminAdapterJsonParser } from './api/admin-adapter/admin-adapter.securi
 import adminAdapterRunStore from './api/admin-adapter/admin-adapter.runs';
 import { runtimeMetrics, runtimeMetricsMiddleware } from './api/admin-adapter/admin-adapter.runtime';
 import fractalRoutes from './api/fractal/fractal.routes';
+import { startFractalRuntime, closeFractalRuntime } from './api/fractal/fractal.runtime';
 import zcashPrivacyRoutes from './api/zcash-privacy/zcash-privacy.routes';
 import liquidObservatoryRoutes from './api/liquid-observatory/liquid-observatory.routes';
 import dataStudioRoutes from './api/data-studio/data-studio.routes';
@@ -207,6 +208,12 @@ class Server {
         logger.err(`Configuration preflight failed for ${failure.feature}: ${failure.reason}`);
       }
       throw new Error('The backend configuration is incoherent; see the preflight errors above.');
+    }
+
+    try {
+      await startFractalRuntime(config.FRACTAL);
+    } catch {
+      throw new Error('The selected Fractal reader configuration or read-only role failed startup validation.');
     }
 
     if (config.DATABASE.ENABLED) {
@@ -684,7 +691,7 @@ class Server {
     templateCollectorService.stopPolling();
     backendInfo.stopPolling();
     boundedHistoryFlush(/** @asyncUnsafe boundedHistoryFlush catches and reports shutdown rejection. */ async () => {
-      await Promise.all([timeMachineService.closeHistory(), eventBus.drain()]);
+      await Promise.all([timeMachineService.closeHistory(), eventBus.drain(), closeFractalRuntime()]);
     }).then(
       flushed => {
         if (!flushed) logger.warn('Time Machine shutdown flush failed or exceeded 5 seconds; the next start will expose a history gap.');

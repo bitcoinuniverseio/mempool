@@ -3,6 +3,7 @@ const configFromFile = require(
 );
 
 interface IConfig {
+  FRACTAL: import('./api/fractal/fractal.runtime').FractalRuntimeConfiguration;
   MEMPOOL: {
     ENABLED: boolean;
     OFFICIAL: boolean;
@@ -177,6 +178,7 @@ interface IConfig {
 }
 
 const defaults: IConfig = {
+  'FRACTAL': { ENABLED: false, PROFILE_FILE: '', RPC_URL: '', COOKIE_PATH: '', CAT_CONNECTION_FILE: '', CURSOR_KEY_FILE: '' },
   'MEMPOOL': {
     'ENABLED': true,
     'OFFICIAL': false,
@@ -355,6 +357,7 @@ const defaults: IConfig = {
 };
 
 class Config implements IConfig {
+  FRACTAL: IConfig['FRACTAL'];
   MEMPOOL: IConfig['MEMPOOL'];
   ESPLORA: IConfig['ESPLORA'];
   ELECTRUM: IConfig['ELECTRUM'];
@@ -378,6 +381,7 @@ class Config implements IConfig {
 
   constructor() {
     const configs = this.merge(configFromFile, defaults);
+    this.FRACTAL = configs.FRACTAL;
     this.MEMPOOL = configs.MEMPOOL;
     this.ESPLORA = configs.ESPLORA;
     this.ELECTRUM = configs.ELECTRUM;
