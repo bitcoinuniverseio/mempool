@@ -75,6 +75,8 @@
       <!-- Active Offers -->
       <section class="panel" *ngIf="vm.offers?.length">
         <h2>BOLT12 Offers Reported by the Source</h2>
+        <p>Scroll the table horizontally to read all columns. Keyboard users can focus the table region and use the arrow keys.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Published BOLT12 offer table">
         <table class="data-table">
           <thead>
             <tr>
@@ -97,6 +99,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
 
       <!-- RFQ Quotes -->
