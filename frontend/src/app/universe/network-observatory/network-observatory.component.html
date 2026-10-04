@@ -137,7 +137,7 @@
             <tr *ngFor="let t of vm.templates.candidateTemplates">
               <td data-label="Template source"><strong>{{ t.poolName }}</strong><span class="mono"> ({{ t.sourceType }})</span></td>
               <td data-label="Transactions">{{ t.txCount }}</td>
-              <td data-label="Weight">{{ t.totalWeight }} WU</td>
+              <td data-label="Weight">{{ templateWeight(t.totalWeight, t.estimatedWeight, t.weightBasis) }}</td>
               <td class="mono" data-label="Fees">{{ t.totalFeesSats }}</td>
               <td data-label="Fee rate">{{ measured(t.expectedMedianFeeRate, 'sat/vB') }}</td>
             </tr>
