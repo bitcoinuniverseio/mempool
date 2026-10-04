@@ -27,8 +27,21 @@ describe('address source checkpoint identity',()=>{
     const calls={info:measuredCore.getBlockchainInfo.mock.calls.length,hash:measuredCore.getBlockHash.mock.calls.length};
     finish(hash(0));
     await new Promise<void>(resolve=>setImmediate(resolve));
-    expect(reads).toHaveBeenCalledTimes(1);
+    expect(reads).toHaveBeenCalledTimes(2);
     expect(measuredCore.getBlockchainInfo).toHaveBeenCalledTimes(calls.info);
     expect(measuredCore.getBlockHash).toHaveBeenCalledTimes(calls.hash);
+  });
+  it('starts exactly four independent hash reads together and fences their completion with a fresh Core observation', async()=>{
+    const completions: (()=>void)[]=[];
+    const info=jest.fn(core.getBlockchainInfo);
+    const delayed=(height:number)=>new Promise<string>(resolve=>completions.push(()=>resolve(hash(height))));
+    const nodeHash=jest.fn(delayed), indexHash=jest.fn(delayed);
+    const pending=verifyAddressSource(100,indexHash,{getBlockchainInfo:info,getBlockHash:nodeHash});
+    await new Promise<void>(resolve=>setImmediate(resolve));
+    expect(nodeHash.mock.calls).toEqual([[0],[100]]);expect(indexHash.mock.calls.map(call=>call[0])).toEqual([0,100]);
+    expect(info).toHaveBeenCalledTimes(1);expect(completions).toHaveLength(4);
+    completions.forEach(finish=>finish());
+    await expect(pending).resolves.toMatchObject({blockHeight:100,genesisHash:hash(0),blockHash:hash(100)});
+    expect(info).toHaveBeenCalledTimes(2);
   });
 });

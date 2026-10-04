@@ -39,10 +39,12 @@ export async function verifyAddressSource(
     if (config.MEMPOOL.NETWORK === 'signet' && (!process.env.UNIVERSE_SIGNET_CHALLENGE || challenge !== process.env.UNIVERSE_SIGNET_CHALLENGE)) throw new Error('Configured Signet challenge is not attested by the owned node');
     const height = Math.min(indexedTip!, before.blocks);
     if (config.MEMPOOL.NETWORK === 'signet' && height < 1) throw new Error('Signet identity requires a non-genesis checkpoint');
-    const genesis = await readCore('getblockhash', [0]);
-    const expected = await readCore('getblockhash', [height]);
-    const sourceGenesis = await readIndex(0);
-    const observed = await readIndex(height);
+    // These four independent reads share the existing deadline; the subsequent
+    // Core observation still fences every response against active-tip movement.
+    const [genesis, expected, sourceGenesis, observed] = await Promise.all([
+      readCore('getblockhash', [0]), readCore('getblockhash', [height]),
+      readIndex(0), readIndex(height),
+    ]);
     const after = await readCore('getblockchaininfo', []);
     if (after.chain !== before.chain || after.signet_challenge !== before.signet_challenge || after.bestblockhash !== before.bestblockhash || after.blocks !== before.blocks) continue;
     if (!isHash(genesis) || !isHash(expected) || sourceGenesis !== genesis || observed !== expected) throw new Error('Address source differs from the owned active chain');
