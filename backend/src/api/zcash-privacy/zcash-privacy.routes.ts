@@ -26,6 +26,13 @@ class ZcashPrivacyRoutes {
     });
 
     app
+      .get(prefix + 'history', async (req: Request, res: Response) => {
+        res.setHeader('Cache-Control', 'no-store');
+        try {
+          if (Object.keys(req.query).some(key => key !== 'network') || req.query.network !== undefined && typeof req.query.network !== 'string') throw new ZcashPrivacyEvidenceError('invalid-query', 'Only the exact public network is accepted.', 400);
+          res.json(await zcashPrivacyService.$getHistory(req.query.network === undefined ? 'mainnet' : String(req.query.network)));
+        } catch (error) { fail(req, res, error); }
+      })
       .get(prefix + 'summary', this.$getSummary)
       .get(prefix + 'pools', this.$getPools)
       .get(prefix + 'upgrades', this.$getUpgrades);

@@ -13,6 +13,7 @@ export { ZcashPrivacyEvidenceError } from './zcash-source-error';
 import { ZcashPrivacyEvidenceError } from './zcash-source-error';
 import { ownedZcashReader, ZcashPublicReader } from './zcash-owned-reader';
 import { observeZcashPools } from './zcash-pool-observation';
+import { ZcashPoolHistory, ZcashPoolLedger } from './zcash-pool-ledger';
 
 /** Activation facts from the Zcash protocol specification; a reference, not an observation. */
 const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
@@ -91,7 +92,13 @@ const NETWORK_UPGRADES: ZcashNetworkUpgrade[] = [
  * reversible ledger exists. Upgrade entries are independent references.
  */
 export class ZcashPrivacyService {
+  private ledger: ZcashPoolLedger | undefined;
   constructor(private readonly reader: ZcashPublicReader = ownedZcashReader) {}
+  /** @asyncUnsafe Propagates bounded actual source and durable history failures. */
+  public async $getHistory(network = 'mainnet'): Promise<ZcashPoolHistory> {
+    if (!this.ledger) this.ledger = new ZcashPoolLedger(this.reader, process.env.UNIVERSE_ZCASH_POOL_LEDGER_FILE);
+    return this.ledger.advance(network);
+  }
   /* IMPLEMENTATION-HANDOFF [WP-BE-014]
    * Defect BE-014; COV-BE-014 privacy summary, value pools, upgrade reference.
    * Summary/pools always throw, although zcash-block-source supplies a
