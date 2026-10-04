@@ -5,7 +5,7 @@ import { beforeAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { provideRouter } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
@@ -19,7 +19,7 @@ describe('Ark native operator evidence rendering', () => {
     TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
   });
   afterEach(() => TestBed.resetTestingModule());
-  const render = (metrics: Record<string, unknown>) => {
+  const render = (metrics: Record<string, unknown>, batchUnavailable = false) => {
     TestBed.overrideComponent(ArkDashboardComponent, {set: {
       template: readFileSync('src/app/universe/ark/ark-dashboard.component.html', 'utf8'),
       templateUrl: undefined, styles: [], styleUrls: [],
@@ -27,7 +27,7 @@ describe('Ark native operator evidence rendering', () => {
     TestBed.configureTestingModule({providers: [provideRouter([]),
       {provide: UniverseApiService, useValue: {
         getArkOperators$: () => of({operators: [{id: 'owned-asp', name: 'Owned native ASP', aspPubkey: 'public', status: 'observed', ...metrics}]}),
-        getArkBatches$: () => of({batches: []}),
+        getArkBatches$: () => batchUnavailable ? throwError(() => ({status: 503, error: {error: 'Native batch projection unavailable'}})) : of({batches: []}),
       }}, {provide: SeoService, useValue: {setTitle: vi.fn()}},
       {provide: StateService, useValue: {network: 'signet', networkChanged$: new Subject(), env: {ROOT_NETWORK: 'mainnet', BASE_MODULE: 'mempool'}}},
     ]});
@@ -57,5 +57,16 @@ describe('Ark native operator evidence rendering', () => {
     expect(text).toContain('90,071,992.54740993 BTC');
     expect(text).toContain('9007199254740993 sats');
     expect(text).not.toContain('Session duration:');
+  });
+  it('retains observed operator facts with a distinct unavailable batch warning instead of an empty directory', () => {
+    const element = render({activeVtxoCount: null, currentBatchHeight: null, totalVolumeSats: null, roundIntervalSec: null,
+      providerVersion: 'v0.9.16', sessionDurationSeconds: '120'}, true);
+    expect(element.textContent).toContain('Owned native ASP');
+    expect(element.textContent).toContain('OBSERVED');
+    expect(element.textContent).toContain('Session duration: 120 seconds');
+    expect(element.querySelector('[role="alert"]').textContent).toContain('Batch directory unavailable: Native batch projection unavailable');
+    expect(element.textContent).toContain('do not establish batch or VTXO availability');
+    expect(element.textContent).not.toContain('Ark Provider Unavailable');
+    expect(element.querySelectorAll('tbody tr')).toHaveLength(0);
   });
 });
