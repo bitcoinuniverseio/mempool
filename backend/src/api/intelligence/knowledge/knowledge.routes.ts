@@ -3,6 +3,7 @@ import { knowledgeRegistryService } from './knowledge-registry.service';
 import { ownerOf, requireOwner, sendIdentityError } from '../identity/owner-auth';
 import { handleError } from '../../../utils/api';
 import config from '../../../config';
+import { IdentityError } from '../identity/developer-identity';
 
 /** Reads are public; submitting or challenging a label needs an owner key with the knowledge scope. */
 class KnowledgeRoutes {
@@ -24,6 +25,7 @@ class KnowledgeRoutes {
       const list = await knowledgeRegistryService.getLabels(category);
       res.json({ schema: 'universe-knowledge-labels-v1', network: config.MEMPOOL.NETWORK, labels: list, count: list.length });
     } catch (e) {
+      if (e instanceof IdentityError) { sendIdentityError(res, e, 'Pool identity is unavailable'); return; }
       handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch labels');
     }
   }
@@ -37,6 +39,7 @@ class KnowledgeRoutes {
       }
       res.json(label);
     } catch (e) {
+      if (e instanceof IdentityError) { sendIdentityError(res, e, 'Pool identity is unavailable'); return; }
       handleError(req, res, 500, e instanceof Error ? e.message : 'Failed to fetch label');
     }
   }

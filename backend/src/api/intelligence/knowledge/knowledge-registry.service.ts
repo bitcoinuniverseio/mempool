@@ -59,15 +59,15 @@ export const CATEGORIES = ['exchange', 'mining_pool', 'custodian', 'merchant', '
 export const EVIDENCE_TYPES = ['bip322_signature', 'proof_of_reserves', 'public_disclosure', 'on_chain_multisig'] as const;
 export const KNOWLEDGE_LIMITS = { labelsPerOwner: 500, nameLength: 128, entityIdLength: 160, evidenceItems: 10, uriLength: 1024, descriptionLength: 1024, proofLength: 4096 } as const;
 
-export type PoolReader = () => Promise<{ name: string; slug: string; link: string; regexes: string; addresses: string }[]>;
+export type PoolReader = () => Promise<{ uniqueId: number; name: string; slug: string; link: string; regexes: string; addresses: string }[]>;
 
 export class KnowledgeRegistryService {
   private static instance: KnowledgeRegistryService;
-  private poolCache: { at: number; labels: EntityLabel[] } | null = null;
+  private poolCache: { at: number; labels: EntityLabel[]; aliases: Map<string, EntityLabel[]> } | null = null;
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public poolReader: PoolReader = async () => {
     if (!config.DATABASE.ENABLED) { return []; }
-    const [rows] = await DB.query<any[]>('SELECT name, link, addresses, regexes, slug FROM pools');
+    const [rows] = await DB.query<any[]>('SELECT unique_id AS uniqueId, name, link, addresses, regexes, slug FROM pools');
     return rows;
   };
 
@@ -92,22 +92,35 @@ export class KnowledgeRegistryService {
   /** @asyncUnsafe One label per pool in the definition used for block attribution. */
   private async poolLabels(now = Date.now()): Promise<EntityLabel[]> {
     if (this.poolCache && now - this.poolCache.at < 10 * 60_000) { return this.poolCache.labels; }
-    let pools: { name: string; slug: string; link: string; regexes: string; addresses: string }[] = [];
+    let pools: Awaited<ReturnType<PoolReader>> = [];
     try { pools = await this.poolReader(); } catch { pools = []; }
-    const labels: EntityLabel[] = pools.filter(pool => pool.slug && pool.slug !== 'unknown').map(pool => {
+    const selected = pools.filter(pool => pool.slug !== 'unknown');
+    const ids = new Set<number>();
+    for (const pool of selected) {
+      if (typeof pool.slug !== 'string' || !pool.slug || !Number.isSafeInteger(pool.uniqueId) || pool.uniqueId <= 0 || ids.has(pool.uniqueId)) {
+        throw new IdentityError('pool_source_identity_invalid', 'Published pool identities are unavailable.', 503);
+      }
+      ids.add(pool.uniqueId);
+    }
+    const aliases = new Map<string, EntityLabel[]>();
+    const labels: EntityLabel[] = selected.map(pool => {
       const tags = KnowledgeRegistryService.parseList(pool.regexes);
       const addresses = KnowledgeRegistryService.parseList(pool.addresses);
       const evidence: EvidenceItem[] = [
         ...tags.map(tag => ({ evidence_type: 'coinbase_tag' as const, reference_uri: pool.link || '', verified_at_utc: null, description: `Coinbase tag ${JSON.stringify(tag)} in the pools definition.` })),
         ...addresses.map(address => ({ evidence_type: 'payout_address' as const, reference_uri: pool.link || '', verified_at_utc: null, description: `Payout address ${address} in the pools definition.` })),
       ];
-      return {
-        label_id: `pool-${pool.slug}`, entity_type: 'pool' as const, entity_id: `pool-${pool.slug}`, name: pool.name, category: 'mining_pool' as const,
+      // Published definition IDs remain stable when names or normalized slugs change.
+      const label: EntityLabel = {
+        label_id: `pool-${pool.uniqueId}`, entity_type: 'pool' as const, entity_id: `pool-${pool.uniqueId}`, name: pool.name, category: 'mining_pool' as const,
         confidence_level: evidence.length ? 2 : 1, confidence_score: evidence.length ? 0.9 : 0.5, status: evidence.length ? 'verified' as const : 'provisional' as const,
         source: 'pools_definition' as const, evidence, created_at: new Date(now).toISOString(), updated_at: new Date(now).toISOString(),
       };
+      const alias = `pool-${pool.slug}`;
+      aliases.set(alias, [...(aliases.get(alias) || []), label]);
+      return label;
     });
-    this.poolCache = { at: now, labels };
+    this.poolCache = { at: now, labels, aliases };
     return labels;
   }
 
@@ -133,6 +146,9 @@ export class KnowledgeRegistryService {
   public async getLabelByEntity(entityId: string): Promise<EntityLabel | null> {
     const pool = (await this.poolLabels()).find(label => label.entity_id === entityId);
     if (pool) { return pool; }
+    const alias = this.poolCache?.aliases.get(entityId) || [];
+    if (alias.length > 1) { throw new IdentityError('pool_alias_ambiguous', 'This legacy pool alias refers to multiple published definitions.', 409); }
+    if (alias.length === 1) { return alias[0]; }
     const [row] = await ownerStore().findKnowledgeLabelsByEntity(config.MEMPOOL.NETWORK, entityId);
     return row ? this.submitted(row) : null;
   }

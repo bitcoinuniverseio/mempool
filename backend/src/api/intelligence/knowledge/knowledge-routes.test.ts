@@ -3,11 +3,14 @@ import { request, Server } from 'http';
 import { AddressInfo } from 'net';
 
 jest.mock('../../../config', () => ({ __esModule: true, default: { MEMPOOL: { NETWORK: 'signet' } } }));
-jest.mock('./knowledge-registry.service', () => ({ knowledgeRegistryService: { getLabels: jest.fn(), getAuditLog: jest.fn() } }));
+jest.mock('./knowledge-registry.service', () => ({ knowledgeRegistryService: { getLabels: jest.fn(), getLabelByEntity: jest.fn(), getAuditLog: jest.fn() } }));
+jest.mock('../identity/developer-identity', () => ({ IdentityError: class extends Error { constructor(public code: string, message: string, public status: number) { super(message); } } }));
 jest.mock('../identity/owner-auth', () => ({ requireOwner: jest.fn(() => (_req: unknown, _res: unknown, next: () => void) => next()), ownerOf: jest.fn(), sendIdentityError: jest.fn() }));
 import config from '../../../config';
 import routes from './knowledge.routes';
 import { knowledgeRegistryService } from './knowledge-registry.service';
+import { IdentityError } from '../identity/developer-identity';
+import { sendIdentityError } from '../identity/owner-auth';
 
 describe('mounted public Knowledge response context', () => {
   let server: Server;
@@ -22,6 +25,7 @@ describe('mounted public Knowledge response context', () => {
     jest.clearAllMocks(); config.MEMPOOL.NETWORK = 'signet';
     (knowledgeRegistryService.getLabels as jest.Mock).mockResolvedValue(labels);
     (knowledgeRegistryService.getAuditLog as jest.Mock).mockResolvedValue(events);
+    (sendIdentityError as jest.Mock).mockImplementation((res, error) => res.status(error.status).json({ error: error.message, code: error.code }));
   });
   const get = (path: string): Promise<{ status: number; body: any }> => new Promise((resolve, reject) => {
     const req = request({ hostname: '127.0.0.1', port: (server.address() as AddressInfo).port, path: '/api/v1/intelligence/knowledge/' + path, agent: false }, res => {
@@ -42,5 +46,11 @@ describe('mounted public Knowledge response context', () => {
     expect((await get('labels?network=mainnet')).body).toMatchObject({ schema: 'universe-knowledge-labels-v1', network: 'signet', labels, count: 1 });
     expect((await get('audit-log?network=mainnet')).body).toMatchObject({ schema: 'universe-knowledge-audit-v1', network: 'signet', audit_events: events, count: 1 });
     expect(knowledgeRegistryService.getLabels).toHaveBeenCalledWith(undefined);
+  });
+  it('returns typed conflict for an ambiguous source alias and unavailable for invalid published identities', async () => {
+    (knowledgeRegistryService.getLabelByEntity as jest.Mock).mockRejectedValue(new IdentityError('pool_alias_ambiguous', 'Ambiguous published alias', 409));
+    expect(await get('labels/pool-bitcoinindia')).toEqual({ status: 409, body: { error: 'Ambiguous published alias', code: 'pool_alias_ambiguous' } });
+    (knowledgeRegistryService.getLabels as jest.Mock).mockRejectedValue(new IdentityError('pool_source_identity_invalid', 'Invalid published identity', 503));
+    expect(await get('labels')).toEqual({ status: 503, body: { error: 'Invalid published identity', code: 'pool_source_identity_invalid' } });
   });
 });
