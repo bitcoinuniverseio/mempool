@@ -163,12 +163,24 @@ it('does not accept a moving global set during exact native delta acquisition', 
   const reset = await f.service.next('address', current.sessionId, current.cursor, signal()); expect(reset.progress).toMatchObject({ verifiedOutputs: 0, mempoolEpoch: 1 }); expect(reset.result).toBeUndefined();
 });
 it('uses the explicit original strict-global fallback above100 or512KiB proof capacity, without claiming solved churn', async () => {
-  for (const pool of [Array.from({ length: 101 }, (_, i) => globalTx(i)), [globalTx(1, '6a' + '00'.repeat(90000))]]) {
+  for (const pool of [Array.from({ length: 101 }, (_, i) => globalTx(i)), [globalTx(1, '6a' + '00'.repeat(140000))]]) {
     const f = setup(); f.setPool(pool); const current = await outspends(f);
     expect(current.globalMempoolProof.mode).toBe('strict-global-fallback'); expect(current.globalMempoolProof.retainedBytes).toBeLessThanOrEqual(524288);
     f.setPool([...pool, globalTx(999)]); const reset = await f.service.next('address', current.sessionId, current.cursor, signal());
     expect(reset).toMatchObject({ reason: 'STRICT_GLOBAL_MEMPOOL_CHANGED', progress: { verifiedOutputs: 0, mempoolEpoch: 1 } }); expect(reset.result).toBeUndefined();
   }
+});
+it('retains exact native bytes without pooled backing and fits medium payload under unchanged binary charge', async () => {
+  const f = setup(), native = globalTx(1, '6a' + '00'.repeat(90000)); f.setPool([native]);
+  const current = await outspends(f), cached = state(f, current.sessionId).global.proofs.get(native.txid);
+  expect(current.globalMempoolProof.mode).toBe('irrelevant-delta-proof');
+  expect(cached.rawBytes.toString('hex')).toBe(native.rawHex);
+  expect(cached.rawBytes.byteOffset).toBe(0); expect(cached.rawBytes.buffer.byteLength).toBe(native.rawHex.length / 2);
+  expect(current.globalMempoolProof.retainedBytes).toBe(512 + 1024 + native.rawHex.length / 2 * 4);
+  cached.rawBytes[0] ^= 1; f.setPool([]);
+  const rejected = await f.service.next('address', current.sessionId, current.cursor, signal());
+  expect(rejected.result).toBeUndefined(); expect(rejected.progress.verifiedOutputs).toBe(0);
+  expect(rejected.progress.phase).toBe('acquire-mempool');
 });
 it('charges all proof bytes inside32MiB, releases on Cancel, and invalidates bounded transition exhaustion', async () => {
   const f = setup(), current = await outspends(f); expect(current.progress.retainedBytes).toBeGreaterThan(current.globalMempoolProof.retainedBytes);
