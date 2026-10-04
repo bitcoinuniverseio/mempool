@@ -21,6 +21,9 @@ describe('Time Machine selected context and target lifecycle', () => {
     const {page}=setup();expect(page.formatFees(1)).toBe('0.00000001 BTC');expect(page.formatFees(0)).toBe('0 BTC');
     for(const value of [null,undefined,-1,0.5,Number.MAX_SAFE_INTEGER+1])expect(page.formatFees(value)).toBe('Not reported');page.ngOnDestroy();
   });
+  it('reports actual weight in exact million weight units without assuming virtual bytes', () => {
+    const {page}=setup();expect(page.formatWeight(4000000)).toBe('4 MWU');expect(page.formatWeight(1000000)).toBe('1 MWU');expect(page.formatWeight(1)).toBe('0.000001 MWU');expect(page.formatWeight(null)).toBe('Not reported');page.ngOnDestroy();
+  });
   it('clears old state as a replacement replay starts and on failure', () => {
     const {page,replay}=setup(); page.currentState={state_hash:'a'.repeat(64)};page.targetHeight=10;page.runReplay();
     expect(page.currentState).toBeNull(); replay.error(new Error('unavailable'));expect(page.currentState).toBeNull();page.ngOnDestroy();

@@ -140,7 +140,7 @@ function validHistorySummary(value: any, network: string): boolean {
               <div class="col-md-3 col-6">
                 <div class="p-3 rounded bg-dark-subtle h-100">
                   <div class="small text-muted">Total Mempool Weight</div>
-                  <div class="h3 my-1 text-primary">{{ (currentState.total_weight / 4000000).toFixed(2) }} MvB</div>
+                  <div class="h3 my-1 text-primary">{{ formatWeight(currentState.total_weight) }}</div>
                   <div class="small text-muted">{{ currentState.projected_blocks_count }} projected blocks</div>
                 </div>
               </div>
@@ -245,6 +245,11 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
   formatFees(value: unknown): string {
     if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) { return 'Not reported'; }
     return atomicToDisplay(String(value), 8) + ' BTC';
+  }
+
+  formatWeight(value: unknown): string {
+    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) { return 'Not reported'; }
+    return atomicToDisplay(String(value), 6) + ' MWU';
   }
 
   loadLatestCheckpoint(): void {
