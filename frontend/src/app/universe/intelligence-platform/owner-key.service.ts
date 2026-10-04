@@ -51,10 +51,10 @@ export class OwnerKeyService {
   public readonly key$ = this.subject.asObservable();
 
   constructor(@Optional() private readonly state?: StateService) {
-    this.network = state?.network || 'mainnet';
+    this.network = state?.network || state?.env?.ROOT_NETWORK || 'mainnet';
     this.subject.next(this.read());
     state?.networkChanged$.subscribe(network => {
-      const next = network || 'mainnet';
+      const next = network || state.env?.ROOT_NETWORK || 'mainnet';
       if (next === this.network) return;
       this.network = next;
       this.subject.next(this.read());

@@ -13,7 +13,7 @@ export class WatchlistLiveService {
   stream(): Observable<WatchlistLiveState> {
     return this.owner.key$.pipe(switchMap(key => {
       if (!key || !this.state.isBrowser) return EMPTY;
-      const network = this.state.network || 'mainnet';
+      const network = this.state.network || this.state.env?.ROOT_NETWORK || 'mainnet';
       const prefix = this.state.network && this.state.network !== this.state.env.ROOT_NETWORK ? '/' + this.state.network : '';
       return new Observable<WatchlistLiveState>(observer => {
         let socket: WebSocket | null = null;
