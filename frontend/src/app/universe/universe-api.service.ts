@@ -1,4 +1,5 @@
 import { Sv2Family, Sv2Page } from './stratum-v2/stratum-v2.types';
+import { ArkBatchPage, ArkBatchWindow, ArkNativeProofInput, ArkNativeProofVerdict, readArkBatch, readArkBatchPage, readArkOperator } from './ark/ark-native-view';
 import { configuredSv2Profile, validateSv2Page } from './stratum-v2/stratum-v2.evidence';
 import { LiquidAssetPage, LiquidPegPage, LiquidNetwork, LiquidObservatoryCoverage } from './liquid-observatory/liquid-observatory.types';
 import { liquidProfile, requireLiquid, validateLiquidRead } from './liquid-observatory/liquid-evidence';
@@ -1015,21 +1016,46 @@ export class UniverseApiService {
    *    Retain provider state and backups; never replace missing evidence with zero.
    */
   getArkOperators$(): Observable<{ operators: ArkOperator[]; total: number }> {
-    return this.httpClient.get<{ operators: ArkOperator[]; total: number }>(
-      this.backendBase + '/api/v1/ark/operators'
-    );
+    return defer(() => {
+      const network = this.network;
+      return this.httpClient.get<{operators: ArkOperator[]; total:number}>(this.backendBase + '/api/v1/ark/operators', {
+        headers:{'Cache-Control':'no-store'},
+      }).pipe(timeout(20000), map(data => {
+        if (!Array.isArray(data?.operators) || data.operators.length > 100 || data.total !== data.operators.length) {throw Error('Malformed native Ark operator directory.');}
+        data.operators.forEach(operator => readArkOperator(operator, network)); return data;
+      }));
+    });
   }
 
-  getArkBatches$(): Observable<{ batches: ArkBatch[]; total: number }> {
-    return this.httpClient.get<{ batches: ArkBatch[]; total: number }>(
-      this.backendBase + '/api/v1/ark/batches'
-    );
+  getArkBatches$(window: ArkBatchWindow = {after: '0', limit: 10}): Observable<ArkBatchPage> {
+    return defer(() => {
+      const network = this.network;
+      return this.httpClient.get<ArkBatchPage>(this.backendBase + '/api/v1/ark/batches', {
+        params: {after: window.after, limit: String(window.limit), ...(window.before !== undefined ? {before: window.before} : {})},
+        headers: {'Cache-Control': 'no-store'},
+      }).pipe(timeout(20000), map(page => readArkBatchPage(page, network, window)));
+    });
   }
 
   getArkBatch$(batchId: string): Observable<ArkBatch> {
-    return this.httpClient.get<ArkBatch>(
-      this.backendBase + '/api/v1/ark/batches/' + encodeURIComponent(batchId)
-    );
+    return defer(() => {
+      const network = this.network;
+      return this.httpClient.get<ArkBatch>(this.backendBase + '/api/v1/ark/batches/' + encodeURIComponent(batchId), {
+        headers: {'Cache-Control': 'no-store'},
+      }).pipe(timeout(20000), map(batch => {
+        const observed = readArkBatch(batch, network);
+        if (observed.batchId !== batchId) {throw Error('Ark batch detail belongs to a different requested round.');}
+        return observed;
+      }));
+    });
+  }
+
+  verifyArkNativeProof$(proof: ArkNativeProofInput): Observable<ArkNativeProofVerdict> {
+    return defer(() => {
+      if (proof.network !== this.network) {return throwError(() => Error('Native proof does not match the selected Ark network.'));}
+      return this.httpClient.post<ArkNativeProofVerdict>(this.backendBase + '/api/v1/ark/verify/native', proof,
+        {headers: {'Cache-Control': 'no-store'}}).pipe(timeout(30000));
+    });
   }
 
   getArkVtxo$(vtxoId: string): Observable<ArkVtxo> {
