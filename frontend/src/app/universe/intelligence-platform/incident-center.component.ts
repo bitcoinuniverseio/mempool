@@ -73,6 +73,9 @@ import { StateService } from '@app/services/state.service';
               </span>
               <span class="badge badge-secondary ms-2 text-uppercase">{{ incident.incident_type }}</span>
               <h4 class="mt-2 mb-0">{{ incident.title }}</h4>
+              <p *ngIf="incident.incident_type === 'reorg' && incident.evidence.common_ancestor?.hash === incident.block_hash">
+                Retained headers show a tip rollback to the ancestor; no competing replacement branch is shown.
+              </p>
             </div>
             <div class="text-muted small">
               Detected: {{ incident.detected_at_utc | date:'medium' }}
