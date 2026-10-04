@@ -1,5 +1,5 @@
 import { derivePublicScript } from './watchlist-descriptor-runtime';
-import { sha256 } from '@noble/hashes/sha256';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { classifyDescriptor } from '../portfolio/shared/derivation';
 import { looksSecretLike } from '../portfolio/shared/secret-detection';
 
