@@ -31,6 +31,17 @@ function validHistorySummary(value: any, network: string): boolean {
     && Array.isArray(value.gap_intervals) && value.gap_intervals.length <= 50000 && value.gap_intervals.every((gap: any) => gap && validHistoryUtc(gap.start_utc) && validHistoryUtc(gap.end_utc) && Date.parse(gap.end_utc) >= Date.parse(gap.start_utc) && typeof gap.reason === 'string' && gap.reason.length > 0 && gap.reason.length <= 256);
 }
 
+function validHistoryCoverage(value: any, network: string): boolean {
+  const integer = (n: unknown): boolean => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
+  const nullableUtc = (s: unknown): boolean => s === null || validHistoryUtc(s);
+  return !!value && value.network === network && typeof value.observer_id === 'string' && value.observer_id.length > 0 && value.observer_id.length <= 128
+    && validHistoryUtc(value.observing_since_utc) && nullableUtc(value.earliest_recorded_event_utc) && nullableUtc(value.latest_recorded_event_utc) && nullableUtc(value.observed_through_utc)
+    && integer(value.total_events) && value.total_events <= 50000 && integer(value.total_checkpoints) && value.total_checkpoints <= 288
+    && (value.total_checkpoints === 0 ? value.earliest_checkpoint_height === null && value.latest_checkpoint_height === null : integer(value.earliest_checkpoint_height) && integer(value.latest_checkpoint_height) && value.latest_checkpoint_height >= value.earliest_checkpoint_height)
+    && typeof value.persistence?.enabled === 'boolean' && typeof value.persistence.pending === 'boolean' && (value.persistence.error === null || typeof value.persistence.error === 'string')
+    && Array.isArray(value.coverage_gaps) && value.coverage_gaps.length <= 50001 && value.coverage_gaps.every((gap: any) => gap && validHistoryUtc(gap.start_utc) && validHistoryUtc(gap.end_utc) && Date.parse(gap.end_utc) >= Date.parse(gap.start_utc) && typeof gap.reason === 'string' && gap.reason.length > 0 && gap.reason.length <= 256);
+}
+
 @Component({
   selector: 'app-time-machine',
   standalone: true,
@@ -57,6 +68,12 @@ function validHistorySummary(value: any, network: string): boolean {
         </div>
         <ng-template #noCoverage><span>No checkpoint recorded yet; the first one arrives with the next block.</span></ng-template>
       </div>
+      <p *ngIf="coverageError" role="alert">{{ coverageError }}</p>
+      <ng-container *ngIf="coverage">
+        <p>History persistence: {{ coverage.persistence.enabled ? 'Enabled' : 'Disabled' }}{{ coverage.persistence.pending ? ' · Pending write' : '' }}</p>
+        <p *ngIf="coverage.persistence.error" role="alert">{{ coverage.persistence.error }}</p>
+        <details *ngIf="coverage.coverage_gaps.length"><summary>Observed coverage gaps</summary><pre>{{ coverage.coverage_gaps | json }}</pre></details>
+      </ng-container>
 
       <!-- Scrub Controls -->
       <section class="card mb-4">
@@ -200,6 +217,7 @@ function validHistorySummary(value: any, network: string): boolean {
 })
 export class TimeMachineComponent implements OnInit, OnDestroy {
   coverage: any = null;
+  coverageError: string | null = null;
   currentState: any = null;
   targetHeight: number | null = null;
   targetTimestamp = '';
@@ -223,14 +241,18 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
   private get network(): string { return this.state?.network || this.state?.env?.ROOT_NETWORK || 'mainnet'; }
   private loadCoverage(): void {
     this.coverageRead?.unsubscribe(); const network = this.network;
+    this.coverage = null; this.coverageError = null;
     this.coverageRead = this.api.getTimeMachineCoverage$().subscribe({
         next: (res) => {
           if (this.destroyed || this.network !== network) { return; }
+          if (!validHistoryCoverage(res, network)) { this.coverageError = 'History coverage does not match the selected network or contains incomplete observations.'; this.cdr.markForCheck(); return; }
           this.coverage = res;
           this.cdr.markForCheck();
         },
         error: () => {
+          if (this.destroyed || this.network !== network) { return; }
           this.coverage = null;
+          this.coverageError = 'Owned history coverage unavailable.';
           this.cdr.markForCheck();
         },
       });
