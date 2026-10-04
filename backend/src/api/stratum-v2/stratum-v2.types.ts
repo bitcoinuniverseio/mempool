@@ -1,37 +1,20 @@
-/**
- * Types for Stratum V2 Job-Declaration and Template Observatory.
- */
-
-export interface StratumV2RoleStatus {
-  readonly role: 'mining-proxy' | 'job-declarator' | 'template-provider' | 'pool';
-  readonly name: string;
-  readonly endpoint: string;
-  readonly noiseProtocolSecured: boolean;
-  readonly negotiatedSubprotocols: readonly string[];
-  readonly connectedDownstreams: number;
-  readonly uptimeSec: number;
-  readonly status: 'active' | 'degraded';
-}
-
+import { Sv2Role, Sv2Snapshot } from './stratum-v2.native-types';
+export type StratumV2RoleStatus = Sv2Role;
 export interface StratumV2Template {
-  readonly templateId: string;
-  readonly blockHeight: number;
-  readonly coinbaseTxValueSats: string;
-  readonly declaredTxCount: number;
-  readonly poolSelectedTxCount: number;
-  readonly feeRateDeltaSatVb: number;
-  readonly totalWeight: number;
-  readonly status: 'mining' | 'superseded' | 'won';
-  readonly generatedAt: number;
+  eventId: string; templateId: string; channelId: string; blockHeight: null;
+  coinbaseValueRemainingSats: string; coinbaseTxValueSats: null;
+  declaredTxCount: string; poolSelectedTxCount: null; feeRateDeltaSatVb: null; totalWeight: null;
+  previousBlockHash: string; status: 'observed-current' | 'unverified-history'; observedAt: string; generatedAt: null;
 }
-
 export interface StratumV2JobDeclaration {
-  readonly jobId: string;
-  readonly templateId: string;
-  readonly declaratorId: string;
-  readonly minerDeclaredTxids: readonly string[];
-  readonly poolModifiedTxids: readonly string[];
-  readonly acceptedByPool: boolean;
-  readonly poolRejectionCode?: string;
-  readonly latencyMs: number;
+  eventId: string; jobId: string; templateId: string; requestId: string; channelId: string;
+  minerDeclaredTxids: null; poolModifiedTxids: null; acceptedByPool: true; latencyMs: null;
+  declarationObservedAt: string; acceptanceObservedAt: string;
+}
+export type Sv2Family = 'roles' | 'templates' | 'declarations';
+export interface Sv2Query { network?: unknown; limit?: unknown; cursor?: unknown; }
+export interface Sv2Page<T> {
+  schemaVersion: 'universe-sv2-observatory-v1';
+  source: Pick<Sv2Snapshot, 'profile' | 'profileSha256' | 'sourceEpoch' | 'sourceGenerationAtomic' | 'observedAt' | 'core' | 'retention'> & { rawSnapshotSha256: string; latestVerifiedAt: string };
+  items: T[]; total: number; totalScope: 'captured-retained-observations'; completeHistory: false; nextCursor: string | null;
 }
