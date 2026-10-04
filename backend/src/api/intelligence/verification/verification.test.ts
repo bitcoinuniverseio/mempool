@@ -5,8 +5,8 @@ jest.mock('../workbench/workbench-core', () => ({ ownedWorkbenchCore: { network:
 const unavailable = (code: string) => expect.objectContaining({ code, status: 503 });
 it('returns a real invalid signature verdict and retains explicit unavailable incident capabilities', async () => {
   await expect(verificationService.verifySignature('addr', 'msg', 'A'.repeat(88))).resolves.toMatchObject({ is_valid: false });
-  expect(() => verificationService.getIncidents()).toThrow(unavailable('unavailable-incident-ledger'));
-  expect(() => verificationService.getIncidentById('unknown')).toThrow(unavailable('unavailable-incident-ledger'));
+  await expect(verificationService.getIncidents()).rejects.toMatchObject(unavailable('unavailable-incident-ledger'));
+  await expect(verificationService.getIncidentById('ab'.repeat(32))).rejects.toMatchObject(unavailable('unavailable-incident-ledger'));
   await expect(verificationService.queryCompactFilter('00'.repeat(32), [])).rejects.toMatchObject({ code: 'invalid-filter-query', status: 400 });
 });
 function routes() {
@@ -35,4 +35,19 @@ it('accepts an empty message and returns the verifier verdict', async () => {
   await routes().get('/api/v1/intelligence/verification/verify-signature')({ body: { address: 'address', message: '', signature: 'A'.repeat(88) } }, res);
   expect(res.status).not.toHaveBeenCalled();
   expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ is_valid: false }));
+});
+it.each([{ network: ['signet', 'mainnet'] }, { network: { selected: 'signet' } }, { network: 'foreign' }, { origin: 'http://127.0.0.1' }])('rejects malformed incident selectors before source acquisition %j', async query => {
+  const spy = jest.spyOn(verificationService, 'getIncidents');
+  try { const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
+    await routes().get('/api/v1/intelligence/incidents')({ query }, res);
+    expect(res.status).toHaveBeenCalledWith(400); expect(spy).not.toHaveBeenCalled();
+  } finally { spy.mockRestore(); }
+});
+it('awaits the registered incident observation and preserves versioned coverage without cached success', async () => {
+  const spy = jest.spyOn(verificationService, 'getIncidents').mockResolvedValue({ schema: 'universe-incident-observations-v1', incidents: [], count: 0 } as never);
+  try { const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
+    await routes().get('/api/v1/intelligence/incidents')({ query: { network: 'signet' } }, res);
+    expect(spy).toHaveBeenCalledWith('signet'); expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ schema: 'universe-incident-observations-v1', count: 0 }));
+    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
+  } finally { spy.mockRestore(); }
 });
