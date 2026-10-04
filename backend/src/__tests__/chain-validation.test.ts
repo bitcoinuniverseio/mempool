@@ -1,4 +1,4 @@
-import {isolatedBackend,defaultMock,quietLogger} from './isolated-backend-helper';
+import {isolatedBackend,defaultMock,quietLogger} from '../../test-support/isolated-backend-helper';
 const hash=(n: number)=>String(n).repeat(64);
 describe('retained active chain validation',()=>{
   const setup=(rows: any[],tip=2,fail=false,moved=false)=>{
