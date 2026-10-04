@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { BehaviorSubject, of, ReplaySubject, Subject } from 'rxjs';
 import { UntypedFormBuilder } from '@angular/forms';
 import { convertToParamMap } from '@angular/router';
 import { LightningStatisticsChartComponent } from '../lightning/statistics-chart/lightning-statistics-chart.component';
@@ -11,9 +11,9 @@ import { NodesChannelsMap } from '../lightning/nodes-channels-map/nodes-channels
 vi.mock('@app/graphs/echarts', () => ({ echarts: { registerMap: vi.fn() } }));
 
 const kinds = ['capacity', 'networks', 'isp', 'map'] as const;
-function setup(kind: typeof kinds[number]) {
+function setup(kind: typeof kinds[number], initialNetworkEvent = true) {
   vi.useFakeTimers(); vi.stubGlobal('window', { innerWidth: 1200 });
-  const network = new BehaviorSubject('signet'), params = new BehaviorSubject(convertToParamMap({})), source = new Subject<any>();
+  const network = initialNetworkEvent ? new BehaviorSubject('signet') : new ReplaySubject<string>(1), params = new BehaviorSubject(convertToParamMap({})), source = new Subject<any>();
   const state = { networkChanged$: network, isBrowser: true, env: {} };
   const api = { cachedRequest: vi.fn(() => source), listStatistics$: vi.fn(), getNodesPerIsp: vi.fn(() => source), getChannelsGeo$: vi.fn(() => source), getWorldNodes$: vi.fn() };
   const seo = { setTitle: vi.fn(), setDescription: vi.fn() }, storage = { getValue: vi.fn(() => null), setValue: vi.fn() };
@@ -40,6 +40,14 @@ function setup(kind: typeof kinds[number]) {
 }
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 describe.each(kinds)('native Lightning %s chart ownership', kind => {
+  it('starts the root-network read without waiting for a network change event', () => {
+    const f = setup(kind, false);
+    expect(f.source.observed).toBe(true);
+    expect(Object.values(f.api).reduce((sum, method) => sum + method.mock.calls.length, 0)).toBe(1);
+    f.source.next(f.value()); f.source.complete();
+    expect(f.component.prepareChartOptions).toHaveBeenCalledOnce();
+    f.subscription.unsubscribe(); f.component.ngOnDestroy();
+  });
   it('cancels previous-network reads and clears rendered options/data while replacement is pending', () => {
     const f = setup(kind); f.component.chartOptions = { series: [{ data: [999] }] };
     if (kind === 'capacity' || kind === 'networks') f.component.chartData = { old: true };
