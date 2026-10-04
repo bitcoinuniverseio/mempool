@@ -124,7 +124,7 @@ export function unixArkNativeRead(publicSocket: string, adminSocket?: string, re
 export function allowedArkReadPath(path: string, admin: boolean): boolean {
   if (admin) {
     if (/^\/v1\/admin\/round\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(path)) return true;
-    if (!/^\/v1\/admin\/(?:rounds|offchainTxs)\?after=(?:0|[1-9][0-9]{0,11})&before=[1-9][0-9]{0,11}&limit=(?:[1-9]|[1-9][0-9]|100)$/.test(path)) return false;
+    if (!/^\/v1\/admin\/(?:rounds\?after=(?:0|[1-9][0-9]{0,11})&before=[1-9][0-9]{0,11}&limit=(?:[1-9]|[1-9][0-9]|100)&withCompleted=true|offchainTxs\?after=(?:0|[1-9][0-9]{0,11})&before=[1-9][0-9]{0,11}&limit=(?:[1-9]|[1-9][0-9]|100))$/.test(path)) return false;
     const query = new URLSearchParams(path.split('?')[1]);
     return BigInt(query.get('after')!) < BigInt(query.get('before')!);
   }
