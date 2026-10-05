@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { GlobalNetworkApiService, GlobalNetworkDnsSeed } from './global-network.service';
+import { Subscription, Subject } from 'rxjs';
+import { GlobalNetworkApiService, GlobalNetworkDnsSeed, GlobalNetworkDnsReport } from './global-network.service';
+import { StateService } from '@app/services/state.service';
+import { globalRead$ } from './global-network-observations';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
@@ -20,7 +22,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Status, address pool size, and reachability ratios of authoritative DNS seeds used for initial peer discovery.
+          Queries of configured chainparam DNS seeds. Discovered peer addresses are not probed by this deployment.
         </p>
 
         <!-- Sub-navigation tabs -->
@@ -33,12 +35,16 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </nav>
       </header>
 
+      <p *ngIf="report" role="status">Configured network {{ report.configured_network }}. {{ report.scope }}.
+        This configured selection does not attest an independently observed node identity.</p>
+      <p *ngIf="!loading && report && !seeds.length">No retained records in this bounded response.</p>
       <div *ngIf="loading" class="text-center py-5 text-muted">
         <div class="spinner-border text-primary mb-2" role="status"></div>
         <div>Querying DNS seed infrastructure...</div>
       </div>
 
-      <div *ngIf="error" class="alert alert-danger my-3">
+      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">Retry fresh read</button>
+      <div *ngIf="error" role="alert" class="alert alert-danger my-3">
         {{ error }}
       </div>
 
@@ -96,33 +102,22 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 })
 export class GlobalNetworkSeedsComponent implements OnInit, OnDestroy {
   seeds: GlobalNetworkDnsSeed[] = [];
+  report: GlobalNetworkDnsReport | null = null;
   loading = true;
   error: string | null = null;
   private sub = new Subscription();
-
+  private retrySignal = new Subject<void>();
   constructor(
     private api: GlobalNetworkApiService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private state: StateService | null = inject(StateService, { optional: true })
   ) {}
-
   ngOnInit(): void {
-    this.sub.add(
-      this.api.getDnsSeeds$().subscribe({
-        next: data => {
-          this.seeds = data;
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: err => {
-          this.error = err?.error?.error || err?.message || 'Failed to load DNS seeds';
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-      })
-    );
+    this.sub.add(globalRead$(this.state, this.retrySignal, () => this.api.getDnsSeeds$()).subscribe(result => {
+      this.report = result.value; this.seeds = result.value?.seeds ?? [];
+      this.loading = result.kind === 'loading'; this.error = result.error; this.cd.markForCheck();
+    }));
   }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  retry(): void { this.retrySignal.next(); }
+  ngOnDestroy(): void { this.sub.unsubscribe(); this.retrySignal.complete(); }
 }
