@@ -3,7 +3,7 @@ import express from 'express';
 import { Application, Request, Response, NextFunction } from 'express';
 import * as http from 'http';
 import * as WebSocket from 'ws';
-import bitcoinApi from './api/bitcoin/bitcoin-api-factory';
+import bitcoinApi, { bitcoinCoreApi } from './api/bitcoin/bitcoin-api-factory';
 import cluster from 'cluster';
 import DB from './database';
 import config from './config';
@@ -87,6 +87,7 @@ import protocolsRoutes from './api/intelligence/protocols/protocols.routes';
 import { protocolRegistryService } from './api/intelligence/protocols/protocol-registry.service';
 import { ProtocolActivityObserver } from './api/intelligence/protocols/protocol-activity';
 import { blockObservationHub } from './api/intelligence/observation/block-observation-hub';
+import { CanonicalPollFence } from './api/intelligence/time-machine/canonical-poll-fence';
 import { watchlistMatcher } from './api/intelligence/watchlists/watchlist-matcher';
 import { blockspaceService } from './api/intelligence/blockspace/blockspace.service';
 import { timeMachineService } from './api/intelligence/time-machine/time-machine.service';
@@ -386,6 +387,15 @@ class Server {
           logger.debug(msg);
         }
       }
+      const pendingCanonicalTip = timeMachineService.getPendingCanonicalTip();
+      const reorgNetwork = config.MEMPOOL.NETWORK;
+      const reorgFence = await CanonicalPollFence.begin(pendingCanonicalTip, async () => {
+        const height = await bitcoinCoreApi.$getBlockHeightTip();
+        if (!Number.isSafeInteger(height) || height < 0 || config.MEMPOOL.NETWORK !== reorgNetwork) throw new Error('Reentry source context changed.');
+        const hash = await bitcoinCoreApi.$getBlockHash(height);
+        if (config.MEMPOOL.NETWORK !== reorgNetwork) throw new Error('Reentry source context changed.');
+        return { height, hash };
+      });
       const newMempool = await bitcoinApi.$getRawMempool();
       const minFeeMempool = memPool.limitGBT ? await bitcoinSecondClient.getRawMemPool() : null;
       const minFeeTip = memPool.limitGBT ? await bitcoinSecondClient.getBlockCount() : -1;
@@ -393,7 +403,14 @@ class Server {
       const numHandledBlocks = await blocks.$updateBlocks();
       const pollRate = config.MEMPOOL.POLL_RATE_MS * (indexer.indexerIsRunning() ? 10 : 1);
       if (numHandledBlocks === 0) {
+        if (pendingCanonicalTip) await reorgFence.verify();
+        const reentryPollGeneration = timeMachineService.getPollGeneration();
         await memPool.$updateMempool(newMempool, latestAccelerations, minFeeMempool, minFeeTip, pollRate);
+        if (pendingCanonicalTip) {
+          if (!await reorgFence.verify() || !timeMachineService.observeVerifiedReentries(newMempool, pendingCanonicalTip, reentryPollGeneration)) {
+            timeMachineService.markObservationFailure(Date.now(), 'Canonical source or exact complete poll changed or was unavailable during verified reentry polling.');
+          }
+        }
       }
       void indexer.$run();
       if (config.WALLETS.ENABLED) {
@@ -482,6 +499,8 @@ class Server {
       if (memPool.isInSync()) timeMachineService.observeBlock(block, transactions);
       else timeMachineService.markObservationFailure();
     });
+    blockObservationHub.subscribeCanonical('time-machine', change => timeMachineService.observeCanonicalChange(change));
+    blocks.setCanonicalChangeCallback(change => blockObservationHub.dispatchCanonical(change));
     blockObservationHub.subscribe('templates', (block, transactions) => { templateCollectorService.observeBlock(block, transactions); });
     // Ordering evidence compares the mined order with the templates recorded for the height, so it reads after the template collector.
     blockObservationHub.subscribe('ordering-evidence', (block, transactions) => { orderingEvidenceService.observeBlock(block, transactions); });

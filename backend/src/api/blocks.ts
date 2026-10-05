@@ -35,6 +35,7 @@ import mempool from './mempool';
 import CpfpRepository from '../repositories/CpfpRepository';
 import { parseDATUMTemplateCreator } from '../utils/bitcoin-script';
 import database from '../database';
+import { CanonicalChange } from './intelligence/observation/block-observation-hub';
 import { getBlockFirstSeenFromLogs, getOldestLogTimestampFromLogs, scanLogsForBlocksFirstSeen } from '../utils/file-read';
 
 /**
@@ -53,6 +54,8 @@ class Blocks {
   private quarterEpochBlockTime: number | null = null;
   private newBlockCallbacks: ((block: BlockExtended, txIds: string[], transactions: TransactionExtended[]) => void)[] = [];
   private newAsyncBlockCallbacks: ((block: BlockExtended, txIds: string[], transactions: MempoolTransactionExtended[]) => Promise<void>)[] = [];
+  private canonicalChangeCallbacks: Array<(change: CanonicalChange) => Promise<void>> = [];
+  private lastCanonicalChange: string | null = null;
   private classifyingBlocks: boolean = false;
   private oldestCoreLogTimestamp: number | undefined | null = undefined;
 
@@ -82,6 +85,54 @@ class Blocks {
 
   public setNewAsyncBlockCallback(fn: (block: BlockExtended, txIds: string[], transactions: MempoolTransactionExtended[]) => Promise<void>) {
     this.newAsyncBlockCallbacks.push(fn);
+  }
+
+  public setCanonicalChangeCallback(fn: (change: CanonicalChange) => Promise<void>): void {
+    this.canonicalChangeCallbacks.push(fn);
+  }
+
+  /** Read-only observer: never rewinds the cache or bypasses indexed reorg cleanup. @asyncUnsafe */
+  private async $observeCanonicalChange(tipHeight: number): Promise<void> {
+    if (!this.canonicalChangeCallbacks.length || !this.blocks.length) return;
+    const network = config.MEMPOOL.NETWORK;
+    const cachedChain = this.blocks.slice(-128).map(block => ({ height: block.height, id: block.id, previousblockhash: block.previousblockhash }));
+    const previous = cachedChain[cachedChain.length - 1];
+    const validHash = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+    let change: CanonicalChange;
+    try {
+      if (!Number.isSafeInteger(tipHeight) || tipHeight < 0) throw new Error('Invalid native canonical tip height.');
+      const comparedHeight = Math.min(tipHeight, previous.height);
+      const comparedHash = await bitcoinCoreApi.$getBlockHash(comparedHeight);
+      if (!validHash(comparedHash)) throw new Error('Invalid native canonical hash.');
+      if (tipHeight >= previous.height && comparedHash === previous.id) { this.lastCanonicalChange = null; return; }
+      const tipHash = tipHeight === comparedHeight ? comparedHash : await bitcoinCoreApi.$getBlockHash(tipHeight);
+      if (!validHash(tipHash)) throw new Error('Invalid native tip hash.');
+      const orphanedBlocks: Array<{ height: number; hash: string }> = [];
+      let ancestor: { height: number; hash: string } | undefined;
+      for (let i = cachedChain.length - 1; i >= 0; i--) {
+        const cached = cachedChain[i];
+        if (cached.height !== previous.height - orphanedBlocks.length || !validHash(cached.id)) throw new Error('Cached ancestry is not contiguous.');
+        if (i < cachedChain.length - 1 && cachedChain[i + 1].previousblockhash !== cached.id) throw new Error('Cached ancestry links do not match.');
+        if (cached.height <= tipHeight) {
+          const hash = cached.height === comparedHeight ? comparedHash : await bitcoinCoreApi.$getBlockHash(cached.height);
+          if (!validHash(hash)) throw new Error('Invalid native ancestor hash.');
+          if (hash === cached.id) { ancestor = { height: cached.height, hash }; break; }
+        }
+        orphanedBlocks.push({ height: cached.height, hash: cached.id });
+      }
+      if (!ancestor) throw new Error('No verified ancestor within 128 contiguous cached blocks.');
+      if (await bitcoinCoreApi.$getBlockHeightTip() !== tipHeight || await bitcoinCoreApi.$getBlockHash(tipHeight) !== tipHash ||
+        await bitcoinCoreApi.$getBlockHash(ancestor.height) !== ancestor.hash || config.MEMPOOL.NETWORK !== network ||
+        this.blocks[this.blocks.length - 1]?.id !== previous.id) throw new Error('Canonical source changed during ancestry observation.');
+      change = { status: 'verified-rollback', network, observedAt: Date.now(), previousTip: { height: previous.height, hash: previous.id },
+        canonicalTip: { height: tipHeight, hash: tipHash }, commonAncestor: ancestor, orphanedBlocks };
+    } catch (error) {
+      change = { status: 'unavailable', network, observedAt: Date.now(), reason: error instanceof Error ? error.message : 'Canonical ancestry unavailable.' };
+    }
+    const key = JSON.stringify({ ...change, observedAt: 0 });
+    if (key === this.lastCanonicalChange) return;
+    for (const observe of this.canonicalChangeCallbacks) await observe(change);
+    this.lastCanonicalChange = key;
   }
 
   /**
@@ -874,7 +925,7 @@ class Blocks {
 
   /**
    * [INDEXING] Index all blocks metadata for the mining dashboard
-   * @asyncSafe
+   * @asyncUnsafe Database validation failures intentionally propagate to the caller.
    */
   public async $generateBlockDatabase(): Promise<boolean> {
     try {
@@ -1015,6 +1066,7 @@ class Blocks {
     let handledBlocks = 0;
     const lastBlockHeight = this.currentBlockHeight;
     const blockHeightTip = await bitcoinCoreApi.$getBlockHeightTip();
+    await this.$observeCanonicalChange(blockHeightTip);
     this.updateTimerProgress(timer, 'got block height tip');
 
     if (this.blocks.length === 0) {
