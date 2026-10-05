@@ -500,7 +500,7 @@ class Server {
       else timeMachineService.markObservationFailure();
     });
     blockObservationHub.subscribeCanonical('time-machine', change => timeMachineService.observeCanonicalChange(change));
-    blocks.setCanonicalChangeCallback(change => blockObservationHub.dispatchCanonical(change));
+    blocks.setCanonicalChangeCallback(change => blockObservationHub.dispatchCanonical(change), () => timeMachineService.getCanonicalRecoveryRequest());
     blockObservationHub.subscribe('templates', (block, transactions) => { templateCollectorService.observeBlock(block, transactions); });
     // Ordering evidence compares the mined order with the templates recorded for the height, so it reads after the template collector.
     blockObservationHub.subscribe('ordering-evidence', (block, transactions) => { orderingEvidenceService.observeBlock(block, transactions); });

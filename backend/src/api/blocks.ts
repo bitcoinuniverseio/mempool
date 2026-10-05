@@ -35,7 +35,8 @@ import mempool from './mempool';
 import CpfpRepository from '../repositories/CpfpRepository';
 import { parseDATUMTemplateCreator } from '../utils/bitcoin-script';
 import database from '../database';
-import { CanonicalChange } from './intelligence/observation/block-observation-hub';
+import { CanonicalChange, CanonicalRecoveryRequest } from './intelligence/observation/block-observation-hub';
+import { btcToSats } from './intelligence/utxo/utxo-evidence';
 import { getBlockFirstSeenFromLogs, getOldestLogTimestampFromLogs, scanLogsForBlocksFirstSeen } from '../utils/file-read';
 
 /**
@@ -55,6 +56,7 @@ class Blocks {
   private newBlockCallbacks: ((block: BlockExtended, txIds: string[], transactions: TransactionExtended[]) => void)[] = [];
   private newAsyncBlockCallbacks: ((block: BlockExtended, txIds: string[], transactions: MempoolTransactionExtended[]) => Promise<void>)[] = [];
   private canonicalChangeCallbacks: Array<(change: CanonicalChange) => Promise<void>> = [];
+  private canonicalRestorationReaders: Array<() => CanonicalRecoveryRequest | null> = [];
   private lastCanonicalChange: string | null = null;
   private classifyingBlocks: boolean = false;
   private oldestCoreLogTimestamp: number | undefined | null = undefined;
@@ -87,8 +89,9 @@ class Blocks {
     this.newAsyncBlockCallbacks.push(fn);
   }
 
-  public setCanonicalChangeCallback(fn: (change: CanonicalChange) => Promise<void>): void {
+  public setCanonicalChangeCallback(fn: (change: CanonicalChange) => Promise<void>, restoration?: () => CanonicalRecoveryRequest | null): void {
     this.canonicalChangeCallbacks.push(fn);
+    if (restoration) this.canonicalRestorationReaders.push(restoration);
   }
 
   /** Read-only observer: never rewinds the cache or bypasses indexed reorg cleanup. @asyncUnsafe */
@@ -104,7 +107,27 @@ class Blocks {
       const comparedHeight = Math.min(tipHeight, previous.height);
       const comparedHash = await bitcoinCoreApi.$getBlockHash(comparedHeight);
       if (!validHash(comparedHash)) throw new Error('Invalid native canonical hash.');
-      if (tipHeight >= previous.height && comparedHash === previous.id) { this.lastCanonicalChange = null; return; }
+      if (tipHeight >= previous.height && comparedHash === previous.id) {
+        this.lastCanonicalChange = null;
+        const requests = this.canonicalRestorationReaders.map(read => read()).filter((request): request is CanonicalRecoveryRequest => request !== null);
+        if (!requests.length) return;
+        const request = requests[0], expected = request.expectedCanonicalTip;
+        if (!requests.every(other => other.expectedCanonicalTip.height === expected.height && other.expectedCanonicalTip.hash === expected.hash) ||
+          !Number.isSafeInteger(expected.height) || expected.height < 0 || !validHash(expected.hash)) throw new Error('Canonical recovery requests do not match.');
+        const restored = request.restorationTarget?.height === previous.height && request.restorationTarget.hash === previous.id;
+        if (!restored && tipHeight <= expected.height) return;
+        if (!restored && await bitcoinCoreApi.$getBlockHash(expected.height) !== expected.hash) throw new Error('Retained canonical source point is no longer an ancestor.');
+        const tipHash = tipHeight === previous.height ? comparedHash : await bitcoinCoreApi.$getBlockHash(tipHeight);
+        if (!validHash(tipHash) || await bitcoinCoreApi.$getBlockHeightTip() !== tipHeight ||
+          await bitcoinCoreApi.$getBlockHash(tipHeight) !== tipHash || await bitcoinCoreApi.$getBlockHash(previous.height) !== comparedHash ||
+          !restored && await bitcoinCoreApi.$getBlockHash(expected.height) !== expected.hash ||
+          config.MEMPOOL.NETWORK !== network || this.blocks[this.blocks.length - 1]?.id !== previous.id) throw new Error('Canonical source changed during restoration observation.');
+        change = restored ? { status: 'verified-restoration', network, observedAt: Date.now(), restoredTarget: { height: previous.height, hash: previous.id },
+          canonicalTip: { height: tipHeight, hash: tipHash } } : { status: 'verified-progression', network, observedAt: Date.now(),
+          previousCanonicalTip: { ...expected }, canonicalTip: { height: tipHeight, hash: tipHash } };
+        for (const observe of this.canonicalChangeCallbacks) await observe(change);
+        return;
+      }
       const tipHash = tipHeight === comparedHeight ? comparedHash : await bitcoinCoreApi.$getBlockHash(tipHeight);
       if (!validHash(tipHash)) throw new Error('Invalid native tip hash.');
       const orphanedBlocks: Array<{ height: number; hash: string }> = [];
@@ -1138,7 +1161,9 @@ class Blocks {
       // fill in missing transaction fee data from verboseBlock
       for (let i = 0; i < transactions.length; i++) {
         if (!transactions[i].fee && transactions[i].txid === verboseBlock.tx[i].txid) {
-          transactions[i].fee = (verboseBlock.tx[i].fee * 100_000_000) || 0;
+          transactions[i].fee = ['liquid', 'liquidtestnet'].includes(config.MEMPOOL.NETWORK)
+            ? (verboseBlock.tx[i].fee * 100_000_000) || 0
+            : btcToSats(verboseBlock.tx[i].fee ?? 0);
         }
       }
 
