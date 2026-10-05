@@ -93,7 +93,9 @@ export class KnowledgeRegistryService {
   private async poolLabels(now = Date.now()): Promise<EntityLabel[]> {
     if (this.poolCache && now - this.poolCache.at < 10 * 60_000) { return this.poolCache.labels; }
     let pools: Awaited<ReturnType<PoolReader>> = [];
-    try { pools = await this.poolReader(); } catch { pools = []; }
+    try { pools = await this.poolReader(); } catch {
+      throw new IdentityError('pool_source_unavailable', 'Pool attribution source is unavailable.', 503);
+    }
     const selected = pools.filter(pool => pool.slug !== 'unknown');
     const ids = new Set<number>();
     for (const pool of selected) {
