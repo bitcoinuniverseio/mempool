@@ -87,7 +87,7 @@ describe('UTXO-set HTTP responses', () => {
     const { gets } = mount();
     expect(gets.size).toBe(4);
     for (const handler of gets.values()) {
-      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
       await handler({ params: {} } as unknown as Request, res as unknown as Response);
       expect(res.status).toHaveBeenCalledWith(503);
       const body = res.json.mock.calls[0][0];
