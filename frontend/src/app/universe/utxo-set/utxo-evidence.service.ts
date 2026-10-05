@@ -13,7 +13,7 @@ export class UtxoEvidenceService {
   const changes=this.state.isBrowser?merge(this.state.networkChanged$,interval(30000)):this.state.networkChanged$;
   return changes.pipe(startWith(null),switchMap(()=>defer(()=>{
    const network=this.state.network||this.state.env.ROOT_NETWORK||'mainnet';
-   return this.http.get<unknown>(this.base+path).pipe(timeout({first:15000}),map(value=>{
+   return this.http.get<unknown>(this.base+path,{headers:{'Cache-Control':'no-store'}}).pipe(timeout({first:15000}),map(value=>{
     if(network!==(this.state.network||this.state.env.ROOT_NETWORK||'mainnet'))throw Error('UTXO context changed.');
     const result=checkedUtxoEvidence(path,value,network);
     return {kind:'available' as const,value:result.value as T,message:result.disclosure};
