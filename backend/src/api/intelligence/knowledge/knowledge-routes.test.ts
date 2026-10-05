@@ -53,4 +53,8 @@ describe('mounted public Knowledge response context', () => {
     (knowledgeRegistryService.getLabels as jest.Mock).mockRejectedValue(new IdentityError('pool_source_identity_invalid', 'Invalid published identity', 503));
     expect(await get('labels')).toEqual({ status: 503, body: { error: 'Invalid published identity', code: 'pool_source_identity_invalid' } });
   });
+  it('returns explicit source-unavailable for a failed definition read without a success catalogue', async () => {
+    (knowledgeRegistryService.getLabels as jest.Mock).mockRejectedValue(new IdentityError('pool_source_unavailable', 'Pool attribution source is unavailable.', 503));
+    expect(await get('labels')).toEqual({ status: 503, body: { error: 'Pool attribution source is unavailable.', code: 'pool_source_unavailable' } });
+  });
 });

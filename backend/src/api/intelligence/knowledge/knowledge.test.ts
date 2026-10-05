@@ -135,6 +135,11 @@ describe('Knowledge native definition citation projection', () => {
     knowledgeRegistryService.poolReader = async () => [{ uniqueId: 0, name: 'Malformed', slug: '', link: '', regexes: '[]', addresses: '[]' }];
     await expect(knowledgeRegistryService.getLabels()).rejects.toMatchObject({ code: 'pool_source_identity_invalid', status: 503 });
   });
+  it('reports a failed definition read as unavailable rather than inventing an empty catalogue', async () => {
+    knowledgeRegistryService.poolReader = async () => { throw new Error('private SQL connection detail'); };
+    await expect(knowledgeRegistryService.getLabels()).rejects.toMatchObject({ code: 'pool_source_unavailable', status: 503, message: 'Pool attribution source is unavailable.' });
+    await expect(knowledgeRegistryService.getLabelByEntity('pool-81')).rejects.toMatchObject({ code: 'pool_source_unavailable', status: 503 });
+  });
   it('does not read SQL definitions when database support is disabled', async () => {
     config.DATABASE.ENABLED = false;
     expect(await defaultPoolReader()).toEqual([]);
