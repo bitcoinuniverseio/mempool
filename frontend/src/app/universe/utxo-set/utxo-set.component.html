@@ -64,7 +64,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let c of vm.checkpoints">
-              <td>#{{ c.blockHeight }}</td>
+              <td>#{{ c.blockHeight }}<br><code class="text-break">{{ c.blockHash }}</code></td>
               <td class="mono">{{ c.muhashHex.slice(0, 24) }}...</td>
               <td>{{ c.totalTxOuts.toLocaleString() }}</td>
               <td class="mono"><strong>{{ checkpointBtc(c.totalAmountSats) }}</strong></td>
