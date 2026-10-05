@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-network.service';
+import { Subscription, Subject, distinctUntilChanged, map, of, switchMap } from 'rxjs';
+import { GlobalNetworkApiService, GlobalNetworkNodeDetail } from './global-network.service';
+import { StateService } from '@app/services/state.service';
+import { globalRead$ } from './global-network-observations';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
@@ -17,12 +19,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <a [routerLink]="'/network/global/nodes' | relativeUrl" class="btn btn-sm btn-outline-secondary">
             &larr; Back to Nodes
           </a>
-          <span class="text-muted small">Global Bitcoin Network Observatory</span>
+          <span class="text-muted small">Owned Bitcoin Peer Observatory</span>
         </div>
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Node Endpoint Inspection</h1>
           <span class="badge bg-success" *ngIf="node && node.transport_v2">
-            BIP324 v2 Encrypted Active
+            Core Reports v2 Transport
           </span>
           <span class="badge bg-secondary" *ngIf="node && node.transport_v2 === false">
             v1 Standard Transport
@@ -35,11 +37,15 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div>Loading node telemetry...</div>
       </div>
 
-      <div *ngIf="error" class="alert alert-danger my-3">
+      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">Retry fresh read</button>
+      <div *ngIf="error" role="alert" class="alert alert-danger my-3">
         {{ error }}
       </div>
 
       <div *ngIf="!loading && node" class="content-body">
+        <p role="status">{{ node.scope }} Chain {{ node.chain_network }}; genesis {{ node.genesis_hash }};
+          observed {{ node.observed_at_utc }} (reported age {{ node.age_ms }} ms / freshness {{ node.freshness_limit_ms }} ms).
+          Peer transport {{ node.network }}. No independent operator or Signet challenge attestation.</p>
         <!-- Endpoint Primary Summary -->
         <div class="card p-4 mb-4 bg-body-tertiary border">
           <div class="row g-3">
@@ -87,11 +93,11 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
               <h2 class="h5 mb-3">Network & Observation Metrics</h2>
               <ul class="list-group list-group-flush bg-transparent">
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
-                  <span class="text-muted">Synchronized Start Height</span>
+                  <span class="text-muted">Peer Advertised Start Height</span>
                   <span class="fw-semibold">{{ node.start_height | number }}</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
-                  <span class="text-muted">Probe Handshake Latency</span>
+                  <span class="text-muted">Core Reported Ping Latency</span>
                   <span class="fw-semibold">{{ node.latency_ms !== null && node.latency_ms >= 0 ? node.latency_ms + ' ms' : 'n/a' }}</span>
                 </li>
                 <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
@@ -113,8 +119,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
         <div class="card p-3 bg-body-tertiary border d-flex flex-row justify-content-between align-items-center">
           <div>
-            <div class="fw-semibold">Verify this Node Directly</div>
-            <div class="small text-muted">Execute a privacy-preserving probe from Universe sensor probes.</div>
+            <div class="fw-semibold">Test TCP Reachability Separately</div>
+            <div class="small text-muted">The separate self-check attempts TCP reachability; it does not verify Bitcoin handshakes.</div>
           </div>
           <a [routerLink]="'/network/global/self-check' | relativeUrl" class="btn btn-primary">
             Run Probe Self-Check
@@ -125,47 +131,20 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   `,
 })
 export class GlobalNetworkNodeDetailComponent implements OnInit, OnDestroy {
-  node: GlobalNetworkObservation | null = null;
+  node: GlobalNetworkNodeDetail | null = null;
   loading = true;
   error: string | null = null;
   private sub = new Subscription();
-
-  constructor(
-    private route: ActivatedRoute,
-    private api: GlobalNetworkApiService,
-    private cd: ChangeDetectorRef
-  ) {}
-
+  private retrySignal = new Subject<void>();
+  constructor(private route: ActivatedRoute, private api: GlobalNetworkApiService, private cd: ChangeDetectorRef,
+    private state: StateService | null = inject(StateService, { optional: true })) {}
   ngOnInit(): void {
-    this.sub.add(
-      this.route.paramMap.subscribe(params => {
-        const endpointId = params.get('endpointId');
-        if (endpointId) {
-          this.fetchNode(endpointId);
-        }
-      })
-    );
+    this.sub.add(this.route.paramMap.pipe(map(params => params.get('endpointId') || ''), distinctUntilChanged(),
+      switchMap(endpoint => endpoint ? globalRead$(this.state, this.retrySignal, () => this.api.getNodeDetail$(endpoint))
+        : of({ kind: 'error' as const, value: null, error: 'No peer endpoint was supplied.' }))).subscribe(result => {
+      this.node = result.value; this.loading = result.kind === 'loading'; this.error = result.error; this.cd.markForCheck();
+    }));
   }
-
-  private fetchNode(endpointId: string): void {
-    this.loading = true;
-    this.sub.add(
-      this.api.getNodeDetail$(endpointId).subscribe({
-        next: data => {
-          this.node = data;
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: err => {
-          this.error = err?.error?.error || err?.message || 'Failed to load node details';
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  retry(): void { this.retrySignal.next(); }
+  ngOnDestroy(): void { this.sub.unsubscribe(); this.retrySignal.complete(); }
 }

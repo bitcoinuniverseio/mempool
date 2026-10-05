@@ -1,9 +1,11 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { GlobalNetworkApiService, GlobalNetworkObservation } from './global-network.service';
+import { Subscription, Subject } from 'rxjs';
+import { StateService } from '@app/services/state.service';
+import { globalRead$, selectedGlobalNetwork } from './global-network-observations';
+import { GlobalNetworkApiService, GlobalNetworkObservation, GlobalNetworkNodesReport } from './global-network.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
@@ -15,13 +17,13 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Global Reachable Bitcoin Nodes</h1>
+          <h1 class="m-0">Owned Node Connected Peers</h1>
           <span class="badge bg-secondary" *ngIf="totalCount > 0">
             {{ totalCount | number }} Active Endpoints
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Directly probed Bitcoin P2P nodes advertising standard and encrypted BIP324 transport capabilities.
+          A bounded page of peers connected to the owned node, reported by Bitcoin Core. Transport capability does not establish an independent handshake probe.
         </p>
 
         <!-- Sub-navigation tabs -->
@@ -34,6 +36,13 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </nav>
       </header>
 
+      <p *ngIf="report" role="status">{{ report.scope }} Network {{ report.chain_network }}; genesis {{ report.genesis_hash }};
+        observed {{ report.observed_at_utc }} (reported age {{ report.age_ms }} ms / freshness {{ report.freshness_limit_ms }} ms).
+        No independent operator or Signet challenge attestation. Showing {{ nodes.length }} peers from offset {{ offset }} of {{ totalCount }}; filters apply to this page.</p>
+      <div class="d-flex gap-2 mb-3">
+        <button type="button" class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="loading || offset === 0">Previous peer page</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="loading || offset + nodes.length >= totalCount">Next peer page</button>
+      </div>
       <div class="card p-3 mb-4 bg-body-tertiary border">
         <div class="row g-2 align-items-center">
           <div class="col-12 col-md-6">
@@ -69,16 +78,17 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div>Querying reachable node catalog...</div>
       </div>
 
-      <div *ngIf="error" class="alert alert-danger my-3">
+      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">Retry fresh read</button>
+      <div *ngIf="error" role="alert" class="alert alert-danger my-3">
         {{ error }}
       </div>
 
-      <div *ngIf="!loading && filteredNodes.length === 0" class="alert alert-info my-3">
+      <div *ngIf="!loading && !error && report && filteredNodes.length === 0" class="alert alert-info my-3">
         No nodes matched the filter criteria.
       </div>
 
-      <div *ngIf="!loading && filteredNodes.length > 0" class="card bg-body-tertiary border">
-        <div class="table-responsive" tabindex="0" role="region" aria-label="Global Reachable Bitcoin Nodes, scroll horizontally" i18n-aria-label>
+      <div *ngIf="!loading && !error && report && filteredNodes.length > 0" class="card bg-body-tertiary border">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Owned Node Connected Peers, scroll horizontally" i18n-aria-label>
           <table class="table table-hover align-middle mb-0">
             <thead>
               <tr>
@@ -86,7 +96,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 <th>Transport</th>
                 <th>User Agent</th>
                 <th>Height</th>
-                <th>Latency</th>
+                <th>Core Ping</th>
                 <th>ASN / Region</th>
                 <th class="text-end">Actions</th>
               </tr>
@@ -137,55 +147,40 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 export class GlobalNetworkNodesComponent implements OnInit, OnDestroy {
   nodes: GlobalNetworkObservation[] = [];
   filteredNodes: GlobalNetworkObservation[] = [];
+  report: GlobalNetworkNodesReport | null = null;
   totalCount = 0;
+  offset = 0;
   loading = true;
   error: string | null = null;
   searchQuery = '';
   transportFilter = 'all';
-
+  private pageContext = '';
   private sub = new Subscription();
-
-  constructor(
-    private api: GlobalNetworkApiService,
-    private cd: ChangeDetectorRef
-  ) {}
-
+  private retrySignal = new Subject<void>();
+  constructor(private api: GlobalNetworkApiService, private cd: ChangeDetectorRef,
+    private state: StateService | null = inject(StateService, { optional: true })) {}
   ngOnInit(): void {
-    this.sub.add(
-      this.api.getNodes$(100, 0).subscribe({
-        next: res => {
-          this.nodes = res.nodes;
-          this.totalCount = res.total;
-          this.applyFilter();
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: err => {
-          this.error = err?.error?.error || err?.message || 'Failed to load reachable nodes';
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-      })
-    );
+    this.sub.add(globalRead$(this.state, this.retrySignal, () => {
+      const context = selectedGlobalNetwork(this.state);
+      if (context !== this.pageContext) { this.offset = 0; this.pageContext = context; }
+      return this.api.getNodes$(100, this.offset);
+    }).subscribe(result => {
+      this.report = result.value; this.nodes = result.value?.nodes ?? []; this.totalCount = result.value?.total ?? 0;
+      this.applyFilter(); this.loading = result.kind === 'loading'; this.error = result.error; this.cd.markForCheck();
+    }));
   }
-
+  retry(): void { this.retrySignal.next(); }
+  nextPage(): void { if (!this.loading && this.offset + this.nodes.length < this.totalCount) { this.offset += 100; this.retry(); } }
+  previousPage(): void { if (!this.loading && this.offset > 0) { this.offset = Math.max(0, this.offset - 100); this.retry(); } }
   applyFilter(): void {
     const q = this.searchQuery.toLowerCase().trim();
     this.filteredNodes = this.nodes.filter(node => {
-      if (this.transportFilter === 'v2' && !node.transport_v2) return false;
-      if (this.transportFilter === 'v1' && node.transport_v2 !== false) return false;
-      if (!q) return true;
-      return (
-        node.endpoint_id.toLowerCase().includes(q) ||
-        node.user_agent.toLowerCase().includes(q) ||
-        (node.asn && String(node.asn).includes(q)) ||
-        (node.country_code && node.country_code.toLowerCase().includes(q))
-      );
+      if (this.transportFilter === 'v2' && node.transport_v2 !== true) { return false; }
+      if (this.transportFilter === 'v1' && node.transport_v2 !== false) { return false; }
+      return !q || node.endpoint_id.toLowerCase().includes(q) || node.user_agent.toLowerCase().includes(q)
+        || !!(node.asn && String(node.asn).includes(q)) || !!(node.country_code && node.country_code.toLowerCase().includes(q));
     });
     this.cd.markForCheck();
   }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  ngOnDestroy(): void { this.sub.unsubscribe(); this.retrySignal.complete(); }
 }
