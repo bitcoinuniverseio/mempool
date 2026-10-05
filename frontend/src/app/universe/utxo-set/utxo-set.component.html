@@ -23,6 +23,7 @@
 
     <ng-container *ngIf="vm.kind === 'ready'">
       <p class="panel" *ngFor="let unavailable of vm.unavailable" role="status">{{ unavailable }}</p>
+      <p class="panel" *ngFor="let disclosure of vm.disclosures" role="status">{{ disclosure }}</p>
       <p>Core MuHash checkpoints are node observations. They are not Utreexo roots or independent projection reconciliation.</p>
       <!-- Protocol Bearing Summary -->
       <div class="metrics-grid" *ngIf="vm.protocolUtxos">
@@ -66,7 +67,7 @@
               <td>#{{ c.blockHeight }}</td>
               <td class="mono">{{ c.muhashHex.slice(0, 24) }}...</td>
               <td>{{ c.totalTxOuts.toLocaleString() }}</td>
-              <td class="mono"><strong>{{ (Number(c.totalAmountSats) / 1e8).toFixed(2) }}</strong></td>
+              <td class="mono"><strong>{{ checkpointBtc(c.totalAmountSats) }}</strong></td>
               <td>{{ (Number(c.bogoSize) / 1e9).toFixed(2) }} GB</td>
             </tr>
           </tbody>

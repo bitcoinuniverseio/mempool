@@ -31,7 +31,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
         return of({ total_checkpoints: 5 });
       }
       if (url.includes('/utxo/overview')) {
-        return of({ total_utxos: 175420100, block_height: 887412 });
+        return of({ network: 'mainnet', total_utxos: 175420100, block_height: 887412, block_hash: 'ab'.repeat(32), total_amount_sats: 1, muhash: 'cd'.repeat(32), bogo_size: '90', block_time: 1791158400, observed_at_utc: '2026-10-05T00:00:00.000Z', dormant_10yr_sats: null, uneconomical_at_10_sat_vb_sats: null, last_reconciled_utc: null, reconciled: false, projection_configured: false, scope: 'Controlled owning DTO checkpoint.', source: { method: 'owned Core gettxoutsetinfo muhash via coinstatsindex', observed_at_utc: '2026-10-05T00:00:00.000Z', freshness_limit_ms: 30000 } });
       }
       if (url.includes('/watchlists')) {
         return of({ watchlists: [{ name: 'Vault', privacy_mode: 'blinded' }] });
