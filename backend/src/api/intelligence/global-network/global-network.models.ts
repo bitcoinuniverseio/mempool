@@ -11,6 +11,40 @@ export interface GlobalNetworkSensor {
   reachable_networks: string[];
 }
 
+/** Identity and freshness of the same owned-node observation, not a global crawl or operator attestation. */
+export interface GlobalNetworkOwnedContext {
+  chain_network: string;
+  genesis_hash: string;
+  observed_at_utc: string;
+  age_ms: number;
+  freshness_limit_ms: number;
+  scope: string;
+}
+
+export interface GlobalNetworkNodesReport extends GlobalNetworkOwnedContext {
+  nodes: GlobalNetworkObservation[];
+  total: number;
+}
+
+export interface GlobalNetworkSensorsReport extends GlobalNetworkOwnedContext {
+  sensors: GlobalNetworkSensor[];
+  total: number;
+}
+
+export interface GlobalNetworkDnsReport {
+  seeds: GlobalNetworkDnsSeed[];
+  total: number;
+  configured_network: string;
+  scope: string;
+}
+
+export interface GlobalNetworkSnapshotsReport {
+  snapshots: GlobalNetworkSnapshot[];
+  total: number;
+  configured_network: string;
+  scope: string;
+}
+
 export interface GlobalNetworkCrawlEpoch {
   epoch_id: string;
   network: string;
