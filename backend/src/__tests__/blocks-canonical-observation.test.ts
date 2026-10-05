@@ -40,6 +40,12 @@ for (const repo of ['Pools', 'Blocks', 'Hashrates', 'BlocksSummaries', 'BlocksAu
 }
 
 import blocks from '../api/blocks';
+import bitcoinClient from '../api/bitcoin/bitcoin-client';
+import BitcoinApi from '../api/bitcoin/bitcoin-api';
+import { calculateGoodBlockCpfp } from '../api/cpfp';
+import chainTips from '../api/chain-tips';
+import mempool from '../api/mempool';
+import { CanonicalPollFence } from '../api/intelligence/time-machine/canonical-poll-fence';
 
 import config from '../config';
 import { BlockObservationHub } from '../api/intelligence/observation/block-observation-hub';
@@ -60,7 +66,7 @@ describe('actual Blocks polling canonical observation', () => {
     changes = []; const hub = new BlockObservationHub();
     hub.subscribeCanonical('history', change => { changes.push(change); history.observeCanonicalChange(change); });
     const state = blocks as any;
-    state.canonicalChangeCallbacks = []; state.lastCanonicalChange = null;
+    state.canonicalChangeCallbacks = []; state.canonicalRestorationReaders = []; state.lastCanonicalChange = null;
     state.lastDifficultyAdjustmentTime = 1; state.quarterEpochBlockTime = 1;
     blocks.setBlocks([block(1), block(2)]);
     blocks.setCanonicalChangeCallback(change => hub.dispatchCanonical(change));
@@ -112,5 +118,100 @@ describe('actual Blocks polling canonical observation', () => {
   it('does not add native hash queries when no canonical observer is registered', async () => {
     (blocks as any).canonicalChangeCallbacks = []; tip.$getBlockHeightTip.mockResolvedValue(1);
     await blocks.$updateBlocks(); expect(tip.$getBlockHash).not.toHaveBeenCalled();
+  });
+  it('observes restored cached canonical tip and retires nonreentering provenance without redispatching a block', async () => {
+    const state = blocks as any;
+    state.canonicalChangeCallbacks = [];
+    const hub = new BlockObservationHub();
+    hub.subscribeCanonical('history-restoration', change => { changes.push(change); history.observeCanonicalChange(change); });
+    blocks.setCanonicalChangeCallback(change => hub.dispatchCanonical(change), () => history.getCanonicalRecoveryRequest());
+    tip.$getBlockHeightTip.mockResolvedValue(1);
+    await blocks.$updateBlocks();
+    expect(history.getPendingCanonicalTip()).not.toBeNull();
+    const priorEvents = history.getTransactionLifecycle(tx.txid);
+    tip.$getBlockHeightTip.mockResolvedValue(2);
+    await blocks.$updateBlocks();
+    expect(changes.map(change => change.status)).toEqual(['verified-rollback', 'verified-restoration']);
+    expect(history.getPendingCanonicalTip()).toBeNull();
+    expect(history.getCanonicalRestorationTarget()).toBeNull();
+    expect(history.getStateByHash(checkpoint.state_hash)).toBeNull();
+    expect(history.getTransactionLifecycle(tx.txid)).toEqual(priorEvents);
+    expect(blocks.getBlocks().map(cached => cached.id)).toEqual([hash(1), hash(2)]);
+  });
+  it('keeps a gap and refuses restoration when actual tip changes during its sequential fence', async () => {
+    (blocks as any).canonicalChangeCallbacks = [];
+    const hub = new BlockObservationHub();
+    hub.subscribeCanonical('history-restoration', change => { changes.push(change); history.observeCanonicalChange(change); });
+    blocks.setCanonicalChangeCallback(change => hub.dispatchCanonical(change), () => history.getCanonicalRecoveryRequest());
+    tip.$getBlockHeightTip.mockResolvedValue(1); await blocks.$updateBlocks();
+    tip.$getBlockHeightTip.mockResolvedValueOnce(2).mockResolvedValueOnce(1).mockResolvedValue(1);
+    await blocks.$updateBlocks();
+    expect(changes.map(change => change.status)).toEqual(['verified-rollback', 'unavailable']);
+    expect(history.getCanonicalRestorationTarget()).toEqual({ height: 2, hash: hash(2) });
+    expect(history.getStateByHash(checkpoint.state_hash)).toBeNull();
+  });
+  it('processes an alternative canonical new block then verifies reentry only on the next fresh complete poll', async () => {
+    (blocks as any).canonicalChangeCallbacks = [];
+    const hub = new BlockObservationHub();
+    hub.subscribeCanonical('history-progression', change => { changes.push(change); history.observeCanonicalChange(change); });
+    blocks.setCanonicalChangeCallback(change => hub.dispatchCanonical(change), () => history.getCanonicalRecoveryRequest());
+    tip.$getBlockHeightTip.mockResolvedValue(1); await blocks.$updateBlocks();
+    const oldExpected = history.getPendingCanonicalTip();
+    // Existing cache cleanup can already have retained only the common ancestor.
+    // The actual producer loop must handle replacement blocks, not a manual hub dispatch.
+    blocks.setBlocks([block(1)]);
+    const canonicalHash = (height: number) => height === 1 ? hash(1) : hash(height + 10);
+    tip.$getBlockHeightTip.mockResolvedValue(3); tip.$getBlockHash.mockImplementation(async height => canonicalHash(height));
+    const readTip = async () => ({ height: await tip.$getBlockHeightTip(), hash: await tip.$getBlockHash(3) });
+    const staleFence = await CanonicalPollFence.begin(oldExpected, readTip);
+    const cacheEnabled = config.MEMPOOL.CACHE_ENABLED; config.MEMPOOL.CACHE_ENABLED = false;
+    const state = blocks as any;
+    try {
+      jest.spyOn(state, 'updateQuarterEpochBlockTime').mockResolvedValue(undefined);
+      jest.spyOn(state, '$getBlockExtended').mockImplementation(async (b: any) => b);
+      jest.spyOn(state, 'summarizeBlockTransactions').mockReturnValue({ transactions: [] });
+      (chainTips as any).updateOrphanedBlocks = jest.fn();
+      (mempool as any).getAccelerations = jest.fn(() => ({}));
+      (bitcoinClient as any).getBlock = jest.fn(async (id: string) => {
+        const height = id === canonicalHash(2) ? 2 : 3;
+        return { id, height, weight: 100, timestamp: height, previousblockhash: canonicalHash(height - 1), extras: { totalFees: 0 }, tx: [{ txid: hash(100 + height), fee: 0 }] };
+      });
+      (BitcoinApi.convertBlock as jest.Mock).mockImplementation(b => b);
+      jest.spyOn(state, '$getTransactionsExtended').mockImplementation(async (_id: unknown, height: any) => [{ txid: hash(100 + height), weight: 100, vsize: 25, fee: 0, vin: [{ is_coinbase: true }] }]);
+      (calculateGoodBlockCpfp as jest.Mock).mockImplementation((_height, transactions) => ({ transactions }));
+      blocks.setNewAsyncBlockCallback(async (b, _ids, transactions) => { await hub.dispatch(b, transactions); });
+      hub.subscribe('history-new-block', (b, transactions) => { history.observeBlock(b, transactions); });
+      expect(await blocks.$updateBlocks()).toBe(2);
+      expect(changes.some(change => change.status === 'verified-progression')).toBe(true);
+      expect(history.getPendingCanonicalTip()).toEqual({ height: 3, hash: canonicalHash(3) });
+      pool[tx.txid] = tx;
+      history.observePoll([tx], [], true, Date.now());
+      expect(await staleFence.verify()).toBe(false);
+      history.markObservationFailure();
+      expect(history.getTransactionLifecycle(tx.txid).slice(-1)[0].event_type).toBe('accepted');
+      const fresh = await CanonicalPollFence.begin(history.getPendingCanonicalTip(), readTip);
+      const generation = history.getPollGeneration(); history.observePoll([], [], true, Date.now());
+      expect(await fresh.verify()).toBe(true);
+      expect(history.observeVerifiedReentries([tx.txid], { height: 3, hash: canonicalHash(3) }, generation, Date.now())).toBe(true);
+      expect(history.getTransactionLifecycle(tx.txid).slice(-1)[0].event_type).toBe('reaccepted_after_reorg');
+    } finally { jest.restoreAllMocks(); config.MEMPOOL.CACHE_ENABLED = cacheEnabled; (blocks as any).newAsyncBlockCallbacks = []; }
+  });
+  it('refuses canonical progression if the retained prior native point is no longer an ancestor', async () => {
+    (blocks as any).canonicalChangeCallbacks = [];
+    const hub = new BlockObservationHub();
+    hub.subscribeCanonical('history-progression', change => { changes.push(change); history.observeCanonicalChange(change); });
+    blocks.setCanonicalChangeCallback(change => hub.dispatchCanonical(change), () => history.getCanonicalRecoveryRequest());
+    tip.$getBlockHeightTip.mockResolvedValue(1); await blocks.$updateBlocks();
+    blocks.setBlocks([block(3)]);
+    tip.$getBlockHeightTip.mockResolvedValue(3);
+    tip.$getBlockHash.mockImplementation(async height => height === 1 ? 'f'.repeat(64) : hash(height));
+    jest.spyOn(blocks as any, 'updateQuarterEpochBlockTime').mockResolvedValue(undefined);
+    try {
+      await blocks.$updateBlocks();
+      expect(changes.map(change => change.status)).toEqual(['verified-rollback', 'unavailable']);
+      expect(history.getCanonicalRestorationTarget()).not.toBeNull();
+      expect(history.getStateByHash(checkpoint.state_hash)).toBeNull();
+      expect(history.getTransactionLifecycle(tx.txid).some(event => event.event_type === 'reaccepted_after_reorg')).toBe(false);
+    } finally { jest.restoreAllMocks(); }
   });
 });

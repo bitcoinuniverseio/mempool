@@ -9,8 +9,14 @@ import logger from '../../../logger';
  * consumer is logged and never stops the others or the loop.
  */
 export type BlockObserver = (block: BlockExtended, transactions: TransactionExtended[]) => void | Promise<void>;
+export interface CanonicalRecoveryRequest {
+  expectedCanonicalTip: { height: number; hash: string };
+  restorationTarget: { height: number; hash: string } | null;
+}
 export type CanonicalChange = { network: string; observedAt: number } & (
   { status: 'unavailable'; reason: string } |
+  { status: 'verified-restoration'; restoredTarget: { height: number; hash: string }; canonicalTip: { height: number; hash: string } } |
+  { status: 'verified-progression'; previousCanonicalTip: { height: number; hash: string }; canonicalTip: { height: number; hash: string } } |
   { status: 'verified-rollback'; previousTip: { height: number; hash: string }; canonicalTip: { height: number; hash: string };
     commonAncestor: { height: number; hash: string }; orphanedBlocks: Array<{ height: number; hash: string }> }
 );

@@ -32,9 +32,11 @@ export interface HistoricalMempoolEvent {
   fee_rate: number;
   block_height?: number;
   block_hash?: string;
+  is_coinbase?: boolean;
   replaced_by_txid?: string;
 }
 export interface OrphanConfirmation { txid: string; block_hash: string; block_height: number; confirmation_sequence: number; orphaned_at: string; canonical_height: number; canonical_hash: string }
+export interface CanonicalRestorationTarget { height: number; hash: string; rollback_sequence: number; observed_at: string; canonical_height?: number; canonical_hash?: string }
 
 export interface MempoolCheckpoint {
   event_sequence?: number;
@@ -103,6 +105,7 @@ export class TimeMachineService {
   private static instance: TimeMachineService;
   private eventLog: HistoricalMempoolEvent[] = [];
   private orphanConfirmations = new Map<string, OrphanConfirmation>();
+  private canonicalRestorationTarget: CanonicalRestorationTarget | null = null;
   private lastPollComplete = false;
   private pollGeneration = 0;
   private checkpoints: MempoolCheckpoint[] = [];
@@ -149,6 +152,7 @@ export class TimeMachineService {
           this.stateCache.set(entry.checkpoint.state_hash, { summary: this.summarize(entry.checkpoint, entry.checkpoint.timestamp_utc, entry.checkpoint.block_height, 0), txids: new Set(transactions.keys()), transactions });
         }
         for (const orphan of value.orphanConfirmations ?? []) this.orphanConfirmations.set(orphan.txid, orphan);
+        this.canonicalRestorationTarget = value.canonicalRestorationTarget ?? null;
         if (now > this.observedThrough) this.gaps.push({ start_utc: new Date(this.observedThrough).toISOString(), end_utc: new Date(now).toISOString(), reason: 'Backend was not observing continuously across a restart.' });
         if (this.gaps.length > 1024) {
           const cutoff = Date.parse(this.gaps[this.gaps.length - 1024].end_utc);
@@ -185,6 +189,7 @@ export class TimeMachineService {
             eventSequence: this.eventSequence, evictedSequence: this.evictedSequence, evictedThrough: this.evictedThrough,
             observedThrough: this.observedThrough, gaps: this.gaps, events: this.eventLog,
             orphanConfirmations: [...this.orphanConfirmations.values()],
+            canonicalRestorationTarget: this.canonicalRestorationTarget ?? undefined,
             checkpoints: this.checkpoints.map(checkpoint => ({ checkpoint, transactions: [...this.stateCache.get(checkpoint.state_hash)!.transactions] })) });
           this.storageError = null;
         } catch {
@@ -215,6 +220,7 @@ export class TimeMachineService {
     this.evictedSequence = 0; this.observedThrough = 0; this.gaps = []; this.interruptedObservation = false;
     this.eventLog = [];
     this.orphanConfirmations.clear();
+    this.canonicalRestorationTarget = null;
     this.lastPollComplete = false; this.pollGeneration = 0;
     this.checkpoints = [];
     this.stateCache.clear();
@@ -289,6 +295,15 @@ export class TimeMachineService {
     return orphan ? { height: orphan.canonical_height, hash: orphan.canonical_hash } : null;
   }
   public getPollGeneration(): number { return this.pollGeneration; }
+  public getCanonicalRestorationTarget(): { height: number; hash: string } | null {
+    return this.canonicalRestorationTarget ? { height: this.canonicalRestorationTarget.height, hash: this.canonicalRestorationTarget.hash } : null;
+  }
+  public getCanonicalRecoveryRequest(): { expectedCanonicalTip: { height: number; hash: string }; restorationTarget: { height: number; hash: string } | null } | null {
+    const retained = this.canonicalRestorationTarget;
+    const expected = this.getPendingCanonicalTip() ?? (retained?.canonical_height !== undefined && retained.canonical_hash !== undefined
+      ? { height: retained.canonical_height, hash: retained.canonical_hash } : null);
+    return expected ? { expectedCanonicalTip: expected, restorationTarget: this.getCanonicalRestorationTarget() } : null;
+  }
 
   /** Invoked only after the main loop fences the actual full poll against its native source. */
   public observeVerifiedReentries(membership: string[], tip: { height: number; hash: string }, priorGeneration: number, now = Date.now()): boolean {
@@ -313,7 +328,7 @@ export class TimeMachineService {
   /** Native ancestor observation is separate from confirmation/checkpoint creation. */
   public observeCanonicalChange(change: CanonicalChange): void {
     if (change.network !== this.network) throw new TimeMachineUnavailableError('invalid-observation', 'Canonical observation network mismatch.', 400);
-    if (!['unavailable', 'verified-rollback'].includes(change.status)) throw new TimeMachineUnavailableError('invalid-observation', 'Unknown canonical observation status.', 400);
+    if (!['unavailable', 'verified-rollback', 'verified-restoration', 'verified-progression'].includes(change.status)) throw new TimeMachineUnavailableError('invalid-observation', 'Unknown canonical observation status.', 400);
     if (!Number.isSafeInteger(change.observedAt) || change.observedAt < this.observedThrough) throw new TimeMachineUnavailableError('invalid-observation', 'Canonical observation timestamp is out of order.', 400);
     if (change.status === 'unavailable') {
       this.checkpoints = []; this.stateCache.clear(); this.orphanConfirmations.clear();
@@ -322,6 +337,32 @@ export class TimeMachineService {
       return;
     }
     const hash = (value: unknown) => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+    if (change.status === 'verified-progression') {
+      const expected = this.getCanonicalRecoveryRequest()?.expectedCanonicalTip;
+      if (!expected || change.previousCanonicalTip.height !== expected.height || change.previousCanonicalTip.hash !== expected.hash ||
+        !Number.isSafeInteger(change.canonicalTip.height) || change.canonicalTip.height <= expected.height || !hash(change.canonicalTip.hash)) {
+        throw new TimeMachineUnavailableError('invalid-observation', 'Canonical progression does not match retained observed source point.', 400);
+      }
+      for (const orphan of this.orphanConfirmations.values()) {
+        orphan.canonical_height = change.canonicalTip.height; orphan.canonical_hash = change.canonicalTip.hash;
+      }
+      this.canonicalRestorationTarget = null;
+      this.lastPollComplete = false; this.observedThrough = change.observedAt;
+      this.schedulePersistence();
+      return;
+    }
+    if (change.status === 'verified-restoration') {
+      const target = this.canonicalRestorationTarget;
+      if (!target || !Number.isSafeInteger(change.canonicalTip.height) || change.canonicalTip.height < target.height || !hash(change.canonicalTip.hash) ||
+        change.restoredTarget.height !== target.height || change.restoredTarget.hash !== target.hash ||
+        change.canonicalTip.height === target.height && change.canonicalTip.hash !== target.hash) {
+        throw new TimeMachineUnavailableError('invalid-observation', 'Canonical restoration does not match retained native target.', 400);
+      }
+      this.orphanConfirmations.clear(); this.canonicalRestorationTarget = null;
+      this.lastPollComplete = false; this.observedThrough = change.observedAt;
+      this.schedulePersistence();
+      return;
+    }
     const points = [change.previousTip, change.canonicalTip, change.commonAncestor];
     if (!points.every(point => Number.isSafeInteger(point.height) && point.height >= 0 && hash(point.hash)) ||
       change.commonAncestor.height > change.canonicalTip.height || change.commonAncestor.height >= change.previousTip.height ||
@@ -331,10 +372,12 @@ export class TimeMachineService {
       change.orphanedBlocks[0].hash !== change.previousTip.hash) throw new TimeMachineUnavailableError('invalid-observation', 'Invalid canonical ancestry observation.', 400);
     const orphans = new Map(change.orphanedBlocks.map(block => [block.hash, block.height]));
     this.orphanConfirmations.clear();
+    this.canonicalRestorationTarget = { ...change.previousTip, rollback_sequence: this.eventSequence, observed_at: new Date(change.observedAt).toISOString(),
+      canonical_height: change.canonicalTip.height, canonical_hash: change.canonicalTip.hash };
     const latestConfirmations = new Map<string, HistoricalMempoolEvent>();
     for (const event of this.eventLog) if (event.event_type === 'confirmed') latestConfirmations.set(event.txid, event);
     for (const event of latestConfirmations.values()) {
-      if (event.event_type === 'confirmed' && event.block_hash && orphans.get(event.block_hash) === event.block_height) {
+      if (event.event_type === 'confirmed' && event.is_coinbase !== true && event.block_hash && orphans.get(event.block_hash) === event.block_height) {
         this.orphanConfirmations.set(event.txid, { txid: event.txid, block_hash: event.block_hash, block_height: event.block_height!,
           confirmation_sequence: event.sequence!, orphaned_at: new Date(change.observedAt).toISOString(), canonical_height: change.canonicalTip.height, canonical_hash: change.canonicalTip.hash });
       }
@@ -352,7 +395,9 @@ export class TimeMachineService {
     if (!Number.isSafeInteger(now) || now < this.observedThrough) throw new TimeMachineUnavailableError('invalid-observation', 'Observation time must be nondecreasing.', 400);
     for (const tx of transactions) {
       this.orphanConfirmations.delete(tx.txid);
-      this.recordLifecycleEvent({ ...TimeMachineService.eventFor(tx, 'confirmed', now, block.height), block_hash: block.id });
+      const coinbase = tx.vin?.length === 1 && typeof tx.vin[0].is_coinbase === 'boolean' ? tx.vin[0].is_coinbase : undefined;
+      this.recordLifecycleEvent({ ...TimeMachineService.eventFor(tx, 'confirmed', now, block.height), block_hash: block.id,
+        ...(coinbase === undefined ? {} : { is_coinbase: coinbase }) });
     }
     this.observedThrough = Math.max(this.observedThrough, now);
     const confirmed = new Set(transactions.map(tx => tx.txid));

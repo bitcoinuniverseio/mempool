@@ -1,4 +1,5 @@
-import { TimeMachineService } from './time-machine.service';
+import { TimeMachineService, TIME_MACHINE_LIMITS } from './time-machine.service';
+import { validateHistorySnapshot } from './history-validation';
 import { HistoryStore } from './history-store';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
@@ -119,5 +120,115 @@ describe('canonical source rollback history', () => {
     history.observeVerifiedReentries([tx.txid], { height: 1, hash: hash(1) }, history.getPollGeneration() - 1, 1301);
     expect(history.getTransactionLifecycle(tx.txid)).toHaveLength(1);
     expect(history.getPendingCanonicalTip()).toBeNull();
+  });
+});
+
+describe('coinbase and native canonical restoration', () => {
+  it('retires a coinbase-only obsolete restoration target on independently verified canonical progression', () => {
+    const history = new TimeMachineService({ store: null, network: 'signet', now: 1000, feed: () => ({}) });
+    history.observeBlock(block(2), [{ ...tx, vin: [{ is_coinbase: true }] }], 1100); history.observeCanonicalChange(rollback);
+    expect(history.getCanonicalRecoveryRequest()?.expectedCanonicalTip).toEqual({ height: 1, hash: hash(1) });
+    const events = history.getTransactionLifecycle(tx.txid);
+    history.observeCanonicalChange({ status: 'verified-progression', network: 'signet', observedAt: 1300,
+      previousCanonicalTip: { height: 1, hash: hash(1) }, canonicalTip: { height: 3, hash: hash(3) } });
+    expect(history.getCanonicalRecoveryRequest()).toBeNull();
+    expect(history.getTransactionLifecycle(tx.txid)).toEqual(events);
+    expect(history.getCoverage().total_checkpoints).toBe(0);
+  });
+  it('persists the new actual canonical point without authorizing a stale or incomplete poll after restart', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'progression-restart-'));
+    const file = join(directory, 'history.gz'), pool: any = { [tx.txid]: tx };
+    let history = new TimeMachineService({ store: new HistoryStore(file, 'signet'), network: 'signet', now: 1000, feed: () => pool });
+    try {
+      history.observeBlock(block(2), [tx], 1100); history.observeCanonicalChange(rollback);
+      history.observeCanonicalChange({ status: 'verified-progression', network: 'signet', observedAt: 1300,
+        previousCanonicalTip: { height: 1, hash: hash(1) }, canonicalTip: { height: 3, hash: hash(3) } });
+      await history.closeHistory();
+      history = new TimeMachineService({ store: new HistoryStore(file, 'signet'), network: 'signet', now: 1400, feed: () => pool });
+      expect(history.getCoverage().persistence.error).toBeNull();
+      expect(history.getPendingCanonicalTip()).toEqual({ height: 3, hash: hash(3) });
+      let token = history.getPollGeneration(); history.observePoll([], [], false, 1500);
+      expect(history.observeVerifiedReentries([tx.txid], { height: 3, hash: hash(3) }, token, 1501)).toBe(false);
+      token = history.getPollGeneration(); history.observePoll([], [], true, 1600);
+      expect(history.observeVerifiedReentries([tx.txid], { height: 1, hash: hash(1) }, token, 1601)).toBe(false);
+      token = history.getPollGeneration(); history.observePoll([], [], true, 1700);
+      expect(history.observeVerifiedReentries([tx.txid], { height: 3, hash: hash(3) }, token, 1701)).toBe(true);
+      expect(history.getTransactionLifecycle(tx.txid).slice(-1)[0].event_type).toBe('reaccepted_after_reorg');
+    } finally { await history.closeHistory(); rmSync(directory, { recursive: true, force: true }); }
+  });
+  it('records actual normalized coinbase fact and never stages proven coinbase reentry', () => {
+    const history = new TimeMachineService({ store: null, network: 'signet', now: 1000, feed: () => ({}) });
+    const coinbase = { ...tx, vin: [{ is_coinbase: true }] };
+    history.observeBlock(block(2), [coinbase], 1100);
+    expect((history.getTransactionLifecycle(tx.txid)[0] as any).is_coinbase).toBe(true);
+    history.observeCanonicalChange(rollback);
+    expect(history.getPendingCanonicalTip()).toBeNull();
+    expect((history as any).getCanonicalRestorationTarget()).toEqual({ height: 2, hash: hash(2) });
+  });
+  it('retires nonreentering orphan provenance only on actual matching restoration without checkpoint invention', () => {
+    const history = new TimeMachineService({ store: null, network: 'signet', now: 1000, feed: () => ({}) });
+    const prior = history.observeBlock(block(2), [tx], 1100);
+    history.observeCanonicalChange(rollback); history.observePoll([], [], false, 1300);
+    const original = history.getTransactionLifecycle(tx.txid);
+    (history as any).observeCanonicalChange({ status: 'verified-restoration', network: 'signet', observedAt: 1400,
+      restoredTarget: { height: 2, hash: hash(2) }, canonicalTip: { height: 2, hash: hash(2) } });
+    expect(history.getPendingCanonicalTip()).toBeNull();
+    expect((history as any).getCanonicalRestorationTarget()).toBeNull();
+    expect(history.getStateByHash(prior.state_hash)).toBeNull();
+    expect(history.getTransactionLifecycle(tx.txid)).toEqual(original);
+    expect(history.getCoverage().coverage_gaps.length).toBeGreaterThan(0);
+  });
+  it('keeps absent legacy coinbase fact unknown and requires exact restoration target', () => {
+    const history = new TimeMachineService({ store: null, network: 'signet', now: 1000, feed: () => ({}) });
+    history.observeBlock(block(2), [tx], 1100); history.observeCanonicalChange(rollback);
+    expect(history.getTransactionLifecycle(tx.txid)[0].is_coinbase).toBeUndefined();
+    expect(history.getPendingCanonicalTip()).not.toBeNull();
+    expect(() => history.observeCanonicalChange({ status: 'verified-restoration', network: 'signet', observedAt: 1300,
+      restoredTarget: { height: 1, hash: hash(1) }, canonicalTip: { height: 1, hash: hash(1) } })).toThrow();
+    expect(() => history.observeCanonicalChange({ status: 'verified-restoration', network: 'testnet', observedAt: 1300,
+      restoredTarget: { height: 2, hash: hash(2) }, canonicalTip: { height: 2, hash: hash(2) } })).toThrow();
+    expect(history.getCanonicalRestorationTarget()).toEqual({ height: 2, hash: hash(2) });
+    expect(history.getPendingCanonicalTip()).not.toBeNull();
+  });
+  it('persists independently observed restoration target even with no eligible reentry candidate', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'coinbase-restoration-'));
+    let history = new TimeMachineService({ store: new HistoryStore(join(directory, 'history.gz'), 'signet'), network: 'signet', now: 1000, feed: () => ({}) });
+    try {
+      history.observeBlock(block(2), [{ ...tx, vin: [{ is_coinbase: true }] }], 1100);
+      history.observeCanonicalChange(rollback); await history.closeHistory();
+      history = new TimeMachineService({ store: new HistoryStore(join(directory, 'history.gz'), 'signet'), network: 'signet', now: 1250, feed: () => ({}) });
+      expect(history.getCoverage().persistence.error).toBeNull();
+      expect(history.getPendingCanonicalTip()).toBeNull();
+      expect(history.getCanonicalRestorationTarget()).toEqual({ height: 2, hash: hash(2) });
+      expect(history.getTransactionLifecycle(tx.txid)[0].is_coinbase).toBe(true);
+      history.observeCanonicalChange({ status: 'verified-restoration', network: 'signet', observedAt: 1300,
+        restoredTarget: { height: 2, hash: hash(2) }, canonicalTip: { height: 2, hash: hash(2) } });
+      await history.closeHistory();
+      history = new TimeMachineService({ store: new HistoryStore(join(directory, 'history.gz'), 'signet'), network: 'signet', now: 1400, feed: () => ({}) });
+      expect(history.getCoverage().persistence.error).toBeNull();
+      expect(history.getCanonicalRestorationTarget()).toBeNull();
+      expect(history.getCoverage().total_checkpoints).toBe(0);
+    } finally { await history.closeHistory(); rmSync(directory, { recursive: true, force: true }); }
+  });
+  it('rejects malformed persisted coinbase and restoration metadata instead of guessing legacy facts', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'restoration-validation-'));
+    const file = join(directory, 'history.gz');
+    const history = new TimeMachineService({ store: new HistoryStore(file, 'signet'), network: 'signet', now: 1000, feed: () => ({}) });
+    let reader: HistoryStore | undefined;
+    try {
+      history.observeBlock(block(2), [tx], 1100); history.observeCanonicalChange(rollback); await history.closeHistory();
+      reader = new HistoryStore(file, 'signet');
+      const original = reader.read();
+      expect(validateHistorySnapshot(original, 'signet', TIME_MACHINE_LIMITS).events[0].is_coinbase).toBeUndefined();
+      for (const malformed of [
+        (copy: any) => { copy.events[0].is_coinbase = 'true'; },
+        (copy: any) => { copy.canonicalRestorationTarget.hash = 'not-a-block-hash'; },
+        (copy: any) => { copy.canonicalRestorationTarget.rollback_sequence = copy.eventSequence + 1; },
+        (copy: any) => { copy.canonicalRestorationTarget.observed_at = new Date(copy.observedThrough + 1).toISOString(); },
+      ]) {
+        const copy = JSON.parse(JSON.stringify(original)); malformed(copy);
+        expect(() => validateHistorySnapshot(copy, 'signet', TIME_MACHINE_LIMITS)).toThrow();
+      }
+    } finally { reader?.close(); await history.closeHistory(); rmSync(directory, { recursive: true, force: true }); }
   });
 });
