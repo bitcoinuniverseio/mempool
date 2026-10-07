@@ -63,7 +63,8 @@
     <ng-container *ngIf="vm.kind === 'ready' && vm.assets">
       <section class="panel">
         <h2>Active Taproot Assets</h2>
-        <table class="data-table">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Active Taproot Assets, scroll horizontally">
+<table class="data-table">
           <thead>
             <tr>
               <th>Asset Name</th>
@@ -85,11 +86,13 @@
             </tr>
           </tbody>
         </table>
+</div>
       </section>
 
       <section class="panel" *ngIf="vm.groups?.length">
         <h2>Asset Groups & Tranches</h2>
-        <table class="data-table">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Asset Groups &amp; Tranches, scroll horizontally">
+<table class="data-table">
           <thead>
             <tr>
               <th>Group Name</th>
@@ -107,6 +110,7 @@
             </tr>
           </tbody>
         </table>
+</div>
       </section>
     </ng-container>
   </ng-container>

@@ -17,28 +17,32 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Owned Node Connected Peers</h1>
+          <h1 class="m-0">Connected peers</h1>
           <span class="badge bg-secondary" *ngIf="totalCount > 0">
             {{ totalCount | number }} Active Endpoints
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          A bounded page of peers connected to the owned node, reported by Bitcoin Core. Transport capability does not establish an independent handshake probe.
+          Peers connected to our Bitcoin node. Filters apply to the current page.
         </p>
 
         <!-- Sub-navigation tabs -->
-        <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+        <nav aria-label="Peer navigation" class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
           <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
-          <a class="nav-link active" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
-          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
-          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
-          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
+          <a class="nav-link active" aria-current="page" [routerLink]="'/network/global/nodes' | relativeUrl">Peers</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">History</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">Discovery</a>
+          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Connection check</a>
         </nav>
       </header>
 
-      <p *ngIf="report" role="status">{{ report.scope }} Network {{ report.chain_network }}; genesis {{ report.genesis_hash }};
+      <p *ngIf="report" role="status" class="text-muted">{{ report.chain_network | titlecase }} &bull; Showing {{ nodes.length }} of {{ totalCount }} peers</p>
+      <details *ngIf="report" class="mb-3">
+        <summary>Source details</summary>
+        <p class="small text-muted text-break">{{ report.scope }} Network {{ report.chain_network }}; genesis {{ report.genesis_hash }};
         observed {{ report.observed_at_utc }} (reported age {{ report.age_ms }} ms / freshness {{ report.freshness_limit_ms }} ms).
-        No independent operator or Signet challenge attestation. Showing {{ nodes.length }} peers from offset {{ offset }} of {{ totalCount }}; filters apply to this page.</p>
+        No independent operator or Signet challenge attestation. Page starts at offset {{ offset }}.</p>
+      </details>
       <div class="d-flex gap-2 mb-3">
         <button type="button" class="btn btn-outline-secondary" (click)="previousPage()" [disabled]="loading || offset === 0">Previous peer page</button>
         <button type="button" class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="loading || offset + nodes.length >= totalCount">Next peer page</button>
@@ -78,7 +82,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div>Querying reachable node catalog...</div>
       </div>
 
-      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">Retry fresh read</button>
+      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">{{ error ? 'Retry' : 'Refresh' }}</button>
       <div *ngIf="error" role="alert" class="alert alert-danger my-3">
         {{ error }}
       </div>
@@ -139,8 +143,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       border-radius: 0.375rem;
     }
     .nav-link.active {
-      background-color: var(--bs-primary, #f7931a);
-      color: #fff;
+      background-color: var(--u-brand);
+      color: var(--u-brand-contrast);
     }
   `],
 })

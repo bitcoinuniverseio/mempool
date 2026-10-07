@@ -3,7 +3,7 @@ import 'zone.js';
 import { ChangeDetectorRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { StateService } from '@app/services/state.service';
@@ -11,6 +11,8 @@ import { GlobalNetworkApiService } from './global-network.service';
 import { GlobalNetworkSeedsComponent } from './global-network-seeds.component';
 import { GlobalNetworkSnapshotsComponent } from './global-network-snapshots.component';
 import { GlobalNetworkNodesComponent } from './global-network-nodes.component';
+import { GlobalNetworkNodeDetailComponent } from './global-network-node-detail.component';
+import { GlobalNetworkSelfCheckComponent } from './global-network-self-check.component';
 
 const seed = { seed_id: 'controlled-seed', hostname: 'seed.example.org', maintainer: 'chainparams', active: null,
   last_query_at: '2026-10-05T00:00:00.000Z', discovered_addrs_count: null, reachable_ratio: null, error: 'Controlled DNS unavailable' };
@@ -22,9 +24,50 @@ describe('Actual Global templates with controlled producer-shaped envelopes', ()
       Object.defineProperty(component, 'ctorParameters', { configurable: true,
         value: () => [{ type: GlobalNetworkApiService }, { type: ChangeDetectorRef }, { type: StateService }] });
     }
+    Object.defineProperty(GlobalNetworkNodeDetailComponent, 'ctorParameters', { configurable: true,
+      value: () => [{ type: ActivatedRoute }, { type: GlobalNetworkApiService }, { type: ChangeDetectorRef }, { type: StateService }] });
+    Object.defineProperty(GlobalNetworkSelfCheckComponent, 'ctorParameters', { configurable: true,
+      value: () => [{ type: GlobalNetworkApiService }, { type: ChangeDetectorRef }, { type: StateService }] });
     TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
   });
   afterEach(() => TestBed.resetTestingModule());
+
+  it('keeps peer identity verifiable while unknown height and capabilities remain explicit', () => {
+    const state = { network: '', env: { ROOT_NETWORK: 'signet' }, networkChanged$: new BehaviorSubject('') };
+    const endpoint = '127.0.0.1:8333';
+    const detail = { endpoint_id: endpoint, chain_network: 'signet', genesis_hash: 'a'.repeat(64),
+      scope: 'Owned connected peers only', network: 'not_publicly_routable', transport_v2: null, addrv2: null,
+      start_height: null, services_hex: null, latency_ms: null, user_agent: '/Satoshi:30.3/', relay: null,
+      age_ms: 0, freshness_limit_ms: 30000, observed_at_utc: '2026-10-07T00:00:00Z' };
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: StateService, useValue: state },
+      { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ endpointId: endpoint })) } },
+      { provide: GlobalNetworkApiService, useValue: { getNodeDetail$: () => of(detail) } }] });
+    const fixture = TestBed.createComponent(GlobalNetworkNodeDetailComponent); fixture.detectChanges();
+    const rows = [...fixture.nativeElement.querySelectorAll('li')] as HTMLElement[];
+    const height = rows.find(row => row.textContent.includes('Reported block height'));
+    expect(height?.lastElementChild?.textContent.trim()).toBe('Unknown');
+    const disclosure = fixture.nativeElement.querySelector('details');
+    expect(disclosure.open).toBe(false); expect(disclosure.textContent).toContain(detail.genesis_hash);
+    expect(disclosure.querySelector('summary').textContent).toBe('Source details');
+    expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain(endpoint);
+    fixture.destroy();
+  });
+
+  it('disables connection submission for invalid form input before any request', async () => {
+    const api = { performSelfCheck$: vi.fn() };
+    const state = { network: '', networkChanged$: new BehaviorSubject('') };
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: StateService, useValue: state },
+      { provide: GlobalNetworkApiService, useValue: api }] });
+    const fixture = TestBed.createComponent(GlobalNetworkSelfCheckComponent); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    const submit = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(submit.disabled).toBe(true);
+    const endpoint = fixture.nativeElement.querySelector('#endpointInput') as HTMLInputElement;
+    endpoint.value = 'example.org'; endpoint.dispatchEvent(new Event('input')); await fixture.whenStable(); fixture.detectChanges();
+    expect(submit.disabled).toBe(false);
+    const port = fixture.nativeElement.querySelector('#portInput') as HTMLInputElement;
+    port.value = '0'; port.dispatchEvent(new Event('input')); await fixture.whenStable(); fixture.detectChanges();
+    expect(submit.disabled).toBe(true); expect(api.performSelfCheck$).not.toHaveBeenCalled(); fixture.destroy();
+  });
 
   it('renders the actual DNS wrapper rows, unknown values, scope and selected-context links', () => {
     const state = { isBrowser: true, network: '', env: { ROOT_NETWORK: 'signet', BASE_MODULE: 'mempool' }, networkChanged$: new BehaviorSubject('') };
@@ -73,7 +116,7 @@ describe('Actual Global templates with controlled producer-shaped envelopes', ()
       { provide: GlobalNetworkApiService, useValue: new GlobalNetworkApiService(http as any, state as any) }] });
     const fixture = TestBed.createComponent(GlobalNetworkSnapshotsComponent); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Configured network signet');
-    expect(fixture.nativeElement.textContent).toContain('testnet — Peers connected to the owned node');
+    expect(fixture.nativeElement.textContent).toContain('testnet • Peers connected to the owned node');
     expect(fixture.nativeElement.textContent).toContain('Unknown'); fixture.destroy();
   });
 

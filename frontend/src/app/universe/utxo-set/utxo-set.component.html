@@ -52,7 +52,8 @@
       <!-- Coinstatsindex Checkpoints -->
       <section class="panel" *ngIf="vm.checkpoints?.length">
         <h2>Coinstatsindex & MuHash Checkpoints</h2>
-        <table class="data-table">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Coinstatsindex &amp; MuHash Checkpoints, scroll horizontally">
+<table class="data-table">
           <thead>
             <tr>
               <th>Block Height</th>
@@ -72,12 +73,14 @@
             </tr>
           </tbody>
         </table>
+</div>
       </section>
 
       <!-- Script Type Distribution -->
       <section class="panel" *ngIf="vm.scriptTypes?.length">
         <h2>Script Type Distribution in UTXO Set</h2>
-        <table class="data-table">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Script Type Distribution in UTXO Set, scroll horizontally">
+<table class="data-table">
           <thead>
             <tr>
               <th>Script Type</th>
@@ -93,9 +96,12 @@
             </tr>
           </tbody>
         </table>
+</div>
       </section>
 
-      <section class="panel" *ngIf="vm.valueCohorts?.length"><h2>Value Cohorts</h2><table class="data-table"><thead><tr><th>Value band</th><th>Outputs</th><th>Satoshis</th></tr></thead><tbody><tr *ngFor="let c of vm.valueCohorts"><td>{{ c.label }}</td><td>{{ c.txOutCount | number }}</td><td>{{ c.totalAmountSats }}</td></tr></tbody></table></section>
+      <section class="panel" *ngIf="vm.valueCohorts?.length"><h2>Value Cohorts</h2><div class="table-responsive" tabindex="0" role="region" aria-label="Value Cohorts, scroll horizontally">
+<table class="data-table"><thead><tr><th>Value band</th><th>Outputs</th><th>Satoshis</th></tr></thead><tbody><tr *ngFor="let c of vm.valueCohorts"><td>{{ c.label }}</td><td>{{ c.txOutCount | number }}</td><td>{{ c.totalAmountSats }}</td></tr></tbody></table>
+</div></section>
       <!-- Utreexo Accumulator -->
       <section class="panel" *ngIf="vm.utreexo">
         <h2>Utreexo Accumulator State (Block #{{ vm.utreexo.blockHeight }})</h2>

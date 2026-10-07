@@ -16,26 +16,26 @@ import { defer, finalize, Subject, Subscription, takeUntil, timeout } from 'rxjs
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Node Connectivity Self-Check Wizard</h1>
-          <span class="badge bg-primary">SSRF-Defended P2P Probe</span>
+          <h1 class="m-0">Connection check</h1>
+          <span class="badge bg-secondary">Public addresses only</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Check a public endpoint TCP connection from this server. Bitcoin handshake, BIP324 readiness and distributed reachability are not tested.
+          Test a public node's connection from this server. This does not verify its Bitcoin protocol.
         </p>
 
         <!-- Sub-navigation tabs -->
-        <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+        <nav aria-label="Peer navigation" class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
           <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
-          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
-          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
-          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
-          <a class="nav-link active" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Peers</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">History</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">Discovery</a>
+          <a class="nav-link active" aria-current="page" [routerLink]="'/network/global/self-check' | relativeUrl">Connection check</a>
         </nav>
       </header>
 
       <!-- Probe Submission Form -->
       <div class="card p-4 mb-4 bg-body-tertiary border">
-        <h2 class="h5 mb-3">Initiate Live Diagnostic Probe</h2>
+        <h2 class="h5 mb-3">Enter your node's address</h2>
         <form (ngSubmit)="runSelfCheck()" #checkForm="ngForm">
           <div class="row g-3">
             <div class="col-12 col-md-8">
@@ -44,7 +44,7 @@ import { defer, finalize, Subject, Subscription, takeUntil, timeout } from 'rxjs
                 id="endpointInput"
                 type="text"
                 class="form-control font-monospace"
-                placeholder="e.g. 95.217.163.42"
+                placeholder="Your node's public IP or domain"
                 [(ngModel)]="endpointAddress"
                 (ngModelChange)="clearResult()"
                 name="endpointAddress"
@@ -72,15 +72,15 @@ import { defer, finalize, Subject, Subscription, takeUntil, timeout } from 'rxjs
 
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
             <span class="text-muted small">
-              Private, link-local, loopback, and metadata network queries are blocked by strict SSRF filtering.
+              Private and local addresses cannot be checked.
             </span>
             <button
               type="submit"
               class="btn btn-primary px-4"
-              [disabled]="probing || !endpointAddress"
+              [disabled]="probing || checkForm.invalid"
             >
               <span *ngIf="probing" class="spinner-border spinner-border-sm me-1" role="status"></span>
-              {{ probing ? 'Probing Node...' : 'Run Self-Check' }}
+              {{ probing ? 'Checking...' : 'Check connection' }}
             </button>
           </div>
         </form>
@@ -143,8 +143,8 @@ import { defer, finalize, Subject, Subscription, takeUntil, timeout } from 'rxjs
       border-radius: 0.375rem;
     }
     .nav-link.active {
-      background-color: var(--bs-primary, #f7931a);
-      color: #fff;
+      background-color: var(--u-brand);
+      color: var(--u-brand-contrast);
     }
   `],
 })
