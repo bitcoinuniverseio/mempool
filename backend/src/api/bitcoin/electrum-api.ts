@@ -15,9 +15,11 @@ import { readIndexedTip } from './electrum-indexed-tip';
 import { fetchElectrumTransactionPage } from './electrum-transaction-page';
 import { collectElectrumAddressStats } from './electrum-address-stats';
 import { readElectrumUtxoMetadata } from './electrum-utxo-metadata';
+import { addressBitcoinClient } from './bitcoin-client';
 
 class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   private electrumClient: any;
+  private readonly addressApi = new BitcoinApi(addressBitcoinClient);
 
   constructor(bitcoinClient: any) {
     super(bitcoinClient);
@@ -74,7 +76,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   async $getAddress(address: string): Promise<IEsploraApi.Address> {
     let scripthash = '';
     const stats = await this.$getExactScriptStatistics(/** @asyncUnsafe */ async signal => {
-      const info = await this.bitcoindClient.rpc.call('validateaddress', [address], { signal });
+      const info = await addressBitcoinClient.rpc.call('validateaddress', [address], { signal });
       if (!info?.isvalid || typeof info.scriptPubKey !== 'string' || !/^(?:[0-9a-f]{2})+$/.test(info.scriptPubKey)) throw new Error('Invalid Bitcoin address');
       scripthash = this.encodeScriptHash(info.scriptPubKey); return scripthash;
     }, () => scripthash);
@@ -84,7 +86,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   /** @asyncUnsafe */
   async $getAddressTransactions(address: string, lastSeenTxId: string): Promise<IEsploraApi.Transaction[]> {
     await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
-    const addressInfo = await this.bitcoindClient.validateAddress(address);
+    const addressInfo = await addressBitcoinClient.validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
       throw new Error('Invalid Bitcoin address');
     }
@@ -107,7 +109,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
         history,
         startingIndex,
         endIndex,
-        (txid) => this.$getRawTransaction(txid, false, true),
+        (txid) => this.addressApi.$getRawTransaction(txid, false, true),
         (progress) => loadingIndicators.setProgress('address-' + address, progress),
       );
     } catch (e: any) {
@@ -128,7 +130,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
     const request = (method: string, params: unknown[], signal: AbortSignal) => {
       active(signal); return withElectrumDeadline(this.electrumClient.request(method, params), method, 15000);
     };
-    const core = (method: string, params: unknown[], signal: AbortSignal) => { active(signal); return this.bitcoindClient.rpc.call(method, params, { signal }); };
+    const core = (method: string, params: unknown[], signal: AbortSignal) => { active(signal); return addressBitcoinClient.rpc.call(method, params, { signal }); };
     return collectElectrumAddressStats(selected, {
       history: signal => request('blockchain.scripthash.get_history', [hash()], signal),
       balance: signal => request('blockchain.scripthash.get_balance', [hash()], signal),
@@ -147,7 +149,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   /** @asyncUnsafe */
   async $getAddressUtxos(address: string): Promise<IEsploraApi.UTXO[]> {
     await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
-    const addressInfo = await this.bitcoindClient.validateAddress(address);
+    const addressInfo = await addressBitcoinClient.validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
       throw new Error('Invalid Bitcoin address');
     }
@@ -183,7 +185,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
         history,
         startingIndex,
         endIndex,
-        (txid) => this.$getRawTransaction(txid, false, true),
+        (txid) => this.addressApi.$getRawTransaction(txid, false, true),
         (progress) => loadingIndicators.setProgress('address-' + scripthash, progress),
       );
     } catch (e: any) {
@@ -198,7 +200,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
     const checkpoint = await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
     const utxos = await this.$getScriptHashUnspent(scripthash);
     if (utxos.some(row => row.height > checkpoint.blockHeight)) throw new Error('UTXO block exceeds the verified address checkpoint');
-    const result = await readElectrumUtxoMetadata(utxos, (method, params, signal) => this.bitcoindClient.rpc.call(method, params, { signal }));
+    const result = await readElectrumUtxoMetadata(utxos, (method, params, signal) => addressBitcoinClient.rpc.call(method, params, { signal }));
     const after = await verifyAddressSource(checkpoint.blockHeight, height => this.$getIndexBlockHash(height));
     if (after.blockHash !== checkpoint.blockHash || after.genesisHash !== checkpoint.genesisHash || after.network !== checkpoint.network) throw new Error('Address source changed during UTXO acquisition');
     return result;
@@ -210,7 +212,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
 
   /** @asyncUnsafe */
   async $getTransactionMerkleProof(txId: string): Promise<IEsploraApi.MerkleProof> {
-    const tx = await this.$getRawTransaction(txId);
+    const tx = await this.addressApi.$getRawTransaction(txId);
     return withElectrumDeadline(this.electrumClient.blockchainTransaction_getMerkle(txId, tx.status.block_height), 'blockchain.transaction.get_merkle');
   }
 
