@@ -91,6 +91,7 @@ const STATISTICS_STALE_AFTER_SECONDS = 300;
 class Capabilities {
   private registeredRoutes = new Set<string>();
   private cached: { at: number; value: CapabilitiesResponse } | null = null;
+  private inFlight: Promise<CapabilitiesResponse> | null = null;
 
   /**
    * Called by the route setup for every feature it mounts, so the report can
@@ -172,6 +173,13 @@ class Capabilities {
     if (this.cached && now - this.cached.at < CACHE_TTL_MS) {
       return this.cached.value;
     }
+    if (this.inFlight) return this.inFlight;
+    const active = this.$buildReport();
+    this.inFlight = active;
+    try { return await active; } finally { if (this.inFlight === active) this.inFlight = null; }
+  }
+
+  private async $buildReport(): Promise<CapabilitiesResponse> {
     let optional: Awaited<ReturnType<typeof $optionalCapabilityReports>> | Record<string, never>;
     try {
       optional = await $optionalCapabilityReports(
@@ -197,7 +205,7 @@ class Capabilities {
         ...optional,
       },
     };
-    this.cached = { at: now, value };
+    this.cached = { at: Date.now(), value };
     return value;
   }
 
@@ -319,8 +327,16 @@ class Capabilities {
     const chainTip = typeof chainSync?.blocks === 'number' ? chainSync.blocks : null;
 
     let probe: Awaited<ReturnType<typeof $probeAddressIndex>>;
+    const controller = new AbortController();
+    let deadline: ReturnType<typeof setTimeout> | undefined;
     try {
-      probe = await $probeAddressIndex(chainTip);
+      const expired = new Promise<never>((_, reject) => {
+        deadline = setTimeout(() => {
+          controller.abort();
+          reject(new Error('Address capability check exceeded its deadline'));
+        }, 8000);
+      });
+      probe = await Promise.race([$probeAddressIndex(chainTip, controller.signal), expired]);
     } catch (e) {
       // The probe is written not to throw, so reaching here means something
       // outside it did. Report unavailable rather than let one failed probe
@@ -331,7 +347,7 @@ class Capabilities {
         routesRegistered,
         dependencies: [{
           name: 'address-index',
-          configured: false,
+          configured: this.addressLookupEnabled(),
           reachable: false,
           detail: 'The address index could not be probed.',
         }],
@@ -348,6 +364,9 @@ class Capabilities {
         maxLagBlocks: null,
         sourceRelease: null,
       };
+    } finally {
+      clearTimeout(deadline);
+      controller.abort();
     }
 
     const dependencies: CapabilityDependency[] = [{

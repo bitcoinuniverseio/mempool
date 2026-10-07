@@ -254,7 +254,9 @@ function factsFor(
  *
  * @asyncSafe
  */
-export async function $probeAddressIndex(chainTip: number | null): Promise<AddressIndexProbe> {
+export async function $probeAddressIndex(chainTip: number | null, signal?: AbortSignal): Promise<AddressIndexProbe> {
+  const active = (): void => { if (signal?.aborted) throw new Error('Address index probe cancelled'); };
+  active();
   const backendKind = addressBackendKind();
   const maxBehindTip = config.ESPLORA.MAX_BEHIND_TIP ?? 2;
   const base = {
@@ -317,6 +319,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     let utxoAnswered = false;
 
     try {
+      active();
       indexedTip = (await client.$getIndexedTip?.()) ?? null;
       reachable = indexedTip !== null;
     } catch (e) {
@@ -325,12 +328,14 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
 
     if (reachable) {
       try {
+        active();
         const summary = await client.$getAddress?.(probeAddress);
         summaryAnswered = addressSummaryProblems(summary, probeAddress).length === 0;
       } catch (e) {
         logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));
       }
       try {
+        active();
         const utxos = await client.$getAddressUtxos?.(probeAddress);
         utxoAnswered = utxoListProblems(utxos).length === 0;
       } catch (e) {
@@ -339,7 +344,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     }
 
     let checkpoint: AddressSourceCheckpoint | null = null;
-    try { checkpoint = await verifyAddressSource(indexedTip, height => client.$getIndexBlockHash!(height)); } catch { /* Unverified source stays degraded. */ }
+    try { active(); checkpoint = await verifyAddressSource(indexedTip, height => { active(); return client.$getIndexBlockHash!(height); }); } catch { /* Unverified source stays degraded. */ }
     const facts = factsFor(backendKind, maxBehindTip, chainTip, {
       checkpoint,
       configured: true,
@@ -373,7 +378,8 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
   let utxoAnswered = false;
 
   try {
-    const height = await esploraRequest('/blocks/tip/height', timeout);
+    active();
+    const height = await esploraRequest('/blocks/tip/height', timeout, signal);
     reachable = true;
     const parsed = Number(height.data);
     indexedTip = Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
@@ -390,13 +396,15 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
 
   if (reachable) {
     try {
-      const summary = await esploraRequest(`/address/${probeAddress}`, timeout);
+      active();
+      const summary = await esploraRequest(`/address/${probeAddress}`, timeout, signal);
       summaryAnswered = addressSummaryProblems(summary.data, probeAddress).length === 0;
     } catch (e) {
       logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));
     }
     try {
-      const utxos = await esploraRequest(`/address/${probeAddress}/utxo`, timeout);
+      active();
+      const utxos = await esploraRequest(`/address/${probeAddress}/utxo`, timeout, signal);
       // 500 is the index's own default for the most unspent outputs it will
       // return for one address, and the same number the address page uses to
       // decide whether to ask at all. They are deliberately the same: a page
