@@ -196,7 +196,7 @@
 
       <ng-template [ngIf]="retryLoadMore">
         <br>
-        <button type="button" class="btn btn-outline-info btn-sm" (click)="loadMore()"><fa-icon [icon]="['fas', 'redo-alt']" [fixedWidth]="true"></fa-icon></button>
+        <button type="button" class="btn btn-outline-info address-retry" (click)="loadMore()" aria-label="Retry transactions"><fa-icon [icon]="['fas', 'redo-alt']" [fixedWidth]="true"></fa-icon></button>
       </ng-template>
     </div>
 
@@ -273,6 +273,11 @@
     <br>
       <div class="text-center address-error">
         @switch (addressFailure) {
+          @case ('busy') {
+            <span i18n="address.error.busy">Address lookup is busy.</span>
+            <br>
+            <i class="small" i18n="address.error.busy-detail">Try again shortly.</i>
+          }
           @case ('backend-syncing') {
             <span i18n="address.error.index-syncing">Address history is still being indexed.</span>
             <br>
@@ -314,13 +319,21 @@
             <span i18n="address.error.loading-address-data">Error loading address data.</span>
           }
         }
+        @if (addressFailure === 'busy' || addressFailure === 'timeout' || addressFailure === 'backend-unavailable' || addressFailure === 'backend-syncing' || addressFailure === 'unknown') {
+          <div class="mt-3">
+            <button type="button" class="btn btn-outline-info address-retry" (click)="retryAddress()" [disabled]="isLoadingAddress" i18n="shared.retry">Retry</button>
+          </div>
+        }
         <br>
         <!--
           The technical detail, and only the technical detail. The sentence
           above is the explanation; this line exists so a reader can quote
           something useful when reporting a problem.
         -->
-        <i class="small text-muted">({{ error | httpErrorMsg }})</i>
+        <details class="small text-muted mt-2">
+          <summary i18n="shared.details">Details</summary>
+          <span>{{ error | httpErrorMsg }}</span>
+        </details>
       </div>
   </ng-template>
 

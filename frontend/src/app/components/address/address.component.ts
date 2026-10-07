@@ -9,7 +9,7 @@ import { WebsocketService } from '@app/services/websocket.service';
 import { StateService } from '@app/services/state.service';
 import { AudioService } from '@app/services/audio.service';
 import { ApiService } from '@app/services/api.service';
-import { of, merge, Subscription, Observable, forkJoin } from 'rxjs';
+import { of, merge, Subscription, Observable, forkJoin, Subject } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { AddressInformation } from '@interfaces/node-api.interface';
@@ -105,6 +105,11 @@ export class AddressComponent implements OnInit, OnDestroy {
 
   isMobile: boolean;
   showQR: boolean = false;
+  private readonly addressRetry$ = new Subject<ParamMap>();
+
+  retryAddress(): void {
+    this.addressRetry$.next(this.route.snapshot.paramMap);
+  }
   private qrHovered = false;
 
   address: Address;
@@ -268,7 +273,7 @@ export class AddressComponent implements OnInit, OnDestroy {
 
     this.updateAccelerationSubscription();
 
-    this.mainSubscription = this.route.paramMap
+    this.mainSubscription = merge(this.route.paramMap, this.addressRetry$)
       .pipe(
         switchMap((params: ParamMap) => {
           this.clearError();
