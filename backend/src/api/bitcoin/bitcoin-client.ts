@@ -11,4 +11,7 @@ const nodeRpcCredentials: BitcoinRpcCredentials = {
   cookie: config.CORE_RPC.COOKIE ? config.CORE_RPC.COOKIE_PATH : undefined,
 };
 
+// Interactive address reads must not wait behind bulk indexing batches.
+// Both pools use the same owned endpoint and existing reader credentials.
+export const addressBitcoinClient = new bitcoin.Client({ ...nodeRpcCredentials, maxSockets: 4 });
 export default new bitcoin.Client(nodeRpcCredentials);

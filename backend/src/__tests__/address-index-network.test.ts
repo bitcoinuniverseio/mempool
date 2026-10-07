@@ -1,7 +1,7 @@
-jest.mock('../api/bitcoin/bitcoin-client', () => ({__esModule:true,default:{
+jest.mock('../api/bitcoin/bitcoin-client', () => { const reader = {
  getBlockchainInfo:async()=>({chain:({mainnet:'main',testnet:'test',testnet4:'testnet4',signet:'signet',regtest:'regtest'} as any)[require('../config').default.MEMPOOL.NETWORK],blocks:100,bestblockhash:'1'.repeat(64),signet_challenge:require('../config').default.MEMPOOL.NETWORK==='signet'?'51':undefined}),
  getBlockHash:async(height: number)=>height===0?'0'.repeat(64):'1'.repeat(64),
-}}));
+}; return { __esModule: true, default: reader, addressBitcoinClient: reader }; });
 import http from 'http';
 import { address, networks } from 'bitcoinjs-lib';
 import { bech32 } from 'bech32';

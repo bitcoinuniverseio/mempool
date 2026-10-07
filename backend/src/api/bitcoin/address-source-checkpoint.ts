@@ -1,5 +1,5 @@
 import config from '../../config';
-import bitcoinClient from './bitcoin-client';
+import { addressBitcoinClient } from './bitcoin-client';
 export interface AddressSourceCheckpoint {
   genesisHash: string;
   blockHeight: number;
@@ -14,7 +14,7 @@ const isHash = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f]{
 export async function verifyAddressSource(
   indexedTip: number | null,
   readHash: (height: number, signal?: AbortSignal) => Promise<unknown>,
-  core = bitcoinClient,
+  core = addressBitcoinClient,
   budgetMs = 15000,
 ): Promise<AddressSourceCheckpoint> {
   if (!Number.isSafeInteger(indexedTip) || indexedTip! < 0) throw new Error('Invalid indexed height');
