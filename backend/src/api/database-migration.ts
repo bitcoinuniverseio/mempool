@@ -1691,7 +1691,7 @@ class DatabaseMigration {
     }
     const [indexes]: any[] = await this.$executeQuery(`SELECT INDEX_NAME, COLUMN_NAME, SEQ_IN_INDEX, NON_UNIQUE FROM information_schema.statistics
       WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='intelligence_notifications'`, true);
-    if (columns.length !== 1 || columns[0].COLUMN_TYPE !== 'bigint unsigned' || !columns[0].EXTRA.includes('auto_increment') ||
+    if (columns.length !== 1 || !/^bigint(?:\(\d+\))? unsigned$/.test(columns[0].COLUMN_TYPE) || !columns[0].EXTRA.includes('auto_increment') ||
         !indexes.some(index => index.COLUMN_NAME === 'notification_sequence' && index.SEQ_IN_INDEX === 1 && Number(index.NON_UNIQUE) === 0 && indexes.filter(peer => peer.INDEX_NAME === index.INDEX_NAME).length === 1)) {
       throw new Error('Notification ordering column or unique index does not satisfy schema 113');
     }
