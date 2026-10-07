@@ -1908,9 +1908,9 @@
     },
     {
       "path": "backend/src/api/ark/ark.routes.ts",
-      "sha256": "2c2a18c0f1a50e89fb4ac4f2035802df3f896f201fc36f233d297ebd3b4ef3f1",
+      "sha256": "6015d06730a1723b76db0007473161cb1c10a300ee9feb86f10d3ebd20a90738",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2894
+      "bytes": 3841
     },
     {
       "path": "backend/src/api/bitcoin/bitcoin-core.routes.ts",
@@ -1956,9 +1956,9 @@
     },
     {
       "path": "backend/src/api/fractal/fractal.routes.ts",
-      "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+      "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3148
+      "bytes": 4162
     },
     {
       "path": "backend/src/api/intelligence/ark-vpack/ark-vpack.routes.ts",
@@ -2034,9 +2034,9 @@
     },
     {
       "path": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-      "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+      "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3424
+      "bytes": 3268
     },
     {
       "path": "backend/src/api/intelligence/graph/graph.routes.ts",
@@ -2046,9 +2046,9 @@
     },
     {
       "path": "backend/src/api/intelligence/knowledge/knowledge.routes.ts",
-      "sha256": "ef9479388d77e905fc28fc066ca4281130bf10ca17050c15f0f0f54bfc31e12e",
+      "sha256": "3d9a26e11893a2ddd5a4340671a2292d68e37371e3926943b33d7a90e48688b0",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3085
+      "bytes": 3550
     },
     {
       "path": "backend/src/api/intelligence/lightning-resilience/lightning-resilience.routes.ts",
@@ -2184,27 +2184,27 @@
     },
     {
       "path": "backend/src/api/intelligence/templates/templates.routes.ts",
-      "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+      "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
       "sha256Encoding": "utf8-lf",
-      "bytes": 7737
+      "bytes": 7886
     },
     {
       "path": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-      "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+      "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
       "sha256Encoding": "utf8-lf",
-      "bytes": 4915
+      "bytes": 6749
     },
     {
       "path": "backend/src/api/intelligence/utxo/utxo.routes.ts",
-      "sha256": "6d6e53da3942ace9a230912a77f0ee066e1ec8402069417ff86e63a5704ec5c6",
+      "sha256": "143894a49c79cbc94218ffbcf086d8dd4f94908787b23aaa3411aeef15d8bd87",
       "sha256Encoding": "utf8-lf",
-      "bytes": 1960
+      "bytes": 1828
     },
     {
       "path": "backend/src/api/intelligence/verification/verification.routes.ts",
-      "sha256": "6b6cbef72cacd2a9f84b745ba0616b26df82a6b386e5f26a21adb00549e42e67",
+      "sha256": "64c03d802b44e8cb024c7b50d43ef2b78c61e33b548f64e9ea739b00d3b0d888",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3967
+      "bytes": 4592
     },
     {
       "path": "backend/src/api/intelligence/watchlists/watchlists.routes.ts",
@@ -2226,9 +2226,9 @@
     },
     {
       "path": "backend/src/api/liquid-observatory/liquid-observatory.routes.ts",
-      "sha256": "a8f4be06beefc4cee062ea205b8a4ef16d181df03edb8b87755499c11fbe6a23",
+      "sha256": "7000736d8a16166ae9aa72f64bc9a90ef47b7b1d5c13951ab1e266c7d6708c24",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2956
+      "bytes": 6338
     },
     {
       "path": "backend/src/api/liquid/liquid.routes.ts",
@@ -2280,9 +2280,9 @@
     },
     {
       "path": "backend/src/api/stratum-v2/stratum-v2.routes.ts",
-      "sha256": "4b969445cb5393d367fd488c7c177d9989e87587e17c49793b2cdab940a0c872",
+      "sha256": "c95289a4d90071cba1a5d67e5f917beab86f405646062132c02e7e8768ff7069",
       "sha256Encoding": "utf8-lf",
-      "bytes": 1737
+      "bytes": 2014
     },
     {
       "path": "backend/src/api/taproot-assets/taproot-assets.routes.ts",
@@ -2292,9 +2292,9 @@
     },
     {
       "path": "backend/src/api/utxo-set/utxo-set.routes.ts",
-      "sha256": "40750fee5bb6219157d5150b691d97653d9fcbe398a49109ed6d2886e288868e",
+      "sha256": "b897920a1356d21df592e7a7979eb8913360ef4883006226d01d2ee7655dd2d0",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2665
+      "bytes": 2891
     },
     {
       "path": "backend/src/api/wildkin/wildkin.routes.ts",
@@ -2310,15 +2310,15 @@
     },
     {
       "path": "backend/src/config.ts",
-      "sha256": "ba418ef58ebc076b907abbaa1586249955180bde20cee2a251af30ddc968b5de",
+      "sha256": "f760130c2b363e2cdff8f464eb8565fce3da93e01ebdfabdf505c98dedb13a74",
       "sha256Encoding": "utf8-lf",
-      "bytes": 11014
+      "bytes": 11288
     },
     {
       "path": "backend/src/index.ts",
-      "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+      "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
       "sha256Encoding": "utf8-lf",
-      "bytes": 34032
+      "bytes": 35887
     },
     {
       "path": "docs/acceptance/2026-09-05-controls.json",
@@ -2772,9 +2772,9 @@
     },
     {
       "path": "frontend/src/app/universe/ark/ark-dashboard.component.ts",
-      "sha256": "365d5a52609abca8595829c7c81eaa166ae536b34d278d3472014d51e499336b",
+      "sha256": "d307fc88ac5c07eece07985d7535cbb783338b5c06b29208d633de0d11a7357a",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2553
+      "bytes": 7605
     },
     {
       "path": "frontend/src/app/universe/bitcoin-staking/staking-delegation-detail.component.ts",
@@ -3222,51 +3222,51 @@
     },
     {
       "path": "frontend/src/app/universe/fractal/cat20-center.component.ts",
-      "sha256": "bb6b4947ace845defba5ecd1f3b99cb3317627a3718fe1a6146e76110267bfee",
+      "sha256": "c17e488ddda76dafafff579b42ce5334362616fdbbbd5a3fd29ffe4b5780d4cd",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2503
+      "bytes": 4685
     },
     {
       "path": "frontend/src/app/universe/fractal/fractal-dashboard.component.ts",
-      "sha256": "2d288466ed340c031f0d4f139d350ff77e78000911e9a392b056510441ce0966",
+      "sha256": "915d08f2d89e0c1ce1fc0039eb982b74b454912ec6f62499f587b95da68a429d",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2263
+      "bytes": 2670
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-node-detail.component.ts",
-      "sha256": "97816786cc82063016bb1bdfdc76db91b35f38ac35a08aa6e2cca7e5be4d131c",
+      "sha256": "2553ce715fe7aa164d4b3fc9af97ce565bc901a5862339deaa0f4c8b84648773",
       "sha256Encoding": "utf8-lf",
-      "bytes": 7719
+      "bytes": 8911
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
-      "sha256": "5133d9f2292b453b9d0523cc11770b4139eaf356014ee8b075759621c3f6f2ea",
+      "sha256": "3bae13f531b69d2ce1753a156331d3cadfc6d1b5d790711cc142318898530890",
       "sha256Encoding": "utf8-lf",
-      "bytes": 7505
+      "bytes": 9455
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
-      "sha256": "2a759e48759ef75a5e922deb2087679732042f0f5ba01309e6d5cd9ad1d6c85f",
+      "sha256": "aa88af46c1096bf87210061df612d43ae3a463ecef98249fa2cd7a526490928f",
       "sha256Encoding": "utf8-lf",
-      "bytes": 8727
+      "bytes": 9663
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
-      "sha256": "ea0a194609a9495fe0c51432d9b87d80c69a89836c03620c93e14d3418b94e37",
+      "sha256": "02692b9af0ef9f15d7e57e5206ec45062d216718ae9495ac4519a8b3ca6d1700",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5272
+      "bytes": 6279
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-self-check.component.ts",
-      "sha256": "1ac4cd195abe1835efa99345825635352a7280dc0a907f41bedb4f931a38f17d",
+      "sha256": "0bb02da6d7c9fba4d9b89378dcad2012578772c7f14cd3bfb0b25f01fe135375",
       "sha256Encoding": "utf8-lf",
-      "bytes": 10160
+      "bytes": 10089
     },
     {
       "path": "frontend/src/app/universe/global-network/global-network-snapshots.component.ts",
-      "sha256": "98af991f83a8f152d3473502c9b3c3e21111419249cf90ef125599c9a420efbc",
+      "sha256": "0224751b513e40fa16bdf08077868c358e72253c1c53a9028efa6315a4ffe98f",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5809
+      "bytes": 7246
     },
     {
       "path": "frontend/src/app/universe/inscription/inscription.component.ts",
@@ -3282,27 +3282,27 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/incident-center.component.ts",
-      "sha256": "d08a66497cdcc8b5c9f2e43343e170966530ce389e673e216cab45dea52617dc",
+      "sha256": "cb080bcb0d71da70fc55a4916fd02ab153b33e711bdac60e2ccccab9cb168510",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5780
+      "bytes": 11918
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-      "sha256": "eba9d0d275cf31b9b5949efac87ea370e26934398f868d67dc8f3d5026a38c69",
+      "sha256": "d2844863691711e2c8a925495c8156a1785c57cb4836fc1e1f3e491cc3657b5b",
       "sha256Encoding": "utf8-lf",
-      "bytes": 9170
+      "bytes": 12368
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/mining-templates.component.ts",
-      "sha256": "8d245475adf5322b72b6146277134c12b4155cbd5acaa8d3e91de7b84a5e3d9b",
+      "sha256": "34123223af1adee7263739229476da9b8982d84d177baf209227cab49f7cc405",
       "sha256Encoding": "utf8-lf",
-      "bytes": 7559
+      "bytes": 19696
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-      "sha256": "399874f9976c83707db821df4245aeb71bec1eb05b3ef81a2b647259018d05c5",
+      "sha256": "6362051b8e7d7eb0f399a879c2b1af39f5e7ae82a2fc40224dc23d175f8110ec",
       "sha256Encoding": "utf8-lf",
-      "bytes": 14735
+      "bytes": 14773
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/protocol-explorer.component.ts",
@@ -3330,21 +3330,21 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-      "sha256": "5851af172133655d7b92cc29995a03d15cbc8a8d04a3a4be3df862837550031c",
+      "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
       "sha256Encoding": "utf8-lf",
-      "bytes": 9992
+      "bytes": 21237
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-      "sha256": "ca8df28d2e1598cc1af939006191fc860846546948077a93e6b750474423c36c",
+      "sha256": "87f506d57408e9d5aec1b6bd5bcd8fa50675d552dc9707dffa2955fe557d29cc",
       "sha256Encoding": "utf8-lf",
-      "bytes": 12269
+      "bytes": 12337
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
-      "sha256": "925591deafc67151d462e8e9c987a0776151e475752be945c445d18e3590667e",
+      "sha256": "18634b02579c67584c06446cd9faebafa7b2ff3b1036a6ff74d0037fcab6303f",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5576
+      "bytes": 6057
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/verify-proof.component.ts",
@@ -3354,15 +3354,15 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
-      "sha256": "0f0df454106bdcf54a53f260b59e5979593b3f06d75af045b109a18943d600f4",
+      "sha256": "99cab827cb9cb3fd2a3265b1419f355aab5100fc856c80d42b03292da0b0f1af",
       "sha256Encoding": "utf8-lf",
-      "bytes": 23254
+      "bytes": 23287
     },
     {
       "path": "frontend/src/app/universe/l2-observatory/l2-observatory.component.ts",
-      "sha256": "7d3ddf232a32a447aa40e62ca7e0d1264d1fbcc7452d0735aab00c82dc73cabe",
+      "sha256": "7e1841e6e7ab6465c6d9e32eb86e7071ba739f508097a7017f4c47f1a1828e78",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2209
+      "bytes": 3838
     },
     {
       "path": "frontend/src/app/universe/labs/privacy/privacy-lab.component.ts",
@@ -3450,9 +3450,9 @@
     },
     {
       "path": "frontend/src/app/universe/liquid-observatory/liquid-observatory.component.ts",
-      "sha256": "38998d4a4e6aa13e2edd217c1f61735647a5ead200c585063542d70ba5d2b880",
+      "sha256": "866ccd6993c77b696d51e549293a0efa95b9c1dd00d5e7a6104700548890cce5",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3414
+      "bytes": 8038
     },
     {
       "path": "frontend/src/app/universe/liquid-observatory/liquid-unblind-workspace.component.ts",
@@ -3612,9 +3612,9 @@
     },
     {
       "path": "frontend/src/app/universe/network-observatory/network-observatory.component.ts",
-      "sha256": "1f82bfabd1706d9741db26fb8bcf019040f10e04df51a20a33000353aa1cd288",
+      "sha256": "a6fcf6178ea29cc5aaa37c42d0c934ab22be7a9c9492edbd4d6f3c8a491aa3cc",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3802
+      "bytes": 5509
     },
     {
       "path": "frontend/src/app/universe/node-console/node-overview.component.ts",
@@ -4206,9 +4206,9 @@
     },
     {
       "path": "frontend/src/app/universe/stratum-v2/stratum-v2.component.ts",
-      "sha256": "30b417a176933b39ed9a3b9c2a4e2f68291ca471ac428216a7779e3f5482ebf6",
+      "sha256": "3061fd8e18c3a1cc41e90e918cd65eaea93a36f454b20802812500fb40c6815d",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3118
+      "bytes": 4412
     },
     {
       "path": "frontend/src/app/universe/swaps/swaps-chain.component.ts",
@@ -4278,15 +4278,15 @@
     },
     {
       "path": "frontend/src/app/universe/universe-api.service.ts",
-      "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+      "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
       "sha256Encoding": "utf8-lf",
-      "bytes": 56975
+      "bytes": 63376
     },
     {
       "path": "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
-      "sha256": "2a6c126b10c4806e45cf9801e39673456126cc9201020e9387c62fe3b7ed1bfb",
+      "sha256": "6ccf568b0e93dfd137d99d50a9996d84530fbf7cff2a7c5999c2dccba1a3e20c",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2395
+      "bytes": 2777
     },
     {
       "path": "frontend/src/app/universe/wildkin/wildkin-bloodlines.component.ts",
@@ -6492,7 +6492,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/fractal/fractal-dashboard.component.ts",
-          "sha256": "2d288466ed340c031f0d4f139d350ff77e78000911e9a392b056510441ce0966",
+          "sha256": "915d08f2d89e0c1ce1fc0039eb982b74b454912ec6f62499f587b95da68a429d",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -6571,7 +6571,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/fractal/cat20-center.component.ts",
-          "sha256": "bb6b4947ace845defba5ecd1f3b99cb3317627a3718fe1a6146e76110267bfee",
+          "sha256": "c17e488ddda76dafafff579b42ce5334362616fdbbbd5a3fd29ffe4b5780d4cd",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -6777,7 +6777,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/liquid-observatory/liquid-observatory.component.ts",
-          "sha256": "38998d4a4e6aa13e2edd217c1f61735647a5ead200c585063542d70ba5d2b880",
+          "sha256": "866ccd6993c77b696d51e549293a0efa95b9c1dd00d5e7a6104700548890cce5",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -7071,7 +7071,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/network-observatory/network-observatory.component.ts",
-          "sha256": "1f82bfabd1706d9741db26fb8bcf019040f10e04df51a20a33000353aa1cd288",
+          "sha256": "a6fcf6178ea29cc5aaa37c42d0c934ab22be7a9c9492edbd4d6f3c8a491aa3cc",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -7289,7 +7289,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/ark/ark-dashboard.component.ts",
-          "sha256": "365d5a52609abca8595829c7c81eaa166ae536b34d278d3472014d51e499336b",
+          "sha256": "d307fc88ac5c07eece07985d7535cbb783338b5c06b29208d633de0d11a7357a",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -7396,7 +7396,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/stratum-v2/stratum-v2.component.ts",
-          "sha256": "30b417a176933b39ed9a3b9c2a4e2f68291ca471ac428216a7779e3f5482ebf6",
+          "sha256": "3061fd8e18c3a1cc41e90e918cd65eaea93a36f454b20802812500fb40c6815d",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -7503,7 +7503,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/l2-observatory/l2-observatory.component.ts",
-          "sha256": "7d3ddf232a32a447aa40e62ca7e0d1264d1fbcc7452d0735aab00c82dc73cabe",
+          "sha256": "7e1841e6e7ab6465c6d9e32eb86e7071ba739f508097a7017f4c47f1a1828e78",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -7651,7 +7651,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-          "sha256": "399874f9976c83707db821df4245aeb71bec1eb05b3ef81a2b647259018d05c5",
+          "sha256": "6362051b8e7d7eb0f399a879c2b1af39f5e7ae82a2fc40224dc23d175f8110ec",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8199,7 +8199,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "5851af172133655d7b92cc29995a03d15cbc8a8d04a3a4be3df862837550031c",
+          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8267,7 +8267,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/mining-templates.component.ts",
-          "sha256": "8d245475adf5322b72b6146277134c12b4155cbd5acaa8d3e91de7b84a5e3d9b",
+          "sha256": "34123223af1adee7263739229476da9b8982d84d177baf209227cab49f7cc405",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8341,7 +8341,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/utxo-intelligence.component.ts",
-          "sha256": "925591deafc67151d462e8e9c987a0776151e475752be945c445d18e3590667e",
+          "sha256": "18634b02579c67584c06446cd9faebafa7b2ff3b1036a6ff74d0037fcab6303f",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8413,7 +8413,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-          "sha256": "ca8df28d2e1598cc1af939006191fc860846546948077a93e6b750474423c36c",
+          "sha256": "87f506d57408e9d5aec1b6bd5bcd8fa50675d552dc9707dffa2955fe557d29cc",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8447,7 +8447,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/incident-center.component.ts",
-          "sha256": "d08a66497cdcc8b5c9f2e43343e170966530ce389e673e216cab45dea52617dc",
+          "sha256": "cb080bcb0d71da70fc55a4916fd02ab153b33e711bdac60e2ccccab9cb168510",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8543,7 +8543,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "eba9d0d275cf31b9b5949efac87ea370e26934398f868d67dc8f3d5026a38c69",
+          "sha256": "d2844863691711e2c8a925495c8156a1785c57cb4836fc1e1f3e491cc3657b5b",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8755,7 +8755,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
-          "sha256": "0f0df454106bdcf54a53f260b59e5979593b3f06d75af045b109a18943d600f4",
+          "sha256": "99cab827cb9cb3fd2a3265b1419f355aab5100fc856c80d42b03292da0b0f1af",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -8918,7 +8918,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-overview.component.ts",
-          "sha256": "2a759e48759ef75a5e922deb2087679732042f0f5ba01309e6d5cd9ad1d6c85f",
+          "sha256": "aa88af46c1096bf87210061df612d43ae3a463ecef98249fa2cd7a526490928f",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -9018,7 +9018,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
-          "sha256": "5133d9f2292b453b9d0523cc11770b4139eaf356014ee8b075759621c3f6f2ea",
+          "sha256": "3bae13f531b69d2ce1753a156331d3cadfc6d1b5d790711cc142318898530890",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -9073,7 +9073,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-node-detail.component.ts",
-          "sha256": "97816786cc82063016bb1bdfdc76db91b35f38ac35a08aa6e2cca7e5be4d131c",
+          "sha256": "2553ce715fe7aa164d4b3fc9af97ce565bc901a5862339deaa0f4c8b84648773",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -9132,7 +9132,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-snapshots.component.ts",
-          "sha256": "98af991f83a8f152d3473502c9b3c3e21111419249cf90ef125599c9a420efbc",
+          "sha256": "0224751b513e40fa16bdf08077868c358e72253c1c53a9028efa6315a4ffe98f",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -9191,7 +9191,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-seeds.component.ts",
-          "sha256": "ea0a194609a9495fe0c51432d9b87d80c69a89836c03620c93e14d3418b94e37",
+          "sha256": "02692b9af0ef9f15d7e57e5206ec45062d216718ae9495ac4519a8b3ca6d1700",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -9267,7 +9267,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/global-network/global-network-self-check.component.ts",
-          "sha256": "1ac4cd195abe1835efa99345825635352a7280dc0a907f41bedb4f931a38f17d",
+          "sha256": "0bb02da6d7c9fba4d9b89378dcad2012578772c7f14cd3bfb0b25f01fe135375",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -15196,7 +15196,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
-          "sha256": "2a6c126b10c4806e45cf9801e39673456126cc9201020e9387c62fe3b7ed1bfb",
+          "sha256": "6ccf568b0e93dfd137d99d50a9996d84530fbf7cff2a7c5999c2dccba1a3e20c",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -53063,7 +53063,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-          "sha256": "399874f9976c83707db821df4245aeb71bec1eb05b3ef81a2b647259018d05c5",
+          "sha256": "6362051b8e7d7eb0f399a879c2b1af39f5e7ae82a2fc40224dc23d175f8110ec",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -53168,7 +53168,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/policy-lab.component.ts",
-          "sha256": "399874f9976c83707db821df4245aeb71bec1eb05b3ef81a2b647259018d05c5",
+          "sha256": "6362051b8e7d7eb0f399a879c2b1af39f5e7ae82a2fc40224dc23d175f8110ec",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -55686,7 +55686,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "5851af172133655d7b92cc29995a03d15cbc8a8d04a3a4be3df862837550031c",
+          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -55799,7 +55799,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "5851af172133655d7b92cc29995a03d15cbc8a8d04a3a4be3df862837550031c",
+          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -55912,7 +55912,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "5851af172133655d7b92cc29995a03d15cbc8a8d04a3a4be3df862837550031c",
+          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -56025,7 +56025,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "5851af172133655d7b92cc29995a03d15cbc8a8d04a3a4be3df862837550031c",
+          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -56138,7 +56138,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/mining-templates.component.ts",
-          "sha256": "8d245475adf5322b72b6146277134c12b4155cbd5acaa8d3e91de7b84a5e3d9b",
+          "sha256": "34123223af1adee7263739229476da9b8982d84d177baf209227cab49f7cc405",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -56247,7 +56247,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-          "sha256": "ca8df28d2e1598cc1af939006191fc860846546948077a93e6b750474423c36c",
+          "sha256": "87f506d57408e9d5aec1b6bd5bcd8fa50675d552dc9707dffa2955fe557d29cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -56340,7 +56340,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
-          "sha256": "ca8df28d2e1598cc1af939006191fc860846546948077a93e6b750474423c36c",
+          "sha256": "87f506d57408e9d5aec1b6bd5bcd8fa50675d552dc9707dffa2955fe557d29cc",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -56433,7 +56433,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "eba9d0d275cf31b9b5949efac87ea370e26934398f868d67dc8f3d5026a38c69",
+          "sha256": "d2844863691711e2c8a925495c8156a1785c57cb4836fc1e1f3e491cc3657b5b",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -56554,7 +56554,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/knowledge-registry.component.ts",
-          "sha256": "eba9d0d275cf31b9b5949efac87ea370e26934398f868d67dc8f3d5026a38c69",
+          "sha256": "d2844863691711e2c8a925495c8156a1785c57cb4836fc1e1f3e491cc3657b5b",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -57119,7 +57119,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/watchlists.component.ts",
-          "sha256": "0f0df454106bdcf54a53f260b59e5979593b3f06d75af045b109a18943d600f4",
+          "sha256": "99cab827cb9cb3fd2a3265b1419f355aab5100fc856c80d42b03292da0b0f1af",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -57571,7 +57571,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/global-network/global-network-nodes.component.ts",
-          "sha256": "5133d9f2292b453b9d0523cc11770b4139eaf356014ee8b075759621c3f6f2ea",
+          "sha256": "3bae13f531b69d2ce1753a156331d3cadfc6d1b5d790711cc142318898530890",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -57676,7 +57676,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/global-network/global-network-self-check.component.ts",
-          "sha256": "1ac4cd195abe1835efa99345825635352a7280dc0a907f41bedb4f931a38f17d",
+          "sha256": "0bb02da6d7c9fba4d9b89378dcad2012578772c7f14cd3bfb0b25f01fe135375",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -103381,7 +103381,7 @@
         },
         {
           "artifact": "backend/src/api/fractal/fractal.routes.ts",
-          "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+          "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -103443,7 +103443,7 @@
         },
         {
           "artifact": "backend/src/api/fractal/fractal.routes.ts",
-          "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+          "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -103505,7 +103505,7 @@
         },
         {
           "artifact": "backend/src/api/fractal/fractal.routes.ts",
-          "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+          "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -103567,7 +103567,7 @@
         },
         {
           "artifact": "backend/src/api/fractal/fractal.routes.ts",
-          "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+          "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -103629,7 +103629,7 @@
         },
         {
           "artifact": "backend/src/api/fractal/fractal.routes.ts",
-          "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+          "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -103691,7 +103691,7 @@
         },
         {
           "artifact": "backend/src/api/fractal/fractal.routes.ts",
-          "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+          "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -103753,7 +103753,7 @@
         },
         {
           "artifact": "backend/src/api/fractal/fractal.routes.ts",
-          "sha256": "f7573eb9aa327359b6c3efb02cfc987ef0af58f4e237c0928e9c38beb7205e31",
+          "sha256": "13d7c10e2fb77edd364d848088aa0ef37fdd7c2446b2a88d71feb6f234731c60",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104001,7 +104001,7 @@
         },
         {
           "artifact": "backend/src/api/liquid-observatory/liquid-observatory.routes.ts",
-          "sha256": "a8f4be06beefc4cee062ea205b8a4ef16d181df03edb8b87755499c11fbe6a23",
+          "sha256": "7000736d8a16166ae9aa72f64bc9a90ef47b7b1d5c13951ab1e266c7d6708c24",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104033,7 +104033,7 @@
         "remainingPrerequisite": "Resolve configured registration, method variants, authorization and actual dependency readback"
       },
       "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
-      "sourceCall": "app\n      .get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary)\n      .get(prefix + 'assets', this.$getAssets)\n      .get(prefix + 'assets/:assetId', this.$getAsset)\n      .get(prefix + 'pegs', this.$getPegs)\n      .get",
+      "sourceCall": "app.get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary).get(prefix + 'assets', this.$getAssets)\n      .get(prefix + 'assets/:assetId', this.$getAsset).get(prefix + 'pegs', this.$getPegs)\n      .get",
       "candidateClassification": "route-registration-candidate",
       "routeConditions": [],
       "registrationConditions": [],
@@ -104063,7 +104063,7 @@
         },
         {
           "artifact": "backend/src/api/liquid-observatory/liquid-observatory.routes.ts",
-          "sha256": "a8f4be06beefc4cee062ea205b8a4ef16d181df03edb8b87755499c11fbe6a23",
+          "sha256": "7000736d8a16166ae9aa72f64bc9a90ef47b7b1d5c13951ab1e266c7d6708c24",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104095,7 +104095,7 @@
         "remainingPrerequisite": "Resolve configured registration, method variants, authorization and actual dependency readback"
       },
       "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
-      "sourceCall": "app\n      .get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary)\n      .get(prefix + 'assets', this.$getAssets)\n      .get(prefix + 'assets/:assetId', this.$getAsset)\n      .get",
+      "sourceCall": "app.get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary).get(prefix + 'assets', this.$getAssets)\n      .get(prefix + 'assets/:assetId', this.$getAsset).get",
       "candidateClassification": "route-registration-candidate",
       "routeConditions": [],
       "registrationConditions": [],
@@ -104125,7 +104125,7 @@
         },
         {
           "artifact": "backend/src/api/liquid-observatory/liquid-observatory.routes.ts",
-          "sha256": "a8f4be06beefc4cee062ea205b8a4ef16d181df03edb8b87755499c11fbe6a23",
+          "sha256": "7000736d8a16166ae9aa72f64bc9a90ef47b7b1d5c13951ab1e266c7d6708c24",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104157,7 +104157,7 @@
         "remainingPrerequisite": "Resolve configured registration, method variants, authorization and actual dependency readback"
       },
       "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
-      "sourceCall": "app\n      .get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary)\n      .get(prefix + 'assets', this.$getAssets)\n      .get",
+      "sourceCall": "app.get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary).get(prefix + 'assets', this.$getAssets)\n      .get",
       "candidateClassification": "route-registration-candidate",
       "routeConditions": [],
       "registrationConditions": [],
@@ -104187,7 +104187,7 @@
         },
         {
           "artifact": "backend/src/api/liquid-observatory/liquid-observatory.routes.ts",
-          "sha256": "a8f4be06beefc4cee062ea205b8a4ef16d181df03edb8b87755499c11fbe6a23",
+          "sha256": "7000736d8a16166ae9aa72f64bc9a90ef47b7b1d5c13951ab1e266c7d6708c24",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104219,7 +104219,7 @@
         "remainingPrerequisite": "Resolve configured registration, method variants, authorization and actual dependency readback"
       },
       "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
-      "sourceCall": "app\n      .get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary)\n      .get",
+      "sourceCall": "app.get(prefix + 'node', this.$getNode)\n      .get(prefix + 'summary', this.$getSummary).get",
       "candidateClassification": "route-registration-candidate",
       "routeConditions": [],
       "registrationConditions": [],
@@ -104249,7 +104249,7 @@
         },
         {
           "artifact": "backend/src/api/liquid-observatory/liquid-observatory.routes.ts",
-          "sha256": "a8f4be06beefc4cee062ea205b8a4ef16d181df03edb8b87755499c11fbe6a23",
+          "sha256": "7000736d8a16166ae9aa72f64bc9a90ef47b7b1d5c13951ab1e266c7d6708c24",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -104281,7 +104281,7 @@
         "remainingPrerequisite": "Resolve configured registration, method variants, authorization and actual dependency readback"
       },
       "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
-      "sourceCall": "app\n      .get(prefix + 'node', this.$getNode)\n      .get",
+      "sourceCall": "app.get(prefix + 'node', this.$getNode)\n      .get",
       "candidateClassification": "route-registration-candidate",
       "routeConditions": [],
       "registrationConditions": [],
@@ -105117,7 +105117,7 @@
         },
         {
           "artifact": "backend/src/api/ark/ark.routes.ts",
-          "sha256": "2c2a18c0f1a50e89fb4ac4f2035802df3f896f201fc36f233d297ebd3b4ef3f1",
+          "sha256": "6015d06730a1723b76db0007473161cb1c10a300ee9feb86f10d3ebd20a90738",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105179,7 +105179,7 @@
         },
         {
           "artifact": "backend/src/api/ark/ark.routes.ts",
-          "sha256": "2c2a18c0f1a50e89fb4ac4f2035802df3f896f201fc36f233d297ebd3b4ef3f1",
+          "sha256": "6015d06730a1723b76db0007473161cb1c10a300ee9feb86f10d3ebd20a90738",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105241,7 +105241,7 @@
         },
         {
           "artifact": "backend/src/api/ark/ark.routes.ts",
-          "sha256": "2c2a18c0f1a50e89fb4ac4f2035802df3f896f201fc36f233d297ebd3b4ef3f1",
+          "sha256": "6015d06730a1723b76db0007473161cb1c10a300ee9feb86f10d3ebd20a90738",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105303,7 +105303,7 @@
         },
         {
           "artifact": "backend/src/api/ark/ark.routes.ts",
-          "sha256": "2c2a18c0f1a50e89fb4ac4f2035802df3f896f201fc36f233d297ebd3b4ef3f1",
+          "sha256": "6015d06730a1723b76db0007473161cb1c10a300ee9feb86f10d3ebd20a90738",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105365,7 +105365,7 @@
         },
         {
           "artifact": "backend/src/api/ark/ark.routes.ts",
-          "sha256": "2c2a18c0f1a50e89fb4ac4f2035802df3f896f201fc36f233d297ebd3b4ef3f1",
+          "sha256": "6015d06730a1723b76db0007473161cb1c10a300ee9feb86f10d3ebd20a90738",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105427,7 +105427,7 @@
         },
         {
           "artifact": "backend/src/api/ark/ark.routes.ts",
-          "sha256": "2c2a18c0f1a50e89fb4ac4f2035802df3f896f201fc36f233d297ebd3b4ef3f1",
+          "sha256": "6015d06730a1723b76db0007473161cb1c10a300ee9feb86f10d3ebd20a90738",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105489,7 +105489,7 @@
         },
         {
           "artifact": "backend/src/api/stratum-v2/stratum-v2.routes.ts",
-          "sha256": "4b969445cb5393d367fd488c7c177d9989e87587e17c49793b2cdab940a0c872",
+          "sha256": "c95289a4d90071cba1a5d67e5f917beab86f405646062132c02e7e8768ff7069",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105521,7 +105521,7 @@
         "remainingPrerequisite": "Resolve configured registration, method variants, authorization and actual dependency readback"
       },
       "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
-      "sourceCall": "app\n      .get(prefix + 'network', this.$getNetwork)\n      .get(prefix + 'templates', this.$getTemplates)\n      .get",
+      "sourceCall": "app\n      .get(prefix + 'network', (req, res) => this.read(req, res, 'roles'))\n      .get(prefix + 'templates', (req, res) => this.read(req, res, 'templates'))\n      .get",
       "candidateClassification": "route-registration-candidate",
       "routeConditions": [],
       "registrationConditions": [],
@@ -105551,7 +105551,7 @@
         },
         {
           "artifact": "backend/src/api/stratum-v2/stratum-v2.routes.ts",
-          "sha256": "4b969445cb5393d367fd488c7c177d9989e87587e17c49793b2cdab940a0c872",
+          "sha256": "c95289a4d90071cba1a5d67e5f917beab86f405646062132c02e7e8768ff7069",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105583,7 +105583,7 @@
         "remainingPrerequisite": "Resolve configured registration, method variants, authorization and actual dependency readback"
       },
       "remainingWork": "Execute and reconcile the complete method, query, event, network and role variants. Historical/source assertions are not current acceptance.",
-      "sourceCall": "app\n      .get(prefix + 'network', this.$getNetwork)\n      .get",
+      "sourceCall": "app\n      .get(prefix + 'network', (req, res) => this.read(req, res, 'roles'))\n      .get",
       "candidateClassification": "route-registration-candidate",
       "routeConditions": [],
       "registrationConditions": [],
@@ -105613,7 +105613,7 @@
         },
         {
           "artifact": "backend/src/api/stratum-v2/stratum-v2.routes.ts",
-          "sha256": "4b969445cb5393d367fd488c7c177d9989e87587e17c49793b2cdab940a0c872",
+          "sha256": "c95289a4d90071cba1a5d67e5f917beab86f405646062132c02e7e8768ff7069",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105923,7 +105923,7 @@
         },
         {
           "artifact": "backend/src/api/utxo-set/utxo-set.routes.ts",
-          "sha256": "40750fee5bb6219157d5150b691d97653d9fcbe398a49109ed6d2886e288868e",
+          "sha256": "b897920a1356d21df592e7a7979eb8913360ef4883006226d01d2ee7655dd2d0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105985,7 +105985,7 @@
         },
         {
           "artifact": "backend/src/api/utxo-set/utxo-set.routes.ts",
-          "sha256": "40750fee5bb6219157d5150b691d97653d9fcbe398a49109ed6d2886e288868e",
+          "sha256": "b897920a1356d21df592e7a7979eb8913360ef4883006226d01d2ee7655dd2d0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -106047,7 +106047,7 @@
         },
         {
           "artifact": "backend/src/api/utxo-set/utxo-set.routes.ts",
-          "sha256": "40750fee5bb6219157d5150b691d97653d9fcbe398a49109ed6d2886e288868e",
+          "sha256": "b897920a1356d21df592e7a7979eb8913360ef4883006226d01d2ee7655dd2d0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -106109,7 +106109,7 @@
         },
         {
           "artifact": "backend/src/api/utxo-set/utxo-set.routes.ts",
-          "sha256": "40750fee5bb6219157d5150b691d97653d9fcbe398a49109ed6d2886e288868e",
+          "sha256": "b897920a1356d21df592e7a7979eb8913360ef4883006226d01d2ee7655dd2d0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -106171,7 +106171,7 @@
         },
         {
           "artifact": "backend/src/api/utxo-set/utxo-set.routes.ts",
-          "sha256": "40750fee5bb6219157d5150b691d97653d9fcbe398a49109ed6d2886e288868e",
+          "sha256": "b897920a1356d21df592e7a7979eb8913360ef4883006226d01d2ee7655dd2d0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107287,7 +107287,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-          "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+          "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107349,7 +107349,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-          "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+          "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107411,7 +107411,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-          "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+          "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107473,7 +107473,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-          "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+          "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107535,7 +107535,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-          "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+          "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107597,7 +107597,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-          "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+          "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107659,7 +107659,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/time-machine/time-machine.routes.ts",
-          "sha256": "f5ecaf805cf9a820111ec0065c7b9953a861945b025a6e5677fec634475d0039",
+          "sha256": "c17e04ffd68ef9267e6db6ef24338d15f9d4279831a0d3515e18cb1c03a6cd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107721,7 +107721,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/templates/templates.routes.ts",
-          "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+          "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107783,7 +107783,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/templates/templates.routes.ts",
-          "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+          "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107845,7 +107845,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/templates/templates.routes.ts",
-          "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+          "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107907,7 +107907,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/templates/templates.routes.ts",
-          "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+          "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -107969,7 +107969,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/templates/templates.routes.ts",
-          "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+          "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108031,7 +108031,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/templates/templates.routes.ts",
-          "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+          "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108093,7 +108093,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/templates/templates.routes.ts",
-          "sha256": "1b0d2acf9d8d312dc79a709de42dfa5a4e23af794f039967488e3e1ef1954748",
+          "sha256": "0ccf469a55df2cc2714b7f7d99d3a987ea7b76e5e333255677a517527dfaee6a",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108155,7 +108155,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/utxo/utxo.routes.ts",
-          "sha256": "6d6e53da3942ace9a230912a77f0ee066e1ec8402069417ff86e63a5704ec5c6",
+          "sha256": "143894a49c79cbc94218ffbcf086d8dd4f94908787b23aaa3411aeef15d8bd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108217,7 +108217,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/utxo/utxo.routes.ts",
-          "sha256": "6d6e53da3942ace9a230912a77f0ee066e1ec8402069417ff86e63a5704ec5c6",
+          "sha256": "143894a49c79cbc94218ffbcf086d8dd4f94908787b23aaa3411aeef15d8bd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108279,7 +108279,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/utxo/utxo.routes.ts",
-          "sha256": "6d6e53da3942ace9a230912a77f0ee066e1ec8402069417ff86e63a5704ec5c6",
+          "sha256": "143894a49c79cbc94218ffbcf086d8dd4f94908787b23aaa3411aeef15d8bd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108341,7 +108341,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/utxo/utxo.routes.ts",
-          "sha256": "6d6e53da3942ace9a230912a77f0ee066e1ec8402069417ff86e63a5704ec5c6",
+          "sha256": "143894a49c79cbc94218ffbcf086d8dd4f94908787b23aaa3411aeef15d8bd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108403,7 +108403,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/utxo/utxo.routes.ts",
-          "sha256": "6d6e53da3942ace9a230912a77f0ee066e1ec8402069417ff86e63a5704ec5c6",
+          "sha256": "143894a49c79cbc94218ffbcf086d8dd4f94908787b23aaa3411aeef15d8bd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -108465,7 +108465,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/utxo/utxo.routes.ts",
-          "sha256": "6d6e53da3942ace9a230912a77f0ee066e1ec8402069417ff86e63a5704ec5c6",
+          "sha256": "143894a49c79cbc94218ffbcf086d8dd4f94908787b23aaa3411aeef15d8bd87",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -109395,7 +109395,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/verification/verification.routes.ts",
-          "sha256": "6b6cbef72cacd2a9f84b745ba0616b26df82a6b386e5f26a21adb00549e42e67",
+          "sha256": "64c03d802b44e8cb024c7b50d43ef2b78c61e33b548f64e9ea739b00d3b0d888",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -109457,7 +109457,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/verification/verification.routes.ts",
-          "sha256": "6b6cbef72cacd2a9f84b745ba0616b26df82a6b386e5f26a21adb00549e42e67",
+          "sha256": "64c03d802b44e8cb024c7b50d43ef2b78c61e33b548f64e9ea739b00d3b0d888",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -109519,7 +109519,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/verification/verification.routes.ts",
-          "sha256": "6b6cbef72cacd2a9f84b745ba0616b26df82a6b386e5f26a21adb00549e42e67",
+          "sha256": "64c03d802b44e8cb024c7b50d43ef2b78c61e33b548f64e9ea739b00d3b0d888",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -109581,7 +109581,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/verification/verification.routes.ts",
-          "sha256": "6b6cbef72cacd2a9f84b745ba0616b26df82a6b386e5f26a21adb00549e42e67",
+          "sha256": "64c03d802b44e8cb024c7b50d43ef2b78c61e33b548f64e9ea739b00d3b0d888",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -109643,7 +109643,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/verification/verification.routes.ts",
-          "sha256": "6b6cbef72cacd2a9f84b745ba0616b26df82a6b386e5f26a21adb00549e42e67",
+          "sha256": "64c03d802b44e8cb024c7b50d43ef2b78c61e33b548f64e9ea739b00d3b0d888",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -110759,7 +110759,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/knowledge/knowledge.routes.ts",
-          "sha256": "ef9479388d77e905fc28fc066ca4281130bf10ca17050c15f0f0f54bfc31e12e",
+          "sha256": "3d9a26e11893a2ddd5a4340671a2292d68e37371e3926943b33d7a90e48688b0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -110821,7 +110821,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/knowledge/knowledge.routes.ts",
-          "sha256": "ef9479388d77e905fc28fc066ca4281130bf10ca17050c15f0f0f54bfc31e12e",
+          "sha256": "3d9a26e11893a2ddd5a4340671a2292d68e37371e3926943b33d7a90e48688b0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -110883,7 +110883,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/knowledge/knowledge.routes.ts",
-          "sha256": "ef9479388d77e905fc28fc066ca4281130bf10ca17050c15f0f0f54bfc31e12e",
+          "sha256": "3d9a26e11893a2ddd5a4340671a2292d68e37371e3926943b33d7a90e48688b0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -110945,7 +110945,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/knowledge/knowledge.routes.ts",
-          "sha256": "ef9479388d77e905fc28fc066ca4281130bf10ca17050c15f0f0f54bfc31e12e",
+          "sha256": "3d9a26e11893a2ddd5a4340671a2292d68e37371e3926943b33d7a90e48688b0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111007,7 +111007,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/knowledge/knowledge.routes.ts",
-          "sha256": "ef9479388d77e905fc28fc066ca4281130bf10ca17050c15f0f0f54bfc31e12e",
+          "sha256": "3d9a26e11893a2ddd5a4340671a2292d68e37371e3926943b33d7a90e48688b0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111255,7 +111255,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-          "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+          "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111317,7 +111317,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-          "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+          "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111379,7 +111379,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-          "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+          "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111441,7 +111441,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-          "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+          "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111503,7 +111503,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-          "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+          "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111565,7 +111565,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-          "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+          "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -111627,7 +111627,7 @@
         },
         {
           "artifact": "backend/src/api/intelligence/global-network/global-network.routes.ts",
-          "sha256": "c294bc26f652fe114f261b5fc0e025bb981e612c356b4cdbe89726fe77c23a1b",
+          "sha256": "99bbe7d715817a9def199a5e71670c6f7cc995bfd2dfee86a666b81e72e12eb0",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -117052,7 +117052,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117151,7 +117151,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117250,7 +117250,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117349,7 +117349,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117448,7 +117448,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117547,7 +117547,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117646,7 +117646,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117745,7 +117745,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117844,7 +117844,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -118119,7 +118119,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -118224,7 +118224,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118391,7 +118391,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118558,7 +118558,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118725,7 +118725,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118892,7 +118892,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -119059,7 +119059,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -119230,7 +119230,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -123317,7 +123317,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123437,7 +123437,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123557,7 +123557,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123677,7 +123677,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123797,7 +123797,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123917,7 +123917,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124037,7 +124037,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124157,7 +124157,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124277,7 +124277,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124397,7 +124397,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124517,7 +124517,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124637,7 +124637,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124763,7 +124763,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -124930,7 +124930,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125097,7 +125097,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125264,7 +125264,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125431,7 +125431,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125598,7 +125598,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125769,7 +125769,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125966,7 +125966,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -127795,7 +127795,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "18c7c75b14f0f3666faef3279626d183dd64810a02af095a3c4b24c02361b64f",
+          "sha256": "ae324f80d9b507894cc9957638d5aa03e08177fc03632793534c6320606edca1",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -127857,7 +127857,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -127937,7 +127937,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127996,7 +127996,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128054,7 +128054,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128114,7 +128114,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128173,7 +128173,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128232,7 +128232,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128291,7 +128291,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128359,7 +128359,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128462,7 +128462,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128551,7 +128551,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128642,7 +128642,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128736,7 +128736,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128829,7 +128829,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128924,7 +128924,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129017,7 +129017,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129108,7 +129108,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129198,7 +129198,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129293,7 +129293,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129386,7 +129386,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129481,7 +129481,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130204,7 +130204,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130260,7 +130260,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130316,7 +130316,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130372,7 +130372,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130428,7 +130428,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130484,7 +130484,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130540,7 +130540,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130596,7 +130596,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130652,7 +130652,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130717,7 +130717,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130802,7 +130802,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130878,7 +130878,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130934,7 +130934,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130999,7 +130999,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "8eb3b203ee8b8dc3a52e24fc1041f2eff3f451a6ad393b57ecdd540ec5315dd8",
+          "sha256": "3913ba99939e3f196be712725d1e7fe441f5abc49389a6a2c5f40a5b3a0385b7",
           "sha256Encoding": "utf8-lf"
         },
         {
