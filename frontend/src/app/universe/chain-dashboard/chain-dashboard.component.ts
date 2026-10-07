@@ -68,7 +68,7 @@ import {
   ExplorerNetwork,
   FeeRecommendationsView,
 } from '@app/universe/universe.types';
-import { chainNetwork } from '@app/universe/chain-network';
+import { resolveChainNetwork } from '@app/universe/chain-network';
 import { StateService } from '@app/services/state.service';
 
 interface FeeLevelReading {
@@ -177,6 +177,8 @@ export class ChainDashboardComponent implements OnInit {
   readonly profile: ChainProfile;
   /** The configured network of this chain, named in the not-offered notice. */
   readonly networkLabel: string;
+  /** Why this chain is not read at all: its configured network is invalid. */
+  readonly networkConfigError: string | null;
   vm$: Observable<DashboardViewModel>;
 
   constructor(
@@ -190,7 +192,9 @@ export class ChainDashboardComponent implements OnInit {
         ? 'dogecoin'
         : 'zcash';
     this.profile = chainProfile(this.chain);
-    this.networkLabel = chainNetwork(this.chain, (this.state.network || 'mainnet') as ExplorerNetwork, this.state.env);
+    const resolved = resolveChainNetwork(this.chain, (this.state.network || 'mainnet') as ExplorerNetwork, this.state.env);
+    this.networkLabel = resolved.network ?? '';
+    this.networkConfigError = resolved.reason;
   }
 
   ngOnInit(): void {

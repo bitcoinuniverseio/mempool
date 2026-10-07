@@ -1,8 +1,9 @@
+import { attachWatchlistStream } from './api/intelligence/watchlists/watchlist-stream';
 import express from 'express';
 import { Application, Request, Response, NextFunction } from 'express';
 import * as http from 'http';
 import * as WebSocket from 'ws';
-import bitcoinApi from './api/bitcoin/bitcoin-api-factory';
+import bitcoinApi, { bitcoinCoreApi } from './api/bitcoin/bitcoin-api-factory';
 import cluster from 'cluster';
 import DB from './database';
 import config from './config';
@@ -59,6 +60,7 @@ import { adminAdapterJsonParser } from './api/admin-adapter/admin-adapter.securi
 import adminAdapterRunStore from './api/admin-adapter/admin-adapter.runs';
 import { runtimeMetrics, runtimeMetricsMiddleware } from './api/admin-adapter/admin-adapter.runtime';
 import fractalRoutes from './api/fractal/fractal.routes';
+import { startFractalRuntime, closeFractalRuntime } from './api/fractal/fractal.runtime';
 import zcashPrivacyRoutes from './api/zcash-privacy/zcash-privacy.routes';
 import liquidObservatoryRoutes from './api/liquid-observatory/liquid-observatory.routes';
 import dataStudioRoutes from './api/data-studio/data-studio.routes';
@@ -85,12 +87,14 @@ import protocolsRoutes from './api/intelligence/protocols/protocols.routes';
 import { protocolRegistryService } from './api/intelligence/protocols/protocol-registry.service';
 import { ProtocolActivityObserver } from './api/intelligence/protocols/protocol-activity';
 import { blockObservationHub } from './api/intelligence/observation/block-observation-hub';
+import { CanonicalPollFence } from './api/intelligence/time-machine/canonical-poll-fence';
 import { watchlistMatcher } from './api/intelligence/watchlists/watchlist-matcher';
 import { blockspaceService } from './api/intelligence/blockspace/blockspace.service';
 import { timeMachineService } from './api/intelligence/time-machine/time-machine.service';
 import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
 import { boundedHistoryFlush } from './api/intelligence/time-machine/history-shutdown';
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
+import { eventBus } from './api/intelligence/events/intelligence-event-bus';
 import { orderingEvidenceService } from './api/intelligence/private-submission/ordering-evidence.service';
 import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
@@ -207,6 +211,12 @@ class Server {
       throw new Error('The backend configuration is incoherent; see the preflight errors above.');
     }
 
+    try {
+      await startFractalRuntime(config.FRACTAL);
+    } catch {
+      throw new Error('The selected Fractal reader configuration or read-only role failed startup validation.');
+    }
+
     if (config.DATABASE.ENABLED) {
       DB.getPidLock();
 
@@ -306,6 +316,11 @@ class Server {
     this.setUpHttpApiRoutes();
 
     if (config.MEMPOOL.ENABLED) {
+      // Every processed block is progress: a catch-up that keeps advancing is
+      // not a stuck run, however long it takes.
+      blocks.setNewBlockCallback(() => { this.mainLoopWatchdog.progress(); });
+      // So is each slice of a mempool sync after a restart or an outage.
+      memPool.setSyncProgressCallback(() => { this.mainLoopWatchdog.progress(); });
       void this.runMainUpdateLoop();
       setInterval(() => { this.mainLoopWatchdog.check(); }, 30_000);
     }
@@ -372,6 +387,15 @@ class Server {
           logger.debug(msg);
         }
       }
+      const pendingCanonicalTip = timeMachineService.getPendingCanonicalTip();
+      const reorgNetwork = config.MEMPOOL.NETWORK;
+      const reorgFence = await CanonicalPollFence.begin(pendingCanonicalTip, async () => {
+        const height = await bitcoinCoreApi.$getBlockHeightTip();
+        if (!Number.isSafeInteger(height) || height < 0 || config.MEMPOOL.NETWORK !== reorgNetwork) throw new Error('Reentry source context changed.');
+        const hash = await bitcoinCoreApi.$getBlockHash(height);
+        if (config.MEMPOOL.NETWORK !== reorgNetwork) throw new Error('Reentry source context changed.');
+        return { height, hash };
+      });
       const newMempool = await bitcoinApi.$getRawMempool();
       const minFeeMempool = memPool.limitGBT ? await bitcoinSecondClient.getRawMemPool() : null;
       const minFeeTip = memPool.limitGBT ? await bitcoinSecondClient.getBlockCount() : -1;
@@ -379,7 +403,14 @@ class Server {
       const numHandledBlocks = await blocks.$updateBlocks();
       const pollRate = config.MEMPOOL.POLL_RATE_MS * (indexer.indexerIsRunning() ? 10 : 1);
       if (numHandledBlocks === 0) {
+        if (pendingCanonicalTip) await reorgFence.verify();
+        const reentryPollGeneration = timeMachineService.getPollGeneration();
         await memPool.$updateMempool(newMempool, latestAccelerations, minFeeMempool, minFeeTip, pollRate);
+        if (pendingCanonicalTip) {
+          if (!await reorgFence.verify() || !timeMachineService.observeVerifiedReentries(newMempool, pendingCanonicalTip, reentryPollGeneration)) {
+            timeMachineService.markObservationFailure(Date.now(), 'Canonical source or exact complete poll changed or was unavailable during verified reentry polling.');
+          }
+        }
       }
       void indexer.$run();
       if (config.WALLETS.ENABLED) {
@@ -439,9 +470,11 @@ class Server {
   setUpWebsocketHandling(): void {
     if (this.wss) {
       websocketHandler.addWebsocketServer(this.wss);
+      attachWatchlistStream(this.wss);
     }
     if (this.wssUnixSocket) {
       websocketHandler.addWebsocketServer(this.wssUnixSocket);
+      attachWatchlistStream(this.wssUnixSocket);
     }
 
     if (Common.isLiquid() && config.DATABASE.ENABLED) {
@@ -466,6 +499,8 @@ class Server {
       if (memPool.isInSync()) timeMachineService.observeBlock(block, transactions);
       else timeMachineService.markObservationFailure();
     });
+    blockObservationHub.subscribeCanonical('time-machine', change => timeMachineService.observeCanonicalChange(change));
+    blocks.setCanonicalChangeCallback(change => blockObservationHub.dispatchCanonical(change), () => timeMachineService.getCanonicalRecoveryRequest());
     blockObservationHub.subscribe('templates', (block, transactions) => { templateCollectorService.observeBlock(block, transactions); });
     // Ordering evidence compares the mined order with the templates recorded for the height, so it reads after the template collector.
     blockObservationHub.subscribe('ordering-evidence', (block, transactions) => { orderingEvidenceService.observeBlock(block, transactions); });
@@ -672,7 +707,11 @@ class Server {
     }
     this.server?.close();
     this.serverUnixSocket?.close();
-    boundedHistoryFlush(() => timeMachineService.closeHistory()).then(
+    templateCollectorService.stopPolling();
+    backendInfo.stopPolling();
+    boundedHistoryFlush(/** @asyncUnsafe boundedHistoryFlush catches and reports shutdown rejection. */ async () => {
+      await Promise.all([timeMachineService.closeHistory(), eventBus.drain(), closeFractalRuntime()]);
+    }).then(
       flushed => {
         if (!flushed) logger.warn('Time Machine shutdown flush failed or exceeded 5 seconds; the next start will expose a history gap.');
         process.exit(code ?? (flushed ? 0 : 1));
@@ -684,6 +723,7 @@ class Server {
     );
   }
   exitCleanup(): void {
+    backendInfo.stopPolling();
     if (config.DATABASE.ENABLED) {
       DB.releasePidLock();
     }

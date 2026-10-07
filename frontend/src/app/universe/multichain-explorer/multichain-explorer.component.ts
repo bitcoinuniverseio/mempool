@@ -17,6 +17,7 @@ import {
 } from '@angular/router';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { isChainNetworkUnavailable } from '@app/universe/chain-network';
 import { UniverseWebsocketService } from '@app/universe/universe-websocket.service';
 import {
   UniverseEntryKind,
@@ -96,6 +97,7 @@ import {
   Subject,
   catchError,
   combineLatest,
+  defer,
   map,
   of,
   switchMap,
@@ -453,9 +455,13 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
     if (!kind || !this.reference) {
       return;
     }
+    const network = this.api.chainNetworkLabel(this.chain);
+    if (!network) {
+      return;
+    }
     this.saved = this.local.toggleBookmark({
       chain: this.chain,
-      network: this.api.chainNetwork(this.chain),
+      network,
       kind,
       value: this.reference,
       path: this.router.url.split('?')[0],
@@ -482,6 +488,23 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
         return $localize`:@@universe.chain.page-outpoint:outpoint`;
       case 'protocols':
         return $localize`:@@universe.chain.page-protocols:protocols`;
+      /**
+       * IMPLEMENTATION-HANDOFF [WP-FE-011] | OV-F006 / D-FE-011 | C-FE-ZRC20-CATALOG-PAGE.
+       * This offered catalogue always reads page one, despite listPage already
+       * being route state. ZRC20 fixtures report total=159 with a finite limit.
+       * 1. For the supported ZRC20 offset contract, use the route page to compute
+       *    the bounded offset and retain ruleset on pageLink/back/forward/reload.
+       * 2. Add typed paging to the ruleset-list view model and render the existing
+       *    pager after that list in multichain-explorer.component.html. Show the
+       *    checked interval and total; reset page to one on ruleset change.
+       * 3. Test actual navigation for >1 page, different rows, failed continuation,
+       *    retry, empty final page, invalid page and route/network cancellation.
+       *    Keep all offered protocol catalogues in the coverage inventory, then
+       *    implement each according to its own cursor/offset contract.
+       * Related source/prerequisites/commands/acceptance/rollback: WP-FE-011 at
+       * UniverseApiService.getChainProtocolList$ and backend WP-OV-006. No
+       * executable placeholder or behavior change belongs to this preparation.
+       */
       case 'protocol-list':
         return $localize`:@@universe.chain.page-protocol-list:protocol assets`;
       case 'protocol-detail':
@@ -509,7 +532,8 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   /** Query parameters for a link to another page of the current list. */
   pageLink(page: number): Record<string, string> {
-    return { page: String(page) };
+    const ruleset = this.route.snapshot.queryParamMap.get('ruleset');
+    return { page: String(page), ...(ruleset ? { ruleset } : {}) };
   }
 
   isProtocolPage(): boolean {
@@ -709,7 +733,7 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
           this.chain,
           protocol,
           100,
-          0,
+          this.chain === 'zcash' && protocol === 'zrc20' ? (context.listPage - 1) * 100 : 0,
           context.ruleset
         );
       case 'protocol-detail':
@@ -727,12 +751,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
               reference,
               'holders'
             )
-          : of({
+          : defer(() => of({
               chain: this.chain,
               network: this.api.chainNetwork(this.chain),
               state: 'unavailable',
               reason: 'section-not-supported',
-            });
+            }));
       case 'protocol-events':
         return this.chain === 'dogecoin'
           ? this.api.getChainProtocolSection$(
@@ -741,12 +765,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
               reference,
               'events'
             )
-          : of({
+          : defer(() => of({
               chain: this.chain,
               network: this.api.chainNetwork(this.chain),
               state: 'unavailable',
               reason: 'section-not-supported',
-            });
+            }));
     }
   }
 
@@ -759,12 +783,13 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   private recordVisit(context: RequestContext): void {
     const kind = PAGE_KINDS[context.page];
-    if (!kind || !this.reference) {
+    const network = this.api.chainNetworkLabel(this.chain);
+    if (!kind || !this.reference || !network) {
       return;
     }
     this.local.recordVisit({
       chain: this.chain,
-      network: this.api.chainNetwork(this.chain),
+      network,
       kind,
       value: this.reference,
       path: this.router.url.split('?')[0],
@@ -774,10 +799,12 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
 
   private isSaved(context: RequestContext): boolean {
     const kind = PAGE_KINDS[context.page];
+    const network = this.api.chainNetworkLabel(this.chain);
     return (
       !!kind &&
       !!this.reference &&
-      this.local.isBookmarked(kind, this.reference, this.chain, this.api.chainNetwork(this.chain))
+      !!network &&
+      this.local.isBookmarked(kind, this.reference, this.chain, network)
     );
   }
 
@@ -821,6 +848,9 @@ export class MultichainExplorerComponent implements OnInit, OnDestroy {
   }
 
   private errorMessage(error: unknown): string {
+    if (isChainNetworkUnavailable(error)) {
+      return $localize`:@@universe.chain.error-network-config:${this.chainName}:CHAIN: is not being read because its network setting is invalid: ${error.reason}:REASON: Nothing from another network is shown. Correct the setting, then reload.`;
+    }
     const status =
       typeof error === 'object' && error !== null && 'status' in error
         ? String((error as { status: unknown }).status)

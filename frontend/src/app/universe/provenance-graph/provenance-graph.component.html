@@ -4,7 +4,7 @@
     <h1 class="title" i18n="universe.provenance.title">Provenance of a transaction</h1>
     <p class="txid"><code>{{ result.txid }}</code></p>
 
-    <p *ngIf="result.state === 'loading'" role="status">Loading transaction connections…</p>
+    <p *ngIf="result.state === 'loading'" role="status">Loading transaction connections...</p>
     <p>Observed transaction and output connections. This graph does not identify owners or trace particular satoshis.</p>
 
     <div class="unavailable" *ngIf="result.state === 'invalid'" role="alert">

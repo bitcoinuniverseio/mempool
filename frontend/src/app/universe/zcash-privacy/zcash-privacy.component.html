@@ -26,6 +26,7 @@
     <div *ngIf="vm.kind === 'error'" class="panel" role="alert">
       <h2>Zcash privacy data unavailable</h2>
       <p>{{ vm.message }}</p>
+      <button type="button" (click)="retry()">Retry</button>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready' && vm.summary">
@@ -33,27 +34,32 @@
         <div class="metric-card">
           <span class="metric-label">Shielded Supply</span>
           <span class="metric-value">{{ vm.summary.shieldedPercentage }}%</span>
-          <span class="metric-sub">{{ (Number(vm.summary.totalShieldedSupplyZat) / 1e8).toFixed(2) }} ZEC</span>
+          <span class="metric-sub">{{ zec(vm.summary.totalShieldedSupplyZat) }} ZEC</span>
         </div>
         <div class="metric-card">
-          <span class="metric-label">Circulating Supply</span>
-          <span class="metric-value">{{ (Number(vm.summary.totalCirculatingSupplyZat) / 1e8).toFixed(2) }} ZEC</span>
+          <span class="metric-label">Node-accounted Supply</span>
+          <span class="metric-value">{{ zec(vm.summary.nodeAccountedSupplyZat) }} ZEC</span>
           <span class="metric-sub">Tip Height: #{{ vm.summary.tipHeight }}</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Orchard Pool (Halo 2)</span>
-          <span class="metric-value">{{ vm.summary.pools[1].balanceZec }} ZEC</span>
-          <span class="metric-sub">{{ vm.summary.pools[1].percentageOfSupply }}% of supply</span>
+          <span class="metric-value">{{ pool(vm.summary, 'orchard')?.balanceZec }} ZEC</span>
+          <span class="metric-sub">{{ pool(vm.summary, 'orchard')?.percentageOfSupply }}% of node-accounted supply</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">Sapling Pool</span>
-          <span class="metric-value">{{ vm.summary.pools[2].balanceZec }} ZEC</span>
-          <span class="metric-sub">{{ vm.summary.pools[2].percentageOfSupply }}% of supply</span>
+          <span class="metric-value">{{ pool(vm.summary, 'sapling')?.balanceZec }} ZEC</span>
+          <span class="metric-sub">{{ pool(vm.summary, 'sapling')?.percentageOfSupply }}% of node-accounted supply</span>
         </div>
       </div>
 
       <section class="panel">
         <h2>Value Pool Breakdown</h2>
+        <p>{{ vm.summary.network }} · Observed branch {{ vm.summary.source.branchId }} · {{ vm.summary.source.observedAt }}</p>
+        <p class="mono">Checkpoint: {{ vm.summary.source.tipHash }}</p>
+        <p>Historical pool flows, transaction counts and circulating supply are unavailable from this observation.</p>
+        <p>Focus the table and use Left and Right arrow keys to view all columns.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Zcash value pool table">
         <table class="data-table">
           <thead>
             <tr>
@@ -71,15 +77,19 @@
               <td><span class="badge" [ngClass]="p.shielded ? 'badge-success' : 'badge-warning'">{{ p.shielded ? 'Shielded' : 'Transparent' }}</span></td>
               <td class="mono">{{ p.balanceZec }}</td>
               <td>{{ p.percentageOfSupply }}%</td>
-              <td>{{ p.txCount.toLocaleString() }}</td>
+              <td>{{ p.txCount === null ? 'Unknown' : p.txCount.toLocaleString() }}</td>
               <td><span class="badge badge-info">{{ p.deprecationStatus }}</span></td>
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
 
       <section class="panel">
         <h2>Network Upgrade Milestones</h2>
+        <p>Protocol reference heights; observed activation is determined separately by the node branch.</p>
+        <p>Focus the table and use Left and Right arrow keys to view all columns.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Zcash network upgrade table">
         <table class="data-table">
           <thead>
             <tr>
@@ -94,13 +104,15 @@
             <tr *ngFor="let u of vm.summary.upgrades">
               <td><strong>{{ u.name }}</strong></td>
               <td class="mono">{{ u.branchId }}</td>
-              <td>#{{ u.activationHeight }}</td>
+              <td>{{ u.activationHeight === null ? 'Unassigned' : '#' + u.activationHeight }}</td>
               <td>{{ u.activatedAt }}</td>
-              <td>{{ u.features.join(', ') }}</td>
+              <td>{{ u.features.join(', ') }} <span *ngIf="u.referenceStatus">({{ u.referenceStatus }})</span></td>
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>
+  <app-zcash-history />
 </div>

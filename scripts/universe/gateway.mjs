@@ -573,6 +573,33 @@ function proxy(request, response, route) {
   let attempt = 0;
   let pendingRetry = null;
   let clientGone = false;
+  let activeRequest = null;
+  let activeResponse = null;
+  let terminal = false;
+
+  const cancelUpstream = () => {
+    if (pendingRetry) clearTimeout(pendingRetry);
+    pendingRetry = null;
+    if (activeResponse) activeResponse.unpipe(response);
+    if (activeRequest) {
+      request.unpipe(activeRequest);
+      activeRequest.setTimeout(0);
+      activeRequest.destroy();
+    }
+    activeResponse?.destroy();
+    activeRequest = null;
+    activeResponse = null;
+  };
+
+  const cleanup = () => {
+    if (terminal) return;
+    terminal = true;
+    cancelUpstream();
+    response.off('close', abandon);
+    response.off('finish', cleanup);
+    request.off('aborted', abandon);
+    request.off('error', abandon);
+  };
 
   // A reader who navigates away mid-retry leaves a response nothing can be
   // written to. Writing to it anyway throws from a timer callback, where there
@@ -580,16 +607,16 @@ function proxy(request, response, route) {
   // and stop the moment it leaves.
   const abandon = () => {
     clientGone = true;
-    if (pendingRetry) {
-      clearTimeout(pendingRetry);
-      pendingRetry = null;
-    }
+    cleanup();
   };
   response.on('close', abandon);
+  response.on('finish', cleanup);
   request.on('aborted', abandon);
+  request.on('error', abandon);
 
   const failClosed = (reason = 'upstream-unavailable') => {
-    if (clientGone || response.headersSent || response.writableEnded) return;
+    if (clientGone || terminal || response.headersSent || response.writableEnded) return;
+    cleanup();
     try {
       // A dead upstream is reported as a gateway failure, never as an empty
       // success: a caller must be able to tell the two apart.
@@ -602,7 +629,7 @@ function proxy(request, response, route) {
   };
 
   const send = () => {
-    if (clientGone) return;
+    if (clientGone || terminal) return;
     const upstream = route.dynamicOverlay ? currentOverlayRoute().upstream : route.upstream;
     const options = {
       protocol: upstream.protocol,
@@ -614,8 +641,29 @@ function proxy(request, response, route) {
       timeout: UPSTREAM_TIMEOUT_MS,
     };
     const transport = upstream.protocol === 'https:' ? https : http;
+    let receivedResponse = false;
+    let bodyFailed = false;
     const proxied = transport.request(options, (upstreamResponse) => {
-      if (clientGone) {
+      receivedResponse = true;
+      activeResponse = upstreamResponse;
+      const bodyFailure = () => {
+        if (bodyFailed || clientGone || terminal) return;
+        bodyFailed = true;
+        if (response.headersSent) {
+          cleanup();
+          response.destroy();
+        } else {
+          failClosed();
+        }
+      };
+      upstreamResponse.on('error', bodyFailure);
+      upstreamResponse.once('aborted', bodyFailure);
+      upstreamResponse.once('close', () => {
+        if (!upstreamResponse.complete) bodyFailure();
+        upstreamResponse.off('error', bodyFailure);
+        upstreamResponse.off('aborted', bodyFailure);
+      });
+      if (clientGone || terminal) {
         upstreamResponse.destroy();
         return;
       }
@@ -623,7 +671,6 @@ function proxy(request, response, route) {
       // services. Forwarding Location could send the browser (and submitted
       // data on 307/308) to an unowned source outside this gateway.
       if ([301, 302, 303, 307, 308].includes(upstreamResponse.statusCode)) {
-        upstreamResponse.destroy();
         failClosed('upstream-redirect-refused');
         return;
       }
@@ -635,20 +682,48 @@ function proxy(request, response, route) {
           withSecurityHeaders(upstreamResponse.headers, false),
         );
       } catch {
-        upstreamResponse.destroy();
+        cleanup();
         response.destroy();
         return;
       }
+      /*
+       * IMPLEMENTATION-HANDOFF [WP-GW-001] | F-GW-001 | COV-GW-STREAM
+       * Verified at 62dec4617: after an upstream sends headers and part of its
+       * body then closes, this IncomingMessage has no error/aborted handler.
+       * The downstream keeps the partial JSON open until its own timeout.
+       * Controlled loopback reproduction: handoff evidence
+       * gateway-truncated-response-final.json; no gateway crash was observed.
+       * Governing source: S-NODE-HTTP-24 (Node 24.19 HTTP response-close events).
+       * Prerequisites: none. 1. Register one idempotent response-body cleanup
+       * path before piping, covering error, aborted and incomplete close.
+       * 2. If headers were sent, destroy the downstream response; otherwise
+       * use failClosed. Never replay a partial response or a state-changing
+       * request. 3. When the client leaves, destroy the active upstream request
+       * and response and cancel retries; remove listeners after completion.
+       * 4. Add loopback cases to gateway-restart.test.mjs for partial JSON,
+       * mid-body close, client cancellation and a successful subsequent read.
+       * Verify: TMPDIR=<writable-dir> node --test scripts/universe/gateway*.test.mjs
+       * plus handoff reproduction/gateway-truncated-response.mjs. Assert one
+       * upstream call, prompt downstream failure, no partial-success body and
+       * a still-serving gateway. Media streaming and both HTTP/HTTPS regress.
+       * Rollback only the gateway artifact; no database migration. Do not
+       * infer this defect caused the public 502 outage: its cause is unknown.
+       * Implementation added; retain this marker until dependent acceptance.
+       */
       upstreamResponse.pipe(response);
     });
+    activeRequest = proxied;
     proxied.on('timeout', () => proxied.destroy(new Error('upstream timeout')));
     proxied.on('error', (error) => {
-      if (clientGone) return;
+      if (clientGone || terminal || bodyFailed) return;
       if (response.headersSent) {
+        cleanup();
         response.destroy();
         return;
       }
-      if (replayable && upstreamIsRestarting(error) && attempt < RESTART_RETRY_DELAYS_MS.length) {
+      if (!receivedResponse && replayable && upstreamIsRestarting(error) && attempt < RESTART_RETRY_DELAYS_MS.length) {
+        proxied.setTimeout(0);
+        activeRequest = null;
         const delay = RESTART_RETRY_DELAYS_MS[attempt];
         attempt += 1;
         pendingRetry = setTimeout(() => {
@@ -663,9 +738,6 @@ function proxy(request, response, route) {
       proxied.end();
     } else {
       request.pipe(proxied);
-      // A request body that stops arriving must not leave the upstream socket
-      // open forever.
-      request.on('error', () => proxied.destroy());
     }
   };
 
@@ -798,7 +870,9 @@ const server = http.createServer((request, response) => {
 
   // Single page application: an unknown path is a client route, not a 404,
   // unless it looks like a missing asset request.
-  if (extname(pathname)) {
+  // Peer addresses contain dots but are application identifiers, not assets.
+  const peerPage = /^\/(?:(?:signet|testnet|testnet4)\/)?network\/global\/node\/[^/]+\/?$/.test(pathname);
+  if (extname(pathname) && !peerPage) {
     response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
     response.end('Not found');
     return;

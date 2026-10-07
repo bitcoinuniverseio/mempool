@@ -26,15 +26,17 @@ export class UtxoSetRoutes {
   }
 
   private async $getCheckpoints(req: Request, res: Response): Promise<void> {
+    res.setHeader('Cache-Control', 'no-store');
     try {
       const checkpoints = await this.service.$getCheckpoints();
-      res.json({ checkpoints, total: checkpoints.length });
+      res.json({ network: checkpoints[0]?.network, checkpoints, total: checkpoints.length });
     } catch (e) {
       fail(req, res, e);
     }
   }
 
   private async $getDistribution(req: Request, res: Response): Promise<void> {
+    res.setHeader('Cache-Control', 'no-store');
     try {
       const distribution = await this.service.$getDistribution();
       res.json(distribution);
@@ -44,6 +46,7 @@ export class UtxoSetRoutes {
   }
 
   private async $getProtocolUtxos(req: Request, res: Response): Promise<void> {
+    res.setHeader('Cache-Control', 'no-store');
     try {
       const data = await this.service.$getProtocolUtxos();
       res.json(data);
@@ -53,6 +56,7 @@ export class UtxoSetRoutes {
   }
 
   private async $getUtreexoRoots(req: Request, res: Response): Promise<void> {
+    res.setHeader('Cache-Control', 'no-store');
     try {
       const roots = await this.service.$getUtreexoRoots();
       res.json(roots);

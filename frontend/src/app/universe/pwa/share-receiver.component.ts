@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, PLATFORM_ID } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { AsyncPipe, CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { StateService } from '@app/services/state.service';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { Network } from '@app/shared/regex.utils';
-import { Observable, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { Observable, of, Subject } from 'rxjs';
+import { catchError, filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import { routeForSharedValue, SharedTarget } from './share-target';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -32,12 +32,14 @@ type Resolution =
   styleUrls: ['./share-receiver.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ShareReceiverComponent {
+export class ShareReceiverComponent implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly stateService = inject(StateService);
   private readonly electrsApi = inject(ElectrsApiService);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly destroyed$ = new Subject<void>();
+  private readonly relativeUrl = new RelativeUrlPipe(this.stateService);
 
   /**
    * On the server there is no share to read, so the page states the least it
@@ -54,16 +56,28 @@ export class ShareReceiverComponent {
               network: this.stateService.network as Network,
             },
           );
-          return { target, title: params.get('title') };
+          return { target, title: params.get('title'), network: this.stateService.network };
         }),
-        switchMap(({ target, title }) => this.open(target, title)),
+        switchMap(({ target, title, network }) => this.open(target, title, network).pipe(
+          takeUntil(this.stateService.networkChanged$.pipe(filter((selected) => selected !== network))),
+        )),
         catchError(() => of({ state: 'failed', value: '' } as Resolution)),
+        takeUntil(this.destroyed$),
       )
     : of({ state: 'opening' });
 
-  private open(target: SharedTarget, title: string | null): Observable<Resolution> {
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
+  }
+
+  private open(target: SharedTarget, title: string | null, network: string): Observable<Resolution> {
     if (target.kind === 'route') {
-      void this.router.navigateByUrl(target.path);
+      // Explicit links already carry their destination context. Plain identifiers
+      // resolve within the network selected when the share was received.
+      const path = target.label === 'page' || target.label === 'home'
+        ? target.path : this.relativeUrl.transform(target.path, network);
+      void this.router.navigateByUrl(path);
       return of({ state: 'opening' });
     }
 
@@ -73,12 +87,12 @@ export class ShareReceiverComponent {
       // neither, that refusal is the answer.
       return this.electrsApi.getBlock$(target.value).pipe(
         map(() => {
-          void this.router.navigate(['/block', target.value]);
+          void this.router.navigateByUrl(this.relativeUrl.transform('/block/' + target.value, network));
           return { state: 'opening' } as Resolution;
         }),
         catchError(() => this.electrsApi.getTransaction$(target.value).pipe(
           map(() => {
-            void this.router.navigate(['/tx', target.value]);
+            void this.router.navigateByUrl(this.relativeUrl.transform('/tx/' + target.value, network));
             return { state: 'opening' } as Resolution;
           }),
           catchError(() => of({ state: 'failed', value: title ?? target.value } as Resolution)),

@@ -1,4 +1,6 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Inject, OnDestroy } from '@angular/core';
+import { Subscription, take, timeout } from 'rxjs';
+import { StateService } from '@app/services/state.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,10 +17,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
           <h1 class="m-0">Payjoin Interactive Playground</h1>
-          <span class="badge bg-primary">Safe Signet/Regtest Sandbox</span>
+          <span class="badge bg-primary">Narrated Simulation</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Step-by-step simulation of the collaborative Payjoin handshake between sender and receiver wallets with telemetry trace logging.
+          Step-by-step simulation of the collaborative Payjoin handshake between sender and receiver wallets with a simulated event trace. This service builds no PSBT and performs no signing or broadcast.
         </p>
 
         <!-- Navigation Tabs -->
@@ -31,9 +33,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </nav>
       </header>
 
+      <p class="alert alert-secondary" id="payjoin-wallet-prerequisites">Actual Sign &amp; Broadcast is unavailable here. It requires a connected signing wallet, owned spendable UTXOs, a supported BIP77 or BIP78 sender/receiver workflow, and an operated broadcast endpoint. This API supplies only a narrated simulation.</p>
+      <button class="btn btn-outline-secondary mb-3" disabled aria-describedby="payjoin-wallet-prerequisites">Sign &amp; Broadcast Payjoin — unavailable</button>
+      <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }} Retry the current step or reset the simulation.</div>
       <!-- Start Session Card -->
       <div *ngIf="!session" class="card p-4 mb-4 bg-body-tertiary border">
-        <h2 class="h5 mb-3">Start Sandbox Collaborative Handshake</h2>
+        <h2 class="h5 mb-3">Start Simulated Collaborative Handshake</h2>
         <div class="row g-3 align-items-end">
           <div class="col-12 col-md-6">
             <label for="amountInput" class="form-label small text-muted">Simulated Payment Amount (Satoshis)</label>
@@ -81,7 +86,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <div class="col-4">
             <div class="p-3 border rounded" [ngClass]="session.step === 'signed_and_broadcast' ? 'border-success bg-body text-success' : 'bg-body-secondary'">
               <div class="fw-bold small">Step 3</div>
-              <div class="small">Broadcast & Settle</div>
+              <div class="small">Signing and Broadcast Walkthrough</div>
             </div>
           </div>
         </div>
@@ -91,7 +96,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <span class="text-muted small">Advance simulation to next collaborative stage.</span>
           <button class="btn btn-primary" (click)="advanceSession()" [disabled]="advancing">
             <span *ngIf="advancing" class="spinner-border spinner-border-sm me-1" role="status"></span>
-            {{ session.step === 'original_created' ? 'Generate Receiver Proposal' : 'Sign & Broadcast Payjoin' }}
+            {{ session.step === 'original_created' ? 'Explain Receiver Proposal' : 'Explain Signing & Broadcast' }}
           </button>
         </div>
 
@@ -127,26 +132,61 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     }
   `],
 })
-export class PayjoinPlaygroundComponent {
+export class PayjoinPlaygroundComponent implements OnDestroy {
   amountSats = 100000;
   starting = false;
   advancing = false;
   session: PayjoinPlaygroundSession | null = null;
 
+  errorMessage: string | null = null;
+  private pending?: Subscription;
+  private generation = 0;
+  private networkSubscription: Subscription;
+
   constructor(
-    private api: PayjoinApiService,
-    private cd: ChangeDetectorRef
-  ) {}
+    @Inject(PayjoinApiService) private api: PayjoinApiService,
+    @Inject(ChangeDetectorRef) private cd: ChangeDetectorRef,
+    @Inject(StateService) state: StateService
+  ) {
+    this.networkSubscription = state.networkChanged$.subscribe(() => this.resetSession());
+  }
+
+  private cancelPending(): void {
+    this.generation++;
+    this.pending?.unsubscribe();
+    this.pending = undefined;
+    this.starting = false;
+    this.advancing = false;
+  }
+
+  private validSession(value: PayjoinPlaygroundSession): boolean {
+    return value?.simulated === true && value.original_txid === null && value.payjoin_txid === null &&
+      typeof value.session_id === 'string' && value.session_id.length > 0 &&
+      ['original_created', 'proposal_generated', 'signed_and_broadcast'].includes(value.step) &&
+      Array.isArray(value.events_trace);
+  }
 
   startSession(): void {
+    if (this.starting || this.advancing) return;
+    if (!Number.isSafeInteger(this.amountSats) || this.amountSats <= 0 || this.amountSats > 21e14) {
+      this.errorMessage = 'Enter a positive whole number of satoshis within the Bitcoin supply limit.';
+      return;
+    }
+    this.cancelPending();
+    const generation = this.generation;
+    this.errorMessage = null;
     this.starting = true;
-    this.api.createPlaygroundSession$(this.amountSats).subscribe({
-      next: s => {
-        this.session = s;
+    this.pending = this.api.createPlaygroundSession$(this.amountSats).pipe(take(1), timeout(15000)).subscribe({
+      next: value => {
+        if (generation !== this.generation) return;
         this.starting = false;
+        if (this.validSession(value)) this.session = value;
+        else this.errorMessage = 'The service returned an unsupported simulation response.';
         this.cd.markForCheck();
       },
       error: () => {
+        if (generation !== this.generation) return;
+        this.errorMessage = 'Could not create the simulation session.';
         this.starting = false;
         this.cd.markForCheck();
       },
@@ -154,15 +194,22 @@ export class PayjoinPlaygroundComponent {
   }
 
   advanceSession(): void {
-    if (!this.session) return;
+    if (!this.session || this.starting || this.advancing || this.session.step === 'signed_and_broadcast') return;
+    this.cancelPending();
+    const generation = this.generation, sessionId = this.session.session_id;
+    this.errorMessage = null;
     this.advancing = true;
-    this.api.advancePlaygroundSession$(this.session.session_id).subscribe({
-      next: s => {
-        this.session = s;
+    this.pending = this.api.advancePlaygroundSession$(sessionId).pipe(take(1), timeout(15000)).subscribe({
+      next: value => {
+        if (generation !== this.generation) return;
         this.advancing = false;
+        if (this.validSession(value) && value.session_id === sessionId) this.session = value;
+        else this.errorMessage = 'The service returned an unsupported simulation response.';
         this.cd.markForCheck();
       },
       error: () => {
+        if (generation !== this.generation) return;
+        this.errorMessage = 'Could not advance this simulation session.';
         this.advancing = false;
         this.cd.markForCheck();
       },
@@ -170,7 +217,14 @@ export class PayjoinPlaygroundComponent {
   }
 
   resetSession(): void {
+    this.cancelPending();
     this.session = null;
+    this.errorMessage = null;
     this.cd.markForCheck();
+  }
+
+  ngOnDestroy(): void {
+    this.cancelPending();
+    this.networkSubscription.unsubscribe();
   }
 }

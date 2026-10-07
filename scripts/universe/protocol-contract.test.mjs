@@ -765,3 +765,33 @@ test('blocked and not applicable are honest results, and neither is a pass', () 
     /1 blocked, 0 not applicable, 0 not tested/,
   );
 });
+
+
+test('versioned canonical static registry evidence needs no invented chain checkpoint', () => {
+  const manifest = releasable(pinned);
+  for (const protocol of manifest.protocols) {
+    for (const descriptor of protocol.readOperationDescriptors) {
+      descriptor.evidencePolicy = { version: 2, checkpoint: descriptor.id === 'registry' ? 'not-required' : 'required' };
+    }
+  }
+  for (const row of manifest.acceptanceEvidence.rows) {
+    row.evidencePolicyVersion = 2;
+    if (row.operation === 'registry') row.checkpoint = null;
+  }
+  assert.doesNotMatch(problems(releaseGate(manifest)), /without a qualified height and block hash checkpoint/);
+  const indexed = manifest.acceptanceEvidence.rows.find(row => row.operation !== 'registry');
+  indexed.checkpoint = null;
+  indexed.evidenceKind = 'configuration';
+  assert.match(problems(releaseGate(manifest)), /without a qualified height and block hash checkpoint/);
+});
+
+test('caller-selected static policy cannot exempt an indexed descriptor', () => {
+  const manifest = releasable(pinned);
+  const protocol = manifest.protocols.find(protocol => protocol.readOperationDescriptors.some(d => d.id !== 'registry'));
+  const descriptor = protocol.readOperationDescriptors.find(d => d.id !== 'registry');
+  descriptor.evidencePolicy = { version: 2, checkpoint: 'not-required' };
+  const row = manifest.acceptanceEvidence.rows.find(row => row.protocol === protocol.id && row.operation === descriptor.id);
+  row.evidencePolicyVersion = 2;
+  row.checkpoint = null;
+  assert.match(problems(releaseGate(manifest)), /without a qualified height and block hash checkpoint/);
+});

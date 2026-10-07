@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import {validPublicDescriptorChecksum} from './descriptor-checksum';
 import config from '../../../config';
 import { EventEnvelopeValidator } from '../events/event-envelope';
 import { AuthenticatedOwner, IdentityError } from '../identity/developer-identity';
@@ -31,6 +32,7 @@ export interface WatchlistEntity {
   blinded_hash: string;
   label: string;
   added_at_utc: string;
+  matching_state?: 'active' | 'pending_resubmission';
 }
 
 export interface WatchlistRule {
@@ -139,13 +141,14 @@ export class WatchlistsService {
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   private async hydrate(row: WatchlistRow): Promise<UserWatchlist> {
     const store = ownerStore();
-    const [entities, rules] = await Promise.all([store.listEntities(row.watchlist_id), store.listRules(row.watchlist_id)]);
+    const [entities, rules, scripts] = await Promise.all([store.listEntities(row.watchlist_id), store.listRules(row.watchlist_id), store.listDescriptorScripts(this.network)]);
+    const registered = new Set(scripts.filter(script=>script.owner_id===row.owner_id).map(script=>script.entity_id));
     return {
       watchlist_id: row.watchlist_id, owner_id: row.owner_id, network: row.network, name: row.name,
       privacy_mode: row.privacy_mode === 'encrypted' ? 'legacy-unverified' : row.privacy_mode,
       requested_privacy_mode: row.privacy_mode, encryption_verified: false,
       privacy_scope: 'Entity identifiers are SHA-256 hashes. Names and labels are stored as supplied. Hashes are not encryption or protection against identifier guessing. Client-supplied blinding does not authenticate an entity.',
-      entities: entities.map(entity => this.toEntity(entity)), rules: rules.map(rule => this.toRule(rule)),
+      entities: entities.map(entity => ({...this.toEntity(entity),matching_state:entity.entity_type==='descriptor'&&!registered.has(entity.entity_id)?'pending_resubmission' as const:'active' as const})), rules: rules.map(rule => this.toRule(rule)),
       created_at: row.created_at, updated_at: row.updated_at, version: row.version, storage: store.kind === 'mysql' ? 'durable' : 'memory',
     };
   }
@@ -176,18 +179,66 @@ export class WatchlistsService {
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
-  public async addEntity(owner: AuthenticatedOwner, watchlistId: string, entityType: unknown, entityRawOrBlinded: unknown, label: unknown, alreadyBlinded = false): Promise<WatchlistEntity | null> {
+  public async addEntity(owner: AuthenticatedOwner, watchlistId: string, entityType: unknown, entityRawOrBlinded: unknown, label: unknown, alreadyBlinded = false, descriptorScripts?: unknown): Promise<WatchlistEntity | null> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-004] DEF-BI-004; COV-BI-004A/B/C/D/E.
+     * Verified: this method accepts and hashes outpoint/descriptor strings but no
+     * matcher consumes them; hashed descriptors cannot be expanded by the backend.
+     * 1. Define a versioned registration DTO with explicit network, entity kind and
+     *    finite descriptor range. Validate txid as 32-byte hex and vout as uint32;
+     *    normalize raw outpoints to lowercase txid:decimal-vout before hashing.
+     * 2. Extend the frontend under WP-FE-007 to parse a public descriptor and expand
+     *    its bounded range locally into scriptPubKeys. Register normalized script
+     *    hashes with parent/derivation metadata; never submit xprivs or seeds.
+     *    Validate hash lengths/counts, quotas, parent ownership and backend network.
+     * 3. Add PROPOSED NEW intelligence_watchlist_entity_scripts migration and store
+     *    APIs for owner/network/parent-scoped children, using composite uniqueness
+     *    for duplicate registration and cascading deletion. Mirror memory store.
+     *    Raw/opaque existing descriptors remain marked pending-resubmission until
+     *    explicitly expanded; keep their IDs and labels for a non-destructive upgrade.
+     * 4. Wire actual matching and authenticated websocket delivery as annotated in
+     *    WatchlistMatcher.observeBlock. Return a truthful registration/matching state;
+     *    addRule may only report a live channel when its consumer path is connected.
+     * Dependencies: WP-BI-001 auth network, WP-BI-002 durable effects, WP-FE-007 DTO/UI.
+     * Governing sources: BIP380 descriptor syntax and docs/api/OWNER-IDENTITY.md.
+     * Tests: watchlists.test.ts, proposed stream test, frontend watchlists specs;
+     *    strict outpoint boundaries, descriptor checksum/range/network errors, private
+     *    key rejection, restart/delete/quota tests and Signet receive/spend readback.
+     * Existing command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/watchlists/watchlists.test.ts
+     * Schema/new DTO tests are NOT TESTED in preparation. Rollback retains parent and
+     *    child data with versioned readers; no removal of required public options.
+     */
     const store = ownerStore();
     const parent = await store.getWatchlist(owner.owner_id, this.network, watchlistId);
     if (!parent) { return null; }
     const type = WatchlistsService.requireEnum(entityType, ENTITY_TYPES, 'entity_type');
-    const raw = WatchlistsService.requireText(entityRawOrBlinded, 'entity_raw_or_blinded', WATCHLIST_LIMITS.rawLength);
+    let raw = WatchlistsService.requireText(entityRawOrBlinded, 'entity_raw_or_blinded', WATCHLIST_LIMITS.rawLength);
+    if (!alreadyBlinded && type === 'outpoint') {
+      const match = /^([0-9a-fA-F]{64}):(0|[1-9][0-9]{0,9})$/.exec(raw);
+      if (!match || Number(match[2]) > 0xffffffff) throw new IdentityError('invalid_outpoint', 'outpoint must be txid:uint32',400);
+      raw = match[1].toLowerCase() + ':' + Number(match[2]);
+    }
+    if (!alreadyBlinded && type === 'txid') {
+      if (!/^[0-9a-fA-F]{64}$/.test(raw)) throw new IdentityError('invalid_txid','txid must have64 hexadecimal characters',400);
+      raw = raw.toLowerCase();
+    }
+    let children: Array<{script_hash:string;derivation_index:number}> | null = null;
+    if (type === 'descriptor' && descriptorScripts !== undefined) {
+      const value = descriptorScripts as any;
+      if (alreadyBlinded || /(?:xprv|tprv|yprv|zprv|uprv|vprv|seed|mnemonic)/i.test(raw) || !validPublicDescriptorChecksum(raw) || /[5KLc9][1-9A-HJ-NP-Za-km-z]{50,51}/.test(raw) || raw.includes('<') || raw.includes('>')) throw new IdentityError('invalid_descriptor','A public descriptor with checksum and a selected branch is required',400);
+      if (value?.version !== 1 || value.network !== this.network || !Array.isArray(value.children) || value.children.length < 1 || value.children.length > 1000) throw new IdentityError('invalid_descriptor_scripts','Invalid descriptor script registration',400);
+      const indexes = new Set<number>();
+      children = value.children.map((child: any) => {
+        if (!child || !/^[0-9a-f]{64}$/.test(child.script_hash) || !Number.isSafeInteger(child.derivation_index) || child.derivation_index < 0 || child.derivation_index >= 0x80000000 || indexes.has(child.derivation_index)) throw new IdentityError('invalid_descriptor_scripts','Invalid or duplicate descriptor child',400);
+        indexes.add(child.derivation_index); return {script_hash:child.script_hash,derivation_index:child.derivation_index};
+      });
+    }
     const cleanLabel = label === undefined || label === null || label === '' ? 'Monitored Item' : WatchlistsService.requireText(label, 'label', WATCHLIST_LIMITS.labelLength);
     const row: WatchlistEntityRow = {
       entity_id: EventEnvelopeValidator.generateUuidV7(), watchlist_id: watchlistId, owner_id: owner.owner_id, network: this.network,
       entity_type: type, blinded_hash: blind(raw, alreadyBlinded), label: cleanLabel, created_at: new Date().toISOString(),
     };
-    const outcome = await store.insertEntityWithinQuota(row, WATCHLIST_LIMITS.entitiesPerList);
+    const outcome = children ? await store.insertDescriptorWithinQuota(row, children.map(child => ({...child,entity_id:row.entity_id,owner_id:row.owner_id,network:row.network})),WATCHLIST_LIMITS.entitiesPerList) : await store.insertEntityWithinQuota(row, WATCHLIST_LIMITS.entitiesPerList);
     if (outcome === 'quota') {
       throw new IdentityError('quota', `a watchlist may hold at most ${WATCHLIST_LIMITS.entitiesPerList} entities`, 409);
     }
@@ -195,7 +246,7 @@ export class WatchlistsService {
       throw new IdentityError('duplicate_entity', 'this entity is already on the watchlist', 409);
     }
     await store.touchWatchlist(watchlistId, row.created_at);
-    return this.toEntity(row);
+    return {...this.toEntity(row), matching_state:type === 'descriptor' && !children ? 'pending_resubmission' : 'active'};
   }
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */

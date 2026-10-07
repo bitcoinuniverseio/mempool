@@ -4,7 +4,7 @@
   "max_memory_bytes": 268435456,
   "files": {
     "rgb_engine.js": "9f1f1907fb8a7179a7b8e4f11bdbcc4875482e4ab5ccf738b82661605cbf083b",
-    "rgb_engine_bg.wasm": "d9ffdb3693a174b7195a6f96a79212eb59122958f02c41a95a811e64823becc2",
-    "rgb.worker.js": "83c2fd7fba720f2cf7439ccb3f67a60785f43c4a522a507b6c8088646aa7394b"
+    "rgb_engine_bg.wasm": "e581fac21292f78dae6e67d5040b426222e50b0615511a88c1ad3b033be58c23",
+    "rgb.worker.js": "75ba514f4bfdc8e001777a339b227b5e90ae040614eedf093ce24c5656e5e24d"
   }
 }

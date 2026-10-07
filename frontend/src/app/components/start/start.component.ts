@@ -15,6 +15,9 @@ import { chartChrome } from '@app/shared/chart-theme';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
+  private destroyed = false;
+  private momentumFrame: number | null = null;
+  private momentumRevision = 0;
   @Input() showLoadingIndicator = false;
 
   interval = 60;
@@ -299,7 +302,15 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
+  private stopMomentum(): void {
+    this.momentumRevision++;
+    if (this.momentumFrame != null) { cancelAnimationFrame(this.momentumFrame); this.momentumFrame = null; }
+    this.velocity = 0;
+    this.stateService.setBlockScrollingInProgress(false);
+  }
+
   resetMomentum(x: number) {
+    this.stopMomentum();
     this.lastUpdate = performance.now();
     this.lastMouseX = x;
     this.velocity = 0;
@@ -317,8 +328,13 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   animateMomentum() {
+    if (this.destroyed) { return; }
+    if (this.momentumFrame != null) { cancelAnimationFrame(this.momentumFrame); }
+    const revision = this.momentumRevision;
     this.lastUpdate = performance.now();
-    requestAnimationFrame(() => {
+    this.momentumFrame = requestAnimationFrame(() => {
+      if (this.destroyed || revision !== this.momentumRevision) { return; }
+      this.momentumFrame = null;
       const now = performance.now();
       const dt = now - this.lastUpdate;
       this.lastUpdate = now;
@@ -497,6 +513,8 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroyed = true;
+    this.stopMomentum();
     // clean up scroll position to prevent caching wrong scroll in Firefox
     this.setScrollLeft(0);
     this.timeLtrSubscription.unsubscribe();

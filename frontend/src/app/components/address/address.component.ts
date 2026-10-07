@@ -112,7 +112,27 @@ export class AddressComponent implements OnInit, OnDestroy {
   isLoadingAddress = true;
   transactions: Transaction[];
   utxos: Utxo[];
-  utxoSourceState: 'idle' | 'loading' | 'complete' | 'limit' | 'unavailable' = 'idle';
+  private nativeOutputState: 'idle' | 'loading' | 'complete' | 'limit' | 'unavailable' = 'idle';
+  private nativeOutputScope: string | undefined;
+  private reconstructionOfferScope: string | undefined;
+  private get reconstructionScope(): string { return JSON.stringify([this.network || this.stateService.env?.ROOT_NETWORK || 'mainnet', this.addressString]); }
+  get utxoSourceState(): 'idle' | 'loading' | 'complete' | 'limit' | 'unavailable' { return this.nativeOutputState; }
+  set utxoSourceState(value: 'idle' | 'loading' | 'complete' | 'limit' | 'unavailable') {
+    const scope = this.reconstructionScope;
+    if (scope !== this.nativeOutputScope) { this.nativeOutputScope = scope; this.reconstructionOfferScope = undefined; }
+    this.nativeOutputState = value;
+    if (value === 'limit' || value === 'unavailable') { this.reconstructionOfferScope = scope; }
+  }
+  get reconstructionOffered(): boolean { return this.reconstructionOfferScope === this.reconstructionScope; }
+  get canOfferIndependentReconstruction(): boolean {
+    const network = this.network || this.stateService.env?.ROOT_NETWORK || 'mainnet';
+    return ['mainnet', 'signet', 'testnet', 'testnet4', 'regtest'].includes(network)
+      && !this.isLoadingAddress && this.nativeOutputScope === this.reconstructionScope && this.nativeOutputState === 'complete'
+      && !!this.address && !this.address.is_pubkey && this.address.address === this.addressString && !this.reconstructionOffered;
+  }
+  offerIndependentReconstruction(): void {
+    if (this.canOfferIndependentReconstruction) { this.reconstructionOfferScope = this.reconstructionScope; }
+  }
   isLoadingTransactions = true;
   retryLoadMore = false;
   error: any;
@@ -224,7 +244,7 @@ export class AddressComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.network = this.stateService.network;
     this.networkChangeSubscription = this.stateService.networkChanged$.subscribe((network) => {
-      this.network = network;
+      if (this.network !== network) { this.network = network; this.utxoSourceState = 'idle'; }
       this.updateAccelerationSubscription();
     });
     this.websocketService.want(['blocks']);

@@ -149,6 +149,11 @@
     </div>
 
     <app-universe-address-assets [utxos]="utxos" [sourceState]="utxoSourceState"></app-universe-address-assets>
+    <div *ngIf="utxoSourceState === 'complete' && !reconstructionOffered && !address?.is_pubkey" class="my-3">
+      <p>The native output read completed. You can independently reconstruct outputs with separate source anchors and closure checks.</p>
+      <button class="btn btn-outline-secondary" (click)="offerIndependentReconstruction()" [disabled]="!canOfferIndependentReconstruction">Reconstruct independently</button>
+    </div>
+    <app-utxo-reconstruction *ngIf="address && !address.is_pubkey && reconstructionOffered" [address]="address.address" [nativeSourceState]="utxoSourceState"></app-utxo-reconstruction>
 
     <p class="universe-portfolio-link" *ngIf="network === ''">
       <a [routerLink]="['/portfolio', 'bitcoin', 'mainnet', addressString]" i18n="address.open-portfolio">

@@ -1,0 +1,8 @@
+import { describe,expect,it,vi } from 'vitest';
+import { BehaviorSubject,Subject,of,throwError } from 'rxjs';
+import { RbfList } from './rbf-list.component';
+function setup(){const fragment=new BehaviorSubject('');const live=new Subject();const api={getRbfList$:vi.fn()};const ws={startTrackRbf:vi.fn(),stopTrackRbf:vi.fn()};const c=new RbfList({fragment} as any,{} as any,api as any,{network:'signet',rbfLatest$:live} as any,ws as any,{setTitle:vi.fn(),setDescription:vi.fn()} as any,{} as any);return {c,api,ws,fragment,live};}
+describe('replacement list honest failure and recovery',()=>{
+ it('keeps unavailable distinct from successful empty and retries after error',()=>{const {c,api}=setup();api.getRbfList$.mockReturnValueOnce(throwError(()=>({status:503}))).mockReturnValueOnce(of([]));c.ngOnInit();const rows:unknown[]=[];const sub=c.rbfTrees$.subscribe(r=>rows.push(r));expect(c.loadError).toContain('unavailable');expect(c.isLoading).toBe(false);c.retryLoad();expect(c.loadError).toBeNull();expect(rows).toEqual([[],[]]);expect(api.getRbfList$).toHaveBeenCalledTimes(2);sub.unsubscribe();});
+ it('cancels old HTTP on mode change and stops fragment/socket after destroy',()=>{const {c,api,fragment,ws}=setup();const old=new Subject(),next=new Subject();api.getRbfList$.mockReturnValueOnce(old).mockReturnValueOnce(next);c.ngOnInit();const sub=c.rbfTrees$.subscribe();fragment.next('fullrbf');expect(old.observed).toBe(false);expect(api.getRbfList$).toHaveBeenLastCalledWith(true);c.ngOnDestroy();fragment.next('');expect(ws.startTrackRbf).toHaveBeenCalledTimes(2);expect(ws.stopTrackRbf).toHaveBeenCalledOnce();sub.unsubscribe();expect(next.observed).toBe(false);c.retryLoad();expect(api.getRbfList$).toHaveBeenCalledTimes(2);});
+});

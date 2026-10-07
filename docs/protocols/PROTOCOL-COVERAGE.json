@@ -2,8 +2,8 @@
   "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.1.0",
   "sourceRepository": "bitcoinuniverseio/backend-apis",
-  "sourceSha": "7ec4602e7a5dcd6495268ae64698280657cc9c73",
-  "generatedAt": "2026-09-17T05:45:55.810Z",
+  "sourceSha": "1a1a2548a74e419bf7341dd7af1cd57ff98e34c7",
+  "generatedAt": "2026-10-04T01:34:54.431Z",
   "primaryStrip": [
     "ORDINALS",
     "RUNES",
@@ -47,6 +47,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -55,6 +59,10 @@
           "route": "/api/v1/universe/outpoints/:txid/:vout",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -63,6 +71,10 @@
           "route": "/api/v1/universe/outpoints/batch",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -71,6 +83,10 @@
           "route": "/api/v1/universe/transactions/:txid",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -79,6 +95,10 @@
           "route": "/api/v1/universe/transactions/batch",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -87,6 +107,10 @@
           "route": "/api/v1/universe/addresses/:address/holdings",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -95,6 +119,10 @@
           "route": "/api/v1/universe/inscriptions/:reference",
           "authorityPath": "/inscription/:reference",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -103,6 +131,10 @@
           "route": "/api/v1/universe/blocks/:height/inscriptions",
           "authorityPath": "/inscriptions/block/:height/:page",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -152,6 +184,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -160,6 +196,10 @@
           "route": "/api/v1/universe/outpoints/:txid/:vout",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -168,6 +208,10 @@
           "route": "/api/v1/universe/outpoints/batch",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -176,6 +220,10 @@
           "route": "/api/v1/universe/transactions/:txid",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -184,6 +232,10 @@
           "route": "/api/v1/universe/transactions/batch",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -192,6 +244,10 @@
           "route": "/api/v1/universe/addresses/:address/holdings",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -200,6 +256,10 @@
           "route": "/api/v1/universe/sats/:reference",
           "authorityPath": "/sat/:reference",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -243,6 +303,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -251,6 +315,10 @@
           "route": "/api/v1/universe/protocols/names/objects",
           "authorityPath": "/v1/marketplace/protocols/names/assets",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -288,6 +356,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -296,6 +368,10 @@
           "route": "/api/v1/universe/protocols/bitmap/objects",
           "authorityPath": "/v1/marketplace/protocols/bitmap/assets",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -334,14 +410,22 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
           "id": "objects",
           "method": "GET",
           "route": "/api/v1/universe/protocols/unat/objects",
-          "authorityPath": "/v1/marketplace/protocols/unat/assets",
+          "authorityPath": "/unat/assets",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -386,6 +470,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -394,6 +482,10 @@
           "route": "/api/v1/universe/outpoints/:txid/:vout",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -402,6 +494,10 @@
           "route": "/api/v1/universe/outpoints/batch",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -410,6 +506,10 @@
           "route": "/api/v1/universe/transactions/:txid",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -418,6 +518,10 @@
           "route": "/api/v1/universe/transactions/batch",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -426,6 +530,10 @@
           "route": "/api/v1/universe/addresses/:address/holdings",
           "authorityPath": "/output/:outpoint",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -434,6 +542,10 @@
           "route": "/api/v1/universe/runes/:reference",
           "authorityPath": "/rune/:reference",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -476,6 +588,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -484,6 +600,10 @@
           "route": "/api/v1/universe/protocols/alkanes/activity",
           "authorityPath": "/token-explorer/alkanes",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -519,6 +639,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -527,6 +651,10 @@
           "route": "/api/v1/universe/protocols/mezcal/activity",
           "authorityPath": "/token-explorer/mezcal",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -565,6 +693,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -573,6 +705,10 @@
           "route": "/api/v1/universe/protocols/stamps/activity",
           "authorityPath": "/token-explorer/stamps",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -610,6 +746,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -618,6 +758,10 @@
           "route": "/api/v1/universe/protocols/src20/activity",
           "authorityPath": "/token-explorer/src20",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -655,6 +799,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -663,6 +811,10 @@
           "route": "/api/v1/universe/protocols/src101/activity",
           "authorityPath": "/token-explorer/src101",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -706,6 +858,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -714,6 +870,10 @@
           "route": "/api/v1/universe/protocols/atomicals_nft/activity",
           "authorityPath": "/token-explorer/atomicals",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -722,6 +882,10 @@
           "route": "/api/v1/universe/outpoints/:txid/:vout",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -730,6 +894,10 @@
           "route": "/api/v1/universe/outpoints/batch",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -738,6 +906,10 @@
           "route": "/api/v1/universe/transactions/:txid",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -746,6 +918,10 @@
           "route": "/api/v1/universe/transactions/batch",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -754,6 +930,10 @@
           "route": "/api/v1/universe/addresses/:address/holdings",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -802,6 +982,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -810,6 +994,10 @@
           "route": "/api/v1/universe/protocols/realms/activity",
           "authorityPath": "/token-explorer/realms",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -818,6 +1006,10 @@
           "route": "/api/v1/universe/outpoints/:txid/:vout",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -826,6 +1018,10 @@
           "route": "/api/v1/universe/outpoints/batch",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -834,6 +1030,10 @@
           "route": "/api/v1/universe/transactions/:txid",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -842,6 +1042,10 @@
           "route": "/api/v1/universe/transactions/batch",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -850,6 +1054,10 @@
           "route": "/api/v1/universe/addresses/:address/holdings",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -897,6 +1105,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -905,6 +1117,10 @@
           "route": "/api/v1/universe/outpoints/:txid/:vout",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -913,6 +1129,10 @@
           "route": "/api/v1/universe/outpoints/batch",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -921,6 +1141,10 @@
           "route": "/api/v1/universe/transactions/:txid",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -929,6 +1153,10 @@
           "route": "/api/v1/universe/transactions/batch",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -937,6 +1165,10 @@
           "route": "/api/v1/universe/addresses/:address/holdings",
           "authorityPath": "/v1/atomicals/utxos/:txid/:vout",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -978,6 +1210,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -986,6 +1222,10 @@
           "route": "/api/v1/universe/protocols/arc20/activity",
           "authorityPath": "/token-explorer/arc20",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1025,6 +1265,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1033,6 +1277,10 @@
           "route": "/api/v1/universe/protocols/op_return/activity",
           "authorityPath": "/token-explorer/op20",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1071,14 +1319,22 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
           "id": "activity",
           "method": "GET",
           "route": "/api/v1/universe/protocols/op_names/activity",
-          "authorityPath": "/token-explorer/op20",
+          "authorityPath": "/token-explorer/op-names",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1087,7 +1343,7 @@
         "activity"
       ],
       "releaseStatus": "BLOCKED",
-      "indexerAuthority": "index-op20",
+      "indexerAuthority": "index-op20-op-names",
       "coverage": "unknown"
     },
     {
@@ -1117,6 +1373,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1125,6 +1385,10 @@
           "route": "/api/v1/universe/protocols/op_inscriptions/objects",
           "authorityPath": "/api/op-inscriptions/inscriptions",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1163,6 +1427,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1171,6 +1439,10 @@
           "route": "/api/v1/universe/protocols/op_drop/activity",
           "authorityPath": "/op-drop/token-explorer",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1208,6 +1480,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1216,6 +1492,10 @@
           "route": "/api/v1/universe/protocols/drops/activity",
           "authorityPath": "/drops/token-explorer",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1253,6 +1533,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1261,6 +1545,10 @@
           "route": "/api/v1/universe/protocols/brc20/activity",
           "authorityPath": "/token-explorer/brc20",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1298,6 +1586,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1306,6 +1598,10 @@
           "route": "/api/v1/universe/protocols/tap/activity",
           "authorityPath": "/token-explorer/tap",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1344,6 +1640,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1352,6 +1652,10 @@
           "route": "/api/v1/universe/protocols/dmt/activity",
           "authorityPath": "/token-explorer/dmt",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1389,6 +1693,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1397,6 +1705,10 @@
           "route": "/api/v1/universe/protocols/dust20/activity",
           "authorityPath": "/token-explorer/dust20",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1434,6 +1746,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1442,6 +1758,10 @@
           "route": "/api/v1/universe/protocols/block20/activity",
           "authorityPath": "/token-explorer/block20",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1479,6 +1799,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1487,6 +1811,10 @@
           "route": "/api/v1/universe/protocols/chainbloom/objects",
           "authorityPath": "/v1/chainbloom/worlds",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1522,6 +1850,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1530,6 +1862,10 @@
           "route": "/api/v1/universe/protocols/patina/objects",
           "authorityPath": "/patina/artifacts",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1567,6 +1903,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1575,6 +1915,10 @@
           "route": "/api/v1/universe/protocols/witness_circles/objects",
           "authorityPath": "/v1/witness/circles",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1610,6 +1954,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1618,6 +1966,10 @@
           "route": "/api/v1/universe/protocols/tandem/objects",
           "authorityPath": "/tandem/verified/objects",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1657,6 +2009,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1665,6 +2021,10 @@
           "route": "/api/v1/universe/protocols/cat20/activity",
           "authorityPath": "/token-explorer/cat20",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1701,6 +2061,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1740,6 +2104,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1748,6 +2116,10 @@
           "route": "/api/v1/anima/status",
           "authorityPath": "/anima/status",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1756,6 +2128,10 @@
           "route": "/api/v1/anima/events",
           "authorityPath": "/anima/events",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1764,6 +2140,10 @@
           "route": "/api/v1/anima/events/:eventId",
           "authorityPath": "/anima/events",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1772,6 +2152,10 @@
           "route": "/api/v1/anima/organisms",
           "authorityPath": "/anima/organisms",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1780,6 +2164,10 @@
           "route": "/api/v1/anima/organisms/:organismId",
           "authorityPath": "/anima/organism/:organismId",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1788,6 +2176,10 @@
           "route": "/api/v1/anima/organisms/:organismId/history",
           "authorityPath": "/anima/lineage/:organismId",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1831,6 +2223,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1839,6 +2235,10 @@
           "route": "/api/v1/dogecoin/protocols/doginals",
           "authorityPath": "/api/v1/inscriptions",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED",
           "pagination": "cursor"
         },
@@ -1848,6 +2248,10 @@
           "route": "/api/v1/dogecoin/protocols/doginals/:id",
           "authorityPath": "/inscription/:id",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -1888,6 +2292,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1896,6 +2304,10 @@
           "route": "/api/v1/dogecoin/protocols/drc20",
           "authorityPath": "/api/v1/drc20/tokens",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED",
           "pagination": "cursor"
         },
@@ -1905,6 +2317,10 @@
           "route": "/api/v1/dogecoin/protocols/drc20/:ticker",
           "authorityPath": "/api/v1/drc20/tokens/:ticker",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1913,6 +2329,10 @@
           "route": "/api/v1/dogecoin/protocols/drc20/:ticker/holders",
           "authorityPath": "/api/v1/drc20/tokens/:ticker/holders",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED",
           "pagination": "cursor"
         }
@@ -1959,6 +2379,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1967,6 +2391,10 @@
           "route": "/api/v1/universe/protocols/tap_doge/activity",
           "authorityPath": "/token-explorer/doge-tap",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1975,6 +2403,10 @@
           "route": "/api/v1/dogecoin/protocols/doge-tap",
           "authorityPath": "/token-explorer/doge-tap/assets",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED",
           "pagination": "offset"
         },
@@ -1984,6 +2416,10 @@
           "route": "/api/v1/dogecoin/protocols/doge-tap/:ref",
           "authorityPath": "/token-explorer/doge-tap/assets/:ref",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -1992,6 +2428,10 @@
           "route": "/api/v1/dogecoin/protocols/doge-tap/:ref/holders",
           "authorityPath": "/token-explorer/doge-tap/assets/:ref/holders",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED",
           "pagination": "offset"
         },
@@ -2001,6 +2441,10 @@
           "route": "/api/v1/dogecoin/protocols/doge-tap/:ref/events",
           "authorityPath": "/token-explorer/doge-tap/assets/:ref/events",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED",
           "pagination": "offset"
         }
@@ -2042,6 +2486,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -2050,6 +2498,10 @@
           "route": "/api/v1/dogecoin/protocols/dunes",
           "authorityPath": "/api/v1/dunes/tokens",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED",
           "pagination": "cursor"
         },
@@ -2059,6 +2511,10 @@
           "route": "/api/v1/dogecoin/protocols/dunes/:dune",
           "authorityPath": "/api/v1/dunes/tokens/:dune",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -2098,6 +2554,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -2106,6 +2566,10 @@
           "route": "/api/v1/zcash/protocols/zerdinals",
           "authorityPath": "/zcash-metaprotocols/inscriptions",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -2114,6 +2578,10 @@
           "route": "/api/v1/zcash/protocols/zerdinals/:id",
           "authorityPath": "/zcash-metaprotocols/inscriptions/:id",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -2151,6 +2619,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -2159,6 +2631,10 @@
           "route": "/api/v1/zcash/protocols/zrunes",
           "authorityPath": "/zcash-metaprotocols/zrunes",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -2167,6 +2643,10 @@
           "route": "/api/v1/zcash/protocols/zrunes/:id",
           "authorityPath": "/zcash-metaprotocols/zrunes/:id",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -2204,6 +2684,10 @@
           "route": "/api/v1/universe/protocols",
           "authorityPath": null,
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "not-required"
+          },
           "acceptance": "NOT TESTED"
         },
         {
@@ -2212,7 +2696,12 @@
           "route": "/api/v1/zcash/protocols/zrc20",
           "authorityPath": "/zcash-metaprotocols/tokens",
           "evidence": "source-contract",
-          "acceptance": "NOT TESTED"
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
+          "acceptance": "NOT TESTED",
+          "pagination": "offset"
         },
         {
           "id": "chain-detail",
@@ -2220,6 +2709,10 @@
           "route": "/api/v1/zcash/protocols/zrc20/:tick",
           "authorityPath": "/zcash-metaprotocols/tokens/:tick",
           "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
           "acceptance": "NOT TESTED"
         }
       ],
@@ -2232,5 +2725,14 @@
       "indexerAuthority": "index-zcash-metaprotocols",
       "coverage": "complete"
     }
-  ]
+  ],
+  "acceptance": {
+    "declared": 123,
+    "passed": 0,
+    "failed": 0,
+    "blocked": 0,
+    "notApplicable": 0,
+    "notTested": 123,
+    "rejected": 0
+  }
 }

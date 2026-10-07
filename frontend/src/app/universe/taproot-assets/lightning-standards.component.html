@@ -55,37 +55,62 @@
   </ng-container>
 
   <ng-container *ngIf="vm$ | async as vm">
+    <p *ngIf="vm.kind === 'loading'" role="status">Loading offers...</p>
     <ng-container *ngIf="vm.kind !== 'loading'">
       <p *ngIf="vm.offersError" role="alert">Offers: {{ vm.offersError }}</p>
       <p *ngIf="vm.quotesError" role="alert">RFQ quotes: {{ vm.quotesError }}</p>
+      <p *ngIf="vm.offersPending" role="status">Reading one bounded offer page. Previously accepted rows remain their earlier observation.</p>
+      <button type="button" [disabled]="vm.offersPending" (click)="restartOffers()">Refresh offers</button>
+      <button type="button" *ngIf="vm.offersError && !vm.restartRequired" [disabled]="vm.offersPending" (click)="retryOffers()">Retry offer page</button>
+      <button type="button" *ngIf="vm.offerPage?.nextCursor && !vm.restartRequired" [disabled]="vm.offersPending" (click)="moreOffers()">Load more offers</button>
+      <section class="panel" *ngIf="vm.offerPage as page">
+        <h2>Owned node offer catalog observation</h2>
+        <p>{{ vm.offers?.length }} of {{ page.total }} intentionally published offers loaded. {{ page.nextCursor ? 'More catalog pages remain.' : 'Published catalog exhausted at this observation.' }} Global offer completeness is unverified.</p>
+        <details>
+        <summary>Source details</summary>
+        <p>Source: {{ page.source.implementation }} {{ page.source.version }} · {{ page.source.network }} · Node <code>{{ page.source.nodeId }}</code>.</p>
+        <p>Genesis <code>{{ page.source.genesisHash }}</code><span *ngIf="page.source.signetChallenge"> · Signet challenge <code>{{ page.source.signetChallenge }}</code></span>.</p>
+        <p>Catalog anchor {{ page.source.catalogAnchor.height }}: <code>{{ page.source.catalogAnchor.hash }}</code>. Observed checkpoint {{ page.source.checkpoint.height }}: <code>{{ page.source.checkpoint.hash }}</code>.</p>
+        <p>Publication <code>{{ page.source.publicationSha256 }}</code> · Observed {{ page.source.observedAt }}.</p>
+        <p>{{ page.source.scope }}</p>
+        </details>
+        <p>Offers are unsigned; listing does not authenticate an issuer. Eligibility is reported at observation. Invoice availability is unverified. No payment is verified.</p>
+      </section>
+      <p *ngIf="vm.offerPage && !vm.offers?.length && !vm.offersPending && !vm.offersError">No published offers are available at this node.</p>
       <!-- Active Offers -->
       <section class="panel" *ngIf="vm.offers?.length">
         <h2>BOLT12 Offers Reported by the Source</h2>
+        <p>Scroll the table horizontally to read all columns. Keyboard users can focus the table region and use the arrow keys.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Published BOLT12 offer table">
         <table class="data-table">
           <thead>
             <tr>
               <th>Description</th>
               <th>Issuer</th>
-              <th>Amount (msat)</th>
+              <th>Declared amount</th>
               <th>Blinded Paths</th>
               <th>Status</th>
+              <th>Offer identifiers / expiry</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let o of vm.offers">
               <td><strong>{{ o.description }}</strong></td>
               <td>{{ o.issuer }}</td>
-              <td class="mono">{{ o.amountMsat }}</td>
+              <td class="mono">{{ listedAmount(o) }}</td>
               <td>{{ o.blindRoutesCount }} paths</td>
-              <td><span class="badge">{{ offerValidityLabel(o.valid) }}</span></td>
+              <td><span class="badge">{{ listedValidity(o) }}</span><br>Invoice availability unverified; payment not verified.</td>
+              <td>Core Lightning catalog ID: <code>{{ o.offerId }}</code><br>Native decoder ID: <code>{{ o.decoderOfferId }}</code><br>Absolute expiry (Unix seconds): {{ o.expiryAtomic ?? 'Not specified' }}</td>
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
 
       <!-- RFQ Quotes -->
       <section class="panel" *ngIf="vm.quotes?.length">
         <h2>Lightning RFQ Quotes (Taproot Assets on Lightning)</h2>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Exchange quotes, scroll horizontally">
         <table class="data-table">
           <thead>
             <tr>
@@ -106,6 +131,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
     </ng-container>
   </ng-container>

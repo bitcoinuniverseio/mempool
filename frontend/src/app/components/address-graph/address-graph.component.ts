@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, LOCALE_ID, NgZone, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { echarts, EChartsOption } from '@app/graphs/echarts';
-import { BehaviorSubject, Observable, Subscription, combineLatest, of } from 'rxjs';
-import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
+import { timeout } from 'rxjs/operators';
+import { exactSummaryBalance, mergeSummaryRows, readObservedSummaryPage$, SUMMARY_PAGE_DEADLINE_MS, SUMMARY_PAGE_LIMIT, validatedSummaryRows } from './address-summary-page';
 import { AddressTxSummary, ChainStats } from '@interfaces/electrs.interface';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { AmountShortenerPipe } from '@app/shared/pipes/amount-shortener.pipe';
@@ -63,7 +64,20 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
   selected = { [$localize`:@@7e69426bd97a606d8ae6026762858e6e7c86a1fd:Balance`]: true, 'Fiat': false };
 
   subscription: Subscription;
-  redraw$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  private networkSubscription: Subscription;
+  private priceSubscription: Subscription;
+  private rows: AddressTxSummary[] = [];
+  private pricedRows: AddressTxSummary[] | null = null;
+  private observedStats: ChainStats;
+  private destroyed = false;
+  checkpoint: string | null = null;
+  historyComplete = false;
+  historyError: string | null = null;
+  fiatError: string | null = null;
+  isPricing = false;
+  get loadedCount(): number { return this.rows.length; }
+  get expectedCount(): number | null { return this.observedStats?.tx_count ?? null; }
+  get canLoadEarlier(): boolean { return !this.addressSummary$ && !!this.checkpoint && !this.historyComplete; }
 
   chartOptions: EChartsOption = {};
   chartInitOptions = {
@@ -88,68 +102,108 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.isLoading = true;
-    if (!this.addressSummary$ && (!this.address || !this.stats)) {
-      return;
-    }
-    if (changes.defaultFiat) {
-      this.selected['Fiat'] = !!this.defaultFiat;
-    }
-    if (changes.address || changes.isPubkey || changes.addressSummary$ || changes.stats) {
-      if (this.subscription) {
-        this.subscription.unsubscribe();
-      }
-      this.subscription = combineLatest([
-        this.redraw$,
-        (this.addressSummary$ || (this.isPubkey
-          ? this.electrsApiService.getScriptHashSummary$((this.address.length === 66 ? '21' : '41') + this.address + 'ac')
-          : this.electrsApiService.getAddressSummary$(this.address)).pipe(
-          catchError(e => {
-            this.error = `Failed to fetch address balance history: ${e?.status || ''} ${e?.statusText || 'unknown error'}`;
-            return of(null);
-          }),
-        )),
-        this.stateService.conversions$.pipe(startWith(null))
-      ]).pipe(
-        switchMap(([redraw, addressSummary, conversions]) => {
-          this.conversions = conversions;
-          if (addressSummary) {
-            let extendedSummary = this.extendSummary(addressSummary);
-            return this.priceService.getPriceByBulk$(extendedSummary.map(d => d.time), 'USD').pipe(
-              tap((prices) => {
-                if (prices.length !== extendedSummary.length) {
-                  extendedSummary = extendedSummary.map(item => ({ ...item, price: 0 }));
-                } else {
-                  extendedSummary = extendedSummary.map((item, index) => {
-                    let price = 0;
-                    if (prices[index].price) {
-                      price = prices[index].price['USD'];
-                    } else if (this.conversions && this.conversions['USD']) {
-                      price = this.conversions['USD'];
-                    }
-                    return { ...item, price: price };
-                  });
-                }
-              }),
-              map(() => [redraw, extendedSummary, conversions])
-            );
-          } else {
-            return of([redraw, addressSummary, conversions]);
-          }
-        })
-      ).subscribe(([redraw, addressSummary, conversions]) => {
-        if (addressSummary) {
-          this.error = null;
-          this.allowZoom = addressSummary.length > 100 && !this.widget;
-          this.prepareChartOptions(addressSummary);
+    if (!this.networkSubscription) {
+      let network = this.stateService.network;
+      this.networkSubscription = this.stateService.networkChanged$.subscribe(next => {
+        if (next !== network) {
+          network = next;
+          this.subscription?.unsubscribe();
+          this.priceSubscription?.unsubscribe();
+          this.rows = []; this.pricedRows = null; this.checkpoint = null;
+          this.data = []; this.fiatData = []; this.hoverData = []; this.chartOptions = {};
+          this.chartInstance?.clear();
+          this.observedStats = undefined; this.historyError = null; this.fiatError = null;
+          this.historyComplete = false; this.isLoading = false; this.isPricing = false;
+          this.error = 'Network changed; reload address history';
+          this.cd.markForCheck();
         }
-        this.isLoading = false;
-        this.cd.markForCheck();
       });
-    } else {
-      // re-trigger subscription
-      this.redraw$.next(true);
     }
+    if (changes.defaultFiat) {this.selected['Fiat'] = !!this.defaultFiat;}
+    if (changes.address || changes.isPubkey || changes.addressSummary$ || changes.stats) {this.reloadHistory();}
+    else {this.renderHistory();}
+  }
+
+  reloadHistory(): void {
+    if (this.destroyed) {return;}
+    this.subscription?.unsubscribe(); this.priceSubscription?.unsubscribe();
+    this.rows = []; this.pricedRows = null; this.checkpoint = null;
+          this.data = []; this.fiatData = []; this.hoverData = []; this.chartOptions = {};
+          this.observedStats = undefined; this.historyError = null; this.fiatError = null;
+    this.observedStats = undefined; this.historyComplete = false;
+    this.error = null; this.historyError = null; this.fiatError = null; this.isPricing = false;
+    this.isLoading = true;
+    if (this.addressSummary$) {
+      // Aggregate inputs have no address cursor or snapshot contract: coverage remains unknown.
+      this.subscription = this.addressSummary$.subscribe({
+        next: rows => {
+          try {
+            const validated = validatedSummaryRows(rows, Infinity); exactSummaryBalance(validated, this.stats);
+            this.rows = validated;
+            this.priceSubscription?.unsubscribe(); this.isPricing = false; this.pricedRows = null; this.fiatError = null; this.historyError = null; this.error = null; this.isLoading = false; this.renderHistory();
+          } catch (error) { this.failHistory(error); }
+        }, error: error => this.failHistory(error),
+      });
+    } else if (this.address) {this.loadEarlier();}
+    else {this.isLoading = false;}
+  }
+
+  loadEarlier(): void {
+    if (this.destroyed || this.historyComplete || this.addressSummary$) {return;}
+    if (this.subscription && !this.subscription.closed) {return;}
+    this.isLoading = true; this.historyError = null;
+    this.subscription = readObservedSummaryPage$(this.electrsApiService, this.address, this.isPubkey,
+      this.rows[this.rows.length - 1]?.txid, this.checkpoint ?? undefined, this.observedStats).subscribe({
+      next: page => {
+        try {
+          const rows = mergeSummaryRows(this.rows, page.rows);
+          if (rows.length > page.stats.tx_count) {throw Error('Summary exceeds confirmed address transaction count');}
+          exactSummaryBalance(rows, page.stats);
+          this.rows = rows; this.observedStats = page.stats; this.checkpoint = page.anchor;
+          this.priceSubscription?.unsubscribe(); this.isPricing = false; this.pricedRows = null; this.fiatError = null;
+          this.historyComplete = page.rows.length < SUMMARY_PAGE_LIMIT && rows.length === page.stats.tx_count;
+          if (page.rows.length < SUMMARY_PAGE_LIMIT && !this.historyComplete) {this.historyError = 'Index returned fewer transactions than its statistics; reload or retry earlier history';}
+          this.error = null; this.isLoading = false; this.renderHistory();
+        } catch (error) { this.failHistory(error); }
+      }, error: error => this.failHistory(error),
+    });
+  }
+
+  private failHistory(error: unknown): void {
+    const detail = error instanceof Error ? error.message : 'Request unavailable';
+    this.historyError = `Balance history unavailable: ${detail}`;
+    this.error = this.rows.length ? null : this.historyError;
+    this.isLoading = false; this.cd.markForCheck();
+  }
+
+  private renderHistory(): void {
+    if (this.destroyed || (!this.rows.length && !this.checkpoint && !this.addressSummary$)) {return;}
+    this.allowZoom = this.rows.length > 100 && !this.widget;
+    this.prepareChartOptions(this.pricedRows ?? this.rows);
+    this.cd.markForCheck();
+    if (this.selected['Fiat'] && !this.stateService.isAnyTestnet() && !this.pricedRows && !this.isPricing) {this.loadFiat();}
+  }
+
+  retryFiat(): void { this.fiatError = null; this.loadFiat(); }
+
+  private loadFiat(): void {
+    this.priceSubscription?.unsubscribe();
+    const rows = this.rows;
+    this.isPricing = true; this.fiatError = null;
+    this.priceSubscription = this.priceService.getPriceByBulk$(rows.map(row => row.time), 'USD')
+      .pipe(timeout({first: SUMMARY_PAGE_DEADLINE_MS})).subscribe({
+        next: prices => {
+          if (this.destroyed || rows !== this.rows) {return;}
+          if (!Array.isArray(prices) || prices.length !== rows.length || prices.some(price => !Number.isFinite(price?.price?.USD) || price.price.USD <= 0)) {
+            this.fiatError = 'Historical USD prices unavailable; BTC history remains available';
+          } else {this.pricedRows = rows.map((row, index) => ({...row, price: prices[index].price.USD}));}
+          this.isPricing = false; this.prepareChartOptions(this.pricedRows ?? rows); this.cd.markForCheck();
+        }, error: () => {
+          if (this.destroyed || rows !== this.rows) {return;}
+          this.isPricing = false; this.fiatError = 'Historical USD prices unavailable; BTC history remains available';
+          this.cd.markForCheck();
+        },
+      });
   }
 
   prepareChartOptions(summary: AddressTxSummary[]) {
@@ -157,12 +211,13 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
       return;
     }
 
-    const total = this.stats ? (this.stats.funded_txo_sum - this.stats.spent_txo_sum) : summary.reduce((acc, tx) => acc + tx.value, 0);
-    let runningTotal = total;
+    const totalExact = exactSummaryBalance(summary, this.observedStats ?? this.stats);
+    const total = Number(totalExact);
+    let runningTotal = totalExact;
     const processData = summary.map(d => {
-        const balance = runningTotal;
-        const fiatBalance = runningTotal * d.price / 100_000_000;
-        runningTotal -= d.value;
+        const balance = Number(runningTotal);
+        const fiatBalance = typeof d.price === 'number' ? balance * d.price / 100_000_000 : null;
+        runningTotal -= BigInt(d.value);
         return {
             time: d.time * 1000,
             balance,
@@ -172,7 +227,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
     }).reverse();
 
     this.data = processData.filter(({ d }) => d.txid !== undefined).map(({ time, balance, d }) => [time, balance, d]);
-    this.fiatData = processData.map(({ time, fiatBalance, balance, d }) => [time, fiatBalance, d, balance]);
+    this.fiatData = processData.filter(row => row.fiatBalance !== null).map(({ time, fiatBalance, balance, d }) => [time, fiatBalance, d, balance]);
 
     const now = Date.now();
     if (this.period !== 'all') {
@@ -266,12 +321,12 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
             tooltip += `<div><b>${header}</b></div>`;
           }
 
-          const formatBTC = (val, decimal) => (val / 100_000_000).toFixed(decimal);
+          const formatBTC = (val, _decimal) => { const atomic = typeof val === 'bigint' ? val : BigInt(val); const absolute = atomic < 0n ? -atomic : atomic; return `${atomic < 0n ? '-' : ''}${absolute / 100_000_000n}.${(absolute % 100_000_000n).toString().padStart(8, '0')}`; };
           const formatFiat = (val) => this.fiatCurrencyPipe.transform(val, null, 'USD');
 
-          const btcVal = btcData.reduce((total, d) => total + d.data[2].value, 0);
+          const btcVal = btcData.reduce((total, d) => total + BigInt(d.data[2].value), 0n);
           const fiatVal = fiatData.reduce((total, d) => total + d.data[2].value * d.data[2].price / 100_000_000, 0);
-          const btcColor = btcVal === 0 ? '' : (btcVal > 0 ? 'var(--green)' : 'var(--red)');
+          const btcColor = btcVal === 0n ? '' : (btcVal > 0 ? 'var(--green)' : 'var(--red)');
           const fiatColor = fiatVal === 0 ? '' : (fiatVal > 0 ? 'var(--green)' : 'var(--red)');
           const btcSymbol = btcVal > 0 ? '+' : '';
           const fiatSymbol = fiatVal > 0 ? '+' : '';
@@ -436,6 +491,7 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
 
   onLegendSelectChanged(e) {
     this.selected = e.selected;
+    if (this.selected['Fiat'] && !this.stateService.isAnyTestnet() && !this.pricedRows && !this.isPricing) {this.loadFiat();}
     this.adjustedRight = this.selected['Fiat'] ? +this.right + 40 : +this.right;
     this.adjustedLeft = this.selected[$localize`:@@7e69426bd97a606d8ae6026762858e6e7c86a1fd:Balance`] ? +this.left : +this.left - 40;
     const graphicElements = this.graphicElements();
@@ -471,6 +527,9 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
+    this.priceSubscription?.unsubscribe();
+    this.networkSubscription?.unsubscribe();
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
@@ -478,34 +537,6 @@ export class AddressGraphComponent implements OnChanges, OnDestroy {
 
   isMobile() {
     return (window.innerWidth <= 767.98);
-  }
-
-  extendSummary(summary) {
-    const extendedSummary = summary.slice();
-
-    // Add a point at today's date to make the graph end at the current time
-    extendedSummary.unshift({ time: Date.now() / 1000, value: 0 });
-
-    let maxTime = Date.now() / 1000;
-
-    const oneHour = 60 * 60;
-    // Fill gaps longer than interval
-    for (let i = 0; i < extendedSummary.length - 1; i++) {
-      if (extendedSummary[i].time > maxTime) {
-        extendedSummary[i].time = maxTime - 30;
-      }
-      maxTime = extendedSummary[i].time;
-      const hours = Math.floor((extendedSummary[i].time - extendedSummary[i + 1].time) / oneHour);
-      if (hours > 1) {
-        for (let j = 1; j < hours; j++) {
-          const newTime = extendedSummary[i].time - oneHour * j;
-          extendedSummary.splice(i + j, 0, { time: newTime, value: 0 });
-        }
-        i += hours - 1;
-      }
-    }
-
-    return extendedSummary;
   }
 
   graphicElements() {

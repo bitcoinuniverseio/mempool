@@ -1,8 +1,8 @@
 import { spawn } from 'child_process';
 import { once } from 'events';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync, realpathSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, dirname, basename } from 'path';
 import { HistoryStore, historyPathForRole } from './history-store';
 import { TimeMachineService, TIME_MACHINE_LIMITS } from './time-machine.service';
 const tx = (id: string) => ({ txid: id.repeat(64), vsize: 100, weight: 400, fee: 200 } as any);
@@ -105,5 +105,33 @@ describe('durable observed history', () => {
     const service=new TimeMachineService({store:null});
     expect(()=>service.replayToTimestampOrHeight('2026-02-30T00:00:00Z')).toThrow(/ISO-8601/);
     expect(()=>service.replayToTimestampOrHeight('2026-02-28T00:00:00Z',1)).toThrow(/not both/);
+  });
+});
+
+describe('confirmed fractional weight-derived virtual size persistence', () => {
+  const removeOwnedFixture = (directory: string) => {
+    const resolved = realpathSync(directory);
+    if (dirname(resolved) !== realpathSync(tmpdir()) || !basename(resolved).startsWith('history-confirmed-weight-')) throw new Error('Refuse cleanup outside the owned history fixture.');
+    rmSync(resolved, { recursive: true, force: true });
+  };
+  it.each([501, 502, 503])('restores canonical ceil virtual bytes for confirmed weight %s', async weight => {
+    const directory = mkdtempSync(join(tmpdir(), 'history-confirmed-weight-'));
+    const file = join(directory, 'state.gz');
+    const confirmed = { txid: 'c'.repeat(64), weight, vsize: weight / 4, fee: 200 } as any;
+    const service = new TimeMachineService({ store: new HistoryStore(file, 'signet'), network: 'signet', now: 1000, feed: () => ({}) });
+    let reopened: TimeMachineService | undefined;
+    try {
+      service.observeBlock(block(1), [confirmed], 1000);
+      await service.closeHistory();
+      reopened = new TimeMachineService({ store: new HistoryStore(file, 'signet'), network: 'signet', now: 2000, feed: () => ({}) });
+      expect(reopened.getCoverage().persistence.error).toBeNull();
+      expect(reopened.getTransactionLifecycle(confirmed.txid)).toEqual([expect.objectContaining({
+        event_type: 'confirmed', vsize: 126, weight, fee_sats: 200, fee_rate: 1.59, block_height: 1,
+      })]);
+      await reopened.flushHistory();
+    } finally {
+      await reopened?.closeHistory(); await service.closeHistory();
+      removeOwnedFixture(directory);
+    }
   });
 });

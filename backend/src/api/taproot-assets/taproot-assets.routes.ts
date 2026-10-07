@@ -71,8 +71,8 @@ class TaprootAssetsRoutes {
 
   private async $getOffers(req: Request, res: Response): Promise<void> {
     try {
-      const offers = await taprootAssetsService.$getOffers();
-      res.json({ offers, total: offers.length });
+      res.setHeader('Cache-Control', 'no-store');
+      res.json(await taprootAssetsService.$getOffersPage(req.query));
     } catch (e) {
       fail(req, res, e);
     }

@@ -24,9 +24,21 @@ describe('developer identity: owners, keys and scopes', () => {
     expect(key.scopes).not.toContain('*');
     expect(key.scopes).toContain('keys:manage');
     const owner = await developerIdentity.authenticateKey(key.secret_key);
-    expect(owner).toEqual({ owner_id: key.owner_id, key_id: key.key_id, scopes: key.scopes });
+    expect(owner).toEqual({ network, owner_id: key.owner_id, key_id: key.key_id, scopes: key.scopes });
   });
 
+  it('shared-store credentials reject another network before last-used mutation', async () => {
+    const key = await developerIdentity.bootstrapOwner('network key','93.184.216.31');
+    expect(key.network).toBe(network);
+    const previous = config.MEMPOOL.NETWORK;
+    try {
+      config.MEMPOOL.NETWORK = previous === 'signet' ? 'testnet' : 'signet';
+      expect(await developerIdentity.authenticateKey(key.secret_key)).toBeNull();
+      const {ownerStore} = await import('./owner-store');
+      expect((await ownerStore().findApiKeyByHash(await developerIdentity.hashSecret(key.secret_key),previous))?.last_used_at).toBeNull();
+    } finally {config.MEMPOOL.NETWORK=previous;}
+    expect(await developerIdentity.authenticateKey(key.secret_key)).toMatchObject({network:previous});
+  });
   it('bounds owner creation per caller address', async () => {
     for (let i = 0; i < 10; i++) { await developerIdentity.bootstrapOwner(`k${i}`, '198.51.100.9'); }
     await expect(developerIdentity.bootstrapOwner('one more', '198.51.100.9')).rejects.toMatchObject({ code: 'rate_limited', status: 429 });
@@ -82,6 +94,7 @@ describe('developer identity: owners, keys and scopes', () => {
   });
 
   it('the legacy operator key is honoured only from the environment', async () => {
+    process.env.UNIVERSE_INTELLIGENCE_LEGACY_NETWORKS = network;
     process.env.UNIVERSE_INTELLIGENCE_LEGACY_MASTER_KEY = 'uip_live_' + 'f'.repeat(48);
     const owner = await developerIdentity.authenticateKey(process.env.UNIVERSE_INTELLIGENCE_LEGACY_MASTER_KEY);
     expect(owner?.scopes).toEqual(['*']);
@@ -210,7 +223,7 @@ describe('webhooks: registration, secrecy and real delivery', () => {
     const { ownerStore } = await import('./owner-store');
     const [row] = await ownerStore().claimOutbox(network, new Date(Date.now() + 3_600_000 * 2).toISOString(), new Date(Date.now() + 3_600_000 * 3).toISOString(), 10);
     expect(row.state).toBe(state);
-    expect(row.attempt_count).toBe(1);
+    expect(row.attempt_count).toBe(2);
   });
 
   it('a destination that turns private between registration and delivery fails permanently', async () => {

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { verifyAddressSource, AddressSourceCheckpoint } from './address-source-checkpoint';
 import http from 'http';
 import { bech32 } from 'bech32';
 import config from '../../config';
@@ -43,6 +44,7 @@ export interface AddressIndexFacts {
   readonly utxoAnswered: boolean;
   /** How far behind Core the index may be and still be called current. */
   readonly maxBehindTip: number;
+  readonly checkpoint?: AddressSourceCheckpoint | null;
 }
 
 export interface AddressIndexVerdict {
@@ -58,6 +60,36 @@ export interface AddressIndexVerdict {
  * index has to have answered a real address query, a real UTXO query, and be
  * within the accepted distance of the chain, or the page it backs is going to
  * tell somebody a wrong thing about their money.
+ */
+/* IMPLEMENTATION-HANDOFF [WP-BE-004]
+ * Defect BE-004; coverage COV-BE-004.source-network, readiness, failover.
+ * Reproduction: backend-reproduce.cjs obtains ready from only height,
+ * address-summary and UTXO reads, with no genesis/shared block hash check.
+ * An index at 1000000 versus Core at 100 is also ready because lag clamps
+ * to zero. A same-height fork/custom Signet can satisfy the existing facts.
+ * 1. Add validated source identity and a shared checkpoint to these facts,
+ *    probe results and capabilities. Read expected network/genesis from the
+ *    owned node and compare the address index block hash at a shared height.
+ *    Recheck the node tip around the reads; bounded retry handles normal tip
+ *    movement. Validate safe nonnegative heights before computing lag.
+ * 2. For Signet, bind the configured challenge as well as chain and genesis:
+ *    BIP325 Signets share genesis, so a matching genesis is insufficient.
+ *    If a reader cannot attest the required context, readiness is unavailable.
+ * 3. Apply the same identity check separately to each Esplora failover host
+ *    and Electrum backend before its data is served. Preserve owned endpoints
+ *    and never substitute an unrelated public provider to pass the gate.
+ * 4. Extend address-index/network/capabilities tests with equal-height forks,
+ *    wrong genesis, custom Signet challenge, huge ahead height, normal one-
+ *    block races, missing/malformed checkpoint and stale fallback. Exercise
+ *    actual Signet node plus index restart/reorg and frontend source states.
+ * Dependencies: AddressIndexFacts/Probe, capabilities.ts, backend-info.ts,
+ * esplora-api.ts FailoverRouter, electrum-indexed-tip, gateway health contract.
+ * Sources: R-BTC-06 (BIP325), R-BE-CORE (getblockchaininfo), owned index RPC.
+ * Acceptance: ready proves the expected chain at an observed shared block;
+ * height alone cannot establish identity and negative lag hides no mismatch.
+ * Rollback: retain previous validated source and data checkpoint; disable
+ * only an unverified source connection while restoring the compatible pair.
+ * Preparation only; the existing readiness behavior remains unchanged.
  */
 export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict {
   const lagBlocks =
@@ -100,6 +132,9 @@ export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict
       degradedReason: 'Bitcoin Core did not report a height, so the index cannot be held to it.',
     };
   }
+  if (!Number.isSafeInteger(facts.indexedTip) || facts.indexedTip < 0 || !Number.isSafeInteger(facts.chainTip) || facts.chainTip < 0 || facts.indexedTip > facts.chainTip + 2) {
+    return {state: 'degraded', lagBlocks: null, degradedReason: 'The address index reported an invalid or implausible height.'};
+  }
   // Still building, or fallen behind far enough that its answers would be
   // wrong. Both are the same thing to a reader: the numbers on this page are
   // not the numbers on the chain, so do not show them.
@@ -123,6 +158,9 @@ export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict
       lagBlocks,
       degradedReason: 'The address index is current but a UTXO query did not return a usable answer.',
     };
+  }
+  if (!facts.checkpoint || facts.checkpoint.blockHeight !== Math.min(facts.indexedTip, facts.chainTip) || Date.now() - Date.parse(facts.checkpoint.verifiedAt) > 90000 || Date.parse(facts.checkpoint.verifiedAt) > Date.now() + 5000 || !/^[0-9a-f]{64}$/.test(facts.checkpoint.genesisHash) || !/^[0-9a-f]{64}$/.test(facts.checkpoint.blockHash) || !Number.isFinite(Date.parse(facts.checkpoint.verifiedAt))) {
+    return {state: 'degraded', lagBlocks, degradedReason: 'The address source has no verified active-chain checkpoint.'};
   }
   return { state: 'ready', lagBlocks, degradedReason: null };
 }
@@ -160,6 +198,7 @@ export interface AddressIndexProbe extends AddressIndexVerdict {
   readonly indexedTip: number | null;
   readonly chainTip: number | null;
   readonly maxBehindTip: number;
+  readonly checkpoint?: AddressSourceCheckpoint | null;
   readonly summaryAnswered: boolean;
   readonly utxoAnswered: boolean;
   /** What the index says it was built from, when it says. Never an origin. */
@@ -180,10 +219,10 @@ const probeConnection = axios.create({
   proxy: false,
 });
 
-function esploraRequest(path: string, timeout: number): Promise<{ data: unknown; headers: Record<string, unknown> }> {
+function esploraRequest(path: string, timeout: number, signal?: AbortSignal): Promise<{ data: unknown; headers: Record<string, unknown> }> {
   return config.ESPLORA.UNIX_SOCKET_PATH
-    ? probeConnection.get(`http://api${path}`, { socketPath: config.ESPLORA.UNIX_SOCKET_PATH as string, timeout })
-    : probeConnection.get(`${config.ESPLORA.REST_API_URL}${path}`, { timeout });
+    ? probeConnection.get(`http://api${path}`, { socketPath: config.ESPLORA.UNIX_SOCKET_PATH as string, timeout, signal })
+    : probeConnection.get(`${config.ESPLORA.REST_API_URL}${path}`, { timeout, signal });
 }
 
 export function addressBackendKind(): AddressBackendKind {
@@ -258,6 +297,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     // the API factory drags the whole backend graph, and the compiled gbt
     // module with it, into anything that merely wants to reason about states.
     let client: {
+      $getIndexBlockHash?: (height: number) => Promise<string>;
       $getIndexedTip?: () => Promise<number | null>;
       $getAddress?: (address: string) => Promise<unknown>;
       $getAddressUtxos?: (address: string) => Promise<unknown>;
@@ -298,7 +338,10 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
       }
     }
 
+    let checkpoint: AddressSourceCheckpoint | null = null;
+    try { checkpoint = await verifyAddressSource(indexedTip, height => client.$getIndexBlockHash!(height)); } catch { /* Unverified source stays degraded. */ }
     const facts = factsFor(backendKind, maxBehindTip, chainTip, {
+      checkpoint,
       configured: true,
       reachable,
       indexedTip,
@@ -312,6 +355,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
       indexedTip,
       summaryAnswered,
       utxoAnswered,
+      checkpoint: facts.checkpoint,
       ...addressIndexState(facts),
     };
   }
@@ -332,7 +376,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     const height = await esploraRequest('/blocks/tip/height', timeout);
     reachable = true;
     const parsed = Number(height.data);
-    indexedTip = Number.isInteger(parsed) ? parsed : null;
+    indexedTip = Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
     // electrs names the commit it was built from in this header and nowhere
     // else in its REST surface.
     const poweredBy = height.headers?.['x-powered-by'];
@@ -364,7 +408,10 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     }
   }
 
+  let checkpoint: AddressSourceCheckpoint | null = null;
+  try { checkpoint = await verifyAddressSource(indexedTip, async (height, signal) => (await esploraRequest('/block-height/' + height, timeout, signal)).data); } catch { /* Unverified source stays degraded. */ }
   const facts = factsFor(backendKind, maxBehindTip, chainTip, {
+    checkpoint,
     configured: true,
     reachable,
     indexedTip,
@@ -381,6 +428,7 @@ export async function $probeAddressIndex(chainTip: number | null): Promise<Addre
     summaryAnswered,
     utxoAnswered,
     sourceRelease,
+    checkpoint,
     ...addressIndexState(facts),
   };
 }

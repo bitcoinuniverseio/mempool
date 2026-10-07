@@ -19,8 +19,9 @@ const makeBlock = (height: number, id = height) => ({ height, id: hash(id), prev
 beforeEach(() => {
   jest.clearAllMocks(); sourceBlocks.clear(); records.clear();
   for (const n of [11,12,13]) {sourceBlocks.set(n,makeBlock(n));}
-  (bitcoinClient.getBlockchainInfo as jest.Mock).mockResolvedValue({chain:'signet'});
-  (bitcoinClient.getBlockHash as jest.Mock).mockImplementation(/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async n=>hash(n));
+  process.env.UNIVERSE_SIGNET_CHALLENGE='51';
+  (bitcoinClient.getBlockchainInfo as jest.Mock).mockResolvedValue({chain:'signet',initialblockdownload:false,blocks:13,bestblockhash:hash(13),signet_challenge:'51'});
+  (bitcoinClient.getBlockHash as jest.Mock).mockImplementation(/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async n=>n===0?hash(0):sourceBlocks.get(n)?.id);
   (bitcoinApi.$getBlockHash as jest.Mock).mockImplementation(/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async n=>n===0?hash(0):sourceBlocks.get(n)?.id);
   (bitcoinApi.$getBlockHeightTip as jest.Mock).mockResolvedValue(13);
   (bitcoinApi.$getBlock as jest.Mock).mockImplementation(/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async id=>[...sourceBlocks.values()].find(b=>b.id===id));
@@ -44,7 +45,24 @@ beforeEach(() => {
   });
 });
 
+const originalChallenge=process.env.UNIVERSE_SIGNET_CHALLENGE;
+afterAll(()=>{if(originalChallenge===undefined){delete process.env.UNIVERSE_SIGNET_CHALLENGE;}else{process.env.UNIVERSE_SIGNET_CHALLENGE=originalChallenge;}});
+
 describe('durable shared-block consumer (controlled transactional storage)',()=>{
+  it('rejects unverified synchronization, custom Signet identity and a forked shared checkpoint before storage reads',/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async()=>{
+    const service=new SilentPaymentsService();
+    for(const info of [{chain:'signet'},{chain:'signet',initialblockdownload:true},{chain:'signet',initialblockdownload:false,blocks:13,bestblockhash:hash(13),signet_challenge:'52'}]){
+      (bitcoinClient.getBlockchainInfo as jest.Mock).mockResolvedValue(info);
+      await expect(service.getBlockManifest(12,'signet')).rejects.toThrow(/synchronization|verified stable/);
+      expect(DB.query).not.toHaveBeenCalled();
+    }
+    (bitcoinClient.getBlockchainInfo as jest.Mock).mockResolvedValue({chain:'signet',initialblockdownload:false,blocks:13,bestblockhash:hash(13),signet_challenge:'51'});
+    (bitcoinApi.$getBlockHash as jest.Mock).mockImplementation(/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async n=>n===0?hash(0):hash(999));
+    await expect(service.getBlockManifest(12,'signet')).rejects.toThrow('verified stable');
+    expect(DB.query).not.toHaveBeenCalled();
+    (bitcoinApi.$getBlockHash as jest.Mock).mockImplementation(/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async n=>n===0?hash(0):sourceBlocks.get(n)?.id);
+    expect(await service.getBlockManifest(12,'signet')).toBeNull();
+  });
   it('registers one callback, replays idempotently, and reads the same persisted checkpoint after restart',/** @asyncUnsafe Jest awaits these promises and owns their failures. */ async()=>{
     const service=new SilentPaymentsService();service.start();service.start();
     expect(blocks.setNewBlockCallback).toHaveBeenCalledTimes(1);

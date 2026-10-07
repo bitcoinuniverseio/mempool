@@ -141,6 +141,18 @@ export class IntelligenceApiService {
     });
   }
 
+  exportHistory$(stateHash: string): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/history/exports`, {
+      state_hash: stateHash, format: 'json',
+    });
+  }
+
+  exportHistoryParquet$(stateHash: string): Observable<ArrayBuffer> {
+    return this.httpClient.post(`${this.apiBaseUrl}/api/v1/intelligence/history/exports`, {
+      state_hash: stateHash, format: 'parquet',
+    }, { responseType: 'arraybuffer' });
+  }
+
   compareStates$(stateHashA: string, stateHashB: string): Observable<any> {
     return this.httpClient.get<any>(
       `${this.apiBaseUrl}/api/v1/intelligence/history/compare?state_a=${encodeURIComponent(stateHashA)}&state_b=${encodeURIComponent(stateHashB)}`
@@ -302,8 +314,8 @@ export class IntelligenceApiService {
     return this.httpClient.delete<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}`, this.ownerHeaders);
   }
 
-  addWatchlistEntity$(watchlistId: string, entityType: string, raw: string, label: string): Observable<any> {
-    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/entities`, { entity_type: entityType, entity_raw_or_blinded: raw, label }, this.ownerHeaders);
+  addWatchlistEntity$(watchlistId: string, entityType: string, raw: string, label: string, descriptorScripts?: import('./watchlist-descriptor').DescriptorScripts): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiBaseUrl}/api/v1/intelligence/watchlists/${encodeURIComponent(watchlistId)}/entities`, { entity_type: entityType, entity_raw_or_blinded: raw, label, ...(descriptorScripts ? { descriptor_scripts: descriptorScripts } : {}) }, this.ownerHeaders);
   }
 
   addWatchlistRule$(watchlistId: string, conditionType: string, deliveryChannel: string, thresholdValue?: number, webhookId?: string): Observable<any> {

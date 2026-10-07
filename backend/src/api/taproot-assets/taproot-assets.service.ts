@@ -1,8 +1,11 @@
 import { ownedWorkbenchCore } from '../intelligence/workbench/workbench-core';
 import { canonicalProof } from './taproot-proof';
 import config from '../../config';
+import bitcoinClient from '../bitcoin/bitcoin-client';
+import { Bolt12OfferSource, Bolt12SourceError, offerSourceFromEnvironment } from './bolt12-offer-source';
 import {
   Bolt12Offer,
+  Bolt12OfferPage,
   LightningRfqQuote,
   TaprootAssetGroup,
   TaprootAssetItem,
@@ -32,6 +35,7 @@ const rfqUnavailable =
 export interface TaprootAssetsServiceOptions {
   /** The owned tapd, or null when the deployment configured none. */
   authority?: TapdAuthority | null;
+  offerSource?: Bolt12OfferSource | null;
 }
 
 /**
@@ -42,10 +46,11 @@ export interface TaprootAssetsServiceOptions {
  * checked against the owned Bitcoin reader. A deployment that names no tapd
  * gets a 503 that says so: an empty directory and an absent directory are
  * different answers, and this never turns the second into the first. BOLT12
- * offers have no owned source yet and stay unavailable.
+ * reads use an independently bound owned Lightning source and explicit public IDs.
  */
 export class TaprootAssetsService {
   private authority: TapdAuthority | null | undefined;
+  private offerSource: Bolt12OfferSource | null | undefined;
 
   constructor(private readonly options: TaprootAssetsServiceOptions = {}) {}
 
@@ -67,9 +72,25 @@ export class TaprootAssetsService {
     return this.read('unavailable-universe', universeUnavailable, authority => authority.listGroups());
   }
 
-  /** @asyncSafe */
+  /** @asyncSafe Lists one bounded page; HTTP consumers use the cursor envelope below. */
   public async $getOffers(): Promise<Bolt12Offer[]> {
-    throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
+    return (await this.$getOffersPage()).offers;
+  }
+
+  /** @asyncSafe */
+  public async $getOffersPage(query: Record<string, unknown> = {}): Promise<Bolt12OfferPage> {
+    try {
+      if (this.offerSource === undefined) {
+        this.offerSource = this.options.offerSource !== undefined ? this.options.offerSource : offerSourceFromEnvironment(
+          config.MEMPOOL.NETWORK, (method, params, signal) => bitcoinClient.rpc.call(method, params, { signal }));
+      }
+      if (!this.offerSource) throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
+      return await this.offerSource.page(query);
+    } catch (error) {
+      if (error instanceof TaprootAssetsEvidenceError) throw error;
+      if (error instanceof Bolt12SourceError) throw new TaprootAssetsEvidenceError(error.code, error.message, error.status);
+      throw new TaprootAssetsEvidenceError('unavailable-offer-source', offersUnavailable);
+    }
   }
 
   /** @asyncSafe */

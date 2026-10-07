@@ -1,27 +1,6 @@
-import axios from 'axios';
-import { readFileSync } from 'fs';
-import { ZcashPrivacyEvidenceError } from './zcash-privacy.service';
-
-export interface ZcashPublicReader { call(method: string, params: unknown[]): Promise<any>; }
-/** Operator-configured source only. Browser requests cannot select an origin or RPC method. */
-export const ownedZcashReader: ZcashPublicReader = {
-  async call(method, params) {
-    const origin = process.env.UNIVERSE_ZCASH_RPC_ORIGIN;
-    if (!origin) throw new ZcashPrivacyEvidenceError('unavailable-zcash-node', 'An owned Zcash RPC source is not configured.');
-    try {
-      const url = new URL(origin);
-      if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw Error('Invalid source');
-      const cookiePath = process.env.UNIVERSE_ZCASH_RPC_COOKIE_FILE;
-      const credentials = cookiePath ? readFileSync(cookiePath, 'utf8').trim() : `${process.env.UNIVERSE_ZCASH_RPC_USER || ''}:${process.env.UNIVERSE_ZCASH_RPC_PASSWORD || ''}`;
-      const response = await axios.post(url.toString(), {jsonrpc:'1.0',id:'public-block-scan',method,params}, {
-        headers: {Authorization: 'Basic ' + Buffer.from(credentials).toString('base64')}, timeout: 5000,
-        maxContentLength: 4100000, maxBodyLength: 1000, maxRedirects: 0, proxy: false,
-      });
-      if (response.data?.error || !Object.prototype.hasOwnProperty.call(response.data || {}, 'result')) throw Error('Invalid RPC response');
-      return response.data.result;
-    } catch { throw new ZcashPrivacyEvidenceError('unavailable-zcash-node', 'The owned Zcash node could not return public block evidence.'); }
-  },
-};
+import { ZcashPrivacyEvidenceError } from './zcash-source-error';
+import { ownedZcashReader, ZcashPublicReader, zcashSourceReady, ZCASH_GENESIS } from './zcash-owned-reader';
+export { ownedZcashReader, ZcashPublicReader } from './zcash-owned-reader';
 let active = 0;
 export class ZcashBlockSource {
   constructor(private reader: ZcashPublicReader = ownedZcashReader) {}
@@ -29,17 +8,22 @@ export class ZcashBlockSource {
     if (!['mainnet','testnet'].includes(network) || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 1 || end < start || end - start >= 10 || end > 0xffffffff || expectedPrevious !== undefined && !/^[0-9a-f]{64}$/.test(expectedPrevious)) throw new ZcashPrivacyEvidenceError('invalid-range', 'Select mainnet/testnet and an interval of 1–10 positive block heights.', 400);
     if (active >= 2) throw new ZcashPrivacyEvidenceError('scanner-source-busy', 'The bounded public block source is busy.');
     active++;
+    const controller = new AbortController();
+    const operationTimer = setTimeout(() => controller.abort(), 15000);
     try {
       const deadline = Date.now() + 15000;
-      const read = async (method: string, params: unknown[]) => {
+      const bounded = async <T>(work: () => Promise<T>): Promise<T> => {
         const remaining = deadline - Date.now();
-        if (remaining <= 0) throw new ZcashPrivacyEvidenceError('source-timeout', 'Public block retrieval exceeded its 15-second budget. Request fewer blocks.');
+        if (remaining <= 0 || controller.signal.aborted) throw new ZcashPrivacyEvidenceError('source-timeout', 'Public block retrieval exceeded its 15-second budget. Request fewer blocks.');
         let timer: ReturnType<typeof setTimeout>;
-        try { return await Promise.race([this.reader.call(method, params), new Promise((_, reject) => {timer = setTimeout(() => reject(new ZcashPrivacyEvidenceError('source-timeout', 'Public block retrieval exceeded its 15-second budget. Request fewer blocks.')), remaining);})]); }
+        try { return await Promise.race([work(), new Promise<never>((_, reject) => {timer = setTimeout(() => reject(new ZcashPrivacyEvidenceError('source-timeout', 'Public block retrieval exceeded its 15-second budget. Request fewer blocks.')), remaining);})]); }
         finally { clearTimeout(timer!); }
       };
+      const read = (method: string, params: unknown[]) => bounded(() => this.reader.call(method, params, controller.signal));
       const before = await read('getblockchaininfo', []);
-      if (before.chain !== (network === 'mainnet' ? 'main' : 'test') || before.initial_block_download_complete !== true || !Number.isSafeInteger(before.blocks) || before.blocks < end || !/^[0-9a-f]{64}$/.test(before.bestblockhash)) throw new ZcashPrivacyEvidenceError('unavailable-checkpoint', 'Owned source network, sync state or requested interval is unavailable.');
+      if (before.chain !== (network === 'mainnet' ? 'main' : 'test') || !Number.isSafeInteger(before.blocks) || before.blocks < end || !/^[0-9a-f]{64}$/.test(before.bestblockhash)
+        || !await bounded(() => zcashSourceReady(this.reader, before, controller.signal))) throw new ZcashPrivacyEvidenceError('unavailable-checkpoint', 'Owned source network, sync state or requested interval is unavailable.');
+      if (await read('getblockhash', [0]) !== ZCASH_GENESIS[network]) throw new ZcashPrivacyEvidenceError('unavailable-checkpoint', 'The owned source genesis does not match the selected Zcash network.');
       const previous = await read('getblockhash', [start - 1]);
       if (!/^[0-9a-f]{64}$/.test(previous)) throw new ZcashPrivacyEvidenceError('invalid-checkpoint', 'The owned node returned an invalid previous block hash.');
       if (expectedPrevious !== undefined && expectedPrevious !== previous) throw new ZcashPrivacyEvidenceError('reorg-detected', 'The prior scan checkpoint is no longer active. Clear the previous result and rescan an earlier interval.', 409);
@@ -55,9 +39,10 @@ export class ZcashBlockSource {
       }
       const after = await read('getblockchaininfo', []);
       const last = await read('getblockhash', [end]);
-      if (after.chain !== before.chain || after.blocks !== before.blocks || after.bestblockhash !== before.bestblockhash || last !== blocks[blocks.length - 1].hash) throw new ZcashPrivacyEvidenceError('source-changed', 'The owned checkpoint changed during retrieval. Retry the interval.', 409);
+      if (after.chain !== before.chain || after.blocks !== before.blocks || after.bestblockhash !== before.bestblockhash || last !== blocks[blocks.length - 1].hash
+        || !await bounded(() => zcashSourceReady(this.reader, after, controller.signal))) throw new ZcashPrivacyEvidenceError('source-changed', 'The owned checkpoint changed during retrieval. Retry the interval.', 409);
       return {mode:'owned-blocks', network, start_height:start, end_height:end, previous_hash:previous, blocks, source:{kind:'owned-zcash-rpc',tip_height:before.blocks,tip_hash:before.bestblockhash}, history_complete:false};
-    } finally { active--; }
+    } finally { clearTimeout(operationTimer); controller.abort(); active--; }
   }
 }
 export const zcashBlockSource = new ZcashBlockSource();

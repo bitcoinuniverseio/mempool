@@ -95,4 +95,17 @@ describe('portfolio backup file selection', () => {
     expect(view.componentInstance.downloadUrl()).toBe('');
   });
 
+
+it('renders failed export status and lets a later successful export provide a download', async () => {
+  const kind = signal('unlocked');
+  const vault = { exportEncrypted: vi.fn().mockRejectedValueOnce(Error('private storage payload')).mockResolvedValue({ encrypted: 'controlled-fixture' }) };
+  vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:controlled-export'), revokeObjectURL: vi.fn() });
+  TestBed.configureTestingModule({ providers: [{ provide: PortfoliosStore, useValue: { vaultKind: kind } }, { provide: PortfolioVaultService, useValue: vault }] });
+  const view = TestBed.createComponent(PortfolioSettingsComponent); view.detectChanges();
+  const button = [...view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>].find(b => b.textContent?.includes('encrypted backup'))!;
+  button.click(); await vi.waitFor(() => { view.detectChanges(); expect(view.nativeElement.querySelector('[role=status]').textContent).toContain('could not be prepared'); });
+  expect(view.componentInstance.downloadUrl()).toBe(''); expect(view.nativeElement.textContent).not.toContain('private storage');
+  button.click(); await vi.waitFor(() => expect(view.componentInstance.downloadUrl()).toBe('blob:controlled-export'));
+});
+
 });

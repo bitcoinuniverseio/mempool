@@ -29,6 +29,34 @@ function checkpoint(value: unknown): boolean {
 }
 
 /** Mirrors the owned activity/objects contracts and their state-specific service results. */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-010] | OV-F002 | C-FE-OPNAMES-PROTOCOL-IDENTITY.
+ * Verified owner contract: index-op20@82bd2665417742f0370bb85b9e714c84246e9b3c,
+ * docs/OP_NAMES_AUTHORITY.md, separates op_names from op20/op_return. The current
+ * overlay maps them to /token-explorer/op20; this validator/test suite accepts
+ * an op20 source under an op_names page. The inline alias example below is
+ * therefore unverified guidance and must be replaced during implementation.
+ * 1. After WP-OV-002 implements the actual OP Names event projection (the owning
+ *    remoteBrowse activity branch currently returns an unconditional empty list),
+ *    bind the response protocol, source protocol and each row identity to the
+ *    requested protocol's pinned descriptor. Do not accept arbitrary source
+ *    labels merely because they are strings. Aliases require explicit evidence
+ *    and an owning descriptor, not a generic synonym/fallback rule.
+ * 2. Preserve source protocol identity and evidence fields in the typed result;
+ *    reject an unrelated op20 feed rather than relabel it. Coordinate
+ *    UniverseApiService.getProtocolActivity$ and protocol-detail consumer states.
+ * 3. Replace only the erroneous op_names/op20 success vector in
+ *    universe-protocol-contract.spec.ts with rejection and real OP Names vectors.
+ *    Revalidate every other alias against its authority before changing it.
+ *    Preserve existing rejection of hasMore=true/nextCursor=null (WP-OV-001).
+ * 4. Run npm test -- --maxWorkers=2 src/app/universe/universe-protocol-contract.spec.ts
+ *    src/app/universe/protocol-detail/protocol-detail.component.spec.ts. Acceptance
+ *    must show actual OP Names objects/activity under their own protocol, network,
+ *    persistence and follow-up detail links on the supported test network.
+ * Prerequisite: pinned owning authority and WP-OV-002 projection/contract. Clear
+ *    any mixed-protocol cache on rollout/rollback; never restore the alias to
+ *    make tests green. Existing runtime behavior is unchanged in this stage.
+ */
 function validPage(kind: ProtocolPageKind, value: unknown, protocolId: string): value is ProtocolPage {
   if (!record(value) || value.schemaVersion !== `universe-protocol-${kind}-v1` || value.protocolId !== protocolId
     || !['served', 'unconfigured', 'unavailable', 'unsupported'].includes(value.state as string)
@@ -46,9 +74,10 @@ function validPage(kind: ProtocolPageKind, value: unknown, protocolId: string): 
     if (kind === 'activity') {
       const source = value.source;
       // The feed client requires an id; optional source fields remain unknown when null.
-      // Source protocol labels are authority-owned (for example op20 serves op_names).
+      // OP Names is an independent authority projection, never an OP20 alias.
       if (!record(source) || !text(source.id)
-        || !['protocol', 'chain', 'network', 'coverage', 'cursor', 'asOf'].every((key) => nullableText(source[key]))) {return false;}
+        || !['protocol', 'chain', 'network', 'coverage', 'cursor', 'asOf'].every((key) => nullableText(source[key]))
+        || (protocolId === 'op_names' && source.protocol !== 'op_names')) {return false;}
     }
     return true;
   }

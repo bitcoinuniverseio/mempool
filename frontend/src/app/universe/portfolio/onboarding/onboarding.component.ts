@@ -140,18 +140,28 @@ function addressContext(address: string): { chain: string; network: string } | n
         @case ('input') {
           <section class="panel">
             <h2>{{ inputTitle() }}</h2>
+            @if (error(); as message) { <p class="error" role="alert">{{ message }}</p> }
+            @if (saving()) { <p role="status">{{ stepChoice() === 'ephemeral' ? 'Opening the public address…' : 'Saving the local portfolio…' }}</p> }
             @if (stepChoice() === 'ephemeral') {
               <label for="ephemeral-context" i18n="@@universe.portfolio.onboarding.lookup-network">Chain and network</label>
-              <select id="ephemeral-context" #contextInput [value]="ephemeralContext()" (change)="selectEphemeralContext(contextInput.value)">
+              <select [disabled]="saving()" id="ephemeral-context" #contextInput [value]="ephemeralContext()" (change)="selectEphemeralContext(contextInput.value)">
                 <option value="bitcoin:mainnet">Bitcoin mainnet</option>
                 <option value="dogecoin:mainnet">Dogecoin mainnet</option>
                 <option value="zcash:mainnet">Zcash mainnet (transparent)</option>
               </select>
             }
+            @if (stepChoice() === 'watch-only') {
+              <label for="watch-network">Bitcoin network</label>
+              <select id="watch-network" #watchNetworkInput [disabled]="saving()" [value]="watchNetwork()" (change)="selectWatchNetwork(watchNetworkInput.value)">
+                <option value="mainnet">Mainnet</option><option value="testnet">Testnet</option>
+                <option value="signet">Signet</option><option value="testnet4">Testnet4</option>
+              </select>
+              <p class="soft">Select the exact source network. Test-family public key encoding does not distinguish Testnet, Signet and Testnet4.</p>
+            }
             <label>
               <span>{{ inputLabel() }}</span>
               @if (stepChoice() === 'watch-only') {
-                <textarea #materialInput rows="3" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
+                <textarea [disabled]="saving()" #materialInput rows="3" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
               } @else {
                 <textarea #materialInput rows="4" (input)="validateMaterial(materialInput.value, materialInput)"></textarea>
               }
@@ -162,18 +172,23 @@ function addressContext(address: string): { chain: string; network: string } | n
               Detection runs locally before anything is sent or stored. Rejected input is discarded immediately.
             </p>
             <div class="actions">
-              <button type="button" class="primary" [disabled]="!valid()" (click)="save()">
+              <button type="button" class="primary" [disabled]="!valid() || saving()" (click)="save()">
                 @if (stepChoice() === 'ephemeral') { <span i18n="@@universe.portfolio.onboarding.open-unsaved">Open without saving</span> }
                 @else { <span i18n="@@universe.portfolio.onboarding.save">Save portfolio</span> }
               </button>
-              <button type="button" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
+              <button type="button" [disabled]="saving()" (click)="step.set('choose')" i18n="@@universe.portfolio.onboarding.back">Back</button>
             </div>
           </section>
         }
         @case ('done') {
           <section class="panel" role="status">
             <h2 i18n="@@universe.portfolio.onboarding.created">Portfolio created</h2>
-            <p class="soft" i18n="@@universe.portfolio.onboarding.created-copy">Opening the overview…</p>
+            @if (error(); as message) {
+              <p class="error" role="alert">{{ message }}</p>
+              <button type="button" [disabled]="saving() || preparingManual()" (click)="openSaved()">Open portfolio</button>
+            } @else {
+              <p class="soft" i18n="@@universe.portfolio.onboarding.created-copy">Opening the overview…</p>
+            }
           </section>
         }
       }
@@ -211,12 +226,14 @@ export class OnboardingComponent implements OnInit {
   readonly stepChoice = signal<EntryChoice>('address');
   readonly error = signal('');
   readonly creatingVault = signal(false);
+  readonly saving = signal(false);
   readonly unlockingVault = signal(false);
   readonly preparingManual = signal(false);
   readonly rejection = signal('');
   readonly validation = signal('');
   readonly valid = signal(false);
   readonly ephemeralContext = signal('bitcoin:mainnet');
+  readonly watchNetwork = signal<'mainnet' | 'testnet' | 'signet' | 'testnet4'>('mainnet');
 
   private portfolio: LocalPortfolio | null = null;
   private importedEntries: ImportEntry[] = [];
@@ -227,7 +244,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   protected choose(choice: EntryChoice): void {
-    if (this.preparingManual()) {return;}
+    if (this.preparingManual() || this.saving()) {return;}
     this.error.set('');
     this.stepChoice.set(choice);
     this.validateMaterial('');
@@ -320,6 +337,7 @@ export class OnboardingComponent implements OnInit {
         ? classifyExtendedKey(text)
         : null;
       if (extended !== null) {
+        if (extended.testnet !== (this.watchNetwork() !== 'mainnet')) { this.rejection.set('Public key encoding does not match the selected Bitcoin network family.'); return; }
         this.validation.set(
           $localize`:@@universe.portfolio.onboarding.xpub-ok:Extended public key accepted (${extended.script}:SCRIPT:).`,
         );
@@ -328,6 +346,7 @@ export class OnboardingComponent implements OnInit {
       }
       const descriptor = looksLikeDescriptor(text) ? classifyDescriptor(text) : null;
       if (descriptor !== null) {
+        if (descriptor.testnet !== (this.watchNetwork() !== 'mainnet')) { this.rejection.set('Descriptor key encoding does not match the selected Bitcoin network family.'); return; }
         this.validation.set(
           descriptor.checksumValid === false
             ? $localize`:@@universe.portfolio.onboarding.descriptor-bad-checksum:The descriptor parses but its checksum is not valid - check for typos.`
@@ -378,6 +397,11 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
+  protected selectWatchNetwork(network: string): void {
+    if (this.saving() || !['mainnet', 'testnet', 'signet', 'testnet4'].includes(network)) return;
+    this.watchNetwork.set(network as 'mainnet' | 'testnet' | 'signet' | 'testnet4'); this.validateMaterial(this.material);
+  }
+
   protected selectEphemeralContext(context: string): void {
     this.ephemeralContext.set(context);
     this.validateMaterial(this.material);
@@ -418,67 +442,92 @@ export class OnboardingComponent implements OnInit {
   }
 
   protected async save(): Promise<void> {
-    this.validateMaterial(this.material);
-    if (!this.valid()) return;
-    if (this.stepChoice() === 'ephemeral') {
+    if (this.saving() || this.step() === 'done') return;
+    this.saving.set(true);
+    this.error.set('');
+    try {
       this.validateMaterial(this.material);
-      if (!this.valid()) {return;}
-      const [chain, network] = this.ephemeralContext().split(':');
-      await this.router.navigate(['/portfolio', chain, network, this.material.trim()]);
-      return;
-    }
-    const portfolio =
-      this.portfolio ??
-      (await this.store.createPortfolio(this.defaultName()));
-    this.portfolio = portfolio;
-    const now = new Date().toISOString();
-    const accounts: LocalAccount[] = [...portfolio.accounts];
-    if (this.stepChoice() === 'watch-only') {
-      const extended = classifyExtendedKey(this.material);
-      const descriptor = extended === null ? classifyDescriptor(this.material) : null;
-      if (extended !== null) {
-        accounts.push({
-          id: crypto.randomUUID(),
-          name: $localize`:@@universe.portfolio.onboarding.watch-account:Watch-only wallet`,
-          chain: 'bitcoin',
-          network: extended.testnet ? 'testnet' : 'mainnet',
-          kind: 'xpub',
-          xpub: { key: extended.key, script: extended.script as ScriptKind, account: 0, gapLimit: 20, branches: ['external'] },
-          tags: [],
-          createdAt: now,
-        });
-      } else if (descriptor !== null) {
-        accounts.push({
-          id: crypto.randomUUID(),
-          name: $localize`:@@universe.portfolio.onboarding.descriptor-account:Descriptor wallet`,
-          chain: 'bitcoin',
-          network: descriptor.testnet ? 'testnet' : 'mainnet',
-          kind: 'descriptor',
-          descriptor: { value: descriptor.value, gapLimit: 20 },
-          tags: [],
-          createdAt: now,
-        });
+      if (!this.valid()) return;
+      const choice = this.stepChoice(), material = this.material, ephemeralContext = this.ephemeralContext(), watchNetwork = this.watchNetwork();
+      if (choice === 'ephemeral') {
+        this.validateMaterial(this.material);
+        if (!this.valid()) {return;}
+        const [chain, network] = ephemeralContext.split(':');
+        if (!await this.router.navigate(['/portfolio', chain, network, material.trim()])) throw Error('Navigation unavailable');
+        return;
       }
-    } else {
-      const imported = this.parseList(this.material);
-      for (const entry of imported.entries) {
-        const match = addressContext(entry.address);
-        if (match === null) continue;
-        accounts.push({
-          id: crypto.randomUUID(),
-          name: entry.label.length > 0 ? entry.label : entry.address.slice(0, 12) + '…',
-          chain: entry.chain.length > 0 ? entry.chain : match.chain,
-          network: entry.network.length > 0 ? entry.network : match.network,
-          kind: imported.entries.length > 1 ? 'addresses' : 'address',
-          addresses: [entry.address],
-          tags: [],
-          createdAt: now,
-        });
+      const portfolio =
+        this.portfolio ??
+        (await this.store.createPortfolio(this.defaultName()));
+      this.portfolio = portfolio;
+      const now = new Date().toISOString();
+      const accounts: LocalAccount[] = [...portfolio.accounts];
+      if (choice === 'watch-only') {
+        const extended = classifyExtendedKey(material);
+        const descriptor = extended === null ? classifyDescriptor(material) : null;
+        if (extended !== null) {
+          accounts.push({
+            id: crypto.randomUUID(),
+            name: $localize`:@@universe.portfolio.onboarding.watch-account:Watch-only wallet`,
+            chain: 'bitcoin',
+            network: watchNetwork,
+            kind: 'xpub',
+            xpub: { key: extended.key, script: extended.script as ScriptKind, account: 0, gapLimit: 20, branches: ['external'] },
+            tags: [],
+            createdAt: now,
+          });
+        } else if (descriptor !== null) {
+          accounts.push({
+            id: crypto.randomUUID(),
+            name: $localize`:@@universe.portfolio.onboarding.descriptor-account:Descriptor wallet`,
+            chain: 'bitcoin',
+            network: watchNetwork,
+            kind: 'descriptor',
+            descriptor: { value: descriptor.value, gapLimit: 20 },
+            tags: [],
+            createdAt: now,
+          });
+        }
+      } else {
+        const imported = this.parseList(material);
+        for (const entry of imported.entries) {
+          const match = addressContext(entry.address);
+          if (match === null) continue;
+          accounts.push({
+            id: crypto.randomUUID(),
+            name: entry.label.length > 0 ? entry.label : entry.address.slice(0, 12) + '…',
+            chain: entry.chain.length > 0 ? entry.chain : match.chain,
+            network: entry.network.length > 0 ? entry.network : match.network,
+            kind: imported.entries.length > 1 ? 'addresses' : 'address',
+            addresses: [entry.address],
+            tags: [],
+            createdAt: now,
+          });
+        }
       }
+      await this.store.updatePortfolio(portfolio.id, (current) => ({ ...current, accounts }));
+      this.step.set('done');
+      await this.openPrepared();
+    } catch {
+      this.error.set(this.stepChoice() === 'ephemeral'
+        ? 'The public address could not be opened. No portfolio was saved. Retry opening the address.'
+        : 'The local portfolio could not be saved. Check that the vault is unlocked and browser storage is available, then retry. Any prepared definition will be reused.');
+    } finally { this.saving.set(false); }
+  }
+
+  protected async openSaved(): Promise<void> {
+    if (this.saving() || this.preparingManual() || this.step() !== 'done' || !this.portfolio) return;
+    this.saving.set(true);
+    try { await this.openPrepared(); } finally { this.saving.set(false); }
+  }
+
+  private async openPrepared(): Promise<void> {
+    this.error.set('');
+    try {
+      if (!this.portfolio || !await this.router.navigate(['/portfolio/p', this.portfolio.id, 'overview'])) throw Error('Navigation unavailable');
+    } catch {
+      this.error.set('The portfolio was saved, but its overview could not be opened. Retry opening it; the saved accounts will not be written again.');
     }
-    await this.store.updatePortfolio(portfolio.id, (current) => ({ ...current, accounts }));
-    this.step.set('done');
-    void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
   }
 
   private async prepareEntry(): Promise<void> {
@@ -507,7 +556,7 @@ export class OnboardingComponent implements OnInit {
       const portfolio = this.portfolio ?? await this.store.createPortfolio($localize`:@@universe.portfolio.onboarding.manual-name:Manual portfolio`);
       this.portfolio = portfolio;
       this.step.set('done');
-      void this.router.navigate(['/portfolio/p', portfolio.id, 'overview']);
+      await this.openPrepared();
     } catch {
       this.error.set($localize`:@@universe.portfolio.onboarding.manual-save-error:The manual portfolio could not be saved. Check browser storage availability and retry.`);
       this.step.set('choose');

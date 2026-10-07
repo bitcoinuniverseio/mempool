@@ -6,8 +6,9 @@
 
 import { ChangeDetectionStrategy, Component, OnInit, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, distinctUntilChanged, forkJoin, map, of, switchMap } from 'rxjs';
+import { catchError, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { readEphemeralEvidence } from '../data/read-ephemeral-evidence';
 import { PortfolioV2ApiService } from '../data/portfolio-v2-api.service';
 import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
@@ -37,6 +38,7 @@ import type {
         <p class="mono">{{ session.valuesHidden() ? masked() : truncated() }}</p>
       </header>
 
+      @for (warning of warnings(); track $index) { <p role="note">{{ warning }}</p> }
       @if (failure(); as failure) {
         <p class="error" role="alert">{{ failure }}</p>
         <a [routerLink]="'/portfolio' | relativeUrl" i18n="@@universe.portfolio.ephemeral.back-home">Back to Portfolio Intelligence</a>
@@ -80,6 +82,7 @@ import type {
 
         <section aria-label="Recent activity">
           <h2 i18n="@@universe.portfolio.ephemeral.activity">Recent activity</h2>
+          <p role="note">The latest ten accepted events are shown. Source or continuation limits are disclosed above.</p>
           @if (activity(); as activity) {
             <ul class="events">
               @for (event of activity.events.slice(0, 10); track event.eventId) {
@@ -130,6 +133,7 @@ export class EphemeralPortfolioComponent implements OnInit {
   private readonly holdingsSignal = signal<PortfolioV2HoldingsPage | null>(null);
   private readonly activitySignal = signal<PortfolioSemanticActivityPage | null>(null);
   private readonly failureSignal = signal('');
+  readonly warnings = signal<readonly string[]>([]);
 
   readonly summary = this.summarySignal.asReadonly();
   readonly holdings = this.holdingsSignal.asReadonly();
@@ -149,12 +153,9 @@ export class EphemeralPortfolioComponent implements OnInit {
         this.holdingsSignal.set(null);
         this.activitySignal.set(null);
         this.failureSignal.set('');
+        this.warnings.set([]);
         if (!chain || !network || !address) return of({ error: 'A chain, network and address are required.' });
-        return forkJoin({
-          summary: this.api.getSummary$(chain, network, address),
-          holdings: this.api.getHoldings$(chain, network, address, undefined, 100),
-          activity: this.api.getActivity$(chain, network, address),
-        }).pipe(catchError(() => of({ error: 'The address evidence could not be read.' })));
+        return readEphemeralEvidence(this.api, chain, network, address).pipe(catchError(() => of({ error: 'The address evidence could not be read or did not match this address.' })));
       }),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(result => {
@@ -162,6 +163,7 @@ export class EphemeralPortfolioComponent implements OnInit {
       this.summarySignal.set(result.summary);
       this.holdingsSignal.set(result.holdings);
       this.activitySignal.set(result.activity);
+      this.warnings.set(result.warnings);
     });
   }
 
@@ -171,7 +173,8 @@ export class EphemeralPortfolioComponent implements OnInit {
 
   protected quantityLabel(quantity: string | null, decimals?: number): string {
     if (quantity === null) return '-';
-    const display = atomicToDisplay(quantity, decimals ?? 8);
+    if (decimals === undefined) return 'Decimals unknown';
+    const display = atomicToDisplay(quantity, decimals);
     return display === null ? '-' : formatExact(display, 'en');
   }
 

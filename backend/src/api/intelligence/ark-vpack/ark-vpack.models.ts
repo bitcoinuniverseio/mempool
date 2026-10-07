@@ -51,6 +51,15 @@ export interface MinimalViableVtxo {
   expires_at_height: number;
 }
 
+/** Versioned native seconds summary. It is incomplete until absolute expiry is independently established. */
+export interface MinimalViableVtxoSeconds extends Omit<MinimalViableVtxo, 'version' | 'exit_delay_blocks' | 'expires_at_height'> {
+  version: 2;
+  exit_delay_blocks: null;
+  exit_delay_seconds: number;
+  expires_at_height: number | null;
+  expires_at_timestamp: number | null;
+}
+
 export interface VpackImplementationAdapter {
   implementation_id: 'arkade' | 'bark' | string;
   implementation_name: string;

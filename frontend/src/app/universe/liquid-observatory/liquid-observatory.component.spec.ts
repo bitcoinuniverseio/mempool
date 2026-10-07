@@ -1,40 +1,19 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
-import { SeoService } from '@app/services/seo.service';
-import { UniverseApiService } from '@app/universe/universe-api.service';
 import { LiquidObservatoryComponent } from './liquid-observatory.component';
-
-const unavailable = () => throwError(() => new HttpErrorResponse({ status: 503 }));
-
-function observe(api: Partial<UniverseApiService>): any {
-  const view = new LiquidObservatoryComponent(api as UniverseApiService, { setTitle: vi.fn() } as unknown as SeoService);
-  view.ngOnInit();
-  let observed: any;
-  view.vm$.subscribe((value) => { observed = value; }).unsubscribe();
-  return observed;
+import { coverage,summary,federation,assets,pegs } from './liquid-fixtures';
+const unavailable=()=>throwError(()=>new Error('selected source unavailable'));
+function setup(overrides:any={}) {
+ const api={getLiquidProjection$:()=>of(coverage(0)),getLiquidObservatorySummary$:()=>of(summary()),getLiquidAssets$:()=>of(assets()),getLiquidPegs$:()=>of(pegs()),getLiquidFederation$:()=>of(federation()),...overrides};
+ const view=new LiquidObservatoryComponent(api as any,{setTitle:vi.fn()} as any);let vm:any;view.vm$.subscribe(v=>vm=v);view.ngOnInit();return {api,view,get vm(){return vm;}};
 }
-
-describe('Liquid observatory on an absent source', () => {
-  it('shows the error state with the reason when the node read fails', () => {
-    const vm = observe({
-      getLiquidObservatorySummary$: unavailable, getLiquidAssets$: unavailable,
-      getLiquidPegs$: unavailable, getLiquidFederation$: unavailable,
-    });
-    expect(vm.kind).toBe('error');
-    expect(vm.message).toBeTruthy();
-    expect(vm.summary).toBeUndefined();
-  });
-
-  it('does not show the summary over empty asset and peg tables when only those reads fail', () => {
-    const vm = observe({
-      getLiquidObservatorySummary$: () => of({ blockHeight: 1 }),
-      getLiquidAssets$: unavailable,
-      getLiquidPegs$: unavailable,
-      getLiquidFederation$: () => of({ epochNumber: 1 }),
-    });
-    expect(vm.kind).toBe('error');
-    expect(vm.assets).toBeUndefined();
-    expect(vm.pegs).toBeUndefined();
-  });
+describe('Liquid independent paired observations',()=>{
+ it('shows no usable source when every observation fails, without fake tables',()=>{const f=setup({getLiquidProjection$:unavailable,getLiquidObservatorySummary$:unavailable,getLiquidAssets$:unavailable,getLiquidPegs$:unavailable,getLiquidFederation$:unavailable});expect(f.vm.kind).toBe('error');expect(f.vm.assets).toBeUndefined();expect(f.vm.pegs).toBeUndefined();expect(f.vm.errors.summary).toContain('unavailable');f.view.ngOnDestroy();});
+ it('retains summary and federation facts alongside unavailable catalog and pegs',()=>{const f=setup({getLiquidAssets$:unavailable,getLiquidPegs$:unavailable});expect(f.vm.kind).toBe('ready');expect(f.vm.summary.blockHeight).toBe(11);expect(f.vm.federation.epochNumber).toBe(1);expect(f.vm.assets).toBeUndefined();expect(f.vm.errors.assets).toContain('unavailable');f.view.ngOnDestroy();});
+ it('cancels all old-context pending requests and removes their observations',()=>{const old=new Subject<any>(),current=new Subject<any>();const get=vi.fn((n:string)=>n==='liquidv1'?old:current);const f=setup({getLiquidObservatorySummary$:get});expect(old.observed).toBe(true);f.view.network='elementsregtest';f.view.refreshNode();expect(old.observed).toBe(false);old.next(summary());expect(f.vm.summary).toBeUndefined();current.next(summary());expect(f.vm.summary.blockHeight).toBe(11);f.view.ngOnDestroy();expect(current.observed).toBe(false);});
+ it('guards pending double advance and uses the exact displayed cursor',()=>{const pending=new Subject<any>(),advance=vi.fn(()=>pending);const f=setup({advanceLiquidProjection$:advance});f.view.advance();f.view.advance();expect(advance).toHaveBeenCalledTimes(1);expect(advance).toHaveBeenCalledWith('liquidv1',{height:-1,blockHash:null});pending.next(coverage());expect(f.vm.projection.status).toBe('COMPLETE_AT_OBSERVED_PAIR');f.view.advance();expect(advance).toHaveBeenCalledTimes(1);f.view.ngOnDestroy();});
+ it('recovers 409 by reading the shared receipt, without another automatic advance',()=>{let reads=0;const advance=vi.fn(()=>throwError(()=>new HttpErrorResponse({status:409})));const f=setup({getLiquidProjection$:()=>of(coverage(reads++===0?0:4)),advanceLiquidProjection$:advance});f.view.advance();expect(f.vm.projection.progress.processedBlocks).toBe(4);expect(f.vm.notice).toContain('another explicit action');expect(advance).toHaveBeenCalledTimes(1);f.view.advance();expect(advance).toHaveBeenCalledTimes(2);expect(advance.mock.calls[1][1]).toEqual(coverage(4).cursor);f.view.ngOnDestroy();});
+ it('cancel aborts local requests, never deletes shared progress, and allows retry',()=>{const pending=new Subject<any>(),advance=vi.fn(()=>pending);const f=setup({advanceLiquidProjection$:advance});f.view.advance();expect(pending.observed).toBe(true);f.view.cancel();expect(pending.observed).toBe(false);expect(f.vm.projection.progress.processedBlocks).toBe(0);expect(f.vm.notice).toContain('does not prove');f.view.advance();expect(advance).toHaveBeenCalledTimes(2);f.view.ngOnDestroy();expect(pending.observed).toBe(false);});
+ it('retains accepted catalog rows when continuation belongs to a changed pair',()=>{const first={...assets(),total:51,nextOffset:1};let count=0;const f=setup({getLiquidAssets$:()=>of(count++===0?first:{...assets(),offset:1,total:51,nextOffset:2,coverage:{...coverage(),source:{...coverage().source,parent:{...coverage().source.parent,hash:'f'.repeat(64)}}}})});f.view.loadAssets(true);expect(f.vm.assets).toHaveLength(1);expect(f.vm.assetPage.nextOffset).toBe(1);expect(f.vm.errors.assets).toContain('changed');f.view.ngOnDestroy();});
 });

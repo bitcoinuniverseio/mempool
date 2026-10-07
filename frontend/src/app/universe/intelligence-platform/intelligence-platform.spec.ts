@@ -31,7 +31,7 @@ describe('Unified Intelligence Platform Frontend Services', () => {
         return of({ total_checkpoints: 5 });
       }
       if (url.includes('/utxo/overview')) {
-        return of({ total_utxos: 175420100, block_height: 887412 });
+        return of({ network: 'mainnet', total_utxos: 175420100, block_height: 887412, block_hash: 'ab'.repeat(32), total_amount_sats: 1, muhash: 'cd'.repeat(32), bogo_size: '90', block_time: 1791158400, observed_at_utc: '2026-10-05T00:00:00.000Z', dormant_10yr_sats: null, uneconomical_at_10_sat_vb_sats: null, last_reconciled_utc: null, reconciled: false, projection_configured: false, scope: 'Controlled owning DTO checkpoint.', source: { method: 'owned Core gettxoutsetinfo muhash via coinstatsindex', observed_at_utc: '2026-10-05T00:00:00.000Z', freshness_limit_ms: 30000 } });
       }
       if (url.includes('/watchlists')) {
         return of({ watchlists: [{ name: 'Vault', privacy_mode: 'blinded' }] });
@@ -46,7 +46,14 @@ describe('Unified Intelligence Platform Frontend Services', () => {
         return of({ incidents: [] });
       }
       if (url.includes('/knowledge/labels')) {
-        return of({ labels: [{ name: 'Exchange A', status: 'verified', confidence_level: 3 }] });
+        return of({ schema: 'universe-knowledge-labels-v1', network: 'mainnet', count: 1, labels: [{
+          label_id: 'controlled-pool', entity_type: 'pool', entity_id: 'controlled-pool', name: 'Controlled Pool',
+          category: 'mining_pool', status: 'verified', confidence_level: 3, confidence_score: 1,
+          source: 'pools_definition', evidence: [], created_at: '2026-10-04T12:00:00.000Z', updated_at: '2026-10-04T12:00:00.000Z',
+        }] });
+      }
+      if (url.includes('/knowledge/audit-log')) {
+        return of({ schema: 'universe-knowledge-audit-v1', network: 'mainnet', count: 0, audit_events: [] });
       }
       if (url.includes('/developer/keys')) {
         return of({ keys: [] });
@@ -288,12 +295,15 @@ describe('Unified Intelligence Platform Frontend Services', () => {
     });
 
     it('KnowledgeRegistryComponent: computes verified count and filters', () => {
-      const cmp = new KnowledgeRegistryComponent(service, mockCdr);
+      const cmp = new KnowledgeRegistryComponent(service, mockCdr, { ...mockStateService, networkChanged$: new Subject<string>() });
       cmp.ngOnInit();
       expect(cmp.labels.length).toBe(1);
       expect(cmp.verifiedCount).toBe(1);
       cmp.searchFilter = 'nonexistent';
       expect(cmp.filteredLabels.length).toBe(0);
+      expect(cmp.loadError).toBeNull();
+      expect(cmp.auditError).toBeNull();
+      cmp.ngOnDestroy();
     });
 
     it('DeveloperPlatformComponent: lists owner keys, reports unavailable usage, shows a minted key once', () => {

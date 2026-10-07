@@ -11,3 +11,5 @@ docs/acceptance/current-execution-evidence.json -text
 docs/acceptance/explorer-health-reconciliation-2026-09-21.json -text
 docs/acceptance/wp07-repair-2026-09-06.json -text
 docs/protocols/PROTOCOL-COVERAGE.json -text
+docs/acceptance/operation-matrix-source-successor-2026-10-03.json -text
+docs/acceptance/protocol-authority-transitions-2026-10-03.json -text

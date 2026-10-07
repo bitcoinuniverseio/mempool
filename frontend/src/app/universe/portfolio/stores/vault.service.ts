@@ -15,6 +15,7 @@
  */
 
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
 import type {
   KdfError,
   KdfOk,
@@ -83,6 +84,8 @@ export type VaultState =
 
 @Injectable({ providedIn: 'root' })
 export class PortfolioVaultService implements OnDestroy {
+  private readonly lockEvents = new Subject<void>();
+  readonly locked$ = this.lockEvents.asObservable();
   private worker: Worker | null = null;
   private workerRequests = new Map<number, { resolve: (value: KdfOk) => void; reject: (error: Error) => void; timeout: ReturnType<typeof setTimeout> }>();
   private workerNextId = 1;
@@ -118,6 +121,8 @@ export class PortfolioVaultService implements OnDestroy {
   isUnlocked(): boolean {
     return this.key !== null;
   }
+  /** Changes on every lock, including automatic locks and vault replacement. */
+  get sessionRevision(): number {return this.lockVersion;}
 
   /** True when a vault exists on this device. */
   async exists(): Promise<boolean> {
@@ -200,6 +205,7 @@ export class PortfolioVaultService implements OnDestroy {
   lock(): void {
     this.lockVersion++;
     this.key = null;
+    this.lockEvents.next();
     for (const transaction of this.activeWrites) {
       try { transaction.abort(); }
       catch { /* A completed transaction can be waiting for its terminal event. */ }
@@ -282,6 +288,101 @@ export class PortfolioVaultService implements OnDestroy {
 
   async deleteRecord(id: string): Promise<void> {
     return this.serialize(version => this.removeRecord(id, version));
+  }
+
+  /** Delete one portfolio and explicitly owned encrypted records together.
+   * Accounts embedded in the portfolio disappear with it. Separate records
+   * must name the exact portfolioId; prefixes and account IDs are not ownership.
+   * All decryption/encryption precedes the single synchronous write transaction.
+   */
+  async deletePortfolioRecords(portfolioId: string, replacementActiveId: string | null): Promise<void> {
+    return this.serialize(async version => {
+      const key = this.requireKey();
+      const records = await this.readAllRecords();
+      if (!records.some(record => record.id === portfolioId && record.type === 'portfolio')) {
+        throw new Error('The portfolio no longer exists in this vault.');
+      }
+      const deletes = new Set<string>([portfolioId]);
+      let preference: VaultRecord | undefined;
+      for (const record of records) {
+        const bytes = await this.decryptBytes(key, record.envelope);
+        try {
+          const value = JSON.parse(new TextDecoder().decode(bytes));
+          if (record.type !== 'portfolio' && value && typeof value === 'object' && value.portfolioId === portfolioId) {
+            deletes.add(record.id);
+          } else if (record.type === 'preferences' && record.id === 'preferences' && value?.activePortfolioId === portfolioId) {
+            const plaintext = new TextEncoder().encode(JSON.stringify({ ...value, activePortfolioId: replacementActiveId }));
+            try { preference = { ...record, envelope: await this.encryptBytes(key, plaintext), updatedAt: new Date().toISOString() }; }
+            finally { plaintext.fill(0); }
+          }
+        } finally { bytes.fill(0); }
+      }
+      this.assertLockVersion(version);
+      const db = await this.open();
+      this.assertLockVersion(version);
+      await this.transaction(db, ['records'], 'readwrite', stores => {
+        for (const id of deletes) { stores['records'].delete(id); }
+        if (preference) { stores['records'].put(preference); }
+      });
+    });
+  }
+
+  /** Commit the complete legacy migration, selection and marker in one transaction.
+   * Crypto finishes before opening the write transaction. The encrypted snapshot
+   * comparison also fences another tab changing preferences or completing migration.
+   */
+  async commitWorkspaceMigration(portfolio: { id: string }, contentHash: string): Promise<boolean> {
+    return this.serialize(async version => {
+      const key = this.requireKey();
+      const records = await this.readAllRecords();
+      const marker = records.find(record => record.id === 'migration.v1');
+      if (marker) {
+        const bytes = await this.decryptBytes(key, marker.envelope);
+        try {
+          if (marker.type !== 'migration.v1' || JSON.parse(new TextDecoder().decode(bytes))?.done !== true) {
+            throw new Error('The existing migration marker is invalid.');
+          }
+        } finally { bytes.fill(0); }
+        this.assertLockVersion(version);
+        return false;
+      }
+      const preference = records.find(record => record.id === 'preferences');
+      let preferences: Record<string, unknown> = { autoLockMinutes: 15, relockWhenHidden: false };
+      if (preference) {
+        const bytes = await this.decryptBytes(key, preference.envelope);
+        try {
+          const value = JSON.parse(new TextDecoder().decode(bytes));
+          if (preference.type !== 'preferences' || !value || typeof value !== 'object' || Array.isArray(value)) {
+            throw new Error('The existing preferences are invalid.');
+          }
+          preferences = value;
+        } finally { bytes.fill(0); }
+      }
+      const now = new Date().toISOString();
+      const prepared: VaultRecord[] = [];
+      for (const [id, type, value] of [
+        [portfolio.id, 'portfolio', portfolio],
+        ['preferences', 'preferences', { ...preferences, activePortfolioId: portfolio.id }],
+        ['migration.v1', 'migration.v1', { done: true, at: now, portfolioId: portfolio.id, contentHash }],
+      ] as const) {
+        const bytes = new TextEncoder().encode(JSON.stringify(value));
+        try { prepared.push({ id, type, envelope: await this.encryptBytes(key, bytes), updatedAt: now }); }
+        finally { bytes.fill(0); }
+      }
+      const db = await this.open();
+      this.assertLockVersion(version);
+      await this.transaction(db, ['records'], 'readwrite', async stores => {
+        const current = await this.requestAsPromise(stores['records'].getAll()) as VaultRecord[];
+        this.assertLockVersion(version);
+        if (current.some(record => record.id === 'migration.v1' || record.id === portfolio.id)
+          || JSON.stringify(current.find(record => record.id === 'preferences')) !== JSON.stringify(preference)) {
+          throw new Error('The vault changed during migration. Reload before retrying.');
+        }
+        for (const record of prepared) { stores['records'].put(record); }
+      });
+      this.assertLockVersion(version);
+      return true;
+    });
   }
 
   private async removeRecord(id: string, version: number): Promise<void> {
@@ -506,8 +607,9 @@ export class PortfolioVaultService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.lock();
+    this.lockEvents.complete();
     this.failWorker(new Error('The vault key derivation was closed.'));
-    document.removeEventListener('visibilitychange', this.visibilityListener);
+    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.visibilityListener);
     if (this.lockTimer !== null) clearTimeout(this.lockTimer);
   }
 

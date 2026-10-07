@@ -100,7 +100,7 @@ describe('Taproot Assets HTTP responses', () => {
     const { gets } = mount();
     expect(gets.size).toBe(5);
     for (const handler of gets.values()) {
-      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), setHeader: jest.fn() };
       await handler({ params: { assetId: 'ab'.repeat(32) } } as unknown as Request, res as unknown as Response);
       expect(res.status).toHaveBeenCalledWith(503);
       const body = res.json.mock.calls[0][0];

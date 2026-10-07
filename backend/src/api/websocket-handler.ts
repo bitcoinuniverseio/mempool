@@ -405,7 +405,7 @@ class WebsocketHandler {
             delete client['track-mempool'];
           }
 
-          if (parsedMessage && parsedMessage['track-stratum'] != null) {
+          if (parsedMessage && Object.prototype.hasOwnProperty.call(parsedMessage, 'track-stratum')) {
             if (parsedMessage['track-stratum']) {
               const sub = parsedMessage['track-stratum'];
               client['track-stratum'] = sub;

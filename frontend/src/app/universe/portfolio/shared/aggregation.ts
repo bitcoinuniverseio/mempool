@@ -65,6 +65,7 @@ export interface AddressSnapshot {
 }
 
 export interface PortfolioEventInput {
+  readonly eventId?: string;
   readonly chain: string;
   readonly network: string;
   readonly txid: string;
@@ -113,6 +114,7 @@ export interface InternalTransferCandidate {
 }
 
 export interface AggregationResult {
+  readonly nativeFlows?: readonly NativeFlow[];
   readonly quoteCurrency: string;
   readonly pricedTotal: string | null;
   readonly unpricedCount: number;
@@ -131,7 +133,20 @@ export interface AggregationResult {
   readonly duplicateAddresses: readonly string[];
 }
 
-const FEE_TOLERANCE = 0n;
+export interface NativeFlow {
+  readonly state: PortfolioDataState;
+  readonly chain: string;
+  readonly network: string;
+  readonly asset: string;
+  readonly decimals: number;
+  readonly inflow: string | null;
+  readonly outflow: string | null;
+}
+
+export function nativeUnit(chain: string): { asset: string; decimals: number } {
+  const asset = ({ bitcoin: 'BTC', dogecoin: 'DOGE', zcash: 'ZEC', liquid: 'L-BTC' } as Record<string, string>)[chain];
+  return asset ? { asset, decimals: 8 } : { asset: `${chain} atomic units`, decimals: 0 };
+}
 
 /**
  * Merges per-address snapshots into the portfolio view. `inclusionPolicy`
@@ -165,6 +180,7 @@ export function aggregatePortfolio(
       claimedBy.set(addressKey, policy[snapshot.address] ?? snapshot.accountId);
     } else if (existing !== (policy[snapshot.address] ?? snapshot.accountId)) {
       if (!duplicates.includes(snapshot.address)) duplicates.push(snapshot.address);
+      if (policy[snapshot.address] === undefined && snapshot.accountId < existing) claimedBy.set(addressKey, snapshot.accountId);
     }
   }
   const included = snapshots.filter(
@@ -257,14 +273,44 @@ export function aggregatePortfolio(
     });
   }
 
-  const accountValues = new Map<string, { values: string[]; states: PortfolioDataState[]; count: number }>();
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-004] | D-FE-004 | C-FE-PF-ACCOUNT-VALUE.
+   * loadAddress emits one AddressSnapshot per native/protocol asset, each with
+   * the same address-wide summary valuation. This loop adds that summary once
+   * per asset: a 10 USD native holding plus a 20 USD token yields portfolio=30
+   * but byAccount=60. Actual-source reproduction: frontend-reproductions.json.
+   * Governing contract: shared/universe-portfolio-v2.types.ts summary.valuation
+   * is address-wide; portfolio-data.service.ts creates the repeated snapshots.
+   * 1. Build an included-address map keyed by chain/network/address/account ID;
+   *    add each address summary valuation exactly once to its selected account.
+   *    Preserve the inclusion policy and reject inconsistent repeated summaries.
+   * 2. Derive per-account distinct holding counts separately from summary totals.
+   *    Fold source failures/completeness from WP-FE-002/003 pessimistically and
+   *    never combine different quote currencies or account contexts as one sum.
+   * 3. Extend aggregation.spec.ts with native+one token, native+many tokens,
+   *    multiple addresses sharing an asset, duplicated address inclusion and
+   *    mixed quotes. Assert total=30/byAccount=30 in the reproduced fixture.
+   *    Run npm test -- --maxWorkers=2 src/app/universe/portfolio/shared/aggregation.spec.ts
+   *    and portfolio-data.service.spec.ts; reconcile downstream reports/insights.
+   * Acceptance: exact per-address, per-account and portfolio readback reconciles
+   *    on Signet without an asset-count multiplier. No migration is needed;
+   *    invalidate derived cached totals on rollout/rollback, retain vault inputs.
+   */
+  const accountValues = new Map<string, { values: string[]; states: PortfolioDataState[]; assets: Set<string> }>();
+  const summaries = new Map<string, string>();
   for (const snapshot of included) {
-    const entry = accountValues.get(snapshot.accountId) ?? { values: [], states: [], count: 0 };
-    if (snapshot.summary.valuation.quoteCurrency === quoteCurrency) {
+    const entry = accountValues.get(snapshot.accountId) ?? { values: [], states: [], assets: new Set<string>() };
+    const key = JSON.stringify([snapshot.chain, snapshot.network, snapshot.address, snapshot.accountId]);
+    const prior = summaries.get(key);
+    const summary = JSON.stringify(snapshot.summary);
+    if (prior === undefined && snapshot.summary.valuation.quoteCurrency === quoteCurrency) {
       entry.values.push(snapshot.summary.valuation.pricedValue);
     }
+    if (prior !== undefined && prior !== summary) entry.states.push('partial');
+    if (snapshot.summary.valuation.quoteCurrency !== quoteCurrency) entry.states.push('partial');
+    summaries.set(key, summary);
     entry.states.push(snapshot.summary.aggregateState);
-    entry.count += 1;
+    entry.assets.add(snapshot.holdings.assetKey);
     accountValues.set(snapshot.accountId, entry);
   }
 
@@ -274,18 +320,33 @@ export function aggregatePortfolio(
   const hasUnknownValue =
     holdings.some((holding) => holding.quantityAtomic === null) ||
     holdings.some((holding) => holding.pricedValue === null && holding.valuationState !== 'not-applicable') ||
-    included.some((snapshot) => snapshot.summary.valuation.state !== 'complete-priced');
+    included.some((snapshot) => snapshot.summary.valuation.state !== 'complete-priced' || !['proven', 'live'].includes(snapshot.summary.aggregateState))
+    || [...accountValues.values()].some(entry => entry.states.some(state => !['proven', 'live'].includes(state)));
 
   // Internal transfers: an outflow on one included account and an inflow
   // on another included account inside the same confirmed transaction on
   // the same chain and network. Movement, not economic flow.
-  const internalTransfers = detectInternalTransfers(events);
+  const selectedEvents = [...new Map(events.filter(event => claimedBy.get(JSON.stringify([event.chain, event.network, event.address])) === event.accountId)
+    .map(event => [JSON.stringify([event.chain, event.network, event.address, event.eventId ?? event.txid, event.eventType]), event])).values()];
+  const internalTransfers = detectInternalTransfers(selectedEvents);
 
-  const external = externalFlows(events, new Set(internalTransfers.map((t) => `${t.chain}:${t.network}:${t.txid}`)));
+  const internalKeys = new Set(internalTransfers.map((t) => `${t.chain}:${t.network}:${t.txid}`));
+  const groups = new Map<string, PortfolioEventInput[]>();
+  for (const event of selectedEvents) {
+    const key = JSON.stringify([event.chain, event.network]);
+    const group = groups.get(key) ?? [];
+    group.push(event);
+    groups.set(key, group);
+  }
+  const nativeFlows = [...groups.values()].map(group => ({ chain: group[0].chain, network: group[0].network,
+    state: foldDataStates([...group.map(event => event.sourceState), ...included.filter(snapshot => snapshot.chain === group[0].chain && snapshot.network === group[0].network).map(snapshot => snapshot.summary.aggregateState)]),
+    ...nativeUnit(group[0].chain), ...externalFlows(group, internalKeys) }));
+  const external = nativeFlows.length === 1 ? nativeFlows[0] : { inflow: null, outflow: null };
 
   const allStates: PortfolioDataState[] = [
     ...included.map((snapshot) => snapshot.summary.aggregateState),
     ...holdings.map((holding) => holding.state),
+    ...[...accountValues.values()].flatMap(entry => entry.states),
   ];
 
   return {
@@ -298,12 +359,13 @@ export function aggregatePortfolio(
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([accountId, entry]) => ({
         accountId,
-        pricedValue: sumExact(entry.values),
+        pricedValue: entry.values.length ? sumExact(entry.values) : null,
         state: foldDataStates(entry.states),
-        holdingCount: entry.count,
+        holdingCount: entry.assets.size,
       })),
     externalInflowAtomic: external.inflow,
     externalOutflowAtomic: external.outflow,
+    nativeFlows,
     internalTransfers,
     unknownValueBucket: hasUnknownValue ? 'present' : 'absent',
     duplicateAddresses: duplicates,
@@ -311,26 +373,76 @@ export function aggregatePortfolio(
 }
 
 /** Deterministic internal-transfer detection from transaction evidence. */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-005] | D-FE-005A/B | C-FE-PF-INTERNAL/MULTICHAIN-FLOW.
+ * The owning semantic-event contract defines nativeValueAtomic as a signed
+ * per-address effect. minPositive rejects a valid -1100 debit, so its paired
+ * +1000 owned credit is incorrectly shown as external. externalFlows also adds
+ * native units across chains/networks, then overview.component.ts labels every
+ * result BTC. Reproduction: 1 BTC + 2 DOGE -> combined 300000000 -> 3 BTC label.
+ * Source: PortfolioSemanticEvent in shared/universe-portfolio-v2.types.ts and
+ * evidence/frontend-reproductions.json; amounts must remain exact strings/BigInt.
+ * 1. Group included, deduplicated events by chain/network/native asset/txid;
+ *    enforce the signed direction contract. Normalize debit magnitude only
+ *    for matching; retain signed effects for reconciliation and separate fees.
+ * 2. Match owned movement against actual input/output or counterparty evidence,
+ *    including multiple owned recipients and mixed external recipients. A shared
+ *    txid alone does not make the whole transaction internal. If current event
+ *    fields cannot prove an amount, expose unresolved movement and extend the
+ *    owning backend-apis event contract before asserting that amount.
+ * 3. Replace the two unscoped native totals with an explicit per-chain/network/
+ *    asset/unit flow result. Update aggregatePortfolio, OverviewComponent.drivers,
+ *    reports/insights and their tests together; retain incomplete history state
+ *    from WP-FE-003. Never sum different native assets or relabel them as BTC.
+ * 4. Extend aggregation.spec.ts with -1100/+1000 plus fee100, >1 owned recipient,
+ *    external+internal outputs, missing prevouts, duplicates/inclusion filters,
+ *    same txid across networks, reorg and >2^53 values. Test 1 BTC and 2 DOGE as
+ *    distinct rows. npm test -- --maxWorkers=2 src/app/universe/portfolio.
+ * Acceptance: real Signet owned transfer and authoritative persisted readback,
+ *    plus a controlled mixed-asset fixture; use justified testnet for Dogecoin.
+ * Dependencies: WP-FE-002/003 read coverage; coordinate any contract change with
+ *    backend-apis before regenerating the shared types. No transaction signing
+ *    belongs here. Version/invalidate derived snapshots on rollout; rollback
+ *    must retain user vault data and must not restore mixed-unit totals.
+ */
 export function detectInternalTransfers(
   events: readonly PortfolioEventInput[],
 ): InternalTransferCandidate[] {
   const candidates: InternalTransferCandidate[] = [];
   const seen = new Set<string>();
-  for (const out of events) {
+  const transactions = new Map<string, PortfolioEventInput[]>();
+  for (const event of events) {
+    const key = `${event.chain}:${event.network}:${event.txid}`;
+    const group = transactions.get(key) ?? [];
+    group.push(event);
+    transactions.set(key, group);
+  }
+  for (const transactionEvents of transactions.values()) {
+    if (transactionEvents.length !== 2) continue;
+    const out = transactionEvents.find(event => event.direction === 'out');
+    if (!out) continue;
     if (out.direction !== 'out' || out.confirmationState !== 'confirmed') continue;
+    if (transactionEvents.some(event => !['proven', 'live'].includes(event.sourceState))) continue;
     const key = `${out.chain}:${out.network}:${out.txid}`;
     if (seen.has(key)) continue;
-    for (const inner of events) {
+    for (const inner of transactionEvents) {
       if (
         inner.direction === 'in' &&
         inner.confirmationState === 'confirmed' &&
         inner.chain === out.chain &&
         inner.network === out.network &&
         inner.txid === out.txid &&
-        inner.accountId !== out.accountId
+        inner.accountId !== out.accountId &&
+        out.counterparties.includes(inner.address) && inner.counterparties.includes(out.address)
       ) {
-        const quantity = minPositive(out.nativeValueAtomic, inner.nativeValueAtomic);
-        if (quantity === null || BigInt(quantity) <= FEE_TOLERANCE) continue;
+        if (!exactInteger(out.nativeValueAtomic) || !exactInteger(inner.nativeValueAtomic) || !exactInteger(out.feeAtomic)) continue;
+        const debit = BigInt(out.nativeValueAtomic);
+        const credit = BigInt(inner.nativeValueAtomic);
+        const fee = BigInt(out.feeAtomic);
+        // Only a fully reconciled bilateral movement is proven by this contract.
+        // Mixed recipients and absent input/output evidence remain external.
+        if (debit >= 0n || credit <= 0n || fee < 0n || -debit !== credit + fee) continue;
+        const quantity = credit.toString();
         candidates.push({
           chain: out.chain,
           network: out.network,
@@ -354,6 +466,14 @@ export function detectInternalTransfers(
 }
 
 /** External (non-internal) flows in exact native units. */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-005] | D-FE-005B | C-FE-PF-MULTICHAIN-FLOW.
+ * Replace this cross-chain accumulator with the explicit scoped result defined
+ * beside detectInternalTransfers. Preserve signed amounts and fee accounting;
+ * update every consumer in one change. The current bigint sums are numerically
+ * exact but dimensionally wrong. Shared work-package tests cover units, inclusion,
+ * incomplete histories, integration acceptance and derived-state rollback.
+ */
 export function externalFlows(
   events: readonly PortfolioEventInput[],
   internalKeys: ReadonlySet<string>,
@@ -361,13 +481,31 @@ export function externalFlows(
   let inflow = 0n;
   let outflow = 0n;
   let known = true;
+  const directions = new Map<string, { incoming: Set<string>; outgoing: Set<string> }>();
+  for (const event of events) {
+    const key = `${event.chain}:${event.network}:${event.txid}`;
+    const group = directions.get(key) ?? { incoming: new Set<string>(), outgoing: new Set<string>() };
+    if (event.direction === 'in') group.incoming.add(event.accountId);
+    if (event.direction === 'out') group.outgoing.add(event.accountId);
+    directions.set(key, group);
+  }
   for (const event of events) {
     if (internalKeys.has(`${event.chain}:${event.network}:${event.txid}`)) continue;
-    if (event.nativeValueAtomic === null) {
+    // Opposite owned effects without a reconciled movement are ambiguous.
+    // Their internal portions cannot be reported as external economic flow.
+    const group = directions.get(`${event.chain}:${event.network}:${event.txid}`);
+    const opposite = event.direction === 'in' ? group?.outgoing : event.direction === 'out' ? group?.incoming : undefined;
+    if (opposite && (opposite.size > 1 || (opposite.size === 1 && !opposite.has(event.accountId)))) {
+      known = false;
+      continue;
+    }
+    if (event.direction === 'unknown') { known = false; continue; }
+    if (!exactInteger(event.nativeValueAtomic)) {
       known = false;
       continue;
     }
     const value = BigInt(event.nativeValueAtomic);
+    if ((event.direction === 'in' && value < 0n) || (event.direction === 'out' && value > 0n) || !['proven', 'live'].includes(event.sourceState)) { known = false; continue; }
     if (event.direction === 'in') inflow += value;
     if (event.direction === 'out') outflow += -value;
   }
@@ -393,10 +531,6 @@ function compareAssetKey(
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-function minPositive(a: string | null, b: string | null): string | null {
-  if (a === null || b === null) return null;
-  const left = BigInt(a);
-  const right = BigInt(b);
-  if (left <= 0n || right <= 0n) return null;
-  return left < right ? left.toString() : right.toString();
+function exactInteger(value: string | null): value is string {
+  return typeof value === 'string' && /^-?(0|[1-9][0-9]{0,127})$/.test(value);
 }

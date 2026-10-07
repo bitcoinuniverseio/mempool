@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { GlobalNetworkApiService, GlobalNetworkDnsSeed } from './global-network.service';
+import { Subscription, Subject } from 'rxjs';
+import { GlobalNetworkApiService, GlobalNetworkDnsSeed, GlobalNetworkDnsReport } from './global-network.service';
+import { StateService } from '@app/services/state.service';
+import { globalRead$ } from './global-network-observations';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
 @Component({
@@ -14,31 +16,39 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Bitcoin DNS Seed Observatory</h1>
+          <h1 class="m-0">Peer discovery</h1>
           <span class="badge bg-secondary" *ngIf="seeds.length > 0">
             {{ seeds.length }} Seed Hosts Monitored
           </span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Status, address pool size, and reachability ratios of authoritative DNS seeds used for initial peer discovery.
+          Starting points for finding peers. Discovered addresses are not checked.
         </p>
 
         <!-- Sub-navigation tabs -->
-        <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+        <nav aria-label="Peer navigation" class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
           <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
-          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
-          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
-          <a class="nav-link active" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
-          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Peers</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">History</a>
+          <a class="nav-link active" aria-current="page" [routerLink]="'/network/global/seeds' | relativeUrl">Discovery</a>
+          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Connection check</a>
         </nav>
       </header>
 
+      <p *ngIf="report" role="status" class="text-muted">{{ report.configured_network | titlecase }} &bull; {{ seeds.length }} discovery sources</p>
+      <details *ngIf="report" class="mb-3">
+        <summary>Source details</summary>
+        <p class="small text-muted">Configured network {{ report.configured_network }}. {{ report.scope }}.
+          This configured selection does not attest an independently observed node identity.</p>
+      </details>
+      <p *ngIf="!loading && report && !seeds.length">No discovery sources are available for this network.</p>
       <div *ngIf="loading" class="text-center py-5 text-muted">
         <div class="spinner-border text-primary mb-2" role="status"></div>
-        <div>Querying DNS seed infrastructure...</div>
+        <div>Loading discovery sources...</div>
       </div>
 
-      <div *ngIf="error" class="alert alert-danger my-3">
+      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">{{ error ? 'Retry' : 'Refresh' }}</button>
+      <div *ngIf="error" role="alert" class="alert alert-danger my-3">
         {{ error }}
       </div>
 
@@ -89,40 +99,29 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       border-radius: 0.375rem;
     }
     .nav-link.active {
-      background-color: var(--bs-primary, #f7931a);
-      color: #fff;
+      background-color: var(--u-brand);
+      color: var(--u-brand-contrast);
     }
   `],
 })
 export class GlobalNetworkSeedsComponent implements OnInit, OnDestroy {
   seeds: GlobalNetworkDnsSeed[] = [];
+  report: GlobalNetworkDnsReport | null = null;
   loading = true;
   error: string | null = null;
   private sub = new Subscription();
-
+  private retrySignal = new Subject<void>();
   constructor(
     private api: GlobalNetworkApiService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private state: StateService | null = inject(StateService, { optional: true })
   ) {}
-
   ngOnInit(): void {
-    this.sub.add(
-      this.api.getDnsSeeds$().subscribe({
-        next: data => {
-          this.seeds = data;
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-        error: err => {
-          this.error = err?.error?.error || err?.message || 'Failed to load DNS seeds';
-          this.loading = false;
-          this.cd.markForCheck();
-        },
-      })
-    );
+    this.sub.add(globalRead$(this.state, this.retrySignal, () => this.api.getDnsSeeds$()).subscribe(result => {
+      this.report = result.value; this.seeds = result.value?.seeds ?? [];
+      this.loading = result.kind === 'loading'; this.error = result.error; this.cd.markForCheck();
+    }));
   }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
-  }
+  retry(): void { this.retrySignal.next(); }
+  ngOnDestroy(): void { this.sub.unsubscribe(); this.retrySignal.complete(); }
 }

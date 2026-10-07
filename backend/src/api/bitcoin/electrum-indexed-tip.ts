@@ -26,7 +26,7 @@ export async function readIndexedTip(
       | null
       | undefined;
     const height = header?.height ?? header?.block_height;
-    return Number.isInteger(height) ? (height as number) : null;
+    return Number.isSafeInteger(height) && (height as number) >= 0 ? (height as number) : null;
   } catch (e) {
     // Warn, not debug. This decides whether the address index looks
     // reachable, and a release gate refuses to ship when it does not.

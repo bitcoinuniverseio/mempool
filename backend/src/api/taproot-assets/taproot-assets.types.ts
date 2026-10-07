@@ -28,14 +28,34 @@ export interface TaprootAssetGroup {
 
 export interface Bolt12Offer {
   readonly offerId: string;
+  /** LDK's merkle-derived identifier differs from Core Lightning's TLV SHA256 catalog key. */
+  readonly decoderOfferId: string;
   readonly offerString: string;
   readonly description: string;
   readonly issuer?: string;
   readonly amountMsat?: string;
   readonly currency?: string;
   readonly blindRoutesCount: number;
-  readonly valid: boolean;
+  valid: boolean;
   readonly expiry?: number;
+  readonly currencyAmountAtomic?: string;
+  readonly expiryAtomic: string | null;
+  readonly syntaxValid: true;
+  readonly sourceActive: boolean;
+  readonly sourceUsed: boolean;
+  readonly singleUse: boolean;
+  readonly networkCompatible: boolean;
+  readonly unknownRequiredFeatures: boolean;
+  validity: 'usable-unverified' | 'source-disabled' | 'already-used' | 'expired' | 'wrong-chain' | 'unsupported-required-features';
+  readonly invoiceAvailability: 'unverified';
+  readonly paymentVerified: false;
+}
+
+export interface Bolt12OfferPage {
+  offers: Bolt12Offer[]; total: number; nextCursor: string | null;
+  source: { implementation: 'CoreLightning'; version: string; nodeId: string; network: string; genesisHash: string;
+    signetChallenge?: string; publicationSha256: string; observedAt: string;
+    checkpoint: { height: number; hash: string }; catalogAnchor: { height: number; hash: string }; scope: string; };
 }
 
 export interface LightningRfqQuote {

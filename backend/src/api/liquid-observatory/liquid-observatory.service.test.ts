@@ -1,4 +1,5 @@
 import { Application, Request, Response } from 'express';
+import { EventEmitter } from 'events';
 import liquidObservatoryRoutes from './liquid-observatory.routes';
 import { LiquidObservatoryEvidenceError, liquidObservatoryService } from './liquid-observatory.service';
 
@@ -50,6 +51,7 @@ describe('Liquid observatory HTTP responses', () => {
     const gets = new Map<string, Handler>();
     const app = {
       get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
+      post: jest.fn(() => app),
     };
     liquidObservatoryRoutes.initRoutes(app as unknown as Application);
     return gets;
@@ -57,10 +59,11 @@ describe('Liquid observatory HTTP responses', () => {
 
   it('answers every read with a 503 that names the missing source', async () => {
     const gets = mount();
-    expect(gets.size).toBe(6);
+    expect(gets.size).toBe(7);
     for (const handler of gets.values()) {
-      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      await handler({ params: { assetId: 'L-BTC' } } as unknown as Request, res as unknown as Response);
+      const res = Object.assign(new EventEmitter(), { status: jest.fn().mockReturnThis(), json: jest.fn() });
+      const req = Object.assign(new EventEmitter(), { params: { assetId: 'L-BTC' } });
+      await handler(req as unknown as Request, res as unknown as Response);
       expect(res.status).toHaveBeenCalledWith(503);
       const body = res.json.mock.calls[0][0];
       expect(body.stage).toMatch(/^unavailable-/);

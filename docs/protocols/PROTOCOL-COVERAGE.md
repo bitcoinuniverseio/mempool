@@ -20,9 +20,9 @@ A protocol never silently disappears from this table: `PROTOCOL-ROSTER.lock`
 records every id that has been published, and the gate fails when one of them
 stops appearing.
 
-Pinned from bitcoinuniverseio/backend-apis at commit 7ec4602e7a5dcd6495268ae64698280657cc9c73,
+Pinned from bitcoinuniverseio/backend-apis at commit 1a1a2548a74e419bf7341dd7af1cd57ff98e34c7,
 manifest schema universe-explorer-protocol-manifest-v1, registry version 1.1.0,
-recorded 2026-09-17T05:45:55.810Z.
+recorded 2026-10-04T01:34:54.431Z.
 
 39 protocol identities are retained. 7 carry historical readable declarations; these are not current runtime or E2E passes. Operation descriptors identify implemented public reads and their owned authority routes; configuration and acceptance are separate. The registry is not the complete application operation inventory.
 
@@ -44,7 +44,7 @@ recorded 2026-09-17T05:45:55.810Z.
 | subrealms | ATOMICALS | bitcoin | index-atomicals-nfts-and-realms | BLOCKED | unknown | registry, outpoint, outpoints-batch, transaction-flow, transactions-batch, address-holdings |
 | arc20 | ATOMICALS | bitcoin | index-atomicals | BLOCKED | unknown | registry, activity |
 | op_return | OP DATA | bitcoin | index-op20 | BLOCKED | unknown | registry, activity |
-| op_names | OP DATA | bitcoin | index-op20 | BLOCKED | unknown | registry, activity |
+| op_names | OP DATA | bitcoin | index-op20-op-names | BLOCKED | unknown | registry, activity |
 | op_inscriptions | OP DATA | bitcoin | index-opinscriptions | VERIFIED READ ONLY | complete | registry, objects |
 | op_drop | OP DATA | bitcoin | index-drops-and-opdrop | BLOCKED | unknown | registry, activity |
 | drops | OP DATA | bitcoin | index-drops-and-opdrop | BLOCKED | unknown | registry, activity |

@@ -102,8 +102,10 @@ test('container gate: develop and main pull requests touching the templates buil
   assert.match(publish, /if: \|\n\s+needs\.test-images\.result == 'success' &&\n\s+github\.event_name == 'workflow_dispatch' &&\n\s+github\.event\.inputs\.publish == 'true'/);
   assert.match(latest, /github\.event\.inputs\.publish == 'true' && github\.event\.inputs\.latest == 'true'/);
   assert.doesNotMatch(source, /github\.ref_name|GITHUB_REF\//);
-  // Every job keeps the shared runner labels used elsewhere.
-  assert.equal((source.match(/runs-on: \[self-hosted, linux, x64, universe-super\]/g) ?? []).length, 3);
+  // Container jobs run in the isolated hosted fleet, including pull requests.
+  const runnerLines = source.split('\n').filter(line => line.trim().startsWith('runs-on:'));
+  assert.equal(runnerLines.length, 3);
+  assert.deepEqual(runnerLines, Array(3).fill('    runs-on: ubuntu-24.04'));
   // The dispatched tag is validated before it reaches a shell or a registry.
   for (const block of [gate, publish, latest]) {
     assert.match(block, /case "\$DISPATCH_TAG" in\n\s+''\|\*\[!A-Za-z0-9\._-\]\*\)/);

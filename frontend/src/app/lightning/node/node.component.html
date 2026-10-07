@@ -19,7 +19,9 @@
   <div class="clearfix"></div>
 
   <div *ngIf="error" class="d-flex flex-column justify-content-around align-items-center mt-5 w-100" style="min-height: 100px">
-    <span class="text-center">No node found for public key "{{ node.public_key | shortenString : 12}}"</span>
+    <span *ngIf="nodeMissing" class="text-center">No node found for public key "{{ node.public_key | shortenString : 12}}"</span>
+    <span *ngIf="!nodeMissing" class="text-center" role="alert">Lightning node data is unavailable. Retry when the selected provider is ready.</span>
+    <button class="btn btn-primary mt-2" type="button" (click)="retry()">Retry node</button>
   </div>
 
   <div class="box" *ngIf="!error">

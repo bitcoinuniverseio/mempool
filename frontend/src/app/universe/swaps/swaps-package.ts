@@ -3,7 +3,7 @@ import { tapLeafHash } from '@scure/btc-signer/payment.js';
 import { concatBytes, compareBytes, equalBytes, PubT, sha256x2, tagSchnorr, taprootTweakPubkey, validatePubkey } from '@scure/btc-signer/utils.js';
 import { decodePsbtInput } from '../workbench/psbt-inspect';
 import { SwapRecoveryPlan } from './swaps.service';
-import { ripemd160 } from '@noble/hashes/ripemd160';
+import { ripemd160 } from '@noble/hashes/legacy.js';
 
 const allowed = new Set(['chain', 'network', 'swap_id', 'swap_type', 'protocol_id', 'protocol_revision',
   'schema_version', 'provider_id', 'created_at', 'expires_at', 'preimage_hash', 'timeout_height',

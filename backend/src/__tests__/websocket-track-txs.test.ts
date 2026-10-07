@@ -42,9 +42,10 @@ jest.mock('../api/statistics/statistics', () => ({ __esModule: true, default: {}
 jest.mock('../api/services/wallets', () => ({ __esModule: true, default: {} }));
 jest.mock('../api/bitcoin/bitcoin-second-client', () => ({ __esModule: true, default: {} }));
 jest.mock('../api/cpfp', () => ({ calculateMempoolTxCpfp: () => undefined }));
-jest.mock('../api/services/stratum', () => ({ __esModule: true, default: {} }));
+jest.mock('../api/services/stratum', () => ({ __esModule: true, default: { getJobs: () => ({}) } }));
 
 import websocketHandler from '../api/websocket-handler';
+import type { StratumJob } from '../api/services/stratum';
 
 const TXID_MEMPOOL = '1'.repeat(64);
 const TXID_REPLACED = '2'.repeat(64);
@@ -54,17 +55,23 @@ const TXID_DOWN = '5'.repeat(64);
 const TXID_NODE_MEMPOOL = '6'.repeat(64);
 const HASH = 'a'.repeat(64);
 
-function connect(): { send: (message: Record<string, unknown>) => Promise<Record<string, any>[]> } {
+function connect(): { send: (message: Record<string, unknown>) => Promise<Record<string, any>[]>; publishStratum: (job: StratumJob) => Record<string, any>[] } {
   const events: Record<string, any> = {};
   const clientEvents: Record<string, any> = {};
   const messages: Record<string, any>[] = [];
-  const server = { on: (name: string, fn: any) => { events[name] = fn; } };
+  const server = { clients: new Set<any>(), on: (name: string, fn: any) => { events[name] = fn; } };
   (websocketHandler as any).webSocketServers = [];
   websocketHandler.addWebsocketServer(server as any);
   websocketHandler.setupConnectionHandling();
-  const client = { on: (name: string, fn: any) => { clientEvents[name] = fn; }, send: (data: string) => messages.push(JSON.parse(data)), close: () => { throw new Error('unexpected close'); } };
+  const client = { readyState: 1, on: (name: string, fn: any) => { clientEvents[name] = fn; }, send: (data: string) => messages.push(JSON.parse(data)), close: () => { throw new Error('unexpected close'); } };
+  server.clients.add(client);
   events.connection(client, { headers: {}, socket: { remoteAddress: '127.0.0.1' } });
   return {
+    publishStratum: (job) => {
+      messages.length = 0;
+      websocketHandler.handleNewStratumJob(job);
+      return messages;
+    },
     send: /** @asyncUnsafe test helper */ async (message) => {
       messages.length = 0;
       await clientEvents.message(JSON.stringify(message));
@@ -132,5 +139,31 @@ describe('websocket track-txs initial status', () => {
     expect(refused['track-txs-error']).toContain('maximum of 100');
     expect(refused['tracked-txs']).toBeUndefined();
     expect(nodeState.getRawTransaction).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('older Stratum job subscription lifecycle', () => {
+  const job: StratumJob = { pool: 7, height: 100, coinbase: '', scriptsig: '', reward: 0, jobId: 'job-1', extraNonce: '', extraNonce2Size: 4, prevHash: '0'.repeat(64), coinbase1: '', coinbase2: '', merkleBranches: [], version: '20000000', bits: '1d00ffff', time: '65000000', timestamp: 0, cleanJobs: true, received: 0 };
+
+  it('honors the current frontend null stop frame and permits a later subscription', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const socket = connect();
+    socket.publishStratum(job);
+    await socket.send({ 'track-stratum': 'all' });
+    expect(socket.publishStratum(job)).toEqual([{ stratumJob: job }]);
+    await socket.send({ 'track-stratum': null });
+    expect(socket.publishStratum(job)).toEqual([]);
+    await socket.send({ 'track-stratum': job.pool });
+    expect(socket.publishStratum(job)).toEqual([{ stratumJob: job }]);
+  });
+
+  it('keeps an absent key inert, filters pools, and preserves false cancellation', /** @asyncUnsafe Jest owns the test promise. */ async () => {
+    const socket = connect();
+    socket.publishStratum(job);
+    await socket.send({ 'track-stratum': job.pool });
+    await socket.send({});
+    expect(socket.publishStratum({ ...job, pool: 8 })).toEqual([]);
+    expect(socket.publishStratum(job)).toEqual([{ stratumJob: job }]);
+    await socket.send({ 'track-stratum': false });
+    expect(socket.publishStratum(job)).toEqual([]);
   });
 });

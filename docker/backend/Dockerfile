@@ -27,6 +27,7 @@ RUN node --version | grep -x v24.19.0 && npm --version | grep -x 11.17.0 && carg
 RUN npm ci --omit=dev --omit=optional
 
 WORKDIR /build
+RUN mkdir -p /build/GeoIP
 RUN npm run package
 
 FROM rust:1.89.0-bookworm AS runtime
@@ -41,6 +42,9 @@ RUN apt-get update && \
 RUN node --version | grep -x v24.19.0 && npm --version | grep -x 11.17.0
 
 WORKDIR /backend
+
+# The package contains the exact locked SDK used by the native proof decoder.
+ENV UNIVERSE_ARKADE_CODEC=/backend/package/native/arkade-codec/codec.mjs
 
 RUN chown 1000:1000 ./
 COPY --from=builder --chown=1000:1000 /build/package ./package/

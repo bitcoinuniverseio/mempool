@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   API_CACHE_MAX_ENTRIES,
+  apiGet,
   NEVER_CACHE_PATHS,
   OFFLINE_URL,
   SHELL_URLS,
@@ -28,7 +29,30 @@ function urlOf(path: string): URL {
   return new URL(`https://explorer.example${path}`);
 }
 
+describe('API storage directives and native freshness',()=>{
+  afterEach(()=>vi.unstubAllGlobals());
+  function storage(cached?:Response){const cache={put:vi.fn(),delete:vi.fn(async()=>true),keys:vi.fn(async()=>[])};const open=vi.fn(async()=>cache),match=vi.fn(async()=>cached);vi.stubGlobal('caches',{open,match});return{cache,open,match};}
+  it('never writes or replays cache for an explicit no-store read, including network failure',async()=>{
+    const s=storage(new Response('stale source'));const request=getRequest('/api/v1/stratum-v2/network',{headers:{'Cache-Control':'no-store'}});vi.stubGlobal('fetch',vi.fn(async()=>{throw new Error('offline');}));await expect(apiGet(request)).rejects.toThrow('offline');expect(s.open).not.toHaveBeenCalled();expect(s.match).not.toHaveBeenCalled();expect(s.cache.put).not.toHaveBeenCalled();
+  });
+  it('returns a genuine no-store response unchanged while evicting the previous eligible entry',async()=>{
+    const s=storage(new Response('prior source'));const response=new Response('current source',{headers:{'Cache-Control':'private, no-store'}});vi.stubGlobal('fetch',vi.fn(async()=>response));const request=getRequest('/api/v1/stratum-v2/network');expect(await apiGet(request)).toBe(response);expect(await response.text()).toBe('current source');expect(s.cache.delete).toHaveBeenCalledWith(request);expect(s.cache.put).not.toHaveBeenCalled();
+  });
+  it('does not replay a legacy incorrectly cached no-store response when offline',async()=>{
+    const s=storage(new Response('old protected source',{headers:{'Cache-Control':'no-store'}}));vi.stubGlobal('fetch',vi.fn(async()=>{throw new Error('offline');}));const response=await apiGet(getRequest('/api/v1/stratum-v2/network'));expect(response.type).toBe('error');expect(s.cache.delete).toHaveBeenCalledTimes(1);expect(s.cache.put).not.toHaveBeenCalled();
+  });
+  it('preserves ordinary allowed snapshot caching and offline fallback with its capture header',async()=>{
+    const s=storage();vi.stubGlobal('fetch',vi.fn(async()=>new Response('public block',{headers:{'Cache-Control':'public, max-age=30'}})));const request=getRequest('/api/v1/blocks');expect(await (await apiGet(request)).text()).toBe('public block');expect(s.cache.put).toHaveBeenCalledTimes(1);const cached=s.cache.put.mock.calls[0][1] as Response;expect(cached.headers.get(SNAPSHOT_HEADER)).toBeTruthy();vi.stubGlobal('fetch',vi.fn(async()=>{throw new Error('offline');}));vi.stubGlobal('caches',{open:s.open,match:vi.fn(async()=>cached)});expect(await (await apiGet(request)).text()).toBe('public block');
+  });
+});
+
 describe('what is never stored', () => {
+  it('honors explicit no-store request directives before API or static interception',()=>{
+    for(const path of ['/api/v1/stratum-v2/network?network=regtest','/resources/config.js']){
+      expect(strategyFor(urlOf(path),getRequest(path,{headers:{'Cache-Control':'max-age=0, NO-STORE'}}))).toBeNull();
+      expect(strategyFor(urlOf(path),getRequest(path,{cache:'no-store'}))).toBeNull();
+    }
+  });
   it('refuses every non GET method', () => {
     const post = strategyFor(urlOf('/api/v1/blocks'), getRequest('/api/v1/blocks', { method: 'POST' }));
     expect(post).toBeNull();
