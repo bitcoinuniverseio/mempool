@@ -15,6 +15,24 @@ describe('ordered migration completion',()=>{
     const subject=isolatedBackend('api/database-migration.ts',{'../config':defaultMock({MEMPOOL:{NETWORK:'signet'},DATABASE:{DATABASE:'isolated'}}),'../database':defaultMock(db),'../logger':quietLogger}).default;
     return {subject,db,markers,statements,getVersion:()=>version,setFailure:(v:boolean)=>fail=v};
   }
+  function notificationSchema(columnType: string) {
+    const test=setup(113);
+    test.db.query=async(input:any)=>{
+      const sql=typeof input==='string'?input:input.sql;
+      if(sql.includes('information_schema.columns')) return [[{COLUMN_TYPE:columnType,EXTRA:'auto_increment'}]];
+      if(sql.includes('information_schema.statistics')) return [[{INDEX_NAME:'intelligence_notifications_sequence',COLUMN_NAME:'notification_sequence',SEQ_IN_INDEX:1,NON_UNIQUE:0}]];
+      throw Error('Existing valid notification schema must not run DDL');
+    };
+    return test;
+  }
+  it.each(['bigint unsigned','bigint(20) unsigned'])('accepts an existing unsigned notification sequence (%s)',async(type)=>{
+    const test=notificationSchema(type);
+    await expect(test.subject.$ensureNotificationSequence()).resolves.toBeUndefined();
+  });
+  it.each(['bigint','bigint(20)','int unsigned','varchar(20)'])('rejects an incompatible notification sequence (%s)',async(type)=>{
+    const test=notificationSchema(type);
+    await expect(test.subject.$ensureNotificationSequence()).rejects.toThrow('schema 113');
+  });
   it('blocks startup on failed key migration without advancing the marker, then resumes',async()=>{
     const test=setup(103,true);await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 104');expect(test.getVersion()).toBe(103);expect(test.markers).toEqual([]);
     test.setFailure(false);await expect(test.subject.$initializeOrMigrateDatabase()).resolves.toBeUndefined();expect(test.getVersion()).toBe(113);expect(test.markers).toEqual([104,105,106,107,108,109,110,111,112,113]);
