@@ -16,7 +16,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Owned Bitcoin Peer Observatory</h1>
+          <h1 class="m-0">Bitcoin peers</h1>
           <div class="d-flex gap-2">
             <span class="badge bg-success" *ngIf="overview">
               {{ overview.total_reachable_nodes | number }} Reachable Nodes
@@ -27,16 +27,16 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           </div>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Capabilities reported for peers connected to this deployment's owned node. This is not a global network census or an independent operator comparison.
+          Connections reported by our Bitcoin node. This is not a global network census.
         </p>
 
         <!-- Sub-navigation tabs -->
-        <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
-          <a class="nav-link active" [routerLink]="'/network/global' | relativeUrl">Overview</a>
-          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
-          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
-          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
-          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
+        <nav aria-label="Peer navigation" class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+          <a class="nav-link active" aria-current="page" [routerLink]="'/network/global' | relativeUrl">Overview</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Peers</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">History</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">Discovery</a>
+          <a class="nav-link" [routerLink]="'/network/global/self-check' | relativeUrl">Connection check</a>
         </nav>
       </header>
 
@@ -45,14 +45,18 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         <div>Loading owned-peer observation...</div>
       </div>
 
-      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">Retry fresh read</button>
+      <button type="button" class="btn btn-outline-primary mb-3" (click)="retry()" [disabled]="loading">{{ error ? 'Retry' : 'Refresh' }}</button>
       <div *ngIf="error" role="alert" class="alert alert-danger my-3">
         {{ error }}
       </div>
 
       <div *ngIf="!loading && overview" class="content-body">
-        <p role="status">Reported network: {{ overview.active_epoch.network }}. {{ overview.active_epoch.scope }}.
+        <p role="status" class="text-muted">{{ overview.active_epoch.network | titlecase }} &bull; {{ overview.total_reachable_nodes | number }} connected peers</p>
+        <details class="mb-3">
+          <summary>Source details</summary>
+          <p class="small text-muted">Reported network: {{ overview.active_epoch.network }}. {{ overview.active_epoch.scope }}.
           Observed {{ overview.last_updated }}. No independent source profile, challenge, or global census is attested by this response.</p>
+        </details>
         <!-- Top Metrics Cards -->
         <section class="row g-3 mb-4">
           <div class="col-12 col-sm-6 col-lg-3">
@@ -167,8 +171,8 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       border-radius: 0.375rem;
     }
     .nav-link.active {
-      background-color: var(--bs-primary, #f7931a);
-      color: #fff;
+      background-color: var(--u-brand);
+      color: var(--u-brand-contrast);
     }
   `],
 })

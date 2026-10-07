@@ -870,7 +870,9 @@ const server = http.createServer((request, response) => {
 
   // Single page application: an unknown path is a client route, not a 404,
   // unless it looks like a missing asset request.
-  if (extname(pathname)) {
+  // Peer addresses contain dots but are application identifiers, not assets.
+  const peerPage = /^\/(?:(?:signet|testnet|testnet4)\/)?network\/global\/node\/[^/]+\/?$/.test(pathname);
+  if (extname(pathname) && !peerPage) {
     response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
     response.end('Not found');
     return;

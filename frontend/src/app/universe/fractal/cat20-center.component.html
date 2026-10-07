@@ -91,7 +91,8 @@
     <!-- List View -->
     <ng-container *ngIf="vm.kind === 'ready' && vm.tokens">
       <section class="panel">
-        <table class="data-table">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Top Token Holders, scroll horizontally">
+<table class="data-table">
           <thead>
             <tr>
               <th>Token ID</th>
@@ -115,6 +116,7 @@
             </tr>
           </tbody>
         </table>
+</div>
       </section>
     </ng-container>
     <section class="panel" *ngIf="vm.page">

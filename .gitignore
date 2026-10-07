@@ -21,3 +21,6 @@ scripts/universe/visual-qa/verify*/
 scripts/universe/visual-qa/artifacts-*/
 scripts/universe/visual-qa/node_modules/
 .artifacts/
+
+# Per-machine assistant permissions are kept locally.
+.claude/settings.local.json

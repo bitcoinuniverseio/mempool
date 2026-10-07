@@ -61,7 +61,8 @@
 
       <section class="panel" *ngIf="vm.latestBlock">
         <h2>Block at the observed tip</h2>
-        <table class="data-table">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Block at the observed tip, scroll horizontally">
+<table class="data-table">
           <tbody>
             <tr>
               <td><strong>Height</strong></td>
@@ -85,6 +86,7 @@
             </tr>
           </tbody>
         </table>
+</div>
       </section>
     </ng-container>
     <button type="button" (click)="retry()" [disabled]="vm.kind === 'loading'">Retry reads</button>
