@@ -60,9 +60,9 @@
       <p *ngIf="vm.offersError" role="alert">Offers: {{ vm.offersError }}</p>
       <p *ngIf="vm.quotesError" role="alert">RFQ quotes: {{ vm.quotesError }}</p>
       <p *ngIf="vm.offersPending" role="status">Reading one bounded offer page. Previously accepted rows remain their earlier observation.</p>
-      <button type="button" [disabled]="vm.offersPending" (click)="restartOffers()">Refresh offers</button>
-      <button type="button" *ngIf="vm.offersError && !vm.restartRequired" [disabled]="vm.offersPending" (click)="retryOffers()">Retry offer page</button>
-      <button type="button" *ngIf="vm.offerPage?.nextCursor && !vm.restartRequired" [disabled]="vm.offersPending" (click)="moreOffers()">Load more offers</button>
+      <button type="button" class="btn btn-secondary read-action" [disabled]="vm.offersPending" (click)="restartOffers()">Refresh offers</button>
+      <button type="button" class="btn btn-secondary read-action" *ngIf="vm.offersError && !vm.restartRequired" [disabled]="vm.offersPending" (click)="retryOffers()">Retry offers</button>
+      <button type="button" class="btn btn-secondary read-action" *ngIf="vm.offerPage?.nextCursor && !vm.restartRequired" [disabled]="vm.offersPending" (click)="moreOffers()">Load more offers</button>
       <section class="panel" *ngIf="vm.offerPage as page">
         <h2>Owned node offer catalog observation</h2>
         <p>{{ vm.offers?.length }} of {{ page.total }} intentionally published offers loaded. {{ page.nextCursor ? 'More catalog pages remain.' : 'Published catalog exhausted at this observation.' }} Global offer completeness is unverified.</p>

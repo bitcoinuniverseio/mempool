@@ -125,7 +125,7 @@
       <p>Tracker source {{ vm.page.trackerSourceRevision }} &middot; observed {{ vm.page.observation.observedAt }}</p>
     </section>
     <p role="alert" *ngIf="vm.pageFailure">{{ vm.pageFailure }}</p>
-    <button type="button" *ngIf="vm.page?.nextCursor || vm.holderFailure || vm.pageFailure" (click)="more()" [disabled]="vm.pending || vm.restartRequired">{{ vm.pending ? 'Reading page...' : vm.pageFailure || vm.holderFailure ? 'Retry page' : 'Load more' }}</button>
-    <button type="button" (click)="restart()" [disabled]="vm.kind === 'loading' || vm.pending">Restart read</button>
+    <button type="button" class="btn btn-secondary read-action" *ngIf="vm.page?.nextCursor || vm.holderFailure || vm.pageFailure" (click)="more()" [disabled]="vm.pending || vm.restartRequired">{{ vm.pending ? 'Reading page...' : vm.pageFailure || vm.holderFailure ? 'Retry page' : 'Load more' }}</button>
+    <button type="button" class="btn btn-secondary read-action" (click)="restart()" [disabled]="vm.kind === 'loading' || vm.pending">Refresh</button>
   </ng-container>
 </div>
