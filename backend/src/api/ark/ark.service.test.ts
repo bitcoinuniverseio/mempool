@@ -15,16 +15,16 @@ describe('ArkService', () => {
   it('reports the missing Ark provider rather than invented operators, rounds and VTXOs', async () => {
     await expect(arkService.$getOperators()).rejects.toThrow(unavailable('unavailable-ark-provider'));
     await expect(arkService.$getBatches()).rejects.toThrow(unavailable('unavailable-ark-provider'));
-    await expect(arkService.$getBatch('batch-860142-01')).rejects.toThrow(unavailable('unavailable-ark-provider'));
-    await expect(arkService.$getVtxo('vtxo-78192a83918273918273918273918273')).rejects.toThrow(unavailable('unavailable-ark-provider'));
-    await expect(arkService.$getVirtualTxs()).rejects.toThrow(unavailable('unavailable-ark-provider'));
+    await expect(arkService.$getBatch('13b42434-ef46-4c68-b367-2aecb01f7b2a')).rejects.toThrow(unavailable('unavailable-ark-provider'));
+    await expect(arkService.$getVtxo('vtxo-78192a83918273918273918273918273')).rejects.toThrow(unavailable('unavailable-ark-projection'));
+    await expect(arkService.$getVirtualTxs()).rejects.toThrow(unavailable('unavailable-ark-projection'));
   });
 
   it('never resolves an absent source as an empty directory', async () => {
     for (const read of [
       () => arkService.$getOperators(),
       () => arkService.$getBatches(),
-      () => arkService.$getBatch('unknown'),
+      () => arkService.$getBatch('13b42434-ef46-4c68-b367-2aecb01f7b2a'),
       () => arkService.$getVtxo('unknown'),
       () => arkService.$getVirtualTxs(),
     ]) {
@@ -62,15 +62,17 @@ describe('Ark exit proof verification boundary', () => {
 describe('Ark HTTP responses', () => {
   type Handler = (req: Request, res: Response) => Promise<void>;
 
-  function mount(): { gets: Map<string, Handler>; post: Handler } {
+  function mount(): { gets: Map<string, Handler>; post: Handler; nativePost: Handler } {
     const gets = new Map<string, Handler>();
     let post!: Handler;
+    let nativePost!: Handler;
     const app = {
       get: jest.fn((path: string, callback: Handler) => { gets.set(path, callback); return app; }),
-      post: jest.fn((_path: string, callback: Handler) => { post = callback; return app; }),
+      post: jest.fn((path: string, callback: Handler) => { if (path.endsWith('/verify')) post = callback;
+        if (path.endsWith('/verify/native')) nativePost = callback; return app; }),
     };
     arkRoutes.initRoutes(app as unknown as Application);
-    return { gets, post };
+    return { gets, post, nativePost };
   }
 
   it.each([
@@ -90,7 +92,7 @@ describe('Ark HTTP responses', () => {
     expect(gets.size).toBe(5);
     for (const handler of gets.values()) {
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-      await handler({ params: { batchId: 'batch-1', vtxoId: 'vtxo-1' } } as unknown as Request, res as unknown as Response);
+      await handler({ params: { batchId: '13b42434-ef46-4c68-b367-2aecb01f7b2a', vtxoId: 'vtxo-1' } } as unknown as Request, res as unknown as Response);
       expect(res.status).toHaveBeenCalledWith(503);
       const body = res.json.mock.calls[0][0];
       expect(body.stage).toMatch(/^unavailable-/);
@@ -99,5 +101,40 @@ describe('Ark HTTP responses', () => {
       expect(body).not.toHaveProperty('batches');
       expect(body).not.toHaveProperty('virtualTxs');
     }
+  });
+  it.each([{ limit: ['1', '2'] }, { before: { value: '100' } }, { after: '-1' }, { limit: '101' }, { withFailed: 'true' }])(
+    'rejects malformed or privileged catalogue selectors before native IO %j', async query => {
+      const { gets } = mount();
+      const handler = [...gets.entries()].find(([path]) => path.endsWith('/batches'))![1];
+      const read = jest.spyOn(arkService, '$getBatchPage');
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      try {
+        await handler({ query } as unknown as Request, res as unknown as Response);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(read).not.toHaveBeenCalled();
+      } finally { read.mockRestore(); }
+    });
+  it('reports a bounded catalogue observation without a fabricated global total or continuation', async () => {
+    const { gets } = mount();
+    const handler = [...gets.entries()].find(([path]) => path.endsWith('/batches'))![1];
+    const read = jest.spyOn(arkService, '$getBatchPage').mockResolvedValue({ batches: [], nativeObservedCount: 1 });
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    try {
+      await handler({ query: { after: '0', before: '100', limit: '10' } } as unknown as Request, res as unknown as Response);
+      expect(res.json).toHaveBeenCalledWith({ batches: [], total: null, page: { after: '0', before: '100', limit: 10,
+        nativeObservedCount: 1, observedCount: 0, completeCatalogue: false, scope: 'bounded-native-completed-rounds', continuation: null } });
+    } finally { read.mockRestore(); }
+  });
+  it('rejects a hash-array proof on the mounted versioned route before native reads', async () => {
+    const { nativePost } = mount(); const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    await nativePost({ body: { vtxoId: 'vtxo-1', proofPath: ['ab'.repeat(32)] } } as Request, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ valid: false, stage: 'invalid-native-proof', exitViable: null, protocolVerified: null }));
+  });
+  it('preserves unavailable native verifier semantics on the mounted versioned route', async () => {
+    const { nativePost } = mount(); const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    await nativePost({ body: { schema: 'universe-ark-native-proof-v1' } } as Request, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ valid: null, stage: 'unavailable-native-verifier', exitViable: null, protocolVerified: null }));
   });
 });

@@ -7,7 +7,7 @@ import { EnterpriseService } from '@app/services/enterprise.service';
 import { NavigationService } from '@app/services/navigation.service';
 import { StorageService } from '@app/services/storage.service';
 import { ChainHealthService, ChainHealthState } from '@app/universe/chain-health.service';
-import { chainNetwork } from '@app/universe/chain-network';
+import { resolveChainNetwork } from '@app/universe/chain-network';
 import { healthServiceSummary, nodeHealthLabel, readHealth } from '@app/universe/multichain-explorer/chain-health';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { mainReady } from '@app/universe/main-ready';
@@ -244,7 +244,8 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   chainCapability(capabilities: ChainCapabilityEnvelope[], chain: ExplorerChain): ChainCapabilityEnvelope | undefined {
-    return capabilities.find((capability) => capability.chain === chain && capability.network === this.resolvedNetwork(chain));
+    const network = this.resolvedNetwork(chain);
+    return network === null ? undefined : capabilities.find((capability) => capability.chain === chain && capability.network === network);
   }
 
   chainState(capability: ChainCapabilityEnvelope | undefined): string {
@@ -252,12 +253,17 @@ export class MasterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   chainNetwork(chain: ExplorerChain): string {
-    return this.networkLabel(this.resolvedNetwork(chain));
+    const network = this.resolvedNetwork(chain);
+    return network === null ? $localize`:@@master-page.network-setting-invalid:Network setting invalid` : this.networkLabel(network);
   }
 
-  /** Bitcoin follows the selector; every other chain reads its configured network. */
-  private resolvedNetwork(chain: ExplorerChain): string {
-    return chainNetwork(chain, (this.stateService.network || 'mainnet') as ExplorerNetwork, this.stateService.env);
+  /**
+   * Bitcoin follows the selector; every other chain reads its configured
+   * network, or null when that configuration is invalid and nothing is read.
+   */
+  private resolvedNetwork(chain: ExplorerChain): string | null {
+    const resolved = resolveChainNetwork(chain, (this.stateService.network || 'mainnet') as ExplorerNetwork, this.stateService.env);
+    return resolved.available ? resolved.network : null;
   }
 
   chainDetail(capability: ChainCapabilityEnvelope | undefined): string {

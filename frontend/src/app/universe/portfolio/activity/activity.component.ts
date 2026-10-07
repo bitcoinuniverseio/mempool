@@ -10,6 +10,7 @@ import { PortfolioSessionService } from '../stores/session.service';
 import { PortfolioDataStateComponent } from '../shared/data-state.component';
 import { atomicToDisplay, formatExact, maskedValue } from '../shared/exact';
 import type { PortfolioDataState } from '@app/shared/universe-portfolio-v2.types';
+import { nativeUnit } from '../shared/aggregation';
 
 type EventKind = 'all' | 'in' | 'out' | 'internal' | 'pending';
 
@@ -112,37 +113,39 @@ export class ActivityComponent {
       rows.push({
         key: `internal:${transfer.txid}`,
         description: $localize`:@@universe.portfolio.activity.internal-row:Internal transfer between tracked accounts (movement, not a gain or loss)`,
-        value: transfer.quantityAtomic === null ? null : `${formatExact(atomicToDisplay(transfer.quantityAtomic, 8) ?? '', 'en')} BTC`,
+        value: `${formatExact(atomicToDisplay(transfer.quantityAtomic, nativeUnit(transfer.chain).decimals) ?? '', 'en')} ${nativeUnit(transfer.chain).asset} (${transfer.network})`,
         state: 'proven' as const,
         txid: transfer.txid,
         timestamp: transfer.timestamp,
-        fee: transfer.feeAtomic === null ? null : `${formatExact(atomicToDisplay(transfer.feeAtomic, 8) ?? '', 'en')} BTC fee`,
+        fee: transfer.feeAtomic === null ? null : `${formatExact(atomicToDisplay(transfer.feeAtomic, nativeUnit(transfer.chain).decimals) ?? '', 'en')} ${nativeUnit(transfer.chain).asset} fee`,
         kind: 'internal',
       });
     }
+    for (const scope of aggregation.nativeFlows ?? []) {
     const flows: { label: string; value: string | null; kind: EventKind }[] = [
       {
         label: $localize`:@@universe.portfolio.activity.external-in:External inflows over the loaded window`,
-        value: aggregation.externalInflowAtomic,
+        value: scope.inflow,
         kind: 'in',
       },
       {
         label: $localize`:@@universe.portfolio.activity.external-out:External outflows over the loaded window`,
-        value: aggregation.externalOutflowAtomic,
+        value: scope.outflow,
         kind: 'out',
       },
     ];
     for (const flow of flows) {
       rows.push({
-        key: flow.kind,
+        key: `${scope.chain}:${scope.network}:${flow.kind}`,
         description: flow.label,
-        value: flow.value === null ? null : `${formatExact(atomicToDisplay(flow.value, 8) ?? '', 'en')} BTC`,
-        state: (flow.value === null ? 'partial' : 'proven') as PortfolioDataState,
+        value: flow.value === null ? null : `${formatExact(atomicToDisplay(flow.value, scope.decimals) ?? '', 'en')} ${scope.asset} (${scope.network})`,
+        state: (flow.value === null ? 'partial' : scope.state) as PortfolioDataState,
         txid: '',
         timestamp: null,
         fee: null,
         kind: flow.kind,
       });
+    }
     }
     const filter = this.filter();
     return rows.filter((row) => filter === 'all' || row.kind === filter);

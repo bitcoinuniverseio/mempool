@@ -1,57 +1,57 @@
-/**
- * Types for the Liquid Confidential-Asset, Peg, and Federation Observatory.
- */
+import { LiquidPairObservation } from './liquid-paired-source';
+import { LiquidRegistryEntry } from './liquid-registry-publication';
+import { LiquidPublicPegOutput, LiquidVerifiedPegInput } from './liquid-public-projection';
 
-export interface LiquidAssetRecord {
-  readonly assetId: string;
-  readonly name: string;
-  readonly ticker: string;
-  readonly precision: number;
-  readonly issuanceTxid: string;
-  readonly issuanceVin: number;
-  readonly reissuanceToken?: string;
-  readonly isConfidential: boolean;
-  readonly circulatingAmount?: string;
-  readonly issuerPubkey?: string;
-  readonly hasProof: boolean;
+export interface LiquidObservatoryCoverage {
+  schemaVersion: 'universe-liquid-observatory-v1';
+  status: 'PARTIAL' | 'COMPLETE_AT_OBSERVED_PAIR';
+  source: LiquidPairObservation;
+  progress: { processedBlocks: number; expectedBlocks: number; nextHeight: number; pageLimit: 16 };
+  cursor: { height: number; blockHash: string | null };
+  scope: 'canonical-public-blocks-and-parent-peg-evidence';
 }
-
-export interface LiquidPegRecord {
-  readonly id: string;
-  readonly type: 'peg-in' | 'peg-out';
-  readonly bitcoinTxid: string;
-  readonly bitcoinVout?: number;
-  readonly liquidTxid: string;
-  readonly liquidVout?: number;
-  readonly amountSats: string;
-  readonly status: 'initiated' | 'confirmed' | 'finalized' | 'reorged';
-  readonly confirmations: number;
-  readonly timestamp: number;
-  readonly federationWitnessAddress: string;
+export interface LiquidAssetRecord extends LiquidRegistryEntry {
+  coverage: LiquidObservatoryCoverage;
+  publication: { revision: string; sha256: string; scope: string };
+  initialIssuanceAmountAtomic: string | null;
+  initialIssuanceAmountCommitment: string | null;
+  circulatingAmount: null; issuerPubkey: null; hasProof: true;
 }
-
+export interface LiquidPegRecord extends LiquidVerifiedPegInput {
+  id: string; type: 'peg-in'; liquidTxid: string; liquidVin: number;
+  amountSats: string; status: 'confirmed'; confirmations: number;
+  timestamp: number; liquidBlockHash: string; liquidBlockHeight: number;
+  federationWitnessAddress: null;
+}
+export interface LiquidAssetPage {
+  coverage: LiquidObservatoryCoverage; assets: LiquidAssetRecord[]; total: number;
+  offset: number; limit: number; nextOffset: number | null;
+  publication: { revision: string; sha256: string; scope: string };
+}
+export interface LiquidPegPage {
+  coverage: LiquidObservatoryCoverage; pegs: LiquidPegRecord[]; total: number;
+  offset: number; limit: number; nextOffset: number | null;
+  pegOuts: { status: 'OBSERVED_REQUESTS_ONLY'; requests: LiquidPegOutRecord[]; total: number;
+    nextOffset: number | null; parentPayoutStatus: 'UNKNOWN'; reason: string };
+}
+export interface LiquidPegOutRecord extends LiquidPublicPegOutput {
+  id: string; type: 'peg-out'; status: 'request-confirmed'; confirmations: number;
+  liquidBlockHash: string; liquidBlockHeight: number; timestamp: number;
+  parentPayoutStatus: 'UNKNOWN'; bitcoinTxid: null;
+}
 export interface LiquidFederationEpoch {
-  readonly epochNumber: number;
-  readonly signblockscript: string;
-  readonly activeSigners: number;
-  readonly totalSigners: number;
-  readonly threshold: number;
-  readonly startHeight: number;
-  readonly endHeight?: number;
-  readonly blockSignerCounts: Record<string, number>;
+  coverage: LiquidObservatoryCoverage;
+  epochNumber: number; signblockscript: string; fedpegScript: string; fedpegProgram: string;
+  parametersRoot: string; activeSigners: null; totalSigners: null; threshold: null;
+  startHeight: number; endHeight: number; blockSignerCounts: null;
+  observedFullParameterRecordsTotal: number; parameterHistoryLimit: 100;
+  observedFullParameterRecords: { height: number; blockHash: string; parametersRoot: string; signblockScript: string }[];
 }
-
 export interface LiquidObservatorySummary {
-  readonly blockHeight: number;
-  readonly blockHash: string;
-  readonly dynamicFederation: {
-    readonly currentEpoch: number;
-    readonly signersOnline: number;
-    readonly totalSigners: number;
-    readonly blockSigningThreshold: string;
-  };
-  readonly peggedReserveSats: string;
-  readonly activeAssetCount: number;
-  readonly confidentialTxPercentage: string;
-  readonly recentPegs: readonly LiquidPegRecord[];
+  coverage: LiquidObservatoryCoverage; blockHeight: number; blockHash: string;
+  dynamicFederation: { currentEpoch: number; signersOnline: null; totalSigners: null; blockSigningThreshold: null; parametersRoot: string };
+  peggedReserveSats: null; activeAssetCount: null; confidentialTxPercentage: null;
+  observedIssuanceCount: number;
+  observedOutputCounts: { confidential: number; explicit: number; scope: 'projected-public-outputs'; amountsUnknown: true };
+  recentPegs: LiquidPegRecord[];
 }

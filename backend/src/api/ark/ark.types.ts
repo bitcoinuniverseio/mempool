@@ -6,23 +6,30 @@ export interface ArkOperator {
   readonly id: string;
   readonly name: string;
   readonly aspPubkey: string;
-  readonly roundIntervalSec: number;
-  readonly currentBatchHeight: number;
-  readonly activeVtxoCount: number;
-  readonly totalVolumeSats: string;
-  readonly status: 'online' | 'degraded';
+  readonly roundIntervalSec: number | null;
+  readonly currentBatchHeight: number | null;
+  readonly activeVtxoCount: number | null;
+  readonly totalVolumeSats: string | null;
+  readonly status: 'online' | 'degraded' | 'observed';
+  readonly providerVersion?: string;
+  readonly sessionDurationSeconds?: string;
+  readonly source?: import('./ark-native-source').ArkNativeObservation;
 }
 
 export interface ArkBatch {
   readonly batchId: string;
   readonly operatorId: string;
   readonly anchorTxid: string;
-  readonly rootHash: string;
-  readonly vtxoCount: number;
-  readonly totalAmountSats: string;
+  readonly rootHash: string | null;
+  readonly vtxoCount: number | null;
+  readonly totalAmountSats: string | null;
   readonly roundTimestamp: number;
-  readonly expirationTimestamp: number;
-  readonly status: 'settled' | 'provisional' | 'swept';
+  readonly expirationTimestamp: number | null;
+  readonly status: 'settled' | 'provisional' | 'swept' | 'observed-completed';
+  readonly endedAt?: number;
+  readonly source?: import('./ark-native-source').ArkNativeObservation;
+  readonly nativeStage?: 'FINALIZATION_STAGE';
+  readonly confirmation?: null;
 }
 
 export interface ArkVtxo {

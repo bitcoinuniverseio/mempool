@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
-import type { HistoricalMempoolEvent, MempoolCheckpoint } from './time-machine.service';
+import type { HistoricalMempoolEvent, MempoolCheckpoint, OrphanConfirmation, CanonicalRestorationTarget } from './time-machine.service';
 type Gap = { start_utc: string; end_utc: string; reason: string };
-interface Snapshot { schema: string; network: string; startedAt: string; eventSequence: number; evictedSequence: number; evictedThrough: number; observedThrough: number; gaps: Gap[]; events: HistoricalMempoolEvent[]; checkpoints: Array<{ checkpoint: MempoolCheckpoint; transactions: Array<[string, { vsize: number; weight: number; fee: number }]> }> }
+interface Snapshot { schema: string; network: string; startedAt: string; eventSequence: number; evictedSequence: number; evictedThrough: number; observedThrough: number; gaps: Gap[]; events: HistoricalMempoolEvent[]; orphanConfirmations?: OrphanConfirmation[]; canonicalRestorationTarget?: CanonicalRestorationTarget; checkpoints: Array<{ checkpoint: MempoolCheckpoint; transactions: Array<[string, { vsize: number; weight: number; fee: number }]> }> }
 const check = (condition: unknown): void => { if (!condition) throw new Error('Invalid observed history snapshot.'); };
 const integer = (n: unknown): boolean => Number.isSafeInteger(n) && (n as number) >= 0;
 const hash = (s: unknown): boolean => typeof s === 'string' && /^[0-9a-f]{64}$/.test(s);
@@ -21,8 +21,32 @@ export function validateHistorySnapshot(value: unknown, network: string, limits:
     check(['observed', 'accepted', 'removed', 'confirmed', 'replaced', 'conflicted', 'evicted', 'reaccepted_after_reorg'].includes(e.event_type));
     check(integer(e.vsize) && integer(e.fee_sats) && (e.weight === undefined || integer(e.weight)) && Number.isFinite(e.fee_rate) && e.fee_rate >= 0);
     check(e.block_height === undefined || integer(e.block_height)); check(e.replaced_by_txid === undefined || hash(e.replaced_by_txid));
+    check(e.block_hash === undefined || e.event_type === 'confirmed' && hash(e.block_hash) && integer(e.block_height));
+    check(e.is_coinbase === undefined || e.event_type === 'confirmed' && typeof e.is_coinbase === 'boolean');
   }
   check(sequence === v.eventSequence);
+  if (v.canonicalRestorationTarget !== undefined) {
+    const target = v.canonicalRestorationTarget;
+    check(target && integer(target.height) && hash(target.hash) && integer(target.rollback_sequence) && target.rollback_sequence <= v.eventSequence &&
+      validUtc(target.observed_at) && Date.parse(target.observed_at) <= v.observedThrough);
+    check(target.canonical_height === undefined && target.canonical_hash === undefined || integer(target.canonical_height) && hash(target.canonical_hash));
+  }
+  if (v.orphanConfirmations !== undefined) {
+    check(Array.isArray(v.orphanConfirmations) && v.orphanConfirmations.length <= limits.events);
+    const seen = new Set<string>();
+    let canonical: string | undefined;
+    const confirmed = new Map(v.events.filter(event => event.event_type === 'confirmed').map(event => [event.sequence, event]));
+    for (const orphan of v.orphanConfirmations) {
+      check(orphan && hash(orphan.txid) && hash(orphan.block_hash) && integer(orphan.block_height) && integer(orphan.confirmation_sequence) && validUtc(orphan.orphaned_at));
+      check(integer(orphan.canonical_height) && hash(orphan.canonical_hash));
+      const point = `${orphan.canonical_height}:${orphan.canonical_hash}`;
+      check(canonical === undefined || canonical === point); canonical = point;
+      check(!seen.has(orphan.txid) && Date.parse(orphan.orphaned_at) <= v.observedThrough); seen.add(orphan.txid);
+      const event = confirmed.get(orphan.confirmation_sequence);
+      check(event && event.txid === orphan.txid && event.block_hash === orphan.block_hash && event.block_height === orphan.block_height && Date.parse(event.timestamp_utc) <= Date.parse(orphan.orphaned_at));
+      check(event?.is_coinbase !== true);
+    }
+  }
   for (const gap of v.gaps) check(validUtc(gap.start_utc) && validUtc(gap.end_utc) && Date.parse(gap.start_utc) <= Date.parse(gap.end_utc) && typeof gap.reason === 'string' && gap.reason.length <= 1024);
   let height = -1, timestamp = -1, totalTransactions = 0;
   for (const entry of v.checkpoints) {

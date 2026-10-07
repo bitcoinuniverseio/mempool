@@ -17,7 +17,7 @@ export interface Bolt12DecodedOffer {
 const hash = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
 const atomic = (v: unknown): v is string => typeof v === 'string' && /^(0|[1-9][0-9]{0,19})$/.test(v) && BigInt(v) <= 18446744073709551615n;
 let active = 0;
-export async function decodeBolt12Offer(request: any, network = config.MEMPOOL.NETWORK): Promise<Bolt12DecodedOffer> {
+export async function decodeBolt12Offer(request: any, network: string = config.MEMPOOL.NETWORK): Promise<Bolt12DecodedOffer> {
   if (!request || typeof request.offer !== 'string' || !request.offer.length || Buffer.byteLength(request.offer, 'utf8') > 16384 ||
       request.network !== network || !['mainnet', 'testnet', 'testnet4', 'signet', 'regtest'].includes(network)) {
     throw new TaprootAssetsEvidenceError('invalid-input', 'Supply a BOLT12 offer of at most 16 KiB and the selected backend network.', 400);

@@ -26,14 +26,32 @@ import { classifyAddressError, sendAddressError } from './address-errors';
 import poolsUpdater from '../../tasks/pools-updater';
 import chainTips from '../chain-tips';
 import { readUnsignedInteger, sourceNotFound } from './route-input';
+import { initUtxoReconstructionRoutes } from './utxo-reconstruction.routes';
+import { initChainSourceIdentityRoutes } from './chain-source-identity.routes';
 
 const TXID_REGEX = /^[a-f0-9]{64}$/i;
 const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
 const ADDRESS_REGEX = /^[a-z0-9]{2,120}$/i;
 const SCRIPT_HASH_REGEX = /^[a-f0-9]{64}$/i;
 
+/** Optional Core amounts are exact, finite, nonnegative and bounded; zero stays explicit. */
+function optionalRpcAmount(value: unknown, maximum: number): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.length > 64) throw new Error('Invalid optional RPC amount');
+  const match = /^(0|[1-9][0-9]*)(?:\.([0-9]+))?(?:[eE]([+-]?[0-9]{1,3}))?$/.exec(value);
+  if (!match) throw new Error('Invalid optional RPC amount');
+  const coefficient = BigInt(match[1] + (match[2] || '')), scale = 8 + Number(match[3] || 0) - (match[2]?.length || 0);
+  const divisor = scale < 0 ? 10n ** BigInt(-scale) : 1n;
+  if (coefficient % divisor !== 0n) throw new Error('Invalid optional RPC amount precision');
+  const atomic = scale < 0 ? coefficient / divisor : coefficient * 10n ** BigInt(scale);
+  if (atomic > BigInt(maximum * 100000000)) throw new Error('Optional RPC amount exceeds its bound');
+  return Number(atomic) / 100000000;
+}
+
 class BitcoinRoutes {
   public initRoutes(app: Application) {
+    initUtxoReconstructionRoutes(app);
+    initChainSourceIdentityRoutes(app);
     app
       .get(config.MEMPOOL.API_URL_PREFIX + 'transaction-times', this.getTransactionTimes)
       .get(config.MEMPOOL.API_URL_PREFIX + 'cpfp/:txId', this.$getCpfpInfo)
@@ -70,6 +88,8 @@ class BitcoinRoutes {
       .get(config.MEMPOOL.API_URL_PREFIX + 'internal/blocks/definition/list', this.getBlockDefinitionHashes)
       .get(config.MEMPOOL.API_URL_PREFIX + 'internal/blocks/definition/current', this.getCurrentBlockDefinitionHash)
       .get(config.MEMPOOL.API_URL_PREFIX + 'internal/blocks/:definitionHash', this.getBlocksByDefinitionHash)
+      .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs/summary/:afterTxid?', this.getAddressTransactionSummary)
+      .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs/summary/:afterTxid?', this.getScriptHashTransactionSummary)
       ;
 
       if (config.MEMPOOL.BACKEND !== 'esplora') {
@@ -94,11 +114,9 @@ class BitcoinRoutes {
           .get(config.MEMPOOL.API_URL_PREFIX + 'block-height/:height', this.getBlockHeight)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address', this.getAddress)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs', this.getAddressTransactions)
-          .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/txs/summary', this.getAddressTransactionSummary)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address/:address/utxo', this.getAddressUtxo)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash', this.getScriptHash)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs', this.getScriptHashTransactions)
-          .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/txs/summary', this.getScriptHashTransactionSummary)
           .get(config.MEMPOOL.API_URL_PREFIX + 'scripthash/:scripthash/utxo', this.getScriptHashUtxo)
           .get(config.MEMPOOL.API_URL_PREFIX + 'address-prefix/:prefix', this.getAddressPrefix)
           ;
@@ -734,9 +752,18 @@ class BitcoinRoutes {
       sendAddressError(req, res, 'invalid-address');
       return;
     }
+    const afterTxid = req.params.afterTxid ?? req.query.after_txid;
+    if (req.params.afterTxid && req.query.after_txid !== undefined && req.params.afterTxid !== req.query.after_txid) {
+      sendAddressError(req, res, 'invalid-address', 'Summary cursors disagree.');
+      return;
+    }
+    if (afterTxid !== undefined && (typeof afterTxid !== 'string' || !TXID_REGEX.test(afterTxid))) {
+      sendAddressError(req, res, 'invalid-address', 'The summary cursor must be a transaction ID.');
+      return;
+    }
 
     try {
-      const summary = await bitcoinApi.$getAddressTransactionSummary(req.params.address);
+      const summary = await bitcoinApi.$getAddressTransactionSummary(req.params.address, afterTxid as string | undefined);
       res.json(summary);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -811,6 +838,21 @@ class BitcoinRoutes {
     if (config.MEMPOOL.BACKEND !== 'esplora') {
       handleError(req, res, 405, 'Scripthash summary lookups require mempool/electrs backend.');
       return;
+    }
+    const afterTxid = req.params.afterTxid ?? req.query.after_txid;
+    if (req.params.afterTxid && req.query.after_txid !== undefined && req.params.afterTxid !== req.query.after_txid) {
+      sendAddressError(req, res, 'invalid-address', 'Summary cursors disagree.');
+      return;
+    }
+    if (!SCRIPT_HASH_REGEX.test(req.params.scripthash)
+      || (afterTxid !== undefined && (typeof afterTxid !== 'string' || !TXID_REGEX.test(afterTxid)))) {
+      sendAddressError(req, res, 'invalid-address', 'A script hash and summary cursor must be 64 hexadecimal characters.');
+      return;
+    }
+    try {
+      res.json(await bitcoinApi.$getScriptHashTransactionSummary(req.params.scripthash, afterTxid as string | undefined));
+    } catch (e) {
+      sendAddressError(req, res, classifyAddressError(e));
     }
   }
 
@@ -1090,7 +1132,7 @@ class BitcoinRoutes {
   private async $testTransactions(req: Request, res: Response) {
     try {
       const rawTxs = Common.getTransactionsFromRequest(req);
-      const maxfeerate = parseFloat(req.query.maxfeerate as string);
+      const maxfeerate = optionalRpcAmount(req.query.maxfeerate, 1);
       const result = await bitcoinApi.$testMempoolAccept(rawTxs, maxfeerate);
       res.send(result);
     } catch (e: any) {
@@ -1102,9 +1144,11 @@ class BitcoinRoutes {
   private async $submitPackage(req: Request, res: Response) {
     try {
       const rawTxs = Common.getTransactionsFromRequest(req);
-      const maxfeerate = parseFloat(req.query.maxfeerate as string);
-      const maxburnamount = parseFloat(req.query.maxburnamount as string);
-      const result = await bitcoinClient.submitPackage(rawTxs, maxfeerate ?? undefined, maxburnamount ?? undefined);
+      const maxfeerate = optionalRpcAmount(req.query.maxfeerate, 1);
+      const maxburnamount = optionalRpcAmount(req.query.maxburnamount, 21000000);
+      const result = maxburnamount === undefined
+        ? maxfeerate === undefined ? await bitcoinClient.submitPackage(rawTxs) : await bitcoinClient.submitPackage(rawTxs, maxfeerate)
+        : await bitcoinClient.rpc.call('submitpackage', { package: rawTxs, ...(maxfeerate === undefined ? {} : { maxfeerate }), maxburnamount });
       res.send(result);
     } catch (e: any) {
       handleError(req, res, 400, (e.message && e.code) ? 'submitpackage RPC error: ' + JSON.stringify({ code: e.code })

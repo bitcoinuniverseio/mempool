@@ -3,6 +3,7 @@
  */
 
 export interface UtxoCheckpoint {
+  readonly network: string;
   readonly blockHeight: number;
   readonly blockHash: string;
   readonly muhashHex: string;

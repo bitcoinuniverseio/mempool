@@ -27,6 +27,7 @@ export class ServerStatusComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.hostSubscription = this.stateService.serverHealth$.pipe(
       map((hosts) => {
+        hosts = hosts.map((host) => ({...host}));
         const subpath = window.location.pathname.slice(0, -6);
         for (const host of hosts) {
           let statusUrl = '';
@@ -45,8 +46,7 @@ export class ServerStatusComponent implements OnInit, OnDestroy {
         return hosts;
       }),
       tap((hosts) => {
-        if (this.hosts.length !== hosts.length) {
-          this.hosts = hosts.sort((a,b) => {
+        this.hosts = hosts.sort((a,b) => {
             const aParts = (a.host?.split('.') || []).reverse();
             const bParts = (b.host?.split('.') || []).reverse();
             let i = 0;
@@ -61,8 +61,7 @@ export class ServerStatusComponent implements OnInit, OnDestroy {
               i++;
             }
             return 0;
-          });
-        }
+        });
         this.cd.markForCheck();
       })
     ).subscribe();

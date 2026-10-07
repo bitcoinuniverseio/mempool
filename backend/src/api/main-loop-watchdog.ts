@@ -40,6 +40,22 @@ export class MainLoopWatchdog {
     this.stallReported = false;
   }
 
+  /**
+   * Marks real progress inside the run, such as a block being processed.
+   * The stall and exit limits measure time without progress, so a long
+   * catch-up that keeps advancing is never killed, while a run stuck on one
+   * await still is. On 2026-09-26 a fixed per-run limit killed an electrum
+   * catch-up (about 12 minutes per block) every 30 minutes, so the backend
+   * restarted 117 times without ever reaching the tip.
+   */
+  progress(): void {
+    if (this.startedAt === null) {
+      return;
+    }
+    this.startedAt = this.now();
+    this.stallReported = false;
+  }
+
   /** Marks the end of the run, however it ended. */
   end(): void {
     this.startedAt = null;

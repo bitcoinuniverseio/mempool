@@ -1,5 +1,7 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
+import * as tls from 'tls';
+import { parseOhttpDirectoryKeys } from './ohttp-directory-keys';
 import { Psbt } from 'bitcoinjs-lib';
 import { compareProposal } from './proposal-analysis';
 import {
@@ -51,6 +53,8 @@ export type DirectoryProber = (
   address: string
 ) => Promise<{
   ok: boolean;
+  content_type?: string;
+  origin?: string;
   status: number | null;
   body: Buffer | null;
   latency_ms: number | null;
@@ -59,33 +63,71 @@ export type DirectoryProber = (
 
 const defaultProber: DirectoryProber = (url, address) =>
   new Promise((resolve) => {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-006] DEF-BI-006; COV-BI-006A/B/C.
+     * Verified: this probe uses /ohttp-keys, omits media-type evidence and treats any
+     * 2xx body as success; getDirectories then declares both BIP77 and BIP78 support.
+     * Governing sources: BIP77 draft 0.2.0 at bitcoin/bips 927b6de9915c9262615a6399de51b200f81e5aa4,
+     * RFC9540 sections 5-6 and RFC9458 sections 3.1-3.2. The pinned BIP snapshot is
+     * bundled under research/snapshots/bip-0077.md. BIP78 plaintext support is optional.
+     * 1. Probe the configured directory's RFC9540 /.well-known/ohttp-gateway with
+     *    Accept: application/ohttp-keys; any legacy endpoint requires an explicitly
+     *    pinned deployment profile, not an assumed universal path.
+     * 2. Return content-type, final authenticated origin, full bounded body and a
+     *    typed transport outcome. Abort on excess bytes instead of hashing a truncated
+     *    prefix; use an absolute deadline and bounded directory concurrency/singleflight.
+     *    Preserve DNS pinning and TLS checks. Redirects, if supported, require fresh
+     *    destination checks and the RFC9540 privacy rules, never arbitrary following.
+     * 3. Parse/validate the entire RFC9458 length-prefixed key collection and supported
+     *    KEM/KDF/AEAD suites in PROPOSED NEW payjoin/ohttp-directory-keys.ts using a
+     *    pinned compatible codec. Reject malformed, empty or unsupported collections;
+     *    the BIP77 draft's key-fragment ambiguity must be resolved against its selected
+     *    implementation profile before adding client encapsulation, never guessed.
+     * Dependencies: pinned directory/codec profile, then getDirectories DTO/consumer.
+     * Tests: payjoin.test.ts and PROPOSED NEW payjoin/ohttp-directory-keys.test.ts;
+     *    RFC vectors, invalid HTML/empty body, wrong content-type, truncation, oversized
+     *    body, timeout, DNS/redirect rejection, supported/unsupported suites and rotation.
+     * Command after native deps are built: cd backend && ./node_modules/.bin/jest
+     *    --runInBand --coverage=false --runTestsByPath src/api/intelligence/payjoin/payjoin.test.ts
+     * Full test command was incomplete with absent native artifacts during preparation.
+     * Rollback keeps configured URLs but invalidates old unvalidated capability cache;
+     *    no production capability may depend on an arbitrary response hash.
+     */
     const started = Date.now();
+    let settled = false;
+    let deadline: NodeJS.Timeout;
+    let responseHandle: import('http').IncomingMessage | undefined;
+    const finish: typeof resolve = value => { if (!settled) { settled = true; clearTimeout(deadline); resolve(value); } };
     const request = https.request(
       {
         host: address,
         servername: url.hostname,
         port: url.port ? Number(url.port) : 443,
-        path: `${url.pathname.replace(/\/$/, '')}/ohttp-keys`,
+        path: '/.well-known/ohttp-gateway',
+        checkServerIdentity: (_hostname, cert) => tls.checkServerIdentity(url.hostname, cert),
         method: 'GET',
-        headers: { host: url.host },
+        headers: { host: url.host, accept: 'application/ohttp-keys' },
         timeout: 5000,
       },
       (response) => {
+        responseHandle = response;
         const chunks: Buffer[] = [];
         let size = 0;
         response.on('data', (chunk: Buffer) => {
           size += chunk.length;
-          if (size <= 8192) {
-            chunks.push(chunk);
-          }
+          if (size > 8192) { finish({ ok: false, status: response.statusCode ?? null, body: null, latency_ms: Date.now() - started, error: 'response_too_large' }); response.destroy(); request.destroy(); return; }
+          chunks.push(chunk);
         });
+        response.on('error', () => finish({ ok: false, status: response.statusCode ?? null, body: null, latency_ms: Date.now() - started, error: 'response_error' }));
+        response.on('aborted', () => finish({ ok: false, status: response.statusCode ?? null, body: null, latency_ms: Date.now() - started, error: 'response_aborted' }));
         response.on('end', () =>
-          resolve({
+          finish({
             ok:
               (response.statusCode ?? 0) >= 200 &&
               (response.statusCode ?? 0) < 300,
             status: response.statusCode ?? null,
             body: Buffer.concat(chunks),
+            content_type: String(response.headers['content-type'] ?? ''),
+            origin: url.origin,
             latency_ms: Date.now() - started,
             error: null,
           })
@@ -96,7 +138,7 @@ const defaultProber: DirectoryProber = (url, address) =>
       request.destroy(new Error('timeout'));
     });
     request.on('error', (error) =>
-      resolve({
+      finish({
         ok: false,
         status: null,
         body: null,
@@ -104,6 +146,7 @@ const defaultProber: DirectoryProber = (url, address) =>
         error: (error as NodeJS.ErrnoException).code ?? error.message,
       })
     );
+    deadline = setTimeout(() => { finish({ok:false,status:null,body:null,latency_ms:Date.now()-started,error:'timeout'}); request.destroy(); responseHandle?.destroy(); },5000);
     request.end();
   });
 
@@ -112,8 +155,10 @@ export class PayjoinService {
   private playgroundSessions = new Map<string, PayjoinPlaygroundSession>();
   private directoryCache: {
     at: number;
+    config: string;
     directories: PayjoinDirectory[];
   } | null = null;
+  private directoryPending: {key:string;work:Promise<PayjoinDirectory[]>} | null = null;
   public prober: DirectoryProber = defaultProber;
   public configuredDirectories: () => string[] = () =>
     (process.env[DIRECTORIES_ENV] ?? '')
@@ -190,8 +235,40 @@ export class PayjoinService {
   }
 
   /** @asyncUnsafe Configured directories, each probed for its OHTTP keys with a short cache. */
-  public async getDirectories(now = Date.now()): Promise<PayjoinDirectory[]> {
-    if (this.directoryCache && now - this.directoryCache.at < 5 * 60_000) {
+  public getDirectories(now = Date.now()): Promise<PayjoinDirectory[]> {
+    const key=JSON.stringify(this.configuredDirectories());
+    if(this.directoryPending?.key===key)return this.directoryPending.work;
+    const work=this.refreshDirectories(now).finally(()=>{if(this.directoryPending?.work===work)this.directoryPending=null;});
+    this.directoryPending={key,work};return work;
+  }
+  private async refreshDirectories(now: number): Promise<PayjoinDirectory[]> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-006] DEF-BI-006; COV-BI-006A/B/C.
+     * Current-source reproduction: HTTP 200 plus '<html>not OHTTP keys</html>'
+     * gives bip77_supported=true, bip78_supported=true and an ohttp_key_hash.
+     * 1. Separate reachability, validated OHTTP key configuration and verified
+     *    protocol capability in PayjoinDirectory and all overview/UI consumers.
+     *    Hash only the complete validated key collection; record pinned profile,
+     *    evidence timestamp, key IDs/suites and typed unavailable/invalid reason.
+     * 2. A valid OHTTP key establishes key availability, not a full BIP77 workflow.
+     *    Require compatible directory behavior evidence before asserting BIP77 support;
+     *    keep BIP78 support unknown until independently configured/verified against
+     *    its plaintext receiver contract. Never infer it from OHTTP availability.
+     * 3. Key the cache by normalized endpoint and protocol profile; coalesce concurrent
+     *    refreshes, bound configured entries and invalidate when config/keys change.
+     *    Update getOverview active count and frontend directory/compatibility displays
+     *    to consume evidence states rather than optimistic booleans.
+     * Dependencies: WP-BI-006 prober/codec; BIP77 927b6de... draft 0.2.0, RFC9458/9540.
+     * Tests: extend payjoin.test.ts and frontend payjoin component tests. Invalid HTML
+     *    must never imply either protocol; valid keys alone leave negotiation unknown;
+     *    BIP78 and BIP77 integration cases have separate evidence and failure paths.
+     * Existing suite command: cd backend && ./node_modules/.bin/jest --runInBand
+     *    --coverage=false --runTestsByPath src/api/intelligence/payjoin/payjoin.test.ts
+     * Acceptance: real configured directory discovery, validated keys and truthful
+     *    API/UI readback; test offered transaction-analysis paths separately on Signet.
+     * Rollback retains URL configuration, clears obsolete cache and preserves truthful
+     *    unavailable results. No transfer/signing/broadcast occurred in this preparation.
+     */
+    if (this.directoryCache && this.directoryCache.config === JSON.stringify(this.configuredDirectories()) && now - this.directoryCache.at < 5 * 60_000) {
       return this.directoryCache.directories;
     }
     const configured = this.configuredDirectories();
@@ -202,6 +279,7 @@ export class PayjoinService {
       );
     }
     const directories: PayjoinDirectory[] = [];
+    if (configured.length > 16) throw new PayjoinUnavailableError('directory_limit', 'At most16 directories may be configured');
     for (const raw of configured) {
       let url: URL;
       try {
@@ -211,6 +289,7 @@ export class PayjoinService {
           directory_id: `dir-${crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12)}`,
           url: raw,
           ohttp_key_hash: null,
+          reachable: false, key_config_valid: false, key_ids: [], protocol_profile: 'rfc9458-rfc9540', bip77_state: 'unavailable', bip78_state: 'unknown',
           bip77_supported: false,
           bip78_supported: false,
           latency_ms: null,
@@ -232,21 +311,31 @@ export class PayjoinService {
           error: error instanceof Error ? error.message : String(error),
         };
       }
+      let keyIds: number[] = [];
+      let invalid: string | null = null;
+      if (probe.ok) {
+        try {
+          if (probe.content_type?.split(';')[0].trim().toLowerCase() !== 'application/ohttp-keys' || probe.origin !== url.origin || !probe.body) throw new Error('invalid_key_response');
+          keyIds = parseOhttpDirectoryKeys(probe.body).map(key => key.key_id);
+        } catch (error) { invalid = error instanceof Error ? error.message : 'invalid_key_collection'; }
+      }
       directories.push({
         directory_id: `dir-${crypto.createHash('sha256').update(url.toString()).digest('hex').slice(0, 12)}`,
         url: url.toString(),
         ohttp_key_hash:
-          probe.ok && probe.body
+          keyIds.length > 0 && probe.body
             ? crypto.createHash('sha256').update(probe.body).digest('hex')
             : null,
-        bip77_supported: probe.ok,
-        bip78_supported: probe.ok,
+        reachable: probe.ok, key_config_valid: keyIds.length > 0, key_ids: keyIds, protocol_profile: 'rfc9458-rfc9540',
+        bip77_state: keyIds.length ? 'unknown' : 'unavailable', bip78_state: 'unknown',
+        bip77_supported: false,
+        bip78_supported: false,
         latency_ms: probe.latency_ms,
         last_tested_at: new Date(now).toISOString(),
-        error: probe.error ?? (probe.ok ? null : `http ${probe.status}`),
+        error: invalid ?? probe.error ?? (probe.ok ? null : `http ${probe.status}`),
       });
     }
-    this.directoryCache = { at: now, directories };
+    this.directoryCache = { at: now, config: JSON.stringify(configured), directories };
     return directories;
   }
 

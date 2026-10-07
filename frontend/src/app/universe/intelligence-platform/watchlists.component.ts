@@ -7,6 +7,8 @@ import { StateService } from '@app/services/state.service';
 import { IntelligenceApiService } from './intelligence-api.service';
 import { OwnerKeyService } from './owner-key.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { descriptorScripts } from './watchlist-descriptor';
+import { WatchlistLiveService } from './watchlist-live.service';
 
 export const ENTITY_TYPES = ['address', 'txid', 'outpoint', 'descriptor'] as const;
 export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replacement', 'feerate_cross', 'reorg_displaced'] as const;
@@ -78,6 +80,11 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
               <div class="col-md-3"><input type="text" class="form-control form-control-sm" [(ngModel)]="entityLabel[wl.watchlist_id]" placeholder="label" aria-label="Label" /></div>
               <div class="col-md-2"><button type="button" class="btn btn-sm btn-outline-primary w-100" [disabled]="!entityRaw[wl.watchlist_id] || busy" (click)="addEntity(wl.watchlist_id)">Add</button></div>
             </div>
+            <div *ngIf="entityType[wl.watchlist_id] === 'descriptor'" class="row mb-2">
+              <label class="col">First child <input type="number" min="0" [(ngModel)]="descriptorStart[wl.watchlist_id]" /></label>
+              <label class="col">Child count (1-1000) <input type="number" min="1" max="1000" [(ngModel)]="descriptorCount[wl.watchlist_id]" /></label>
+              <p>Only the selected range is monitored. Supply a checksummed public descriptor.</p>
+            </div>
             <div class="table-responsive mb-4" *ngIf="wl.entities.length" tabindex="0" role="region" aria-label="Watched entities, scroll horizontally" i18n-aria-label>
               <table class="table table-sm table-hover mb-0">
                 <thead><tr><th>Label</th><th>Type</th><th>SHA-256</th><th>Added</th><th></th></tr></thead>
@@ -134,6 +141,7 @@ export const CONDITION_TYPES = ['confirmation', 'value_transfer', 'rbf_replaceme
             <h4 class="mb-0">Notifications</h4>
             <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadNotifications()">Refresh</button>
           </div>
+          <p role="status">{{ liveStatus }}</p>
           <p *ngIf="notificationError" role="alert">{{notificationError}}</p><p *ngIf="loadingNotifications">Loading notifications...</p>
           <div *ngIf="!loadingNotifications && !notificationError && notifications.length === 0" class="p-4 text-center text-muted">No notifications yet.</div>
           <div class="table-responsive" *ngIf="notifications.length > 0" tabindex="0" role="region" aria-label="Notifications, scroll horizontally" i18n-aria-label>
@@ -185,6 +193,9 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   entityType: Record<string, string> = {};
   entityRaw: Record<string, string> = {};
   entityLabel: Record<string, string> = {};
+  descriptorStart: Record<string, number> = {};
+  descriptorCount: Record<string, number> = {};
+  liveStatus = 'Live notifications not connected';
   ruleCondition: Record<string, string> = {};
   ruleThreshold: Record<string, number | null> = {};
   ruleChannel: Record<string, string> = {};
@@ -192,7 +203,7 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
 
   private requests=new Map<string,Subscription>();private context=new Subscription();private revision=0;private destroyed=false;
   webhookError:string|null=null;notificationError:string|null=null;loadingNotifications=false;
-  private reset():void {this.revision++;for(const s of this.requests.values())s.unsubscribe();this.requests.clear();this.watchlists=[];this.webhooks=[];this.notifications=[];this.entityType={};this.entityRaw={};this.entityLabel={};this.ruleCondition={};this.ruleThreshold={};this.ruleChannel={};this.ruleWebhook={};this.newName='';this.loading=false;this.loadingNotifications=false;this.busy=false;this.loadError=null;this.webhookError=null;this.notificationError=null;}
+  private reset():void {this.descriptorStart={};this.descriptorCount={};this.liveStatus='Live notifications not connected';this.revision++;for(const s of this.requests.values())s.unsubscribe();this.requests.clear();this.watchlists=[];this.webhooks=[];this.notifications=[];this.entityType={};this.entityRaw={};this.entityLabel={};this.ruleCondition={};this.ruleThreshold={};this.ruleChannel={};this.ruleWebhook={};this.newName='';this.loading=false;this.loadingNotifications=false;this.busy=false;this.loadError=null;this.webhookError=null;this.notificationError=null;}
   private track(slot:string,source:Observable<any>,observer:any):void {
     if(this.destroyed||!this.hasKey)return;this.requests.get(slot)?.unsubscribe();const revision=this.revision,key=this.ownerKey.key,network=this.state?.network;
     const current=()=>!this.destroyed&&revision===this.revision&&key===this.ownerKey.key&&network===this.state?.network;
@@ -205,7 +216,8 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
     private api: IntelligenceApiService,
     private ownerKey: OwnerKeyService,
     private cdr: ChangeDetectorRef,
-    @Optional() private state:StateService=null
+    @Optional() private state:StateService=null,
+    @Optional() private live: WatchlistLiveService = null
   ) {}
 
   get hasKey(): boolean {
@@ -215,6 +227,14 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     let key=this.ownerKey.key;this.context.add(this.ownerKey.key$?.subscribe(value=>{if(value!==key){key=value;this.reset();this.reload();this.cdr.markForCheck();}}));
     this.context.add(this.state?.networkChanged$.subscribe(()=>{this.reset();this.reload();this.cdr.markForCheck();}));this.reload();
+    this.context.add(this.live?.stream().subscribe(update => {
+      this.liveStatus = update.status;
+      if (update.notification && this.hasKey) {
+        const id = update.notification.notification_id;
+        this.notifications = [update.notification, ...this.notifications.filter(row => row.notification_id !== id)].slice(0, 200);
+      }
+      this.cdr.markForCheck();
+    }));
   }
 
   thresholdHint(condition: string): string {
@@ -261,6 +281,8 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
         if(!Array.isArray(res?.watchlists)){this.loading=false;this.loadError='Invalid watchlist response.';this.cdr.markForCheck();return;}this.watchlists=res.watchlists;
         for (const wl of this.watchlists) {
           this.entityType[wl.watchlist_id] ??= 'address';
+          this.descriptorStart[wl.watchlist_id] ??= 0;
+          this.descriptorCount[wl.watchlist_id] ??= 20;
           this.ruleCondition[wl.watchlist_id] ??= 'confirmation';
           this.ruleChannel[wl.watchlist_id] ??= 'in_app';
           this.ruleWebhook[wl.watchlist_id] ||= this.webhooks[0]?.webhook_id || '';
@@ -298,10 +320,46 @@ export class WatchlistsComponent implements OnInit, OnDestroy {
     this.run(this.api.deleteWatchlist$(watchlistId), () => this.load());
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-007] | DEF-BI-004 | COV-BI-004A/B.
+   * ENTITY_TYPES offers outpoint and descriptor, but the pinned backend matcher
+   * only matches txid/address hashes. Accepted registration is not a functioning
+   * alert. Backend WP-BI-004 owns registration/matcher/store repair; see its
+   * source annotations and frontend-findings.json for cross-repository evidence.
+   * 1. Agree a versioned expanded-entity DTO with WP-BI-004 before changing
+   *    IntelligenceApiService.addWatchlistEntity$. Normalize outpoint as strict
+   *    lowercase 64-hex txid plus uint32 vout under the selected backend network.
+   * 2. Expand public descriptors in the browser over a finite explicit range;
+   *    reject private material, require the supported network, and derive public
+   *    scriptPubKey children using exactly the backend's matching normalization.
+   *    Preserve parent/range metadata and registration progress in the UI.
+   * 3. Display registered/indexing/active/failed coverage from actual backend
+   *    readback. Do not hide the offered kinds or claim that an opaque parent
+   *    hash already covers outputs. Legacy opaque hashes require explicit public
+   *    input resubmission because the backend cannot reverse them.
+   * 4. Extend watchlists component/service tests for create/read/reload/delete,
+   *    finite range validation, wrong-network/private input rejection and failure
+   *    recovery. Run npm test -- --maxWorkers=2 src/app/universe/intelligence-platform.
+   *    Signet acceptance: watch a real known outpoint's confirmation/spend and a
+   *    derived public descriptor output; verify persisted matching notification,
+   *    owner isolation, duplicate suppression and retry after service restart.
+   * Dependencies: WP-BI-004 and WP-FE-008/WP-BI-001 credential context. Rollback
+   *    preserves parent/child registration metadata; never discard stored watches.
+   */
   addEntity(watchlistId: string): void {
     const raw = (this.entityRaw[watchlistId] || '').trim();
     if (!raw) { return; }
-    this.run(this.api.addWatchlistEntity$(watchlistId, this.entityType[watchlistId] || 'address', raw, (this.entityLabel[watchlistId] || '').trim() || 'Monitored Item'), () => {
+    const type = this.entityType[watchlistId] || 'address';
+    let scripts;
+    try {
+      if (type === 'descriptor') scripts = descriptorScripts(raw, this.state?.network || this.state?.env?.ROOT_NETWORK || 'mainnet', this.descriptorStart[watchlistId] ?? 0, this.descriptorCount[watchlistId] ?? 20);
+      if (type === 'outpoint' && (!/^[a-f0-9]{64}:(?:0|[1-9][0-9]*)$/i.test(raw) || !Number.isSafeInteger(Number(raw.slice(65))) || Number(raw.slice(65)) > 0xffffffff)) throw Error('Supply an outpoint as transaction ID:output index');
+    } catch (error) {
+      this.loadError = error instanceof Error ? error.message : 'Invalid watch input';
+      if (type === 'descriptor') this.entityRaw[watchlistId] = '';
+      return;
+    }
+    this.run(this.api.addWatchlistEntity$(watchlistId, type, raw, (this.entityLabel[watchlistId] || '').trim() || 'Monitored Item', scripts), () => {
       this.entityRaw[watchlistId] = '';
       this.entityLabel[watchlistId] = '';
       this.load();

@@ -6,6 +6,9 @@ const jobs = new Map<string, any>();
 
 jest.mock('../config', () => { const actual = jest.requireActual('../config').default; return { __esModule: true, default: { ...actual, DATABASE: { ...actual.DATABASE, ENABLED: true } } }; });
 jest.mock('../logger', () => ({ __esModule: true, default: { info: jest.fn(), warn: jest.fn(), err: jest.fn(), debug: jest.fn() } }));
+// Resume uses controlled adapter receipts; importing identity must not start
+// unrelated live Core polling timers in this isolated test.
+jest.mock('../api/backend-info', () => ({ __esModule: true, default: { getBackendInfo: jest.fn(() => ({ gitCommit: 'abc1234', version: 'test' })) } }));
 jest.mock('../database', () => ({
   __esModule: true,
   default: {

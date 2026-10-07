@@ -2,175 +2,141 @@ const http = require('http');
 const https = require('https');
 import { readFileSync } from 'fs';
 
-const JsonRPC = function (opts) {
+const JsonRPC = function (this: any, opts) {
   // @ts-ignore
   this.opts = opts || {};
   // @ts-ignore
   this.http = this.opts.ssl ? https : http;
+  this.agent = new this.http.Agent({ keepAlive: true, maxSockets: this.opts.maxSockets || 8, maxFreeSockets: 2 });
 };
 
-JsonRPC.prototype.call = function (method, params) {
+/* IMPLEMENTATION-HANDOFF [WP-BE-005]
+ * Defect BE-005; coverage COV-BE-005.rpc-body-deadline, transport-recovery.
+ * Real loopback reproduction: backend-reproduce.cjs uses this exact source.
+ * With timeout=40ms, a trickling body resolves after about 150ms; a response
+ * closed after headers leaves the promise pending beyond 250ms. The absolute
+ * timer is cleared at headers and no response aborted/error/close handler
+ * settles the call. Socket inactivity is not a whole-operation deadline.
+ * 1. Keep one absolute deadline through headers, body and JSON decoding.
+ *    Centralize settlement so success/error/timeout is delivered once; clear
+ *    every timer/listener and destroy the transport on cancellation/failure.
+ * 2. Handle response error, aborted and premature close; require complete
+ *    framed input before parsing. Bound response bytes per RPC use case
+ *    (verbose blocks need an appropriate limit), and avoid unbounded string
+ *    concatenation. Validate RPC response identity, shape and batch ordering.
+ * 3. Use Buffer.byteLength for outgoing JSON Content-Length. Preserve Core
+ *    error codes without exposing credentials, cookies or raw sensitive
+ *    parameters; do not automatically retry broadcast or other writes after
+ *    an ambiguous outcome. Refresh changed authentication only deliberately.
+ * 4. Add loopback transport tests for both reproduced failures, split UTF-8,
+ *    malformed JSON, oversized bodies, wrong/missing IDs, timeout before/after
+ *    headers, cancellation and one successful call after recovery. Exercise
+ *    node outage/restart under the main loop and every shared RPC consumer.
+ * Dependencies: rpc-api/index.ts, commands.ts, bitcoin-client/second-client,
+ * all indexers and protocol readers sharing this transport. R-BE-NODE is the
+ * official HTTP lifecycle/deadline reference in the handoff register.
+ * Acceptance: each call settles inside its total budget, buffers are bounded,
+ * no transport failure stalls the indexer, and no uncertain write is replayed.
+ * Rollback: restore the previous client only with bounded caller deadlines;
+ * no database migration is required. Keep logs free of credentials/raw txs.
+ * Preparation only; executable transport behavior is unchanged.
+ */
+JsonRPC.prototype.call = function (method, params, options?) {
   return new Promise((resolve, reject) => {
+    const signal: AbortSignal | undefined = options?.signal;
+    if (signal?.aborted) { reject(Object.assign(new Error('RPC request cancelled'), {code: 'EABORTED'})); return; }
     const time = Date.now();
-    let requestJSON;
-
-    if (Array.isArray(method)) {
-      // multiple rpc batch call
-      requestJSON = [];
-      method.forEach(function (batchCall, i) {
-        requestJSON.push({
-          id: time + '-' + i,
-          method: batchCall.method,
-          params: batchCall.params
-        });
-      });
-    } else {
-      // single rpc call
-      requestJSON = {
-        id: time,
-        method: method,
-        params: params
-      };
-    }
-
-    // First we encode the request into JSON
-    requestJSON = JSON.stringify(requestJSON);
-
-    // prepare request options
+    const batch = Array.isArray(method);
+    const calls = batch ? method.map((call, i) => ({ id: `${time}-${i}`, method: call.method, params: call.params }))
+      : [{ id: time, method, params }];
+    const payload = JSON.stringify(batch ? calls : calls[0]);
+    const timeout = this.opts.timeout || 30000;
+    const maxBytes = this.opts.maxResponseBytes || 64 * 1024 * 1024;
     const requestOptions = {
-      host: this.opts.host || 'localhost',
-      port: this.opts.port || 8332,
-      method: 'POST',
-      path: '/',
-      headers: {
-        'Host': this.opts.host || 'localhost',
-        'Content-Length': requestJSON.length
-      },
-      agent: false,
-      rejectUnauthorized: this.opts.ssl && this.opts.sslStrict !== false
+      host: this.opts.host || 'localhost', port: this.opts.port || 8332,
+      method: 'POST', path: '/',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+      agent: this.agent, rejectUnauthorized: this.opts.ssl && this.opts.sslStrict !== false,
     };
-
-    if (this.opts.ssl && this.opts.sslCa) {
-    // @ts-ignore
-      requestOptions.ca = this.opts.sslCa;
-    }
-
-    // use HTTP auth if user and password set
+    if (this.opts.ssl && this.opts.sslCa) requestOptions['ca'] = this.opts.sslCa;
     if (this.opts.cookie) {
-      if (!this.cachedCookie) {
-        this.cachedCookie = readFileSync(this.opts.cookie).toString();
-      }
-      // @ts-ignore
-      requestOptions.auth = this.cachedCookie;
+      if (!this.cachedCookie) this.cachedCookie = readFileSync(this.opts.cookie).toString().trim();
+      requestOptions['auth'] = this.cachedCookie;
     } else if (this.opts.user && this.opts.pass) {
-      // @ts-ignore
-      requestOptions.auth = this.opts.user + ':' + this.opts.pass;
+      requestOptions['auth'] = `${this.opts.user}:${this.opts.pass}`;
     }
-
-    // Now we'll make a request to the server
-    let cbCalled = false;
+    let settled = false;
+    let response;
     const request = this.http.request(requestOptions);
-
-    // start request timeout timer
-    const reqTimeout = setTimeout(function () {
-      if (cbCalled) {return;}
-      cbCalled = true;
-      request.abort();
-      const err = new Error('ETIMEDOUT');
-      // @ts-ignore
-      err.code = 'ETIMEDOUT';
-      reject(err);
-    }, this.opts.timeout || 30000);
-
-    // set additional timeout on socket in case of remote freeze after sending headers
-    request.setTimeout(this.opts.timeout || 30000, function () {
-      if (cbCalled) {return;}
-      cbCalled = true;
-      request.abort();
-      const err = new Error('ESOCKETTIMEDOUT');
-      // @ts-ignore
-      err.code = 'ESOCKETTIMEDOUT';
-      reject(err);
-    });
-
-    request.on('error', function (err) {
-      if (cbCalled) {return;}
-      cbCalled = true;
-      clearTimeout(reqTimeout);
-      reject(err);
-    });
-
-    request.on('response', (response) => {
-      clearTimeout(reqTimeout);
-
-      // We need to buffer the response chunks in a nonblocking way.
-      let buffer = '';
-      response.on('data', function (chunk) {
-        buffer = buffer + chunk;
+    const finish = (error?, result?) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      signal?.removeEventListener('abort', onAbort);
+      request.setTimeout(0);
+      if (error) {
+        response?.destroy();
+        request.destroy();
+        reject(error);
+      } else resolve(result);
+    };
+    const failure = (code: string, message: string) => Object.assign(new Error(message), { code });
+    const deadline = setTimeout(() => finish(failure('ETIMEDOUT', 'RPC operation exceeded its deadline')), timeout);
+    const onAbort = () => finish(failure('EABORTED', 'RPC request cancelled'));
+    signal?.addEventListener('abort', onAbort, {once: true});
+    request.on('error', () => finish(failure('ERPC_TRANSPORT', 'RPC transport failed')));
+    request.on('response', incoming => {
+      response = incoming;
+      const chunks: Buffer[] = [];
+      let bytes = 0;
+      incoming.on('error', () => finish(failure('ERPC_BODY', 'RPC response failed')));
+      incoming.on('aborted', () => finish(failure('ERPC_BODY', 'RPC response was aborted')));
+      incoming.on('close', () => {
+        if (!incoming.complete) finish(failure('ERPC_BODY', 'RPC response closed before completion'));
       });
-      // When all the responses are finished, we decode the JSON and
-      // depending on whether it's got a result or an error, we call
-      // emitSuccess or emitError on the promise.
-      response.on('end', () => {
-        let err;
-
-        if (cbCalled) {return;}
-        cbCalled = true;
-
+      incoming.on('data', chunk => {
+        if (settled) return;
+        bytes += chunk.length;
+        if (bytes > maxBytes) return finish(failure('ERPC_SIZE', 'RPC response exceeds the byte limit'));
+        chunks.push(Buffer.from(chunk));
+      });
+      incoming.on('end', () => {
+        if (settled) return;
+        if (!incoming.complete) return finish(failure('ERPC_BODY', 'RPC response is incomplete'));
+        if (incoming.statusCode === 401 && this.opts.cookie) this.cachedCookie = undefined;
         try {
-          var decoded = JSON.parse(buffer);
-        } catch (e) {
-          // if we authenticated using a cookie and it failed, read the cookie file again
-          if (
-            response.statusCode === 401 /* Unauthorized */ &&
-            this.opts.cookie
-          ) {
-            this.cachedCookie = undefined;
+          const decoded = JSON.parse(Buffer.concat(chunks, bytes).toString('utf8'));
+          const answers = batch ? decoded : [decoded];
+          if (!Array.isArray(answers) || answers.length !== calls.length) throw new Error();
+          const byId = new Map();
+          for (const answer of answers) {
+            if (!answer || typeof answer !== 'object' || Array.isArray(answer) ||
+                !calls.some(call => call.id === answer.id) || byId.has(answer.id) ||
+                (!Object.prototype.hasOwnProperty.call(answer, 'result') && answer.error == null)) throw new Error();
+            byId.set(answer.id, answer);
           }
-
-          if (response.statusCode !== 200) {
-            err = new Error('Invalid params, response status code: ' + response.statusCode);
-            err.code = -32602;
-            reject(err);
-          } else {
-            err = new Error('Problem parsing JSON response from server');
-            err.code = -32603;
-            reject(err);
-          }
-          return;
-        }
-
-        if (!Array.isArray(decoded)) {
-          decoded = [decoded];
-        }
-
-        // iterate over each response, normally there will be just one
-        // unless a batch rpc call response is being processed
-        decoded.forEach(function (decodedResponse, i) {
-          if (decodedResponse.hasOwnProperty('error') && decodedResponse.error != null) {
-            if (reject) {
-              err = new Error(decodedResponse.error.message || '');
-              if (decodedResponse.error.code) {
-                err.code = decodedResponse.error.code;
-              }
-              reject(err);
-            }
-          } else if (decodedResponse.hasOwnProperty('result')) {
-            // @ts-ignore
-            resolve(decodedResponse.result, response.headers);
-          } else {
-            if (reject) {
-              err = new Error(decodedResponse.error.message || '');
-              if (decodedResponse.error.code) {
-                err.code = decodedResponse.error.code;
-              }
-              reject(err);
+          const ordered = calls.map(call => byId.get(call.id));
+          for (const [index, answer] of ordered.entries()) {
+            if (answer.error != null) {
+              // Core codes are useful to callers; remote messages can contain request data.
+              if (!Number.isSafeInteger(answer.error.code)) throw new Error();
+              const code = answer.error.code;
+              const message = code === -5 && calls[index].method === 'getrawtransaction'
+                ? 'No such mempool or blockchain transaction'
+                : code === -5 && ['getblock', 'getblockheader', 'getblockhash'].includes(calls[index].method)
+                  ? 'Block not found' : 'RPC server rejected the request';
+              return finish(Object.assign(new Error(message), { code }));
             }
           }
-        });
+          if (incoming.statusCode !== 200) return finish(failure('ERPC_HTTP', `RPC response status ${incoming.statusCode}`));
+          if (Date.now() - time >= timeout) return finish(failure('ETIMEDOUT', 'RPC operation exceeded its deadline'));
+          finish(undefined, batch ? ordered.map(answer => answer.result) : ordered[0].result);
+        } catch {
+          finish(failure('ERPC_RESPONSE', 'Malformed RPC response or mismatched identity'));
+        }
       });
     });
-    request.end(requestJSON);
+    request.end(payload);
   });
 };
 

@@ -12,6 +12,13 @@ class CapabilitiesRoutes {
   public initRoutes(app: Application): void {
     app.get(config.MEMPOOL.API_URL_PREFIX + 'capabilities', async (req: Request, res: Response) => {
       try {
+        /*
+         * Outstanding: M23-HEALTH of the 2026-09-23 mainnet plan. Mining readiness now
+         * compares the indexed tip with a fresh same-network Core reading
+         * (capabilities.mining.ts); the live address and statistics outage causes
+         * are still being diagnosed. The plan and its acceptance rows live in the
+         * handoff bundle, not here.
+         */
         const report = await capabilities.$report();
         res.header('Pragma', 'public');
         res.header('Cache-control', 'public');

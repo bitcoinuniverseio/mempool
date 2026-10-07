@@ -58,8 +58,7 @@ class GlobalNetworkRoutes {
 
   private async $getDnsSeeds(req: Request, res: Response): Promise<void> {
     try {
-      const seeds = await globalNetworkService.getDnsSeeds();
-      res.json({ seeds, total: seeds.length });
+      res.json(await globalNetworkService.getDnsSeedsReport());
     } catch (e) {
       fail(req, res, e, 'Failed to fetch DNS seeds');
     }
@@ -67,8 +66,7 @@ class GlobalNetworkRoutes {
 
   private async $getSnapshots(req: Request, res: Response): Promise<void> {
     try {
-      const snapshots = globalNetworkService.getSnapshots();
-      res.json({ snapshots, total: snapshots.length });
+      res.json(globalNetworkService.getSnapshotsReport());
     } catch (e) {
       fail(req, res, e, 'Failed to fetch snapshots');
     }
@@ -76,8 +74,7 @@ class GlobalNetworkRoutes {
 
   private async $getSensors(req: Request, res: Response): Promise<void> {
     try {
-      const sensors = await globalNetworkService.getSensors();
-      res.json({ sensors, total: sensors.length });
+      res.json(await globalNetworkService.getSensorsReport());
     } catch (e) {
       fail(req, res, e, 'Failed to fetch sensors');
     }

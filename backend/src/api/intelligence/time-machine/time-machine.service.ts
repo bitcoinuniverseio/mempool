@@ -6,6 +6,7 @@ import { validateHistorySnapshot, validUtc } from './history-validation';
 import config from '../../../config';
 import mempool from '../../mempool';
 import { BlockExtended, MempoolTransactionExtended, TransactionExtended } from '../../../mempool.interfaces';
+import { CanonicalChange } from '../observation/block-observation-hub';
 
 /**
  * Mempool time machine over what this backend has actually observed.
@@ -30,8 +31,12 @@ export interface HistoricalMempoolEvent {
   fee_sats: number;
   fee_rate: number;
   block_height?: number;
+  block_hash?: string;
+  is_coinbase?: boolean;
   replaced_by_txid?: string;
 }
+export interface OrphanConfirmation { txid: string; block_hash: string; block_height: number; confirmation_sequence: number; orphaned_at: string; canonical_height: number; canonical_hash: string }
+export interface CanonicalRestorationTarget { height: number; hash: string; rollback_sequence: number; observed_at: string; canonical_height?: number; canonical_hash?: string }
 
 export interface MempoolCheckpoint {
   event_sequence?: number;
@@ -99,6 +104,10 @@ export const TIME_MACHINE_LIMITS = { checkpoints: 288, events: 50_000, eventsPer
 export class TimeMachineService {
   private static instance: TimeMachineService;
   private eventLog: HistoricalMempoolEvent[] = [];
+  private orphanConfirmations = new Map<string, OrphanConfirmation>();
+  private canonicalRestorationTarget: CanonicalRestorationTarget | null = null;
+  private lastPollComplete = false;
+  private pollGeneration = 0;
   private checkpoints: MempoolCheckpoint[] = [];
   private stateCache: Map<string, { summary: ReplayStateSummary; txids: Set<string>; transactions: Map<string, { vsize: number; weight: number; fee: number }> }> = new Map();
   private evictedThrough = 0;
@@ -142,6 +151,8 @@ export class TimeMachineService {
           const transactions = new Map(entry.transactions);
           this.stateCache.set(entry.checkpoint.state_hash, { summary: this.summarize(entry.checkpoint, entry.checkpoint.timestamp_utc, entry.checkpoint.block_height, 0), txids: new Set(transactions.keys()), transactions });
         }
+        for (const orphan of value.orphanConfirmations ?? []) this.orphanConfirmations.set(orphan.txid, orphan);
+        this.canonicalRestorationTarget = value.canonicalRestorationTarget ?? null;
         if (now > this.observedThrough) this.gaps.push({ start_utc: new Date(this.observedThrough).toISOString(), end_utc: new Date(now).toISOString(), reason: 'Backend was not observing continuously across a restart.' });
         if (this.gaps.length > 1024) {
           const cutoff = Date.parse(this.gaps[this.gaps.length - 1024].end_utc);
@@ -177,6 +188,8 @@ export class TimeMachineService {
           await this.store.write({ schema: 'observed-history-v1', network: this.network, startedAt: this.startedAt,
             eventSequence: this.eventSequence, evictedSequence: this.evictedSequence, evictedThrough: this.evictedThrough,
             observedThrough: this.observedThrough, gaps: this.gaps, events: this.eventLog,
+            orphanConfirmations: [...this.orphanConfirmations.values()],
+            canonicalRestorationTarget: this.canonicalRestorationTarget ?? undefined,
             checkpoints: this.checkpoints.map(checkpoint => ({ checkpoint, transactions: [...this.stateCache.get(checkpoint.state_hash)!.transactions] })) });
           this.storageError = null;
         } catch {
@@ -206,6 +219,9 @@ export class TimeMachineService {
     this.timer = undefined; this.store = null; this.dirty = false; this.storageError = null; this.loadFailed = false;
     this.evictedSequence = 0; this.observedThrough = 0; this.gaps = []; this.interruptedObservation = false;
     this.eventLog = [];
+    this.orphanConfirmations.clear();
+    this.canonicalRestorationTarget = null;
+    this.lastPollComplete = false; this.pollGeneration = 0;
     this.checkpoints = [];
     this.stateCache.clear();
     this.evictedThrough = 0;
@@ -222,12 +238,13 @@ export class TimeMachineService {
     if (this.eventLog.length > TIME_MACHINE_LIMITS.events) {
       const removed = this.eventLog.shift();
       if (removed) { this.evictedThrough = Math.max(this.evictedThrough, Date.parse(removed.timestamp_utc)); this.evictedSequence = removed.sequence!; }
+      if (removed && this.orphanConfirmations.get(removed.txid)?.confirmation_sequence === removed.sequence) this.orphanConfirmations.delete(removed.txid);
     }
     this.schedulePersistence();
   }
 
   private static eventFor(tx: MempoolTransactionExtended | TransactionExtended, type: HistoricalMempoolEvent['event_type'], at: number, blockHeight?: number, replacedBy?: string): HistoricalMempoolEvent {
-    const vsize = tx.vsize ?? Math.ceil((tx.weight ?? 0) / 4);
+    const vsize = tx.vsize == null ? Math.ceil((tx.weight ?? 0) / 4) : Number.isFinite(tx.vsize) && tx.vsize >= 0 ? Math.ceil(tx.vsize) : tx.vsize;
     return {
       event_id: crypto.createHash('sha256').update(`${tx.txid}:${type}:${blockHeight ?? ''}:${replacedBy ?? ''}`).digest('hex').slice(0, 32),
       txid: tx.txid, timestamp_utc: new Date(at).toISOString(), event_type: type, vsize, weight: tx.weight, fee_sats: tx.fee ?? 0,
@@ -238,7 +255,7 @@ export class TimeMachineService {
   /** Called from the mempool change callback with what entered and left. */
   public observeMempoolChange(added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], now = Date.now()): void {
     if (!Number.isSafeInteger(now) || now < this.observedThrough) throw new TimeMachineUnavailableError('invalid-observation', 'Observation time must be nondecreasing.', 400);
-    for (const tx of added) { this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'accepted', now)); }
+    for (const tx of added) this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'accepted', now));
     for (const tx of removed) { this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'removed', now)); }
     this.observedThrough = Math.max(this.observedThrough, now);
     this.schedulePersistence();
@@ -246,19 +263,23 @@ export class TimeMachineService {
 
   /** Complete polls advance observed coverage even when their transaction delta is empty. */
   public observePoll(added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], complete: boolean, now = Date.now()): void {
+    this.lastPollComplete = false;
+    this.pollGeneration++;
     if (!complete) this.markObservationFailure(now);
     else if (this.interruptedObservation) {
       this.gaps[this.gaps.length - 1].end_utc = new Date(now).toISOString();
       this.interruptedObservation = false;
     }
     this.observeMempoolChange(added, removed, now);
+    this.lastPollComplete = complete;
   }
 
   /** Called by the main loop when a poll fails; recovery closes the unknown interval. */
-  public markObservationFailure(now = Date.now()): void {
+  public markObservationFailure(now = Date.now(), reason = 'Mempool polling failed or returned an incomplete snapshot.'): void {
+    this.lastPollComplete = false;
     if (!Number.isSafeInteger(now) || now < this.observedThrough) return;
     if (this.interruptedObservation) this.gaps[this.gaps.length - 1].end_utc = new Date(now).toISOString();
-    else this.gaps.push({ start_utc: new Date(this.observedThrough || now).toISOString(), end_utc: new Date(now).toISOString(), reason: 'Mempool polling failed or returned an incomplete snapshot.' });
+    else this.gaps.push({ start_utc: new Date(this.observedThrough || now).toISOString(), end_utc: new Date(now).toISOString(), reason });
     this.interruptedObservation = true;
     if (this.gaps.length > 1024) {
       this.checkpoints = []; this.stateCache.clear(); this.gaps = this.gaps.slice(-1024);
@@ -269,10 +290,115 @@ export class TimeMachineService {
     this.recordLifecycleEvent(TimeMachineService.eventFor(replaced, 'replaced', now, undefined, replacementTxid));
   }
 
+  public getPendingCanonicalTip(): { height: number; hash: string } | null {
+    const orphan = this.orphanConfirmations.values().next().value as OrphanConfirmation | undefined;
+    return orphan ? { height: orphan.canonical_height, hash: orphan.canonical_hash } : null;
+  }
+  public getPollGeneration(): number { return this.pollGeneration; }
+  public getCanonicalRestorationTarget(): { height: number; hash: string } | null {
+    return this.canonicalRestorationTarget ? { height: this.canonicalRestorationTarget.height, hash: this.canonicalRestorationTarget.hash } : null;
+  }
+  public getCanonicalRecoveryRequest(): { expectedCanonicalTip: { height: number; hash: string }; restorationTarget: { height: number; hash: string } | null } | null {
+    const retained = this.canonicalRestorationTarget;
+    const expected = this.getPendingCanonicalTip() ?? (retained?.canonical_height !== undefined && retained.canonical_hash !== undefined
+      ? { height: retained.canonical_height, hash: retained.canonical_hash } : null);
+    return expected ? { expectedCanonicalTip: expected, restorationTarget: this.getCanonicalRestorationTarget() } : null;
+  }
+
+  /** Invoked only after the main loop fences the actual full poll against its native source. */
+  public observeVerifiedReentries(membership: string[], tip: { height: number; hash: string }, priorGeneration: number, now = Date.now()): boolean {
+    const complete = this.lastPollComplete;
+    this.lastPollComplete = false;
+    const expected = this.getPendingCanonicalTip();
+    if (!complete || !Number.isSafeInteger(priorGeneration) || priorGeneration < 0 || this.pollGeneration !== priorGeneration + 1 ||
+      !expected || expected.height !== tip.height || expected.hash !== tip.hash) return false;
+    if (!Number.isSafeInteger(now) || now < this.observedThrough) throw new TimeMachineUnavailableError('invalid-observation', 'Verified reentry timestamp is out of order.', 400);
+    const feed = this.lifecycleFeed();
+    const ids = new Set(membership), cachedIds = Object.keys(feed);
+    if (ids.size !== membership.length || ids.size !== cachedIds.length || !cachedIds.every(id => ids.has(id))) return false;
+    for (const id of membership) {
+      const orphan = this.orphanConfirmations.get(id), tx = feed[id];
+      if (!orphan || !tx || tx.txid !== id) continue;
+      this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'reaccepted_after_reorg', now));
+      this.orphanConfirmations.delete(id);
+    }
+    return true;
+  }
+
+  /** Native ancestor observation is separate from confirmation/checkpoint creation. */
+  public observeCanonicalChange(change: CanonicalChange): void {
+    if (change.network !== this.network) throw new TimeMachineUnavailableError('invalid-observation', 'Canonical observation network mismatch.', 400);
+    if (!['unavailable', 'verified-rollback', 'verified-restoration', 'verified-progression'].includes(change.status)) throw new TimeMachineUnavailableError('invalid-observation', 'Unknown canonical observation status.', 400);
+    if (!Number.isSafeInteger(change.observedAt) || change.observedAt < this.observedThrough) throw new TimeMachineUnavailableError('invalid-observation', 'Canonical observation timestamp is out of order.', 400);
+    if (change.status === 'unavailable') {
+      this.checkpoints = []; this.stateCache.clear(); this.orphanConfirmations.clear();
+      this.markObservationFailure(change.observedAt, 'Canonical ancestor unavailable; retained checkpoints cannot be verified.');
+      this.observedThrough = change.observedAt;
+      return;
+    }
+    const hash = (value: unknown) => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+    if (change.status === 'verified-progression') {
+      const expected = this.getCanonicalRecoveryRequest()?.expectedCanonicalTip;
+      if (!expected || change.previousCanonicalTip.height !== expected.height || change.previousCanonicalTip.hash !== expected.hash ||
+        !Number.isSafeInteger(change.canonicalTip.height) || change.canonicalTip.height <= expected.height || !hash(change.canonicalTip.hash)) {
+        throw new TimeMachineUnavailableError('invalid-observation', 'Canonical progression does not match retained observed source point.', 400);
+      }
+      for (const orphan of this.orphanConfirmations.values()) {
+        orphan.canonical_height = change.canonicalTip.height; orphan.canonical_hash = change.canonicalTip.hash;
+      }
+      this.canonicalRestorationTarget = null;
+      this.lastPollComplete = false; this.observedThrough = change.observedAt;
+      this.schedulePersistence();
+      return;
+    }
+    if (change.status === 'verified-restoration') {
+      const target = this.canonicalRestorationTarget;
+      if (!target || !Number.isSafeInteger(change.canonicalTip.height) || change.canonicalTip.height < target.height || !hash(change.canonicalTip.hash) ||
+        change.restoredTarget.height !== target.height || change.restoredTarget.hash !== target.hash ||
+        change.canonicalTip.height === target.height && change.canonicalTip.hash !== target.hash) {
+        throw new TimeMachineUnavailableError('invalid-observation', 'Canonical restoration does not match retained native target.', 400);
+      }
+      this.orphanConfirmations.clear(); this.canonicalRestorationTarget = null;
+      this.lastPollComplete = false; this.observedThrough = change.observedAt;
+      this.schedulePersistence();
+      return;
+    }
+    const points = [change.previousTip, change.canonicalTip, change.commonAncestor];
+    if (!points.every(point => Number.isSafeInteger(point.height) && point.height >= 0 && hash(point.hash)) ||
+      change.commonAncestor.height > change.canonicalTip.height || change.commonAncestor.height >= change.previousTip.height ||
+      change.commonAncestor.height === change.canonicalTip.height && change.commonAncestor.hash !== change.canonicalTip.hash ||
+      !Array.isArray(change.orphanedBlocks) || change.orphanedBlocks.length > 128 || change.orphanedBlocks.length !== change.previousTip.height - change.commonAncestor.height ||
+      !change.orphanedBlocks.every((block, index) => block.height === change.previousTip.height - index && hash(block.hash)) ||
+      change.orphanedBlocks[0].hash !== change.previousTip.hash) throw new TimeMachineUnavailableError('invalid-observation', 'Invalid canonical ancestry observation.', 400);
+    const orphans = new Map(change.orphanedBlocks.map(block => [block.hash, block.height]));
+    this.orphanConfirmations.clear();
+    this.canonicalRestorationTarget = { ...change.previousTip, rollback_sequence: this.eventSequence, observed_at: new Date(change.observedAt).toISOString(),
+      canonical_height: change.canonicalTip.height, canonical_hash: change.canonicalTip.hash };
+    const latestConfirmations = new Map<string, HistoricalMempoolEvent>();
+    for (const event of this.eventLog) if (event.event_type === 'confirmed') latestConfirmations.set(event.txid, event);
+    for (const event of latestConfirmations.values()) {
+      if (event.event_type === 'confirmed' && event.is_coinbase !== true && event.block_hash && orphans.get(event.block_hash) === event.block_height) {
+        this.orphanConfirmations.set(event.txid, { txid: event.txid, block_hash: event.block_hash, block_height: event.block_height!,
+          confirmation_sequence: event.sequence!, orphaned_at: new Date(change.observedAt).toISOString(), canonical_height: change.canonicalTip.height, canonical_hash: change.canonicalTip.hash });
+      }
+    }
+    this.checkpoints = this.checkpoints.filter(checkpoint => checkpoint.block_height < change.commonAncestor.height ||
+      checkpoint.block_height === change.commonAncestor.height && checkpoint.block_hash === change.commonAncestor.hash);
+    const retained = new Set(this.checkpoints.map(checkpoint => checkpoint.state_hash));
+    for (const key of this.stateCache.keys()) if (!retained.has(key)) this.stateCache.delete(key);
+    this.markObservationFailure(change.observedAt, 'Verified canonical rollback interrupted block observation.');
+    this.observedThrough = change.observedAt;
+  }
+
   /** Called from the block hub: records confirmations and snapshots the mempool. */
   public observeBlock(block: BlockExtended, transactions: TransactionExtended[], now = Date.now()): MempoolCheckpoint {
     if (!Number.isSafeInteger(now) || now < this.observedThrough) throw new TimeMachineUnavailableError('invalid-observation', 'Observation time must be nondecreasing.', 400);
-    for (const tx of transactions) { this.recordLifecycleEvent(TimeMachineService.eventFor(tx, 'confirmed', now, block.height)); }
+    for (const tx of transactions) {
+      this.orphanConfirmations.delete(tx.txid);
+      const coinbase = tx.vin?.length === 1 && typeof tx.vin[0].is_coinbase === 'boolean' ? tx.vin[0].is_coinbase : undefined;
+      this.recordLifecycleEvent({ ...TimeMachineService.eventFor(tx, 'confirmed', now, block.height), block_hash: block.id,
+        ...(coinbase === undefined ? {} : { is_coinbase: coinbase }) });
+    }
     this.observedThrough = Math.max(this.observedThrough, now);
     const confirmed = new Set(transactions.map(tx => tx.txid));
     const snapshot = Object.values(this.lifecycleFeed()).filter(tx => !confirmed.has(tx.txid));

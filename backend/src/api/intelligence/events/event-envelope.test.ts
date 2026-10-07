@@ -48,8 +48,8 @@ describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
     });
 
     expect(envelope.event_id).toBeDefined();
-    expect(envelope.schema_version).toBe('1.0.0');
-    expect(envelope.clock_uncertainty_ms).toBeGreaterThanOrEqual(0);
+    expect(envelope.schema_version).toBe('1.2.0');
+    expect(envelope.clock_uncertainty_ms).toBeNull();
 
     const subject = EventEnvelopeValidator.buildSubject(
       envelope.network,
@@ -59,7 +59,7 @@ describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
     expect(subject).toBe('btc.bitcoin.mempool.observed');
   });
 
-  it('publishes and delivers events with wildcard matching and deduplication', (done) => {
+  it('publishes and delivers events with wildcard matching and deduplication', async () => {
     const bus = IntelligenceEventBus.getInstance();
     const envelope = EventEnvelopeValidator.createEnvelope({
       event_type: 'observed',
@@ -71,17 +71,20 @@ describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
     });
 
     const subject = 'btc.bitcoin.relay.observed';
-    const unsubscribe = bus.subscribe('btc.bitcoin.relay.*', (env, ack) => {
+    let delivered!: () => void;
+    const received = new Promise<void>(resolve=>delivered=resolve);
+    const unsubscribe = await bus.subscribe('btc.bitcoin.relay.*', (env, ack) => {
       expect(env.entity_id).toBe('tx-broadcast-01');
       ack();
       unsubscribe();
-      done();
+      delivered();
     });
 
-    bus.publish(subject, envelope);
+    await bus.publish(subject, envelope);
+    await received;
   });
 
-  it('quarantines malformed envelopes into dead-letter storage', () => {
+  it('quarantines malformed envelopes into dead-letter storage', async () => {
     const bus = IntelligenceEventBus.getInstance();
     const badEnvelope: any = {
       event_id: '0191ae32-1234-7000-8000-000000000000',
@@ -99,7 +102,7 @@ describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
       payload: { fee_sats: 10.5 }, // invalid float
     };
 
-    const published = bus.publish('btc.bitcoin.test.bad', badEnvelope);
+    const published = await bus.publish('btc.bitcoin.test.bad', badEnvelope);
     expect(published).toBe(false);
 
     const deadLetters = bus.getDeadLetterQueue();
@@ -137,3 +140,6 @@ describe('Phase 1 Foundation: Event Envelope & Event Bus', () => {
     expect(validateWebhookUrl('https://api.external-auditor.org/webhook').hostname).toBe('api.external-auditor.org');
   });
 });
+
+import {subjectMatches} from './intelligence-event-bus';
+describe('subject token matching',()=>{it('matches middle/suffix/global filters with exact token semantics',()=>{expect(subjectMatches('btc.*.template.*','btc.signet.template.observed')).toBe(true);expect(subjectMatches('btc.signet.>','btc.signet.template.observed')).toBe(true);expect(subjectMatches('*','btc.signet.template.observed')).toBe(true);expect(subjectMatches('btc.signet.template.*','btc.mainnet.template.observed')).toBe(false);expect(subjectMatches('btc.signet.*','btc.signet.template.observed')).toBe(false);expect(subjectMatches('btc.>.template','btc.signet.template.observed')).toBe(false);});});

@@ -45,6 +45,12 @@ export interface LocalAccount {
     readonly complete: boolean;
     readonly derivedExternal?: readonly string[];
     readonly derivedInternal?: readonly string[];
+    /** Completion is only within the explicitly scanned gap/range boundary. */
+    readonly boundary?: 'gap-limit' | 'fixed-descriptor';
+    readonly unusedExternal?: number;
+    readonly unusedInternal?: number;
+    readonly observedTipHash?: string;
+    readonly sourceIdentity?: import('../data/discovery-source-identity').DiscoverySourceIdentity;
   };
   readonly groupId?: string;
   readonly tags: readonly string[];

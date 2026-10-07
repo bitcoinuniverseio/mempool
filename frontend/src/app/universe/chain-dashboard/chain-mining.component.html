@@ -5,6 +5,12 @@
     <h1 i18n="universe.mining.heading">{{ profile.name }} mining</h1>
   </header>
 
+  <!-- An invalid network setting stops every read of this chain. Say so
+       plainly rather than show another network's data under its name. -->
+  <p class="notice failure" role="alert" *ngIf="networkConfigError" i18n="universe.mining.network-config-invalid">
+    {{ profile.name }} is not being read because its network setting is invalid: {{ networkConfigError }} Nothing from another network is shown. Correct the setting, then reload.
+  </p>
+
   <p class="lede" *ngIf="chain === 'dogecoin'" i18n="universe.mining.lede-doge">
     Dogecoin is merged mined: miners work on Litecoin's scrypt proof of work and commit to Dogecoin blocks through AuxPoW, so most Dogecoin blocks are found by Litecoin pools.
   </p>
@@ -27,7 +33,7 @@
   <p class="notice empty" role="status" *ngIf="vm.viewError === 'network-not-offered'" i18n="universe.mining.network-not-offered">
     Mining statistics are offered for {{ profile.name }} mainnet only. This explorer is bound to {{ profile.name }} {{ networkLabel }}, where the block collector does not run, so no reading below is available; nothing is invented in its place.
   </p>
-  <p class="notice failure" role="alert" *ngIf="vm.viewError && vm.viewError !== 'network-not-offered'" i18n="universe.mining.view-error">
+  <p class="notice failure" role="alert" *ngIf="vm.viewError && vm.viewError !== 'network-not-offered' && vm.viewError !== 'network-config-invalid'" i18n="universe.mining.view-error">
     Some mining readings cannot be fetched right now. Panels below say what they are missing.
   </p>
 

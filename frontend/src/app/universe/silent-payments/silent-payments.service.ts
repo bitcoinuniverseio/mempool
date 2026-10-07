@@ -39,7 +39,10 @@ export class SilentPaymentsApiService {
   private apiBaseUrl = '';
   get network(): string { return this.stateService.network || 'mainnet'; }
   get networkChanges$(): Observable<string> { return this.stateService.networkChanged$.pipe(map(network => network || 'mainnet')); }
-  path(path: string): string { return (this.network === 'mainnet' ? '' : '/' + this.network) + path; }
+  private networkPrefix(network: string): string {
+    return network === 'mainnet' || network === this.stateService.env?.ROOT_NETWORK ? '' : '/' + network;
+  }
+  path(path: string): string { return this.networkPrefix(this.network) + path; }
   constructor(private httpClient: HttpClient, private stateService: StateService) {
     if (!this.stateService.isBrowser && this.stateService.env) {
       this.apiBaseUrl = this.stateService.env.NGINX_PROTOCOL + '://' + this.stateService.env.NGINX_HOSTNAME + ':' + this.stateService.env.NGINX_PORT;
@@ -48,7 +51,7 @@ export class SilentPaymentsApiService {
   private request<T>(path: string, body?: object): Observable<T> {
     return defer(() => {
       const network = this.network;
-      const url = `${this.apiBaseUrl}/api/v1/intelligence/payments/silent/${path}?chain=bitcoin&network=${encodeURIComponent(network)}`;
+      const url = `${this.apiBaseUrl}${this.networkPrefix(network)}/api/v1/intelligence/payments/silent/${path}?chain=bitcoin&network=${encodeURIComponent(network)}`;
       return (body ? this.httpClient.post<T>(url, body) : this.httpClient.get<T>(url)).pipe(
         takeUntil(this.networkChanges$.pipe(filter(next => next !== network))),
         map(result => {
@@ -67,8 +70,10 @@ export class SilentPaymentsApiService {
     }));
   }
   getBlockBundleBytes$(height: number): Observable<string> {
-    const network = this.network;
-    return this.httpClient.get(`${this.apiBaseUrl}/api/v1/intelligence/payments/silent/blocks/${height}/bundle?chain=bitcoin&network=${encodeURIComponent(network)}`, { responseType: 'text' }).pipe(takeUntil(this.networkChanges$.pipe(filter(next => next !== network))));
+    return defer(() => {
+      const network = this.network;
+      return this.httpClient.get(`${this.apiBaseUrl}${this.networkPrefix(network)}/api/v1/intelligence/payments/silent/blocks/${height}/bundle?chain=bitcoin&network=${encodeURIComponent(network)}`, { responseType: 'text' }).pipe(takeUntil(this.networkChanges$.pipe(filter(next => next !== network))));
+    });
   }
   getSupportRegistry$(): Observable<SilentPaymentSupportClaim[]> { return this.request('support'); }
   validateAddress$(address: string): Observable<{ valid: boolean; network?: string; scan_pubkey?: string; spend_pubkey?: string; error?: string }> { return this.request('validate-address', { address }); }

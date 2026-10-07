@@ -79,8 +79,10 @@ class VerificationRoutes {
 
   private async $getIncidents(req: Request, res: Response): Promise<void> {
     try {
-      const incidents = verificationService.getIncidents();
-      res.json({ incidents, count: incidents.length });
+      const network = incidentNetwork(req);
+      const incidents = await verificationService.getIncidents(network);
+      res.setHeader('Cache-Control', 'no-store');
+      res.json(incidents);
     } catch (e) {
       fail(req, res, e, 'Failed to fetch incidents');
     }
@@ -88,11 +90,12 @@ class VerificationRoutes {
 
   private async $getIncident(req: Request, res: Response): Promise<void> {
     try {
-      const incident = verificationService.getIncidentById(req.params.id);
+      const incident = await verificationService.getIncidentById(req.params.id, incidentNetwork(req));
       if (!incident) {
         res.status(404).json({ error: `Incident '${req.params.id}' not found.` });
         return;
       }
+      res.setHeader('Cache-Control', 'no-store');
       res.json(incident);
     } catch (e) {
       fail(req, res, e, 'Failed to fetch incident');
@@ -101,3 +104,11 @@ class VerificationRoutes {
 }
 
 export default new VerificationRoutes();
+
+function incidentNetwork(req: Request): string | undefined {
+  if (Object.keys(req.query || {}).some(key => key !== 'network') || req.query?.network !== undefined &&
+    (typeof req.query.network !== 'string' || !['mainnet', 'testnet', 'testnet4', 'signet'].includes(req.query.network))) {
+    throw new VerificationEvidenceError('invalid-incident-network', 'Choose a single supported incident network.', 400);
+  }
+  return req.query?.network as string | undefined;
+}

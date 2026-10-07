@@ -17,6 +17,7 @@ import blocks from './blocks';
 class Mempool {
   private inSync: boolean = false;
   private observedPollCallback?: (added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], complete: boolean) => void;
+  private syncProgressCallback?: () => void;
 
   public setObservedPollCallback(callback: (added: MempoolTransactionExtended[], removed: MempoolTransactionExtended[], complete: boolean) => void): void {
     this.observedPollCallback = callback;
@@ -112,6 +113,15 @@ class Mempool {
   public setMempoolChangedCallback(fn: (newMempool: { [txId: string]: MempoolTransactionExtended; },
     newTransactions: MempoolTransactionExtended[], deletedTransactions: MempoolTransactionExtended[][], accelerationDelta: string[]) => void): void {
     this.mempoolChangedCallback = fn;
+  }
+
+  /**
+   * Called for each slice fetched while the mempool is out of sync, so a
+   * long initial or post-outage sync counts as progress to the main loop
+   * watchdog instead of looking like a stuck run.
+   */
+  public setSyncProgressCallback(fn: () => void): void {
+    this.syncProgressCallback = fn;
   }
 
   public setAsyncMempoolChangedCallback(fn: (newMempool: { [txId: string]: MempoolTransactionExtended; }, mempoolSize: number,
@@ -316,6 +326,9 @@ class Mempool {
         const txs = await transactionUtils.$getMempoolTransactionsExtended(slice, false, false, false);
         logger.debug(`fetched ${txs.length} transactions`);
         this.updateTimerProgress(timer, 'fetched new transactions');
+        if (!this.inSync && txs.length) {
+          this.syncProgressCallback?.();
+        }
 
         for (const transaction of txs) {
           this.mempoolCache[transaction.txid] = transaction;

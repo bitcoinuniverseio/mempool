@@ -113,6 +113,17 @@ export class AnimaTransitionsComponent implements OnInit {
       .subscribe({
         next: (page) => {
           this.loadingMore = false;
+          const seen = new Set(this.events.map(row => row.eventId));
+          const validRows = Array.isArray(page.events)
+            && page.events.every(row => row && typeof row.eventId === 'string' && row.eventId.length > 0);
+          const added = validRows ? page.events.filter(row => !seen.has(row.eventId)) : [];
+          if (!validRows || !Number.isSafeInteger(page.total) || page.total !== this.total
+            || page.total < this.events.length + new Set(added.map(row => row.eventId)).size
+            || (added.length === 0 && this.events.length < page.total)) {
+            this.pageFailure = {kind: 'malformed'};
+            this.publish();
+            return;
+          }
           this.append(page.events);
           this.total = page.total;
           this.publish();

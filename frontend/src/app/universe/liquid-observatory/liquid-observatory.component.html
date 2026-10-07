@@ -1,125 +1,37 @@
 <div class="container-xl product-page">
-  <header class="page-head">
-    <nav class="crumbs">
-      <a [routerLink]="['/' | relativeUrl]">Home</a>
-      <span class="divider">/</span>
-      <span>Liquid Network</span>
-    </nav>
-    <h1>Liquid Confidential-Asset, Peg, and Federation Observatory</h1>
-    <p class="summary">
-      Dynamic federation epochs, block signing matrices, peg-in/peg-out reserves, and confidential asset issuances on Liquid.
-    </p>
-  </header>
-
-  <nav class="nav-tabs">
-    <a [routerLink]="['/liquid/observatory' | relativeUrl]" class="active">Observatory</a>
-    <a [routerLink]="['/liquid/unblind' | relativeUrl]">Unblinding Workspace</a>
-  </nav>
-
-  <section class="panel">
-    <h2>Owned Elements Checkpoint</h2>
-    <label for="elementsNetwork">Source network</label>
-    <select id="elementsNetwork" [(ngModel)]="network" (ngModelChange)="refreshNode()"><option value="liquidv1">Liquid mainnet</option><option value="liquidtestnet">Liquid testnet</option><option value="elementsregtest">Isolated Elements regtest</option></select>
-    <button type="button" (click)="refreshNode()">Refresh checkpoint</button>
-    <ng-container *ngIf="node$ | async as state">
-      <p *ngIf="state.loading" aria-busy="true">Reading the owned node checkpoint...</p>
-      <p *ngIf="state.error" role="alert">{{ state.error }}</p>
-      <ng-container *ngIf="state.node as node">
-        <p>Network: {{ node.network }} · Height: {{ node.blockHeight }} · Initial synchronization: {{ node.initialBlockDownload ? 'in progress' : 'complete' }}</p>
-        <p class="mono">{{ node.blockHash }}</p>
-        <p>Block signing policy: <span class="mono">{{ node.signblockScript }}</span></p>
-        <p>Peg program: <span class="mono">{{ node.fedpegProgram }}</span></p>
-        <p>These are node-reported checkpoint and policy bytes. Signer liveness, peg reserves and asset registry coverage remain unavailable.</p>
-      </ng-container>
-    </ng-container>
-  </section>
-
-  <ng-container *ngIf="vm$ | async as vm">
-    <div *ngIf="vm.kind === 'loading'" class="panel" aria-busy="true">
-      <p>Reading Liquid Elements node and federation state...</p>
-    </div>
-
-    <div *ngIf="vm.kind === 'error'" class="panel">
-      <h2>Full Observatory Evidence Unavailable</h2>
-      <p>Complete peg, registry and federation observations are not available from the configured sources.</p>
-      <p role="alert">{{ vm.message }}</p>
-    </div>
-
-    <ng-container *ngIf="vm.kind === 'ready' && vm.summary && vm.federation">
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span class="metric-label">Pegged L-BTC Reserve</span>
-          <span class="metric-value">{{ (Number(vm.summary.peggedReserveSats) / 1e8).toFixed(2) }} BTC</span>
-          <span class="metric-sub">{{ vm.summary.peggedReserveSats }} sats</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">Active Signers</span>
-          <span class="metric-value">{{ vm.summary.dynamicFederation.signersOnline }} / {{ vm.summary.dynamicFederation.totalSigners }}</span>
-          <span class="metric-sub">Threshold: {{ vm.summary.dynamicFederation.blockSigningThreshold }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">Dynamic Epoch</span>
-          <span class="metric-value">Epoch #{{ vm.summary.dynamicFederation.currentEpoch }}</span>
-          <span class="metric-sub">Block #{{ vm.summary.blockHeight }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="metric-label">Confidential Ratio</span>
-          <span class="metric-value">{{ vm.summary.confidentialTxPercentage }}%</span>
-          <span class="metric-sub">{{ vm.summary.activeAssetCount }} Issued Assets</span>
-        </div>
-      </div>
-
-      <section class="panel">
-        <h2>Registered Confidential Assets</h2>
-        <table class="data-table" *ngIf="vm.assets?.length">
-          <thead>
-            <tr>
-              <th>Ticker</th>
-              <th>Asset Name</th>
-              <th>Asset ID</th>
-              <th>Precision</th>
-              <th>Confidential</th>
-              <th>Proof</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let a of vm.assets">
-              <td><strong>{{ a.ticker }}</strong></td>
-              <td>{{ a.name }}</td>
-              <td class="mono">{{ a.assetId.slice(0, 16) }}...</td>
-              <td>{{ a.precision }}</td>
-              <td><span class="badge badge-success">{{ a.isConfidential ? 'Confidential' : 'Explicit' }}</span></td>
-              <td><span class="badge badge-info">{{ a.hasProof ? 'Verified' : 'Unproved' }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section class="panel">
-        <h2>Recent Peg-in & Peg-out Operations</h2>
-        <table class="data-table" *ngIf="vm.pegs?.length">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Amount (BTC)</th>
-              <th>Bitcoin Txid</th>
-              <th>Liquid Txid</th>
-              <th>Confirmations</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let p of vm.pegs">
-              <td><span class="badge" [ngClass]="p.type === 'peg-in' ? 'badge-success' : 'badge-warning'">{{ p.type | uppercase }}</span></td>
-              <td><strong>{{ (Number(p.amountSats) / 1e8).toFixed(4) }}</strong></td>
-              <td class="mono"><a [routerLink]="['/tx' | relativeUrl, p.bitcoinTxid]">{{ p.bitcoinTxid.slice(0, 14) }}...</a></td>
-              <td class="mono">{{ p.liquidTxid.slice(0, 14) }}...</td>
-              <td>{{ p.confirmations }}</td>
-              <td><span class="badge badge-success">{{ p.status }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-    </ng-container>
-  </ng-container>
+ <header class="page-head"><nav class="crumbs"><a [routerLink]="['/' | relativeUrl]">Home</a><span>/</span><span>Liquid observatory</span></nav>
+ <h1>Liquid Confidential-Asset, Peg, and Federation Observatory</h1>
+ <p>Canonical public block observations and parent peg evidence for an explicitly configured Elements/Bitcoin pair. Reserve, circulating supply, signer liveness and payout approval remain unknown.</p></header>
+ <nav class="nav-tabs"><a [routerLink]="['/liquid/observatory' | relativeUrl]" class="active">Observatory</a><a [routerLink]="['/liquid/unblind' | relativeUrl]">Unblinding Workspace</a></nav>
+ <section class="panel"><h2>Selected native pair</h2><label for="elementsNetwork">Source network</label>
+ <select id="elementsNetwork" [(ngModel)]="network" (ngModelChange)="refreshNode()"><option value="liquidv1">Liquid mainnet</option><option value="liquidtestnet">Liquid testnet</option><option value="elementsregtest">Isolated Elements regtest</option></select>
+ <button type="button" (click)="refreshNode()">Refresh observations</button><button type="button" (click)="cancel()">Cancel observatory requests</button>
+ <ng-container *ngIf="node$ | async as state"><p *ngIf="state.loading" aria-busy="true">Reading the owned node checkpoint...</p><p *ngIf="state.error" role="alert">Node checkpoint unavailable: {{ state.error }}</p>
+ <ng-container *ngIf="state.node as node"><p>Node-reported network {{ node.network }} / height {{ node.blockHeight }} / synchronization {{ node.initialBlockDownload ? 'in progress' : 'complete' }}</p><p class="mono">{{ node.blockHash }}</p><p>Block signing script: <span class="mono">{{ node.signblockScript }}</span></p><p>Checkpoint and policy only; this independent node read does not establish paired projection or inventory completeness.</p></ng-container></ng-container></section>
+ <ng-container *ngIf="vm$ | async as vm">
+ <p *ngIf="vm.kind === 'loading'" aria-busy="true">Reading bounded pair observations...</p><p *ngIf="vm.kind === 'error'">No usable configured pair observation is available.</p>
+ <p *ngIf="vm.notice" role="status">{{ vm.notice }}</p>
+ <section class="panel"><h2>Shared public projection</h2><p *ngIf="vm.errors.projection" role="alert">Projection unavailable: {{ vm.errors.projection }}</p>
+ <ng-container *ngIf="vm.projection as c"><p>{{ c.source.profile.network }} / parent {{ c.source.profile.parentNetwork }} / {{ c.status }}</p><p>{{ c.progress.processedBlocks }} / {{ c.progress.expectedBlocks }} public blocks observed. Next height {{ c.progress.nextHeight }}; manual page limit {{ c.progress.pageLimit }}.</p>
+ <p>Elements checkpoint {{ c.source.elements.height }} <span class="mono">{{ c.source.elements.hash }}</span></p><p>Parent checkpoint {{ c.source.parent.height }} <span class="mono">{{ c.source.parent.hash }}</span></p>
+ <p>Observed {{ c.source.observedAt }}. Profile <span class="mono">{{ c.source.profileSha256 }}</span></p><p>Elements genesis <span class="mono">{{ c.source.profile.elementsGenesis }}</span>; parent genesis <span class="mono">{{ c.source.profile.parentGenesis }}</span></p>
+ <p>Source revisions <span class="mono">{{ c.source.profile.elementsSourceRevision }}</span> / <span class="mono">{{ c.source.profile.parentSourceRevision }}</span>. Native versions {{ c.source.profile.elementsVersion }} / {{ c.source.profile.parentVersion }}.</p>
+ <p>Completion refers to public block coverage at this observed pair, not hidden amounts or federation-authorized payouts.</p>
+ <button type="button" (click)="advance()" [disabled]="c.status !== 'PARTIAL' || vm.pending.advance || vm.pending.projection">Continue up to 16 blocks</button></ng-container>
+ <button type="button" (click)="refreshProjection()" [disabled]="vm.pending.projection || vm.pending.advance">Refresh projection receipt</button><p *ngIf="vm.pending.advance" aria-busy="true">Acquiring one bounded page...</p><p *ngIf="vm.errors.advance" role="alert">Projection advance failed: {{ vm.errors.advance }}</p></section>
+ <section class="panel"><h2>Observed summary</h2><p *ngIf="vm.errors.summary" role="alert">Summary unavailable: {{ vm.errors.summary }}</p>
+ <ng-container *ngIf="vm.summary as s"><p>Native Elements height {{ s.blockHeight }} / epoch {{ s.dynamicFederation.currentEpoch }} / coverage {{ s.coverage.status }}</p><p class="mono">{{ s.blockHash }}</p>
+ <div class="metrics-grid"><div class="metric-card"><span class="metric-label">Pegged reserve</span><span class="metric-value">Unknown</span></div><div class="metric-card"><span class="metric-label">Signer liveness / threshold</span><span class="metric-value">Unknown / Unknown</span></div><div class="metric-card"><span class="metric-label">Active assets / confidential transaction percentage</span><span class="metric-value">Unknown / Unknown</span></div></div>
+ <p>{{ s.observedIssuanceCount }} observed issuance records; public outputs: {{ s.observedOutputCounts.explicit }} explicit, {{ s.observedOutputCounts.confidential }} opaque. Hidden amounts are unknown. This is projected public output coverage, not a whole-chain transaction percentage.</p><p>Summary pair observed {{ s.coverage.source.observedAt }}; projected through {{ s.coverage.cursor.height }}. Parent {{ s.coverage.source.parent.height }} / {{ s.coverage.source.parent.hash }}.</p></ng-container></section>
+ <section class="panel"><h2>Operator-published assets</h2><p *ngIf="vm.errors.assets" role="alert">Catalog unavailable: {{ vm.errors.assets }}</p>
+ <ng-container *ngIf="vm.assetPage as p"><p>Loaded {{ vm.assets?.length }} / {{ p.total }} publication entries; {{ p.coverage.status }} / projected through {{ p.coverage.cursor.height }} at {{ p.coverage.source.observedAt }}.</p><p>Publication {{ p.publication.revision }} / {{ p.publication.scope }} / <span class="mono">{{ p.publication.sha256 }}</span>. Names and tickers are operator assertions bound to canonical initial issuance, not issuer identity or circulating supply.</p>
+ <p class="mono">Elements {{ p.coverage.source.elements.height }} / {{ p.coverage.source.elements.hash }}; parent {{ p.coverage.source.parent.height }} / {{ p.coverage.source.parent.hash }}.</p><div tabindex="0" role="region" aria-label="Liquid published asset table" style="overflow-x:auto"><table class="data-table"><thead><tr><th>Name / ticker</th><th>Asset ID</th><th>Initial issuance</th><th>Circulating / issuer</th><th>Evidence</th></tr></thead><tbody><tr *ngFor="let a of vm.assets"><td>{{ a.name }} / {{ a.ticker }}</td><td class="mono">{{ a.assetId }}</td><td>{{ a.initialIssuanceAmountAtomic === null ? 'Opaque amount: Unknown' : amount(a.initialIssuanceAmountAtomic, a.precision) }}<span *ngIf="a.initialIssuanceAmountAtomic !== null"> ({{ a.initialIssuanceAmountAtomic }} atomic)</span><span class="mono" *ngIf="a.initialIssuanceAmountCommitment"> Commitment {{ a.initialIssuanceAmountCommitment }}</span></td><td>Unknown / Unknown</td><td><button type="button" (click)="detail(a.assetId)" [disabled]="vm.pending.detail">Read issuance evidence</button></td></tr></tbody></table></div>
+ <button type="button" (click)="loadAssets(true)" [disabled]="p.nextOffset === null || vm.pending.assets">Load more assets</button></ng-container>
+ <button type="button" (click)="loadAssets()" [disabled]="vm.pending.assets">Restart asset page</button><p *ngIf="vm.errors.detail" role="alert">Asset detail unavailable: {{ vm.errors.detail }}</p><ng-container *ngIf="vm.assetDetail as a"><p class="mono">Initial issuance {{ a.issuanceTxid }}:{{ a.issuanceVin }} / entropy {{ a.assetEntropy }}</p><p>{{ a.provenance }} / {{ a.publication.scope }}</p></ng-container></section>
+ <section class="panel"><h2>Verified public peg-in claims</h2><p *ngIf="vm.errors.pegs" role="alert">Peg-in evidence unavailable: {{ vm.errors.pegs }}</p>
+ <ng-container *ngIf="vm.pegPage as p"><p>Loaded {{ vm.pegs?.length }} / {{ p.total }} claims / {{ p.coverage.status }} at projected height {{ p.coverage.cursor.height }} / pair observed {{ p.coverage.source.observedAt }}. Parent evidence does not establish total reserves.</p><p class="mono">Elements {{ p.coverage.source.elements.height }} / {{ p.coverage.source.elements.hash }}; parent {{ p.coverage.source.parent.height }} / {{ p.coverage.source.parent.hash }}.</p><div tabindex="0" role="region" aria-label="Liquid peg-in claim table" style="overflow-x:auto"><table class="data-table"><thead><tr><th>Amount</th><th>Parent outpoint / proof</th><th>Elements claim</th><th>Confirmations</th></tr></thead><tbody><tr *ngFor="let a of vm.pegs"><td>{{ amount(a.amountAtomic) }} BTC ({{ a.amountAtomic }} atomic)</td><td class="mono">{{ a.parentTxid }}:{{ a.parentVout }} / {{ a.parentProofSha256 }}</td><td class="mono">{{ a.liquidTxid }}:{{ a.liquidVin }}</td><td>Elements {{ a.confirmations }} / parent {{ a.parentConfirmations }}</td></tr></tbody></table></div><button type="button" (click)="loadPegs('pegs',true)" [disabled]="p.nextOffset === null || vm.pending.pegs">Load more peg-in claims</button></ng-container><button type="button" (click)="loadPegs('pegs')" [disabled]="vm.pending.pegs">Restart peg-in page</button></section>
+ <section class="panel"><h2>Observed peg-out requests</h2><p *ngIf="vm.errors.pegOuts" role="alert">Peg-out requests unavailable: {{ vm.errors.pegOuts }}</p>
+ <ng-container *ngIf="vm.pegOutPage as p"><p>{{ p.pegOuts.status }} / parent payout {{ p.pegOuts.parentPayoutStatus }}. {{ p.pegOuts.reason }}</p><p>Loaded {{ vm.pegOuts?.length }} / {{ p.pegOuts.total }} requests / {{ p.coverage.status }} through {{ p.coverage.cursor.height }} / pair observed {{ p.coverage.source.observedAt }}.</p><p class="mono">Elements {{ p.coverage.source.elements.height }} / {{ p.coverage.source.elements.hash }}; parent {{ p.coverage.source.parent.height }} / {{ p.coverage.source.parent.hash }}.</p><div tabindex="0" role="region" aria-label="Liquid peg-out request table" style="overflow-x:auto"><table class="data-table"><thead><tr><th>Requested amount</th><th>Elements request</th><th>Parent destination script</th><th>Payout</th></tr></thead><tbody><tr *ngFor="let a of vm.pegOuts"><td>{{ amount(a.amountAtomic) }} BTC ({{ a.amountAtomic }} atomic)</td><td class="mono">{{ a.txid }}:{{ a.vout }}</td><td class="mono">{{ a.parentScript }} {{ a.parentAddress ?? '' }}</td><td>Unknown; no proven parent transaction</td></tr></tbody></table></div><button type="button" (click)="loadPegs('pegOuts',true)" [disabled]="p.pegOuts.nextOffset === null || vm.pending.pegOuts">Load more peg-out requests</button></ng-container><button type="button" (click)="loadPegs('pegOuts')" [disabled]="vm.pending.pegOuts">Restart peg-out page</button></section>
+ <section class="panel"><h2>Observed federation policy</h2><p *ngIf="vm.errors.federation" role="alert">Federation policy unavailable: {{ vm.errors.federation }}</p><ng-container *ngIf="vm.federation as f"><p>{{ f.coverage.status }} / epoch {{ f.epochNumber }} / heights {{ f.startHeight }} to {{ f.endHeight }} / projected through {{ f.coverage.cursor.height }} at {{ f.coverage.source.observedAt }}.</p><p class="mono">Elements {{ f.coverage.source.elements.height }} / {{ f.coverage.source.elements.hash }}; parent {{ f.coverage.source.parent.height }} / {{ f.coverage.source.parent.hash }}.</p><p>Signer identities, online count, threshold and per-block signer counts: Unknown.</p><p class="mono">Parameters root {{ f.parametersRoot }}</p><p class="mono">Signing script {{ f.signblockscript }}</p><p class="mono">Peg script {{ f.fedpegScript }} / program {{ f.fedpegProgram }}</p><p>Showing {{ f.observedFullParameterRecords.length }} / {{ f.observedFullParameterRecordsTotal }} observed full-parameter records (limit {{ f.parameterHistoryLimit }}). Repeated policy roots are records, not proven parameter changes.</p><div *ngFor="let r of f.observedFullParameterRecords"><p class="mono">Height {{ r.height }} / {{ r.blockHash }} / root {{ r.parametersRoot }} / script {{ r.signblockScript }}</p></div></ng-container></section>
+ </ng-container>
 </div>

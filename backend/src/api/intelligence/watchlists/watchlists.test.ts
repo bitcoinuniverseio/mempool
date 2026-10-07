@@ -52,6 +52,27 @@ describe('watchlists: ownership, validation and durability', () => {
     expect(() => blind('not-a-hash', true)).toThrow();
   });
 
+  it('observes normalized outpoint receive/spend and expanded public descriptor scripts',async()=>{
+    const wl=await watchlistsService.createWatchlist(alice,'outpoints');
+    const received='a'.repeat(64),spent='b'.repeat(64);
+    const point=await watchlistsService.addEntity(alice,wl.watchlist_id,'outpoint',received.toUpperCase()+':0','point');
+    expect(point?.blinded_hash).toBe(sha256(received+':0'));
+    await expect(watchlistsService.addEntity(alice,wl.watchlist_id,'outpoint',received+':4294967296','invalid')).rejects.toMatchObject({code:'invalid_outpoint'});
+    const {descriptorChecksum}=await import('./descriptor-checksum');const descriptor='raw(51)';
+    expect(descriptorChecksum(descriptor)).toBe('8lvh9jxk');
+    const scriptHash=crypto.createHash('sha256').update(Buffer.from('51','hex')).digest('hex');
+    const child=await watchlistsService.addEntity(alice,wl.watchlist_id,'descriptor',descriptor+'#'+descriptorChecksum(descriptor),'descriptor',false,{version:1,network:config.MEMPOOL.NETWORK,children:[{script_hash:scriptHash,derivation_index:4}]});
+    expect(child?.matching_state).toBe('active');
+    await watchlistsService.addRule(alice,wl.watchlist_id,'value_transfer','in_app');
+    const matcher=new WatchlistMatcher();
+    const first={txid:received,vout:[{scriptpubkey:'51',value:1000}],vin:[]} as unknown as TransactionExtended;
+    const second={txid:spent,vout:[],vin:[{txid:received,vout:0,prevout:{scriptpubkey:'51',value:1000}}]} as unknown as TransactionExtended;
+    expect((await matcher.observeBlock(block(1,'1'.repeat(64),1),[first])).inserted).toBe(2);
+    expect((await matcher.observeBlock(block(2,'2'.repeat(64),1),[second])).inserted).toBe(2);
+    expect((await matcher.observeBlock(block(2,'2'.repeat(64),1),[second])).duplicates).toBe(2);
+    const notifications=await watchlistsService.getNotifications(alice,null,100);expect(notifications).toHaveLength(4);expect(notifications?.filter(row=>row.entity_type==='descriptor')).toHaveLength(2);
+    await watchlistsService.deleteEntity(alice,wl.watchlist_id,child!.entity_id);expect(await ownerStore().listDescriptorScripts(config.MEMPOOL.NETWORK)).toEqual([]);
+  });
   it('does not claim encryption and preserves historical records without relabeling stored bytes', async () => {
     await expect(watchlistsService.createWatchlist(alice, 'encrypted', 'encrypted')).rejects.toMatchObject({ code: 'invalid_privacy_mode', status: 400 });
     const wl = await watchlistsService.createWatchlist(alice, 'historical');

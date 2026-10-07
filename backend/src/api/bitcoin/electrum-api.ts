@@ -1,4 +1,7 @@
 import config from '../../config';
+import { createHash } from 'crypto';
+import {utxoListProblems} from './esplora-contract';
+import { verifyAddressSource } from './address-source-checkpoint';
 import Client from '@mempool/electrum-client';
 import { withElectrumDeadline } from './electrum-deadline';
 import { AbstractBitcoinApi } from './bitcoin-api-abstract-factory';
@@ -11,6 +14,7 @@ import loadingIndicators from '../loading-indicators';
 import memoryCache from '../memory-cache';
 import { readIndexedTip } from './electrum-indexed-tip';
 import { fetchElectrumTransactionPage } from './electrum-transaction-page';
+import { collectElectrumAddressStats } from './electrum-address-stats';
 
 class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   private electrumClient: any;
@@ -53,6 +57,13 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
    *
    * @asyncSafe
    */
+  /** @asyncUnsafe */
+  async $getIndexBlockHash(height: number): Promise<string> {
+    const header = await withElectrumDeadline(this.electrumClient.request('blockchain.block.header', [height]), 'blockchain.block.header');
+    if (typeof header !== 'string' || !/^[0-9a-f]{160}$/i.test(header)) throw new Error('Invalid indexed block header');
+    return createHash('sha256').update(createHash('sha256').update(Buffer.from(header, 'hex')).digest()).digest().reverse().toString('hex');
+  }
+
   async $getIndexedTip(): Promise<number | null> {
     return readIndexedTip((method, params) =>
       withElectrumDeadline(this.electrumClient.request(method, params), method),
@@ -61,42 +72,18 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
 
   /** @asyncUnsafe */
   async $getAddress(address: string): Promise<IEsploraApi.Address> {
-    const addressInfo = await this.bitcoindClient.validateAddress(address);
-    if (!addressInfo || !addressInfo.isvalid) {
-      throw new Error('Invalid Bitcoin address');
-    }
-
-    try {
-      const balance = await this.$getScriptHashBalance(addressInfo.scriptPubKey);
-      const history = await this.$getScriptHashHistory(addressInfo.scriptPubKey);
-
-      const unconfirmed = history.filter((h) => h.fee).length;
-
-      return {
-        'address': addressInfo.address,
-        'chain_stats': {
-          'funded_txo_count': 0,
-          'funded_txo_sum': balance.confirmed ? balance.confirmed : 0,
-          'spent_txo_count': 0,
-          'spent_txo_sum': balance.confirmed < 0 ? balance.confirmed : 0,
-          'tx_count': history.length - unconfirmed,
-        },
-        'mempool_stats': {
-          'funded_txo_count': 0,
-          'funded_txo_sum': balance.unconfirmed > 0 ? balance.unconfirmed : 0,
-          'spent_txo_count': 0,
-          'spent_txo_sum': balance.unconfirmed < 0 ? -balance.unconfirmed : 0,
-          'tx_count': unconfirmed,
-        },
-        'electrum': true,
-      };
-    } catch (e: any) {
-      throw new Error(typeof e === 'string' ? e : e && e.message || e);
-    }
+    let scripthash = '';
+    const stats = await this.$getExactScriptStatistics(/** @asyncUnsafe */ async signal => {
+      const info = await this.bitcoindClient.rpc.call('validateaddress', [address], { signal });
+      if (!info?.isvalid || typeof info.scriptPubKey !== 'string' || !/^(?:[0-9a-f]{2})+$/.test(info.scriptPubKey)) throw new Error('Invalid Bitcoin address');
+      scripthash = this.encodeScriptHash(info.scriptPubKey); return scripthash;
+    }, () => scripthash);
+    return { address, ...stats, electrum: true };
   }
 
   /** @asyncUnsafe */
   async $getAddressTransactions(address: string, lastSeenTxId: string): Promise<IEsploraApi.Transaction[]> {
+    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
     const addressInfo = await this.bitcoindClient.validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
       throw new Error('Invalid Bitcoin address');
@@ -129,42 +116,37 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
     }
   }
 
+  /** @asyncUnsafe */
   async $getScriptHash(scripthash: string): Promise<IEsploraApi.ScriptHash> {
-    try {
-      const balance = await withElectrumDeadline(this.electrumClient.blockchainScripthash_getBalance(scripthash), 'blockchain.scripthash.get_balance');
-      let history = memoryCache.get<IElectrumApi.ScriptHashHistory[]>('Scripthash_getHistory', scripthash);
-      if (!history) {
-        history = await withElectrumDeadline(this.electrumClient.blockchainScripthash_getHistory(scripthash), 'blockchain.scripthash.get_history');
-        memoryCache.set('Scripthash_getHistory', scripthash, history, 2);
-      }
+    const stats = await this.$getExactScriptStatistics(scripthash, () => scripthash);
+    return { scripthash, ...stats, electrum: true };
+  }
 
-      const unconfirmed = history ? history.filter((h) => h.fee).length : 0;
-
-      return {
-        'scripthash': scripthash,
-        'chain_stats': {
-          'funded_txo_count': 0,
-          'funded_txo_sum': balance.confirmed ? balance.confirmed : 0,
-          'spent_txo_count': 0,
-          'spent_txo_sum': balance.confirmed < 0 ? balance.confirmed : 0,
-          'tx_count': (history?.length || 0) - unconfirmed,
-        },
-        'mempool_stats': {
-          'funded_txo_count': 0,
-          'funded_txo_sum': balance.unconfirmed > 0 ? balance.unconfirmed : 0,
-          'spent_txo_count': 0,
-          'spent_txo_sum': balance.unconfirmed < 0 ? -balance.unconfirmed : 0,
-          'tx_count': unconfirmed,
-        },
-        'electrum': true,
-      };
-    } catch (e: any) {
-      throw new Error(typeof e === 'string' ? e : e && e.message || e);
-    }
+  /** @asyncUnsafe */
+  private $getExactScriptStatistics(selected: string | ((signal: AbortSignal) => Promise<string>), hash: () => string) {
+    const active = (signal: AbortSignal): void => { if (signal.aborted) throw new Error('Address statistics timeout'); };
+    const request = (method: string, params: unknown[], signal: AbortSignal) => {
+      active(signal); return withElectrumDeadline(this.electrumClient.request(method, params), method, 15000);
+    };
+    const core = (method: string, params: unknown[], signal: AbortSignal) => { active(signal); return this.bitcoindClient.rpc.call(method, params, { signal }); };
+    return collectElectrumAddressStats(selected, {
+      history: signal => request('blockchain.scripthash.get_history', [hash()], signal),
+      balance: signal => request('blockchain.scripthash.get_balance', [hash()], signal),
+      core,
+      checkpoint: /** @asyncUnsafe */ async signal => {
+        const height = await readIndexedTip((method, params) => request(method, params, signal)); active(signal);
+        return verifyAddressSource(height, /** @asyncUnsafe */ async value => {
+          const header = await request('blockchain.block.header', [value], signal); active(signal);
+          if (typeof header !== 'string' || !/^[0-9a-f]{160}$/i.test(header)) throw new Error('Invalid indexed block header');
+          return createHash('sha256').update(createHash('sha256').update(Buffer.from(header, 'hex')).digest()).digest().reverse().toString('hex');
+        }, { rpc: { call: (method: string, params: unknown[]) => core(method, params, signal) } }, 15000);
+      },
+    });
   }
 
   /** @asyncUnsafe */
   async $getAddressUtxos(address: string): Promise<IEsploraApi.UTXO[]> {
+    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
     const addressInfo = await this.bitcoindClient.validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
       throw new Error('Invalid Bitcoin address');
@@ -173,7 +155,9 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
     return this.$getScriptHashUtxos(scripthash);
   }
 
+  /** @asyncUnsafe */
   async $getScriptHashTransactions(scripthash: string, lastSeenTxId?: string): Promise<IEsploraApi.Transaction[]> {
+    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
     try {
       loadingIndicators.setProgress('address-' + scripthash, 0);
 
@@ -209,7 +193,9 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   }
 
   /** @asyncUnsafe */
+  /** @asyncUnsafe */
   async $getScriptHashUtxos(scripthash: string): Promise<IEsploraApi.UTXO[]> {
+    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
     const utxos = await this.$getScriptHashUnspent(scripthash);
     const result: IEsploraApi.UTXO[] = [];
     for(const utxo of utxos) {
@@ -240,6 +226,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
         });
       }
     }
+    if (utxoListProblems(result).length) throw new Error('Electrum returned an invalid UTXO contract');
     return result;
   }
 
@@ -254,7 +241,10 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   }
 
   private $getScriptHashBalance(scriptHash: string): Promise<IElectrumApi.ScriptHashBalance> {
-    return withElectrumDeadline(this.electrumClient.blockchainScripthash_getBalance(this.encodeScriptHash(scriptHash)), 'blockchain.scripthash.get_balance');
+    return withElectrumDeadline<IElectrumApi.ScriptHashBalance>(this.electrumClient.blockchainScripthash_getBalance(this.encodeScriptHash(scriptHash)), 'blockchain.scripthash.get_balance').then(balance => {
+      if (!Number.isSafeInteger(balance.confirmed) || !Number.isSafeInteger(balance.unconfirmed)) throw new Error('Electrum returned an inexact balance');
+      return balance;
+    });
   }
 
   private $getScriptHashHistory(scriptHash: string): Promise<IElectrumApi.ScriptHashHistory[]> {

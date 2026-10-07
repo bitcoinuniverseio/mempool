@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
-import { ArkEvidenceError, arkService } from './ark.service';
+import { ArkEvidenceError, arkService, arkBatchWindow } from './ark.service';
 
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(req: Request, res: Response, e: unknown): void {
@@ -22,7 +22,8 @@ class ArkRoutes {
       .get(prefix + 'batches/:batchId', this.$getBatch)
       .get(prefix + 'vtxos/:vtxoId', this.$getVtxo)
       .get(prefix + 'virtual-txs', this.$getVirtualTxs)
-      .post(prefix + 'verify', this.$verifyProof);
+      .post(prefix + 'verify', this.$verifyProof)
+      .post(prefix + 'verify/native', this.$verifyNativeProof);
   }
 
   private async $getOperators(req: Request, res: Response): Promise<void> {
@@ -36,8 +37,13 @@ class ArkRoutes {
 
   private async $getBatches(req: Request, res: Response): Promise<void> {
     try {
-      const batches = await arkService.$getBatches();
-      res.json({ batches, total: batches.length });
+      if (Object.keys(req.query || {}).some(key => !['after', 'before', 'limit'].includes(key))) {
+        throw new ArkEvidenceError('invalid-ark-batch-window', 'Unsupported completed-round selector.', 400);
+      }
+      const window = arkBatchWindow(req.query || {});
+      const { batches, nativeObservedCount } = await arkService.$getBatchPage({ after: window.after, before: window.before, limit: String(window.limit) });
+      res.json({ batches, total: null, page: { ...window, nativeObservedCount, observedCount: batches.length, completeCatalogue: false,
+        scope: 'bounded-native-completed-rounds', continuation: null } });
     } catch (e) {
       fail(req, res, e);
     }
@@ -87,6 +93,13 @@ class ArkRoutes {
     } catch (e) {
       fail(req, res, e);
     }
+  }
+
+  private async $verifyNativeProof(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await arkService.$verifyNativeProof(req.body);
+      res.status(result.stage === 'invalid-native-proof' ? 400 : result.stage === 'verified-native-proof' ? 200 : 503).json(result);
+    } catch (e) { fail(req, res, e); }
   }
 }
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { webcrypto } from 'node:crypto';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PortfolioVaultService } from '../stores/vault.service';
 import { OwnedPortfolioShare, PortfolioShareService } from './portfolio-share.service';
@@ -32,7 +32,7 @@ describe('encrypted portfolio share owner workflow', () => {
     };
     service = new PortfolioShareService(http as unknown as HttpClient, vault as unknown as PortfolioVaultService);
   });
-  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
   it('uploads only an encrypted projection and independently decrypts it with the fragment key', async () => {
     const id = await service.create('owner-one', holdings, createdAt, 86400);
@@ -54,6 +54,16 @@ describe('encrypted portfolio share owner workflow', () => {
     expect(stored.state).toBe('active');
     const summary = await service.list('owner-one');
     expect(Object.keys(summary[0]).sort()).toEqual(['shareId', 'state', 'createdAt', 'expiresAt'].sort());
+  });
+
+  it('preserves partial unknown coverage inside the encrypted projection', async () => {
+    const coverage = { state: 'partial', unknownValueBucket: 'present' as const };
+    const id = await service.create('owner-one', holdings, createdAt, 86400, coverage);
+    const stored = records.get(`portfolio-share:${id}`)!;
+    const key = await webcrypto.subtle.importKey('raw', Buffer.from(stored.keyB64Url, 'base64url'), 'AES-GCM', false, ['decrypt']);
+    const plaintext = await webcrypto.subtle.decrypt({ name: 'AES-GCM', iv: Buffer.from(stored.request.nonceB64, 'base64') }, key, Buffer.from(stored.request.ctB64, 'base64'));
+    expect(JSON.parse(new TextDecoder().decode(plaintext)).coverage).toEqual(coverage);
+    expect(JSON.stringify(stored.request)).not.toContain('partial');
   });
 
   it('retains the exact pending request across an uncertain response and a recreated service', async () => {
@@ -107,6 +117,51 @@ describe('encrypted portfolio share owner workflow', () => {
     vault.put.mockRejectedValueOnce(new Error('vault full'));
     await expect(service.create('owner-one', holdings, createdAt, 60)).rejects.toThrow('vault full');
     expect(http.post).not.toHaveBeenCalled();
+  });
+  it('cancels a pending upload on lock and keeps ownership pending after re-unlock', async () => {
+    const locked$ = new Subject<void>(), response = new Subject<any>(); let sessionRevision = 0;
+    Object.assign(vault, {locked$}); Object.defineProperty(vault, 'sessionRevision', {get: () => sessionRevision});
+    http.post.mockReturnValueOnce(response);
+    const creating = service.create('owner-one', holdings, createdAt, 60).catch(error => error);
+    await vi.waitFor(() => expect(http.post).toHaveBeenCalledOnce());
+    const pending = [...records.values()][0];
+    sessionRevision++; locked$.next();
+    response.next({shareId: pending.shareId, createdAt, expiresAt: new Date(Date.now() + 60000).toISOString()});
+    expect(await creating).toBeInstanceOf(Error);
+    expect(response.observed).toBe(false); expect(records.get(`portfolio-share:${pending.shareId}`)?.state).toBe('pending');
+    expect(vault.put).toHaveBeenCalledOnce();
+  });
+  it('does not return a fragment key read from an earlier lock session', async () => {
+    let sessionRevision = 0; Object.defineProperty(vault, 'sessionRevision', {get: () => sessionRevision});
+    const id = await service.create('owner-one', holdings, createdAt, 60);
+    let finish!: (value: OwnedPortfolioShare) => void;
+    vault.get.mockReturnValueOnce(new Promise(resolve => {finish = resolve;}));
+    const reading = service.link(id, 'owner-one', 'https://example.test').catch(error => error);
+    sessionRevision++; finish(records.get(`portfolio-share:${id}`)!);
+    expect(await reading).toBeInstanceOf(Error);
+  });
+  it('bounds an unresponsive pending retry without replacing its owner capability', async () => {
+    http.post.mockReturnValueOnce(throwError(() => Error('uncertain upload')));
+    await expect(service.create('owner-one', holdings, createdAt, 60)).rejects.toThrow('uncertain upload');
+    const pending = [...records.values()][0], response = new Subject<any>();
+    http.post.mockReturnValueOnce(response);
+    vi.useFakeTimers();
+    const retrying = service.retry(pending.shareId, 'owner-one').catch(error => error);
+    await vi.advanceTimersByTimeAsync(15001);
+    expect(await retrying).toBeInstanceOf(Error);
+    expect(response.observed).toBe(false); expect(vault.put).toHaveBeenCalledOnce();
+    expect(records.get(`portfolio-share:${pending.shareId}`)?.state).toBe('pending');
+  });
+  it('cancels a pending revoke without writing an acknowledgement into a re-unlocked vault', async () => {
+    const locked$ = new Subject<void>(), response = new Subject<any>(); let sessionRevision = 0;
+    Object.assign(vault, {locked$}); Object.defineProperty(vault, 'sessionRevision', {get: () => sessionRevision});
+    const id = await service.create('owner-one', holdings, createdAt, 60);
+    http.delete.mockReturnValueOnce(response);
+    const revoking = service.revoke(id, 'owner-one').catch(error => error);
+    await vi.waitFor(() => expect(http.delete).toHaveBeenCalledOnce());
+    sessionRevision++; locked$.next(); response.next(null);
+    expect(await revoking).toBeInstanceOf(Error); expect(response.observed).toBe(false);
+    expect(records.get(`portfolio-share:${id}`)?.state).toBe('active'); expect(vault.put).toHaveBeenCalledTimes(2);
   });
 
   it.each([0, 59, 2_592_001, 1.5])('rejects invalid TTL %s before persistence', async (ttl) => {

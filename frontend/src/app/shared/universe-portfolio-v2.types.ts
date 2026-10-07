@@ -130,7 +130,7 @@ export function portfolioAssetKey(identity: PortfolioAssetIdentity): string | nu
     // segments, not on the assetId being colon-free.
     if (typeof assetId !== 'string' || assetId.length === 0)
         return null;
-    if (assetId.length > 256)
+    if (assetId.length > 512)
         return null;
     return `${chain}:${network}:${protocol}:${assetType}:${assetId}`;
 }
@@ -146,7 +146,7 @@ export function parsePortfolioAssetKey(key: string): PortfolioAssetIdentity | nu
         !KEY_PART.test(network) ||
         !KEY_PART.test(protocol) ||
         !PORTFOLIO_ASSET_TYPES.includes(assetType as PortfolioAssetType) ||
-        assetId.length === 0) {
+        assetId.length === 0 || assetId.length > 512) {
         return null;
     }
     return {

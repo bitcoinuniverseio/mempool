@@ -91,10 +91,10 @@ describe('NetworkObservatoryService', () => {
 
   it('compares the recorded candidate templates for the latest height with each other and the local mempool', async () => {
     const { service } = setup([TX]);
-    templateCollectorService.fetchCoreTemplate = async () => ({ height: 100, previousblockhash: 'p'.repeat(64), transactions: [{ txid: TX, hash: TX, fee: 100, weight: 400 }, { txid: OTHER, hash: OTHER, fee: 50, weight: 400 }], coinbasevalue: 5000 });
+    templateCollectorService.fetchCoreTemplate = async () => ({ height: 100, previousblockhash: 'a'.repeat(64), transactions: [{ txid: TX, hash: TX, fee: 100, weight: 400 }, { txid: OTHER, hash: OTHER, fee: 50, weight: 400 }], coinbasevalue: 5000 });
     await templateCollectorService.collectCoreTemplate(1_000);
     templateCollectorService.readProjection = () => ({ transactionIds: [TX], totalFees: 100, blockVSize: 100, nTx: 1 });
-    templateCollectorService.collectProjection(2_000);
+    await templateCollectorService.collectProjection(2_000);
     const comparison = await service.$getTemplates();
     expect(comparison).toMatchObject({ state: 'observed', blockHeight: 100, generatedAt: 2_000, consensusMempoolTxCount: 1, missingFromLocalCount: 1, feeRateSpreadSatVb: null, observer: { observers: 1 } });
     expect(comparison.candidateTemplates).toHaveLength(2);
@@ -111,7 +111,7 @@ describe('NetworkObservatoryService', () => {
     await templateCollectorService.collectCoreTemplate(1_000);
     const comparison = await service.$getTemplates();
     expect(comparison).toMatchObject({ state: 'no-templates-observed', blockHeight: null, candidateTemplates: [], consensusMempoolTxCount: null, missingFromLocalCount: null });
-    expect(comparison.sources.find(s => s.sourceId === 'src-core-gbt')).toMatchObject({ status: 'offline', lastError: 'rpc offline' });
+    expect(comparison.sources.find(s => s.sourceId === 'src-core-gbt')).toMatchObject({ status: 'offline', lastError: 'Core template observation unavailable' });
   });
 });
 

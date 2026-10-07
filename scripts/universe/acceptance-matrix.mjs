@@ -11,11 +11,12 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const require = createRequire(resolve(root, 'frontend/package.json'));
 const ts = require('typescript');
-const output = 'docs/acceptance/operation-matrix-2026-09-06.json';
+const output = 'docs/acceptance/operation-matrix-source-successor-2026-10-03.json';
 const inventories = ['docs/acceptance/2026-09-05-inventory.json', 'docs/acceptance/2026-09-05-controls.json'];
 const protocolFile = 'docs/protocols/PROTOCOL-COVERAGE.json';
 const healthHandoffFile = 'docs/acceptance/explorer-health-handoff-2026-09-06.json';
 const healthReconciliationFile = 'docs/acceptance/explorer-health-reconciliation-2026-09-21.json';
+const authorityTransitionsFile = 'docs/acceptance/protocol-authority-transitions-2026-10-03.json';
 const universeApiFile = 'frontend/src/app/universe/universe-api.service.ts';
 const catalogFile = 'backend/src/api/admin-adapter/admin-adapter.catalog.ts';
 const adminFile = 'backend/src/api/admin-adapter/admin-adapter.routes.ts';
@@ -378,6 +379,10 @@ export function buildMatrix({ evidencePath } = {}) {
     assert.equal(found.operation.pagination ?? null, addition.pagination ?? null, `${addition.key} pagination changed`);
   }
   const catalogueUpdates = new Map(healthReconciliation.catalogueUpdates.map(update => [update.id, update]));
+  const authorityTransitions = json(authorityTransitionsFile);
+  assert.equal(authorityTransitions.schemaVersion, 'explorer-authority-source-transitions-v1');
+  assert.equal(new Set(authorityTransitions.transitions.map(row => row.protocol)).size,
+    authorityTransitions.transitions.length, 'Authority transitions repeat');
   const reconciledCatalogue = healthHandoff.protocolCatalogue.map(original => {
     const update = catalogueUpdates.get(original.id);
     return update ? { ...original, declaredOperations: update.declaredOperations } : original;
@@ -386,7 +391,23 @@ export function buildMatrix({ evidencePath } = {}) {
   for (const original of reconciledCatalogue) {
     const identity = inventory.protocols.find(row => row.id === original.id);
     const protocol = protocolManifest.protocols.find(row => row.id === original.protocol);
-    assert(identity?.protocol === original.protocol && protocol?.chain === original.chain && protocol.indexerAuthority === original.authority,
+    const transition = authorityTransitions.transitions.find(row => row.protocol === original.protocol);
+    if (transition) {
+      assert.equal(transition.chain, original.chain);
+      assert.equal(transition.fromAuthority, original.authority);
+      assert.equal(transition.toAuthority, protocol?.indexerAuthority);
+      assert.equal(transition.sourceRepository, protocolManifest.sourceRepository);
+      assert.equal(transition.registrySourceRevision, protocolManifest.sourceSha);
+      assert.equal(transition.functionalAcceptance, false);
+      assert(transition.reason && transition.producerPath && transition.producerRepository &&
+        /^[0-9a-f]{7,40}$/.test(transition.producerSourceRevision), 'Authority transition lacks provenance');
+      for (const row of records.values()) if (row.id === original.id || row.protocol === original.protocol) {
+        row.authorityTransition = transition;
+        row.sources.push(ref(authorityTransitionsFile, { protocol: original.protocol }));
+      }
+    }
+    assert(identity?.protocol === original.protocol && protocol?.chain === original.chain &&
+      protocol.indexerAuthority === (transition?.toAuthority ?? original.authority),
       `Handoff identity or authority mismatch: ${original.id}`);
     assert.deepEqual([...original.declaredOperations].sort(), [...protocol.implementedReadOperations].sort(), `Handoff operation mismatch: ${original.id}`);
   }
@@ -440,9 +461,12 @@ export function buildMatrix({ evidencePath } = {}) {
   reconciledProtocolOperationRows.forEach((original, index) => {
     const identity = inventory.protocols.find(row => row.protocol === original.protocol);
     const row = records.get(`${identity?.id}/${original.operation}`);
-    assert(row && original.coverageId === `${identity.id}.${original.operation}` && row.chain === original.chain && row.authority === original.authority,
+    assert(row && original.coverageId === `${identity.id}.${original.operation}` && row.chain === original.chain &&
+      (row.authority === original.authority || row.authorityTransition?.fromAuthority === original.authority &&
+        row.authorityTransition.toAuthority === row.authority),
       `Cannot bind handoff operation without changing identity: ${original.coverageId}`);
     row.handoffBinding = { coverageId: original.coverageId, ledgerId: row.id, priorStatus: original.status,
+      historicalAuthority: original.authority,
       evidenceLevel: original.evidenceLevel, originalMissingPrerequisite: original.missingPrerequisite,
       steps: original.steps, expectedFinalOutcome: original.expectedFinalOutcome };
     row.sources.push(ref(index < healthHandoff.protocolOperationRows.length ? healthHandoffFile : healthReconciliationFile,
@@ -680,6 +704,36 @@ export function buildMatrix({ evidencePath } = {}) {
  * ANNOTATED is not implemented, verified functionality or release. Preserve existing
  * executable behavior in this preparation.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-COV-001] | G-COVERAGE-01 | COV-INVENTORY
+ * Verified baseline 62dec4617 contains 1,617 overlapping candidate records,
+ * 123 protocol read descriptors and 39 protocol identities. This validator
+ * deliberately requires an unreconciled denominator; those records cannot
+ * establish whole-application acceptance. Historical PASS LOCAL assertions
+ * remain evidence of their bounded scope, not current network journeys.
+ * Governing source: the user's operation-level acceptance contract and the
+ * pinned protocol manifest; see the dated handoff COVERAGE-MATRIX.json.
+ * Dependencies: WP-OPS-000 and the frontend/backend/overlay repair packages.
+ * 1. Preserve every old ID, source/evidence hash and assertion in this output.
+ * 2. Add PROPOSED NEW scripts/universe/reconciled-operations.mjs to join actual
+ * route registrations, dispatcher selectors and consumer calls by method,
+ * chain, network, role, input/output contract and lifecycle transition. Give
+ * each distinct variant its own stable ID and map all candidates to it.
+ * 3. Emit unresolved mappings as blockers; require a reason plus source proof
+ * for exclusions. Do not make validateMatrix accept a fabricated denominator.
+ * 4. Extend the release evidence producer to bind those exact IDs, component
+ * revisions, configuration hashes, test network and evidence files; separate
+ * local component verification from complete application outcomes.
+ * 5. Add omission/duplicate/role/network/recovery cases to acceptance-matrix
+ * tests and an actual successor-ledger integration test. From repository root
+ * use node --test scripts/universe/acceptance-matrix.test.mjs
+ * scripts/universe/protocol-contract.test.mjs. Preserve all 1,617 prior IDs.
+ * Acceptance: every candidate is mapped or evidenced as excluded, every
+ * required variant has executable steps and a truthful outcome, and no
+ * required FAIL/BLOCKED/NOT TESTED row can qualify a release. Rollback by
+ * reverting the successor generator; retain all historical ledger versions.
+ * Preparation only: no runtime logic or historical status is changed here.
+ */
 export function validateMatrix(matrix) {
   const ids = new Set(uniqueIds(matrix.rows, 'matrix'));
   for (const [name, group] of Object.entries(matrix.sourceGroups)) {
@@ -713,6 +767,14 @@ export function validateMatrix(matrix) {
     const bindingIds = uniqueIds(bindings.map(row => ({ id: row.handoffBinding.coverageId })), 'handoff operation bindings');
     assert.deepEqual(bindingIds.sort(), [...matrix.healthHandoff.protocolOperationIds].sort(), 'Lost handoff operation binding');
     for (const row of bindings) assert.equal(row.handoffBinding.ledgerId, row.id, 'Handoff binding changed the original ledger ID');
+    for (const row of bindings.filter(row => row.authorityTransition)) {
+      assert.equal(row.authorityTransition.fromAuthority, row.handoffBinding.historicalAuthority,
+        'Authority transition lost historical authority');
+      assert.equal(row.authorityTransition.toAuthority, row.authority,
+        'Authority transition changed current authority');
+      assert.equal(row.authorityTransition.functionalAcceptance, false,
+        'Source transition cannot accept an operation');
+    }
   }
   return true;
 }

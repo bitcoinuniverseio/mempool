@@ -124,6 +124,22 @@ import { execSync } from 'child_process';
   }
 
 
+  /** @asyncUnsafe Runs conditional work on one connection; rollback then rethrow to caller. */
+  public async $transaction<T>(work: (connection: PoolConnection) => Promise<T>): Promise<T> {
+    const connection = await (await this.getPool()).getConnection();
+    try {
+      await connection.beginTransaction();
+      const result = await work(connection);
+      await connection.commit();
+      return result;
+    } catch (error) {
+      try { await connection.rollback(); } catch { connection.destroy(); }
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+
   /** @asyncSafe */
   public async checkDbConnection() {
     this.checkDBFlag();

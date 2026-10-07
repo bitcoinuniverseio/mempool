@@ -1,0 +1,240 @@
+{
+  "scope": "Public native0e9 observed receipt pair; controlled regression fixture, not current functional acceptance. UI9c rejected fresh measurement despite stable canonical checkpoint.",
+  "producerRevision": "0e9f83c2186512b29e752e82d06d42efacbc8030",
+  "address": "tb1pzejtjhky603uvms40dz7mv3lgpmrt92zrzeqff0mcz06yfu3wstsywxmc0",
+  "previous": {
+    "schema": "universe-address-utxo-reconstruction-v4",
+    "sessionId": "650c71ed-4f34-4220-8b5d-819ad7e1f6a3",
+    "cursor": 5,
+    "address": "tb1pzejtjhky603uvms40dz7mv3lgpmrt92zrzeqff0mcz06yfu3wstsywxmc0",
+    "network": "signet",
+    "status": "PARTIAL",
+    "confirmedAnchor": {
+      "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+      "blockHeight": 324933,
+      "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+      "network": "signet",
+      "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+      "verifiedAt": "2026-10-04T16:24:31.892Z",
+      "sourceId": "7d255ead005c9aed30d4e0a8dd3ec7e6935f0c2414473a4644214fbf030f694c",
+      "scriptPubKey": "51201664b95ec4d3e3c66e157b45edb23f407635954218b204a5fbc09fa227917417",
+      "chainStats": {
+        "funded_txo_count": 1,
+        "funded_txo_sum": 66135,
+        "spent_txo_count": 1,
+        "spent_txo_sum": 66135,
+        "tx_count": 2
+      }
+    },
+    "latestObservedTip": {
+      "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+      "blockHeight": 324933,
+      "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+      "network": "signet",
+      "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+      "verifiedAt": "2026-10-04T16:25:06.954Z"
+    },
+    "confirmedTailAnchor": {
+      "checkpoint": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 324933,
+        "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-04T16:24:45.798Z"
+      },
+      "chainStats": {
+        "funded_txo_count": 1,
+        "funded_txo_sum": 66135,
+        "spent_txo_count": 1,
+        "spent_txo_sum": 66135,
+        "tx_count": 2
+      }
+    },
+    "mempoolAnchor": {
+      "identity": "a220183ed926695184b776c10bda85584605218deff862337cbb8cb10a6d43bc",
+      "observedAt": "2026-10-04T16:25:00.773Z",
+      "checkpoint": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 324933,
+        "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-04T16:24:59.763Z"
+      },
+      "addressMempoolStats": {
+        "funded_txo_count": 0,
+        "funded_txo_sum": 0,
+        "spent_txo_count": 0,
+        "spent_txo_sum": 0,
+        "tx_count": 0
+      }
+    },
+    "observedAt": "2026-10-04T16:25:08.000Z",
+    "expiresAt": "2026-10-04T17:24:34.893Z",
+    "globalMempoolProof": {
+      "mode": "irrelevant-delta-proof",
+      "fallbackReason": null,
+      "maximumTransactions": 100,
+      "maximumRetainedBytes": 524288,
+      "retainedBytes": 447096,
+      "transactionCount": 46,
+      "sequenceAtomic": "13099",
+      "initialIdentity": "a220183ed926695184b776c10bda85584605218deff862337cbb8cb10a6d43bc",
+      "transitionCount": 0,
+      "maximumTransitions": 128,
+      "maximumRetainedTransitions": 8,
+      "transitions": [],
+      "verifiedOutputContext": null
+    },
+    "progress": {
+      "phase": "outspends",
+      "pageLimit": 100,
+      "mempoolEpoch": 0,
+      "confirmedEpoch": 0,
+      "confirmedTransactionsProcessed": 2,
+      "confirmedTransactionsExpected": 2,
+      "confirmedTailTransactionsProcessed": 0,
+      "confirmedTailTransactionsExpected": 0,
+      "mempoolTransactionsProcessed": 0,
+      "mempoolTransactionsExpected": 0,
+      "candidateOutputs": 0,
+      "verifiedOutputs": 0,
+      "retainedBytes": 449472
+    }
+  },
+  "value": {
+    "schema": "universe-address-utxo-reconstruction-v4",
+    "sessionId": "650c71ed-4f34-4220-8b5d-819ad7e1f6a3",
+    "cursor": 6,
+    "address": "tb1pzejtjhky603uvms40dz7mv3lgpmrt92zrzeqff0mcz06yfu3wstsywxmc0",
+    "network": "signet",
+    "status": "COMPLETE_AT_OBSERVED_TIP",
+    "confirmedAnchor": {
+      "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+      "blockHeight": 324933,
+      "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+      "network": "signet",
+      "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+      "verifiedAt": "2026-10-04T16:24:31.892Z",
+      "sourceId": "7d255ead005c9aed30d4e0a8dd3ec7e6935f0c2414473a4644214fbf030f694c",
+      "scriptPubKey": "51201664b95ec4d3e3c66e157b45edb23f407635954218b204a5fbc09fa227917417",
+      "chainStats": {
+        "funded_txo_count": 1,
+        "funded_txo_sum": 66135,
+        "spent_txo_count": 1,
+        "spent_txo_sum": 66135,
+        "tx_count": 2
+      }
+    },
+    "latestObservedTip": {
+      "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+      "blockHeight": 324933,
+      "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+      "network": "signet",
+      "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+      "verifiedAt": "2026-10-04T16:25:16.413Z"
+    },
+    "confirmedTailAnchor": {
+      "checkpoint": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 324933,
+        "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-04T16:24:45.798Z"
+      },
+      "chainStats": {
+        "funded_txo_count": 1,
+        "funded_txo_sum": 66135,
+        "spent_txo_count": 1,
+        "spent_txo_sum": 66135,
+        "tx_count": 2
+      }
+    },
+    "mempoolAnchor": {
+      "identity": "500cdeb2733dd9dcf567f4a16ba5d925f93a8888aeff7af3c01ab20cb54bf8ed",
+      "observedAt": "2026-10-04T16:25:17.421Z",
+      "checkpoint": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 324933,
+        "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-04T16:25:16.413Z"
+      },
+      "addressMempoolStats": {
+        "funded_txo_count": 0,
+        "funded_txo_sum": 0,
+        "spent_txo_count": 0,
+        "spent_txo_sum": 0,
+        "tx_count": 0
+      }
+    },
+    "observedAt": "2026-10-04T16:25:17.422Z",
+    "expiresAt": "2026-10-04T17:24:34.893Z",
+    "globalMempoolProof": {
+      "mode": "irrelevant-delta-proof",
+      "fallbackReason": null,
+      "maximumTransactions": 100,
+      "maximumRetainedBytes": 524288,
+      "retainedBytes": 463712,
+      "transactionCount": 47,
+      "sequenceAtomic": "13102",
+      "initialIdentity": "a220183ed926695184b776c10bda85584605218deff862337cbb8cb10a6d43bc",
+      "transitionCount": 1,
+      "maximumTransitions": 128,
+      "maximumRetainedTransitions": 8,
+      "transitions": [
+        {
+          "transition": 1,
+          "fromIdentity": "a220183ed926695184b776c10bda85584605218deff862337cbb8cb10a6d43bc",
+          "toIdentity": "500cdeb2733dd9dcf567f4a16ba5d925f93a8888aeff7af3c01ab20cb54bf8ed",
+          "addedTxids": [
+            "d883f7db86ade8dc4a807fbd966af205ea1361f5a55173605640c8036f81f1e3",
+            "e42c2f22373df881c8fb05383d4bb19dcb7f649467930d4500442610abc38886"
+          ],
+          "removedTxids": [
+            "b4c1356a9c3d6a05907643a41c580694513991a71e72e3717a404cfd70a10413"
+          ],
+          "observedAt": "2026-10-04T16:25:17.421Z",
+          "verifiedOutputsRetained": 0,
+          "proofSha256": "52f35482bbc535719273e3a8a8616d5d4bf57f58fe8d439a31f1fe6d73f53e29"
+        }
+      ],
+      "verifiedOutputContext": {
+        "identity": "500cdeb2733dd9dcf567f4a16ba5d925f93a8888aeff7af3c01ab20cb54bf8ed",
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 324933,
+          "blockHash": "000000110d26fac1674170db4fe138e8b916cd2c0e5a14b414c6394bd43a3555",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-04T16:25:16.413Z"
+        },
+        "outpointsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "outputCount": 0
+      }
+    },
+    "progress": {
+      "phase": "complete",
+      "pageLimit": 100,
+      "mempoolEpoch": 0,
+      "confirmedEpoch": 0,
+      "confirmedTransactionsProcessed": 2,
+      "confirmedTransactionsExpected": 2,
+      "confirmedTailTransactionsProcessed": 0,
+      "confirmedTailTransactionsExpected": 0,
+      "mempoolTransactionsProcessed": 0,
+      "mempoolTransactionsExpected": 0,
+      "candidateOutputs": 0,
+      "verifiedOutputs": 0,
+      "retainedBytes": 466088
+    },
+    "result": {
+      "outputCount": 0,
+      "balanceAtomic": "0",
+      "items": []
+    }
+  }
+}

@@ -7,7 +7,7 @@ import { StateService } from '@app/services/state.service';
 import { Filter, toFilters } from '@app/shared/filters.utils';
 import { getTransactionFlags, addInnerScriptsToVin, countSigops, fillUnsignedInput } from '@app/shared/transaction.utils';
 import { decodeRawTransaction } from '@app/shared/transaction-codec.utils';
-import { catchError, firstValueFrom, Subscription, switchMap, tap, throwError, timer } from 'rxjs';
+import { catchError, firstValueFrom, Subscription, switchMap, tap, EMPTY, timer } from 'rxjs';
 import { WebsocketService } from '@app/services/websocket.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
@@ -71,6 +71,8 @@ export class TransactionRawComponent implements OnInit, OnDestroy {
   hasCpfp: boolean = false;
   showCpfpDetails = false;
   mempoolBlocksSubscription: Subscription;
+  private destroyed = false;
+  private graphSizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     public route: ActivatedRoute,
@@ -295,6 +297,8 @@ export class TransactionRawComponent implements OnInit, OnDestroy {
   }
 
   postTx(): void {
+    if (this.destroyed || this.isLoadingBroadcast) return;
+    this.broadcastSubscription?.unsubscribe();
     this.isLoadingBroadcast = true;
     this.errorBroadcast = null;
 
@@ -310,14 +314,15 @@ export class TransactionRawComponent implements OnInit, OnDestroy {
         )
       ),
       catchError((error) => {
-        if (typeof error.error === 'string') {
+        if (typeof error?.error === 'string') {
           const matchText = error.error.replace(/\\/g, '').match('"message":"(.*?)"');
           this.errorBroadcast = 'Failed to broadcast transaction, reason: ' + (matchText && matchText[1] || error.error);
-        } else if (error.message) {
+        } else if (error?.message) {
           this.errorBroadcast = 'Failed to broadcast transaction, reason: ' + error.message;
         }
         this.isLoadingBroadcast = false;
-        return throwError(() => error);
+        this.errorBroadcast ||= 'Failed to broadcast transaction. Check connectivity and retry.';
+        return EMPTY;
       })
     ).subscribe();
   }
@@ -366,18 +371,20 @@ export class TransactionRawComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize', ['$event'])
   setGraphSize(): void {
+    if (this.graphSizeTimer !== undefined) clearTimeout(this.graphSizeTimer);
+    this.graphSizeTimer = undefined;
+    if (this.destroyed || !this.stateService.isBrowser) return;
     this.isMobile = window.innerWidth < 850;
-    if (this.graphContainer?.nativeElement && this.stateService.isBrowser) {
-      setTimeout(() => {
-        if (this.graphContainer?.nativeElement?.clientWidth) {
-          this.graphWidth = this.graphContainer.nativeElement.clientWidth;
-        } else {
-          setTimeout(() => { this.setGraphSize(); }, 1);
-        }
-      }, 1);
-    } else {
-      setTimeout(() => { this.setGraphSize(); }, 1);
-    }
+    // Layout may settle after decoding; retries end even if the graph is hidden.
+    let attempts = 0;
+    const measure = () => {
+      this.graphSizeTimer = undefined;
+      if (this.destroyed) return;
+      const width = this.graphContainer?.nativeElement?.clientWidth;
+      if (width) this.graphWidth = width;
+      else if (++attempts < 30) this.graphSizeTimer = setTimeout(measure, 16);
+    };
+    this.graphSizeTimer = setTimeout(measure, 16);
   }
 
   setupGraph() {
@@ -425,6 +432,9 @@ export class TransactionRawComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
+    if (this.graphSizeTimer !== undefined) clearTimeout(this.graphSizeTimer);
+    this.graphSizeTimer = undefined;
     this.mempoolBlocksSubscription?.unsubscribe();
     this.flowPrefSubscription?.unsubscribe();
     this.stateService.markBlock$.next({});

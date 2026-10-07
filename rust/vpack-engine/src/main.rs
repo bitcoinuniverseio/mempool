@@ -35,6 +35,73 @@ fn strict_state(value: &Value) -> Result<(), String> {
     Ok(())
 }
 
+// IMPLEMENTATION-HANDOFF [WP-RS-001]
+// Coverage: COV-RS-VPACK-STATE-ARK, COV-RS-VPACK-STATE-SECOND.
+// Defect: DEF-RS-001. Preparation only; executable behavior is unchanged.
+// Verified source cause: strict_state permits each supplied sibling.hash, but
+// the pinned libvpack typed builders replace it with a hash derived from value
+// and script. A well-formed but incorrect supplied commitment is silently lost
+// before validate_invariants sees the tree. This is a reconstruction-integrity
+// defect, not evidence that a spend or signature was accepted. Native execution
+// of the reproduction is BLOCKED in the preparation workspace: Cargo is absent.
+// References at e1f783a02489680b84121c71388a6a96122f5c63:
+// https://github.com/jgmcalpine/libvpack-rs/blob/e1f783a02489680b84121c71388a6a96122f5c63/src/export.rs
+// (tree_from_ark_labs_ingredients and tree_from_second_tech_ingredients), and
+// https://github.com/jgmcalpine/libvpack-rs/blob/e1f783a02489680b84121c71388a6a96122f5c63/src/consensus/mod.rs
+// (hash_sibling_birth_tx documents the compact sibling commitment).
+// 1. After VpackState deserialization and before consuming state.ingredients,
+//    validate every ArkLabs sibling and every SecondTech path-step sibling.
+//    Compare its decoded [u8; 32] hash with
+//    vpack::consensus::hash_sibling_birth_tx(sibling.value, &sibling.script).
+//    Return an error identifying the variant/step/sibling on mismatch. Do not
+//    silently replace a supplied hash, guess byte order, or modify native Bark.
+// 2. Keep strict_state unknown-field rejection and typed numeric/hex bounds.
+//    Invoke the existing builders only after this comparison succeeds. Retain
+//    binary-package checksum/invariant checks and the explicit unknown fields
+//    for signature verification and exit viability. No dependency upgrade or
+//    wire-format change is required; prerequisites: none.
+// 3. Add fixtures to this file's tests module for both typed variants. Derive a
+//    matching hash with the pinned helper, then change one hash byte while
+//    preserving value/script. Assert matching states reconstruct identically
+//    to the baseline, changed hashes reject, malformed lengths still reject,
+//    and an unknown field remains rejected. Cover each SecondTech path step.
+//    Run cargo test --manifest-path rust/vpack-engine/Cargo.toml --locked and
+//    cargo build --manifest-path rust/vpack-engine/Cargo.toml --release --locked.
+//    These commands require the pinned dependencies and are UNVERIFIED here.
+// 4. Coordinate backend/src/api/intelligence/ark-vpack/vpack-reconstruction.ts
+//    and vpack-reconstruction.test.ts: a native exit status of 2 must surface as
+//    HTTP 400 invalid-package; valid state/Bark/binary reconstruction must retain
+//    its prior IDs, scripts and transaction bytes. Exercise both state variants
+//    through POST /api/v1/intelligence/ark/vpack/packages/reconstruct on Signet
+//    with owned anchor evidence and the packaged native binary; retain logs,
+//    revision, fixture hashes and downstream translate/exit-plan regressions.
+// 5. Acceptance requires those native/API tests, not this annotation or a code
+//    inspection alone. Rebuild and package the correct OS/architecture binary.
+//    No migration/backfill or user signing is required. Roll back the wrapper
+//    and binary together if deployment fails; old evidence does not establish
+//    this new validation gate. Preserve supplied public package bytes for retry.
+fn validate_sibling_commitments(state: &VpackState) -> Result<(), String> {
+    match &state.ingredients {
+        VpackIngredients::ArkLabs(ingredients) => {
+            for (index, sibling) in ingredients.siblings.iter().flatten().enumerate() {
+                if sibling.hash != vpack::consensus::hash_sibling_birth_tx(sibling.value, &sibling.script) {
+                    return Err(format!("ark_labs sibling {index} commitment mismatch"));
+                }
+            }
+        }
+        VpackIngredients::SecondTech(ingredients) => {
+            for (step_index, step) in ingredients.path.iter().enumerate() {
+                for (index, sibling) in step.siblings.iter().enumerate() {
+                    if sibling.hash != vpack::consensus::hash_sibling_birth_tx(sibling.value, &sibling.script) {
+                        return Err(format!("second_tech step {step_index} sibling {index} commitment mismatch"));
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 fn reconstruct(input: &str) -> Result<Value, String> {
     let request: Value = serde_json::from_str(input).map_err(|_| "Invalid JSON")?;
     if let Some(raw) = request.get("bark_hex").and_then(Value::as_str) {
@@ -58,6 +125,7 @@ fn reconstruct(input: &str) -> Result<Value, String> {
     } else {
         strict_state(request.get("state").ok_or("Supply state or vpack_hex")?)?;
         let state: VpackState = serde_json::from_value(request.get("state").cloned().ok_or("Supply state or vpack_hex")?).map_err(|e| e.to_string())?;
+        validate_sibling_commitments(&state)?;
         match state.ingredients {
             VpackIngredients::ArkLabs(i) => vpack::create_vpack_ark_labs(i),
             VpackIngredients::SecondTech(i) => vpack::create_vpack_second_tech(i),
@@ -99,6 +167,25 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test] fn sibling_commitments_checked_before_normalization() {
+        let script = vec![0x51];
+        let hash = hex::encode(vpack::consensus::hash_sibling_birth_tx(1000, &script));
+        let sibling = json!({"hash": hash, "value":1000, "script":"51"});
+        for variant in ["ark_labs", "second_tech"] {
+            let mut ingredients = if variant == "ark_labs" {
+                json!({"anchor_outpoint":format!("{}:0", "11".repeat(32)), "nSequence":4294967295u32, "outputs":[{"value":1000,"script":"51"}], "siblings":[sibling.clone()], "child_output":{"value":1000,"script":"51"}})
+            } else {
+                json!({"anchor_outpoint":format!("{}:0", "11".repeat(32)), "amount":1000,"script_pubkey":"51", "path":[{"siblings":[sibling.clone()],"child_amount":1000,"child_script":"51"},{"siblings":[sibling.clone()],"child_amount":1000,"child_script":"51"}]})
+            };
+            let state = json!({"schema_version":"1.0", "implementation":variant,"ingredients":ingredients.clone()});
+            let typed: VpackState = serde_json::from_value(state).unwrap();
+            assert!(validate_sibling_commitments(&typed).is_ok());
+            if variant == "ark_labs" { ingredients["siblings"][0]["hash"] = json!("00".repeat(32)); }
+            else { ingredients["path"][1]["siblings"][0]["hash"] = json!("00".repeat(32)); }
+            let typed: VpackState = serde_json::from_value(json!({"schema_version":"1.0","implementation":variant,"ingredients":ingredients})).unwrap();
+            assert!(validate_sibling_commitments(&typed).unwrap_err().contains("commitment mismatch"));
+        }
+    }
     #[test] fn short_header_is_rejected_without_panic() { assert!(reconstruct(r#"{"vpack_hex":"56504b"}"#).is_err()); }
     #[test] fn invalid_json_is_rejected() { assert!(reconstruct("{").is_err()); }
     #[test] fn unsupported_fields_cannot_be_silently_discarded() {

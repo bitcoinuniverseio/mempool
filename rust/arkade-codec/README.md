@@ -10,14 +10,22 @@ it in a bounded child (5-second timeout, bounded input/output, concurrency limit
 
 Input is the native public package `{nodes,leaf_outpoint,default_vtxo}`. Nodes
 contain native SDK PSBT trees; default_vtxo supplies x-only pubkey, server_pubkey,
-and exit_delay_blocks. The pinned SDK validates TxTree structure and compiles the
+and exit_delay_blocks for the original block policy. A version 2 policy supplies
+`version: 2` and `exit_delay_seconds` instead; the two fields cannot coexist.
+Seconds must be an exact multiple of 512 and fit the BIP68 16-bit time field.
+The codec preserves the time flag and emits a versioned seconds locktime, with
+exit_delta null so it cannot be misread as blocks. The pinned SDK validates TxTree structure and compiles the
 DefaultVtxo output policy. The wrapper binds declared IDs, selected leaf and policy,
 rejects cycles/unknown extensions, and preserves all original PSBTs. It does not
 sign or broadcast. Unsupported custom policies reject instead of being approximated.
 
 Arkade-to-MVV adds a summary and preserves this entire package; reverse conversion
 revalidates and requires exact summary agreement. Expiry is null when the supplied
-native proof does not establish it. This envelope is not a complete wallet backup.
+native proof does not establish it. Seconds policies use MVV summary version 2,
+with exit_delay_blocks null and exit_delay_seconds retained. The existing wallet
+backup importer only accepts complete version 1 packages; it rejects version 2
+until its own versioned policy and expiry validation is implemented. This envelope
+is not a complete wallet backup.
 Bark-to-Arkade and reverse do not rewrite signed transactions: Bark fixtures use
 nSequence=0, while the pinned Arkade tree validator requires 0xffffffff. Conversion
 requires a protocol-supported transaction/signature migration, which is not supplied.

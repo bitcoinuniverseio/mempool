@@ -1375,8 +1375,8 @@
     "schemaVersion": "universe-explorer-protocol-manifest-v1",
     "registryVersion": "1.1.0",
     "sourceRepository": "bitcoinuniverseio/backend-apis",
-    "sourceSha": "7ec4602e7a5dcd6495268ae64698280657cc9c73",
-    "sha256": "55a01a52c6b42e537c4603baf9ece8467eef56707e86dcc939cad4cbef61720a",
+    "sourceSha": "1a1a2548a74e419bf7341dd7af1cd57ff98e34c7",
+    "sha256": "1630aeb583cdc839830577a35d9d5f134c51cbb33ecd41d3c25f0e0de9d75afe",
     "protocols": [
       {
         "id": "ordinals",
@@ -1585,7 +1585,7 @@
             "id": "objects",
             "method": "GET",
             "route": "/api/v1/universe/protocols/unat/objects",
-            "authorityPath": "/v1/marketplace/protocols/unat/assets",
+            "authorityPath": "/unat/assets",
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
           }
@@ -2037,7 +2037,7 @@
             "id": "activity",
             "method": "GET",
             "route": "/api/v1/universe/protocols/op_names/activity",
-            "authorityPath": "/token-explorer/op20",
+            "authorityPath": "/token-explorer/op-names",
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
           }
@@ -3420,7 +3420,7 @@
             "id": "objects",
             "method": "GET",
             "route": "/api/v1/universe/protocols/unat/objects",
-            "authorityPath": "/v1/marketplace/protocols/unat/assets",
+            "authorityPath": "/unat/assets",
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
           },
@@ -4808,7 +4808,7 @@
             "id": "activity",
             "method": "GET",
             "route": "/api/v1/universe/protocols/op_names/activity",
-            "authorityPath": "/token-explorer/op20",
+            "authorityPath": "/token-explorer/op-names",
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
           },

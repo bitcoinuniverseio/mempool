@@ -6,6 +6,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildCommandMatrix, buildMatrix, describeArtifact, tableIds, uniqueIds, validateMatrix } from './acceptance-matrix.mjs';
 
+test('OP Names successor keeps predecessor authority and cannot promote source transition acceptance', () => {
+  const matrix = buildMatrix();
+  const row = matrix.rows.find(row => row.id === 'PRO-17/registry');
+  assert.equal(row.authority, 'index-op20-op-names');
+  assert.equal(row.handoffBinding.historicalAuthority, 'index-op20');
+  assert.equal(row.authorityTransition.functionalAcceptance, false);
+  assert.equal(matrix.operationDenominator, null);
+  assert.equal(matrix.realNetworkE2ePasses, 0);
+  const tampered = structuredClone(matrix);
+  tampered.rows.find(row => row.id === 'PRO-17/registry').authorityTransition.functionalAcceptance = true;
+  assert.throws(() => validateMatrix(tampered), /Source transition cannot accept/);
+});
+
 test('current text source identities are portable across Git LF and CRLF checkouts but retain token changes', () => {
   const lf = Buffer.from('export const state = "ready";\nexport const count = 1;\n');
   const crlf = Buffer.from(lf.toString().replaceAll('\n', '\r\n'));

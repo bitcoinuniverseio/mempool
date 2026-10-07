@@ -63,7 +63,9 @@ test('the artifact workflow requires candidate-bound acceptance before packing',
   assert.match(artifactWorkflow, /Qualify the release acceptance envelope/);
   assert.match(artifactWorkflow, /--expect-artifact-commit.*git rev-parse HEAD/);
   assert.match(artifactWorkflow, /--acceptance docs\/acceptance\/qualified-release-evidence\.json/);
-  assert.match(artifactWorkflow, /cp -a docs\/acceptance\/qualified-release-evidence\.json/);
+  // The envelope and its evidence closure are staged by the contract script;
+  // release-artifact.test.mjs proves the packed archive qualifies on its own.
+  assert.match(artifactWorkflow, /--stage-acceptance "\$stage"/);
 });
 
 // Install the real function into a disposable release tree. Package download,
@@ -496,6 +498,20 @@ function qualifiedCutoverFixture(mode) {
       }),
     );
   }
+  if (mode === 'protocol-only' || mode === 'forged-application') {
+    // Isolate the shell's second gate after the protocol gate succeeds.
+    // Actual protocol admission and archive qualification use real fixtures
+    // in release-artifact.test.mjs; this stub is never release evidence.
+    writeFileSync(join(candidate, 'scripts/universe/protocol-contract.mjs'), 'process.exitCode = 0;');
+    writeFileSync(join(candidate, 'docs/acceptance/qualified-release-evidence.json'), '{}');
+    if (mode === 'forged-application') {
+      for (const name of ['reconciled-release.mjs', 'reconciled-operations.mjs']) {
+        copyFileSync(join(here, name), join(candidate, 'scripts/universe', name));
+      }
+      writeFileSync(join(candidate, 'docs/acceptance/reconciled-operations.json'), '{}');
+      writeFileSync(join(candidate, 'docs/acceptance/qualified-application-evidence.json'), '{}');
+    }
+  }
   writeFileSync(join(root, 'current'), join(root, 'releases', 'mempool-old'));
   return root;
 }
@@ -538,6 +554,16 @@ for (const mode of ['missing', 'forged']) {
     assert.match(result.stdout, /CURRENT_CONTENT=.*mempool-old/);
     assert.doesNotMatch(result.stdout, /current now points|restart|cutover to new complete/);
     assert.match(result.stdout + result.stderr, /qualified acceptance|evidence artifact|not releasable/i);
+  });
+}
+
+for (const mode of ['protocol-only', 'forged-application']) {
+  test(`cutover refuses ${mode} after protocol admission before changing the current release`, () => {
+    const result = runQualifiedCutover(mode);
+    assert.notEqual(result.status, 0, result.stdout + result.stderr);
+    assert.match(result.stdout, /CURRENT_CONTENT=.*mempool-old/);
+    assert.doesNotMatch(result.stdout, /current now points|restart|cutover to new complete/);
+    assert.match(result.stdout + result.stderr, /application acceptance/i);
   });
 }
 

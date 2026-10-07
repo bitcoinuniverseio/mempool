@@ -5,6 +5,7 @@ import logger from '../../../logger';
 import blocks from '../../blocks';
 import bitcoinApi from '../../bitcoin/bitcoin-api-factory';
 import bitcoinClient from '../../bitcoin/bitcoin-client';
+import { verifyAddressSource } from '../../bitcoin/address-source-checkpoint';
 import { IEsploraApi } from '../../bitcoin/esplora-api.interface';
 import { buildSilentPaymentBundle, SILENT_PAYMENTS_SCHEMA_QUERIES } from './silent-payments-ingestion';
 import { decodeSilentAddress, inspectPsbt, SP_NETWORKS } from './silent-payments-parsers';
@@ -57,12 +58,14 @@ export class SilentPaymentsService {
     catch { throw new SilentPaymentUnavailable('Configured Bitcoin Core RPC is unavailable.'); }
     const actual = ({ main: 'mainnet', test: 'testnet', testnet4: 'testnet4', signet: 'signet', regtest: 'regtest' })[info?.chain];
     if (actual !== network) {throw new SilentPaymentUnavailable('Configured Bitcoin Core chain does not match the requested network.');}
-    if (info.initialblockdownload) {throw new SilentPaymentUnavailable('Configured Bitcoin Core is still synchronizing.');}
+    if (info.initialblockdownload !== false) {throw new SilentPaymentUnavailable('Configured Bitcoin Core synchronization state is unavailable or still synchronizing.');}
     // Check the shared Esplora/electrum source against Core before accepting its block data.
-    let coreHash: string;
-    try { coreHash = await bitcoinClient.getBlockHash(0); }
-    catch { throw new SilentPaymentUnavailable('Cannot verify Bitcoin source identity.'); }
-    if (await bitcoinApi.$getBlockHash(0) !== coreHash) {throw new SilentPaymentUnavailable('Shared Bitcoin source and Core have different genesis blocks.');}
+    try {
+      const indexedTip = await bitcoinApi.$getBlockHeightTip();
+      await verifyAddressSource(indexedTip, height => bitcoinApi.$getBlockHash(height));
+    } catch {
+      throw new SilentPaymentUnavailable('Shared Bitcoin source does not have a verified stable owned checkpoint and configured network identity.');
+    }
   }
 
   /** @asyncUnsafe Source/storage failures propagate to the route or shared-event error boundary. */

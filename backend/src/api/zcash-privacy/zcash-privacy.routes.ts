@@ -26,6 +26,13 @@ class ZcashPrivacyRoutes {
     });
 
     app
+      .get(prefix + 'history', async (req: Request, res: Response) => {
+        res.setHeader('Cache-Control', 'no-store');
+        try {
+          if (Object.keys(req.query).some(key => key !== 'network') || req.query.network !== undefined && typeof req.query.network !== 'string') throw new ZcashPrivacyEvidenceError('invalid-query', 'Only the exact public network is accepted.', 400);
+          res.json(await zcashPrivacyService.$getHistory(req.query.network === undefined ? 'mainnet' : String(req.query.network)));
+        } catch (error) { fail(req, res, error); }
+      })
       .get(prefix + 'summary', this.$getSummary)
       .get(prefix + 'pools', this.$getPools)
       .get(prefix + 'upgrades', this.$getUpgrades);
@@ -33,7 +40,8 @@ class ZcashPrivacyRoutes {
 
   private async $getSummary(req: Request, res: Response): Promise<void> {
     try {
-      const summary = await zcashPrivacyService.$getSummary();
+      const summary = await zcashPrivacyService.$getSummary(req.query.network === undefined ? 'mainnet' : String(req.query.network));
+      res.setHeader('Cache-Control', 'no-store');
       res.json(summary);
     } catch (e) {
       fail(req, res, e);
@@ -42,8 +50,10 @@ class ZcashPrivacyRoutes {
 
   private async $getPools(req: Request, res: Response): Promise<void> {
     try {
-      const pools = await zcashPrivacyService.$getPools();
-      res.json({ pools, total: pools.length });
+      const summary = await zcashPrivacyService.$getSummary(req.query.network === undefined ? 'mainnet' : String(req.query.network));
+      const pools = summary.pools;
+      res.setHeader('Cache-Control', 'no-store');
+      res.json({ pools, total: pools.length, network: summary.network, source: summary.source, tipHeight: summary.tipHeight });
     } catch (e) {
       fail(req, res, e);
     }
@@ -51,7 +61,7 @@ class ZcashPrivacyRoutes {
 
   private async $getUpgrades(req: Request, res: Response): Promise<void> {
     try {
-      const upgrades = await zcashPrivacyService.$getUpgrades();
+      const upgrades = await zcashPrivacyService.$getUpgrades(req.query.network === undefined ? 'mainnet' : String(req.query.network));
       res.json({ upgrades, total: upgrades.length });
     } catch (e) {
       fail(req, res, e);

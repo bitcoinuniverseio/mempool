@@ -32,6 +32,7 @@ describe('portfolio report sharing controls', () => {
   function fixture() {
     const completedAt = '2026-09-05T12:00:00.000Z';
     const aggregation = {
+      state: 'proven', unknownValueBucket: 'absent',
       pricedTotal: '1', holdings: [{ assetKey: 'bitcoin:mainnet:BTC', displayName: 'BTC', pricedValue: '0.10', locations: [{ address: 'private-address-one' }] }],
     } as unknown as AggregationResult;
     const data = signal<PortfolioDataState>({ loading: false, accounts: [], completedAt, aggregation });
@@ -62,7 +63,7 @@ describe('portfolio report sharing controls', () => {
     expect(view.nativeElement.querySelector('tbody').textContent).toContain('0.1');
     expect(view.nativeElement.querySelector('tbody').textContent).toContain('10%');
     await component.createShare();
-    expect(shares.create).toHaveBeenCalledWith('owner-one', [{ asset: 'BTC', share: '10%' }], completedAt, 86400);
+    expect(shares.create).toHaveBeenCalledWith('owner-one', [{ asset: 'BTC', share: '10%' }], completedAt, 86400, { state: 'proven', unknownValueBucket: 'absent' });
     expect(component.shareLink()).toContain('#key=fragment-secret');
   });
 

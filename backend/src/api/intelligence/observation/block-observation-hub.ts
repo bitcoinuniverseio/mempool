@@ -9,9 +9,32 @@ import logger from '../../../logger';
  * consumer is logged and never stops the others or the loop.
  */
 export type BlockObserver = (block: BlockExtended, transactions: TransactionExtended[]) => void | Promise<void>;
+export interface CanonicalRecoveryRequest {
+  expectedCanonicalTip: { height: number; hash: string };
+  restorationTarget: { height: number; hash: string } | null;
+}
+export type CanonicalChange = { network: string; observedAt: number } & (
+  { status: 'unavailable'; reason: string } |
+  { status: 'verified-restoration'; restoredTarget: { height: number; hash: string }; canonicalTip: { height: number; hash: string } } |
+  { status: 'verified-progression'; previousCanonicalTip: { height: number; hash: string }; canonicalTip: { height: number; hash: string } } |
+  { status: 'verified-rollback'; previousTip: { height: number; hash: string }; canonicalTip: { height: number; hash: string };
+    commonAncestor: { height: number; hash: string }; orphanedBlocks: Array<{ height: number; hash: string }> }
+);
 
 export class BlockObservationHub {
   private observers: { name: string; observe: BlockObserver }[] = [];
+  private canonicalObservers: Array<{ name: string; observe: (change: CanonicalChange) => void | Promise<void> }> = [];
+
+  public subscribeCanonical(name: string, observe: (change: CanonicalChange) => void | Promise<void>): void {
+    this.canonicalObservers.push({ name, observe });
+  }
+
+  public async dispatchCanonical(change: CanonicalChange): Promise<void> {
+    for (const observer of this.canonicalObservers) {
+      try { await observer.observe(change); }
+      catch (error) { logger.warn(`canonical observer ${observer.name} failed: ${error instanceof Error ? error.message : String(error)}`); }
+    }
+  }
 
   public subscribe(name: string, observe: BlockObserver): void {
     this.observers.push({ name, observe });

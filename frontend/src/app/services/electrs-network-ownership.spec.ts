@@ -4,11 +4,41 @@ vi.mock('@app/bitcoin.utils', () => ({ calcScriptHash$: vi.fn(async () => 'hash'
 import { ElectrsApiService } from './electrs-api.service';
 
 describe('Electrs request identity', () => {
+  it('reads the text index tip from the selected network partition', () => {
+    const networkChanged$ = new Subject<string>(); const http = { get: vi.fn(() => of('a'.repeat(64))) };
+    const service = new ElectrsApiService(http as any, {isBrowser:true,env:{ROOT_NETWORK:'mainnet'},networkChanged$} as any);
+    networkChanged$.next('signet'); service.getBlockTipHash$().subscribe();
+    expect(http.get).toHaveBeenCalledWith('/signet/api/blocks/tip/hash',{responseType:'text'});
+  });
   it('preserves height zero', () => {
     const http = { get: vi.fn(() => of([])) };
     const service = new ElectrsApiService(http as any, { isBrowser: true, env: {}, networkChanged$: new Subject() } as any);
     service.listBlocks$(0).subscribe();
     expect(http.get).toHaveBeenCalledWith('/api/blocks/0');
+  });
+  it('uses the owned compact-summary path cursor across selected networks without a full-history after_txid query', () => {
+    const networkChanged$ = new Subject<string>();
+    const http = { get: vi.fn(() => of([])) };
+    const service = new ElectrsApiService(http as any, { isBrowser: true, env: { ROOT_NETWORK: 'mainnet' }, networkChanged$ } as any);
+    const cursor = 'b'.repeat(64);
+    networkChanged$.next('signet');
+    service.getAddressSummary$('tb1qowned').subscribe();
+    service.getAddressSummary$('tb1qowned', cursor).subscribe();
+    expect(http.get.mock.calls[0]).toEqual(['/signet/api/address/tb1qowned/txs/summary']);
+    expect(http.get.mock.calls[1]).toEqual(['/signet/api/address/tb1qowned/txs/summary/' + cursor]);
+    networkChanged$.next('mainnet');
+    service.getAddressSummary$('bc1qowned', cursor).subscribe();
+    expect(http.get.mock.calls[2]).toEqual(['/api/address/bc1qowned/txs/summary/' + cursor]);
+  });
+  it('keeps compact script-summary continuation on its network while async hashing completes', async () => {
+    const networkChanged$ = new Subject<string>();
+    const http = { get: vi.fn(() => of([])) };
+    const service = new ElectrsApiService(http as any, { isBrowser: true, env: { ROOT_NETWORK: 'mainnet' }, networkChanged$ } as any);
+    networkChanged$.next('signet');
+    const response = firstValueFrom(service.getScriptHashSummary$('51', 'c'.repeat(64)));
+    networkChanged$.next('testnet');
+    await response;
+    expect(http.get).toHaveBeenCalledWith('/signet/api/scripthash/hash/txs/summary/' + 'c'.repeat(64));
   });
   it('keeps all asynchronous script reads on the network captured before hashing', async () => {
     const networkChanged$ = new Subject<string>();

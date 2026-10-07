@@ -1,9 +1,11 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GlobalNetworkApiService, GlobalNetworkSelfCheckResult } from './global-network.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
+import { StateService } from '@app/services/state.service';
+import { defer, finalize, Subject, Subscription, takeUntil, timeout } from 'rxjs';
 
 @Component({
   selector: 'app-global-network-self-check',
@@ -14,26 +16,26 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Node Connectivity Self-Check Wizard</h1>
-          <span class="badge bg-primary">SSRF-Defended P2P Probe</span>
+          <h1 class="m-0">Connection check</h1>
+          <span class="badge bg-secondary">Public addresses only</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Check a public endpoint TCP connection from this server. Bitcoin handshake, BIP324 readiness and distributed reachability are not tested.
+          Test a public node's connection from this server. This does not verify its Bitcoin protocol.
         </p>
 
         <!-- Sub-navigation tabs -->
-        <nav class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+        <nav aria-label="Peer navigation" class="nav nav-pills flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
           <a class="nav-link" [routerLink]="'/network/global' | relativeUrl">Overview</a>
-          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Reachable Nodes</a>
-          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">Snapshots Archive</a>
-          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">DNS Seeds</a>
-          <a class="nav-link active" [routerLink]="'/network/global/self-check' | relativeUrl">Node Self-Check</a>
+          <a class="nav-link" [routerLink]="'/network/global/nodes' | relativeUrl">Peers</a>
+          <a class="nav-link" [routerLink]="'/network/global/snapshots' | relativeUrl">History</a>
+          <a class="nav-link" [routerLink]="'/network/global/seeds' | relativeUrl">Discovery</a>
+          <a class="nav-link active" aria-current="page" [routerLink]="'/network/global/self-check' | relativeUrl">Connection check</a>
         </nav>
       </header>
 
       <!-- Probe Submission Form -->
       <div class="card p-4 mb-4 bg-body-tertiary border">
-        <h2 class="h5 mb-3">Initiate Live Diagnostic Probe</h2>
+        <h2 class="h5 mb-3">Enter your node's address</h2>
         <form (ngSubmit)="runSelfCheck()" #checkForm="ngForm">
           <div class="row g-3">
             <div class="col-12 col-md-8">
@@ -42,8 +44,9 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 id="endpointInput"
                 type="text"
                 class="form-control font-monospace"
-                placeholder="e.g. 95.217.163.42"
+                placeholder="Your node's public IP or domain"
                 [(ngModel)]="endpointAddress"
+                (ngModelChange)="clearResult()"
                 name="endpointAddress"
                 required
                 [disabled]="probing"
@@ -57,6 +60,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
                 class="form-control font-monospace"
                 placeholder="8333"
                 [(ngModel)]="port"
+                (ngModelChange)="clearResult()"
                 name="port"
                 min="1"
                 max="65535"
@@ -68,15 +72,15 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
             <span class="text-muted small">
-              Private, link-local, loopback, and metadata network queries are blocked by strict SSRF filtering.
+              Private and local addresses cannot be checked.
             </span>
             <button
               type="submit"
               class="btn btn-primary px-4"
-              [disabled]="probing || !endpointAddress"
+              [disabled]="probing || checkForm.invalid"
             >
               <span *ngIf="probing" class="spinner-border spinner-border-sm me-1" role="status"></span>
-              {{ probing ? 'Probing Node...' : 'Run Self-Check' }}
+              {{ probing ? 'Checking...' : 'Check connection' }}
             </button>
           </div>
         </form>
@@ -90,8 +94,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       <!-- Diagnostic Results Card -->
       <div *ngIf="result" class="card p-4 bg-body-tertiary border">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border-bottom pb-2">
-          <h2 class="h5 m-0 text-success" *ngIf="result.reachable">&check; Node Reachable</h2>
-          <h2 class="h5 m-0 text-danger" *ngIf="!result.reachable">&cross; Connection Refused</h2>
+          <h2 class="h5 m-0" [class.text-success]="result.reachable" [class.text-danger]="!result.reachable">{{ resultLabel }}</h2>
           <span class="text-muted small">Check ID: <code>{{ result.check_id }}</code></span>
         </div>
 
@@ -140,12 +143,17 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       border-radius: 0.375rem;
     }
     .nav-link.active {
-      background-color: var(--bs-primary, #f7931a);
-      color: #fff;
+      background-color: var(--u-brand);
+      color: var(--u-brand-contrast);
     }
   `],
 })
-export class GlobalNetworkSelfCheckComponent {
+export class GlobalNetworkSelfCheckComponent implements OnInit, OnDestroy {
+  private readonly cancelled$ = new Subject<void>();
+  private readonly subscriptions = new Subscription();
+  private destroyed = false;
+  private revision = 0;
+  private network: string;
   endpointAddress = '';
   port = 8333;
   probing = false;
@@ -154,22 +162,63 @@ export class GlobalNetworkSelfCheckComponent {
 
   constructor(
     private api: GlobalNetworkApiService,
-    private cd: ChangeDetectorRef
-  ) {}
+    private cd: ChangeDetectorRef,
+    private state: StateService
+  ) { this.network = state.network; }
+
+  get resultLabel(): string { return this.result?.reachable ? 'TCP endpoint reachable' : 'Endpoint not reachable'; }
+
+  ngOnInit(): void {
+    this.subscriptions.add(this.state.networkChanged$.subscribe(network => {
+      if (network !== this.network) { this.clearResult(); }
+      this.network = network;
+    }));
+  }
+
+  clearResult(): void {
+    this.revision++; this.cancelled$.next(); this.probing = false;
+    this.result = null; this.errorMessage = null; this.cd.markForCheck();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true; this.clearResult(); this.subscriptions.unsubscribe(); this.cancelled$.complete();
+  }
+
+  private validReceipt(res: GlobalNetworkSelfCheckResult, endpoint: string, port: number): boolean {
+    const text = (value: unknown, limit: number): boolean => typeof value === 'string' && value.length > 0 && value.length <= limit;
+    return !!res && text(res.check_id, 128) && res.endpoint_address === endpoint && res.port === port &&
+      text(res.resolved_address, 128) && text(res.probed_from_region, 128) && typeof res.reachable === 'boolean' &&
+      res.bip324_handshake === null && !res.user_agent && res.services == null &&
+      text(res.probed_at, 64) && Number.isFinite(Date.parse(res.probed_at)) &&
+      (res.reachable ? Number.isFinite(res.latency_ms) && res.latency_ms >= 0 && res.error === null :
+        res.latency_ms === null && text(res.error, 1024));
+  }
 
   runSelfCheck(): void {
-    if (!this.endpointAddress) return;
+    if (this.destroyed || this.probing) { return; }
+    const endpoint = this.endpointAddress.trim();
+    const port = this.port;
+    if (!endpoint || endpoint.length > 255 || !Number.isInteger(port) || port < 1 || port > 65535) {
+      this.errorMessage = 'Enter a public endpoint and an integer port from 1 to 65535.'; return;
+    }
+    const revision = this.revision;
     this.probing = true;
     this.errorMessage = null;
     this.result = null;
 
-    this.api.performSelfCheck$(this.endpointAddress.trim(), this.port).subscribe({
+    defer(() => this.api.performSelfCheck$(endpoint, port)).pipe(timeout(15000), takeUntil(this.cancelled$),
+      finalize(() => { if (revision === this.revision) { this.probing = false; this.cd.markForCheck(); } })).subscribe({
       next: res => {
-        this.result = res;
+        if (this.destroyed || revision !== this.revision) { return; }
+        if (!this.validReceipt(res, endpoint, port)) {
+          this.errorMessage = 'The source response is not a valid TCP-only receipt for this endpoint and port.';
+          this.result = null;
+        } else { this.result = res; }
         this.probing = false;
         this.cd.markForCheck();
       },
       error: err => {
+        if (this.destroyed || revision !== this.revision) { return; }
         this.errorMessage = err?.error?.error || err?.message || 'Failed to complete node self check';
         this.probing = false;
         this.cd.markForCheck();

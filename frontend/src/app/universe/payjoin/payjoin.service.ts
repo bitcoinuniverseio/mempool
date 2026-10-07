@@ -3,12 +3,38 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-012] | DEF-BI-006 / D-FE-012B | C-FE-PAYJOIN-DIRECTORY.
+ * Backend WP-BI-006 establishes that HTTP200 alone is currently labeled BIP77
+ * and BIP78 support. This DTO also permits a null key hash while the directory
+ * template calls .slice on it, which throws on a valid unavailable observation.
+ * 1. Coordinate a versioned probe DTO with WP-BI-006: separate HTTP reachability,
+ *    validated RFC9458 OHTTP key discovery (RFC9540 media type), BIP77 support
+ *    and independently evidenced BIP78 support. Unknown differs from false.
+ * 2. Decode key/configuration identity, protocol evidence, timestamps and network
+ *    in getDirectories$; update PayjoinOverview counts to include only validated
+ *    capability observations. Never count a generic HTML200 as protocol support.
+ * 3. Render null key hashes safely and expose the probe's actual unavailable/
+ *    unsupported reason. Preserve proposal analysis and playground state.
+ * 4. Add proposed payjoin-directory.component.spec.ts rendered tests for null
+ *    key, HTML200, malformed key configuration, valid OHTTP and independent v1
+ *    states; extend service/overview tests. npm test -- --maxWorkers=2
+ *    src/app/universe/payjoin. Require clean render and verified owned Signet
+ *    directory readback; HTTP200 by itself is not functional acceptance.
+ * Sources: BIP77 0.2.0, RFC9458, RFC9540, and WP-BI-006 pinned research/evidence.
+ * Rollback keeps compatible DTO versions and preserves honest unknown states;
+ *    the null-safe template correction can remain independent of probe rollout.
+ */
 export interface PayjoinDirectory {
   directory_id: string;
   url: string;
   ohttp_key_hash: string | null;
   bip77_supported: boolean;
   bip78_supported: boolean;
+  bip77_state?: 'unknown' | 'unavailable' | 'supported' | 'unsupported';
+  bip78_state?: 'unknown' | 'unavailable' | 'supported' | 'unsupported';
+  reachable?: boolean;
+  key_config_valid?: boolean;
   latency_ms: number | null;
   last_tested_at: string;
   error: string | null;
@@ -49,6 +75,7 @@ export interface PayjoinCompatibilityEntry {
 
 export interface PayjoinPlaygroundSession {
   session_id: string;
+  simulated: true;
   step: 'original_created' | 'proposal_generated' | 'signed_and_broadcast';
   sender_address: string;
   receiver_address: string;

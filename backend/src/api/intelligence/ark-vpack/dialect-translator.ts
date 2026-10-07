@@ -8,8 +8,15 @@ function canonical(value: any): string {
 
 function minimal(evidence: any, network: string) {
   const [txid, output] = evidence.anchor_outpoint.split(':');
-  return { vtxo_id: evidence.vtxo_id, version: 1, network, amount_sats: evidence.amount_sats,
-    script_pubkey: evidence.script_pub_key, sequence: evidence.sequence, exit_delay_blocks: evidence.exit_delta,
+  const seconds = evidence.exit_locktime?.version === 2 && evidence.exit_locktime?.unit === 'seconds';
+  if (evidence.exit_locktime && (!seconds || !Number.isSafeInteger(evidence.exit_locktime.value) || evidence.exit_locktime.value < 512
+    || evidence.exit_locktime.value > 33553920 || evidence.exit_locktime.value % 512 !== 0 || evidence.exit_delta !== null)) {
+    throw new AnchorReadError('invalid-locktime', 'The native relative locktime cannot be preserved without changing its units.', 400);
+  }
+  if (seconds && evidence.expiry !== null) throw new AnchorReadError('unsupported-expiry-unit', 'The native expiry needs explicit independently verified height or timestamp units.', 400);
+  return { vtxo_id: evidence.vtxo_id, version: seconds ? 2 : 1, network, amount_sats: evidence.amount_sats,
+    script_pubkey: evidence.script_pub_key, sequence: evidence.sequence, exit_delay_blocks: seconds ? null : evidence.exit_delta,
+    ...(seconds ? { exit_delay_seconds: evidence.exit_locktime.value, expires_at_timestamp: null } : {}),
     anchor_outpoint: { txid, vout: Number(output) }, asp_pubkey: evidence.asp_pubkey,
     user_pubkey: evidence.user_pubkey, expires_at_height: evidence.expiry };
 }

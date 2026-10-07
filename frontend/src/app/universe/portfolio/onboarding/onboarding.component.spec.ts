@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { PortfoliosStore } from '../stores/portfolios.store';
 import { OnboardingComponent } from './onboarding.component';
 import { deriveAccountXpubFromSeed } from '../shared/derivation';
+import { checksumCreate } from 'utxo-descriptors';
 
 beforeAll(() => TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting()));
 afterEach(() => { TestBed.resetTestingModule(); vi.restoreAllMocks(); });
@@ -391,5 +392,93 @@ describe('saved onboarding checksum and existing vault boundaries', () => {
     const { view, choose } = setup('unlocked'); choose('Import an address list');
     const input = view.nativeElement.querySelector('textarea'); input.value = JSON.stringify([{ address: '1BoatSLRHtKNngkdXEeobR76b53LETtpyT', chain: 'dogecoin', network: 'mainnet' }]); input.dispatchEvent(new Event('input')); view.detectChanges();
     expect(view.componentInstance.valid()).toBe(false);
+  });
+});
+
+describe('address portfolio save lifecycle', () => {
+  const definition = { id: 'test-owned-definition', name: 'Owned', accounts: [] };
+  function setup(createPortfolio: any) {
+    const store = { vaultKind: () => 'unlocked', createPortfolio, updatePortfolio: vi.fn().mockResolvedValue(undefined) };
+    const router = { navigate: vi.fn().mockResolvedValue(true) };
+    TestBed.configureTestingModule({ providers: [{ provide: PortfoliosStore, useValue: store }, { provide: Router, useValue: router }] });
+    const view = TestBed.createComponent(OnboardingComponent);
+    view.componentInstance.step.set('input'); view.detectChanges();
+    const textarea = view.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    textarea.value = '1BoatSLRHtKNngkdXEeobR76b53LETtpyT'; textarea.dispatchEvent(new Event('input')); view.detectChanges();
+    const button = view.nativeElement.querySelector('button.primary') as HTMLButtonElement;
+    return { view, button, store, router };
+  }
+  it('blocks a second save while definition creation is pending', async () => {
+    let finish!: (value: any) => void;
+    const f = setup(vi.fn(() => new Promise(resolve => { finish = resolve; })));
+    f.button.click(); f.view.detectChanges(); expect(f.button.disabled).toBe(true);
+    await (f.view.componentInstance as any).save(); expect(f.store.createPortfolio).toHaveBeenCalledOnce();
+    finish(definition); await vi.waitFor(() => expect(f.store.updatePortfolio).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(f.view.componentInstance.saving()).toBe(false));
+    expect(f.router.navigate).toHaveBeenCalledOnce();
+  });
+
+  it.each(['testnet', 'signet', 'testnet4'])('stores the explicitly selected %s context for test-family public material', async network => {
+    const { view, store } = setup(vi.fn().mockResolvedValue(definition));
+    view.componentInstance.stepChoice.set('watch-only'); view.detectChanges();
+    const enter = (value: string): HTMLButtonElement => {
+      const input = view.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+      input.value = value; input.dispatchEvent(new Event('input')); view.detectChanges();
+      return view.nativeElement.querySelector('button.primary') as HTMLButtonElement;
+    };
+    const codec = createBase58check(bytes => createHash('sha256').update(bytes).digest());
+    const payload = codec.decode(deriveAccountXpubFromSeed(new Uint8Array(32).fill(1), 'p2wpkh', 0));
+    new DataView(payload.buffer, payload.byteOffset, payload.byteLength).setUint32(0, 0x043587cf);
+    const key = codec.encode(payload);
+    expect(enter(key).disabled).toBe(true);
+    const select = view.nativeElement.querySelector('#watch-network') as HTMLSelectElement;
+    select.value = network; select.dispatchEvent(new Event('change')); view.detectChanges();
+    expect(enter(key).disabled).toBe(false);
+    const descriptor = `wpkh(${key}/0/*)`; const button = enter(descriptor + '#' + checksumCreate(descriptor));
+    expect(button.disabled).toBe(false); button.click();
+    await vi.waitFor(() => expect(store.updatePortfolio).toHaveBeenCalledOnce());
+    const saved = store.updatePortfolio.mock.calls[0][1]({ accounts: [] });
+    expect(saved.accounts[0].network).toBe(network); expect(saved.accounts[0].kind).toBe('descriptor');
+  });
+  it('renders a failed save and retries the same already prepared definition', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition)); f.store.updatePortfolio.mockRejectedValueOnce(Error('private failure payload'));
+    f.button.click(); await vi.waitFor(() => { f.view.detectChanges(); expect(f.view.componentInstance.saving()).toBe(false); expect(f.view.nativeElement.querySelector('[role=alert]').textContent).toContain('could not be saved'); });
+    expect(f.button.disabled).toBe(false); expect(f.view.nativeElement.textContent).not.toContain('private failure'); expect(f.router.navigate).not.toHaveBeenCalled();
+    f.button.click(); await vi.waitFor(() => expect(f.router.navigate).toHaveBeenCalledOnce());
+    expect(f.store.createPortfolio).toHaveBeenCalledOnce(); expect(f.store.updatePortfolio.mock.calls.every(call => call[0] === definition.id)).toBe(true);
+  });
+  it('discloses saved data when navigation fails and retries only opening', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition));
+    f.router.navigate.mockResolvedValueOnce(false);
+    await (f.view.componentInstance as any).save(); f.view.detectChanges();
+    expect(f.view.componentInstance.step()).toBe('done');
+    expect(f.view.nativeElement.querySelector('[role=alert]')?.textContent).toContain('saved');
+    const retry = Array.from(f.view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(b => b.textContent?.includes('Open portfolio'))!;
+    expect(retry).toBeTruthy(); retry.click();
+    await vi.waitFor(() => expect(f.router.navigate).toHaveBeenCalledTimes(2));
+    expect(f.store.createPortfolio).toHaveBeenCalledOnce(); expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
+  });
+  it('retains pending protection until navigation settles', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition));
+    let finish!: (value: boolean) => void;
+    f.router.navigate.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const save = (f.view.componentInstance as any).save();
+    await vi.waitFor(() => expect(f.router.navigate).toHaveBeenCalledOnce());
+    expect(f.view.componentInstance.saving()).toBe(true);
+    await (f.view.componentInstance as any).save();
+    expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
+    finish(true); await save; expect(f.view.componentInstance.saving()).toBe(false);
+  });
+  it('handles rejected navigation without retrying saved account writes', async () => {
+    const f = setup(vi.fn().mockResolvedValue(definition));
+    f.router.navigate.mockRejectedValueOnce(Error('private navigation failure'));
+    await (f.view.componentInstance as any).save(); f.view.detectChanges();
+    expect(f.view.nativeElement.querySelector('[role=alert]')?.textContent).toContain('was saved');
+    expect(f.view.nativeElement.textContent).not.toContain('private navigation');
+    await (f.view.componentInstance as any).save();
+    expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
+    await (f.view.componentInstance as any).openSaved();
+    expect(f.router.navigate).toHaveBeenCalledTimes(2);
+    expect(f.store.updatePortfolio).toHaveBeenCalledOnce();
   });
 });

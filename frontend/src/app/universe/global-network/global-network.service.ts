@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, defer, map, timeout } from 'rxjs';
+import { parseGlobalOverview, parseGlobalNodes, parseGlobalDetail, parseGlobalDns, parseGlobalSnapshots, parseGlobalSensors, selectedGlobalNetwork } from './global-network-observations';
 import { StateService } from '@app/services/state.service';
 
 export interface GlobalNetworkSensor {
@@ -15,6 +16,21 @@ export interface GlobalNetworkSensor {
   last_probe_utc: string;
   reachable_networks: string[];
 }
+
+/** Reported owned-node identity; no independent operator or Signet challenge attestation. */
+export interface GlobalNetworkOwnedContext {
+  chain_network: string;
+  genesis_hash: string;
+  observed_at_utc: string;
+  age_ms: number;
+  freshness_limit_ms: number;
+  scope: string;
+}
+export interface GlobalNetworkNodesReport extends GlobalNetworkOwnedContext { nodes: GlobalNetworkObservation[]; total: number; }
+export interface GlobalNetworkSensorsReport extends GlobalNetworkOwnedContext { sensors: GlobalNetworkSensor[]; total: number; }
+export interface GlobalNetworkDnsReport { seeds: GlobalNetworkDnsSeed[]; total: number; configured_network: string; scope: string; }
+export interface GlobalNetworkSnapshotsReport { snapshots: GlobalNetworkSnapshot[]; total: number; configured_network: string; scope: string; }
+export type GlobalNetworkNodeDetail = GlobalNetworkObservation & GlobalNetworkOwnedContext;
 
 export interface GlobalNetworkCrawlEpoch {
   epoch_id: string;
@@ -131,33 +147,35 @@ export class GlobalNetworkApiService {
     }
   }
 
-  getOverview$(): Observable<GlobalNetworkOverview> {
-    return this.httpClient.get<GlobalNetworkOverview>(`${this.apiBaseUrl}/api/v1/intelligence/network/global/overview`);
+  private read$<T>(path: string, validate: (value: unknown, expected: string) => T): Observable<T> {
+    return defer(() => {
+      const expected = selectedGlobalNetwork(this.stateService);
+      return this.httpClient.get<unknown>(`${this.apiBaseUrl}/api/v1/intelligence/network/global/${path}`,
+        { headers: { 'Cache-Control': 'no-store' } }).pipe(timeout({ first: 15000 }), map(value => {
+          if (selectedGlobalNetwork(this.stateService) !== expected) { throw Error('Selected context changed.'); }
+          return validate(value, expected);
+        }));
+    });
   }
 
-  getNodes$(limit = 50, offset = 0): Observable<{ nodes: GlobalNetworkObservation[]; total: number }> {
-    return this.httpClient.get<{ nodes: GlobalNetworkObservation[]; total: number }>(
-      `${this.apiBaseUrl}/api/v1/intelligence/network/global/nodes?limit=${limit}&offset=${offset}`
-    );
+  getOverview$(): Observable<GlobalNetworkOverview> { return this.read$('overview', parseGlobalOverview); }
+  getNodes$(limit = 50, offset = 0): Observable<GlobalNetworkNodesReport> {
+    return defer(() => {
+      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500 || !Number.isSafeInteger(offset) || offset < 0 || offset > 10000) {
+        throw Error('Invalid bounded peer page.');
+      }
+      return this.read$(`nodes?limit=${limit}&offset=${offset}`, (value, expected) => parseGlobalNodes(value, expected, limit, offset));
+    });
   }
-
-  getNodeDetail$(endpointId: string): Observable<GlobalNetworkObservation> {
-    return this.httpClient.get<GlobalNetworkObservation>(
-      `${this.apiBaseUrl}/api/v1/intelligence/network/global/nodes/${encodeURIComponent(endpointId)}`
-    );
+  getNodeDetail$(endpointId: string): Observable<GlobalNetworkNodeDetail> {
+    return defer(() => {
+      if (!endpointId || endpointId.length > 512) { throw Error('Invalid peer endpoint.'); }
+      return this.read$(`nodes/${encodeURIComponent(endpointId)}`, (value, expected) => parseGlobalDetail(value, expected, endpointId));
+    });
   }
-
-  getDnsSeeds$(): Observable<GlobalNetworkDnsSeed[]> {
-    return this.httpClient.get<GlobalNetworkDnsSeed[]>(`${this.apiBaseUrl}/api/v1/intelligence/network/global/seeds`);
-  }
-
-  getSnapshots$(): Observable<GlobalNetworkSnapshot[]> {
-    return this.httpClient.get<GlobalNetworkSnapshot[]>(`${this.apiBaseUrl}/api/v1/intelligence/network/global/snapshots`);
-  }
-
-  getSensors$(): Observable<GlobalNetworkSensor[]> {
-    return this.httpClient.get<GlobalNetworkSensor[]>(`${this.apiBaseUrl}/api/v1/intelligence/network/global/sensors`);
-  }
+  getDnsSeeds$(): Observable<GlobalNetworkDnsReport> { return this.read$('seeds', parseGlobalDns); }
+  getSnapshots$(): Observable<GlobalNetworkSnapshotsReport> { return this.read$('snapshots', parseGlobalSnapshots); }
+  getSensors$(): Observable<GlobalNetworkSensorsReport> { return this.read$('sensors', parseGlobalSensors); }
 
   performSelfCheck$(endpointAddress: string, port: number): Observable<GlobalNetworkSelfCheckResult> {
     return this.httpClient.post<GlobalNetworkSelfCheckResult>(

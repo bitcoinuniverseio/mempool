@@ -238,12 +238,12 @@ export class ApiService {
   submitPackage$(rawTxs: string[], maxfeerate?: number, maxburnamount?: number): Observable<SubmitPackageResult> {
     const queryParams = [];
 
-    if (maxfeerate) {
-      queryParams.push(`maxfeerate=${maxfeerate}`);
+    if (maxfeerate != null) {
+      queryParams.push(`maxfeerate=${maxfeerate.toFixed(8)}`);
     }
 
-    if (maxburnamount) {
-      queryParams.push(`maxburnamount=${maxburnamount}`);
+    if (maxburnamount != null) {
+      queryParams.push(`maxburnamount=${maxburnamount.toFixed(8)}`);
     }
     return this.httpClient.post<SubmitPackageResult>(this.apiBaseUrl + this.apiBasePath + '/api/v1/txs/package' + (queryParams.length > 0 ? `?${queryParams.join('&')}` : ''), rawTxs);
   }

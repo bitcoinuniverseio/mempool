@@ -3,7 +3,6 @@ import config from '../../../config';
 import logger from '../../../logger';
 import { BlockExtended, TransactionExtended } from '../../../mempool.interfaces';
 import { EventEnvelopeValidator } from '../events/event-envelope';
-import { developerIdentity } from '../identity/developer-identity';
 import { NotificationRow, ownerStore, WatchlistEntityRow, WatchlistRuleRow } from '../identity/owner-store';
 
 /**
@@ -43,11 +42,30 @@ export class WatchlistMatcher {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   private async record(finding: Finding, now: number): Promise<'inserted' | 'duplicate' | 'rate_limited'> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-002] DEF-BI-002; COV-BI-002A/B/C.
+     * Verified current-code reproduction: insertNotification succeeds, insertOutbox
+     * throws, replay returns duplicate and leaves zero delivery rows indefinitely.
+     * 1. Replace the split insertNotification/enqueueDelivery path with the atomic
+     *    OwnerStore.recordNotificationWithDelivery contract specified beside the SQL
+     *    implementation. Reuse the existing notification ID when an event replays.
+     * 2. Couple any per-rule quota decision to that transaction; previously recorded
+     *    events must still be reconciled when the hourly quota is reached. A retry
+     *    cannot silently abandon delivery intent or advance a checkpoint before commit.
+     * 3. Keep webhook owner/network checks at the durable boundary. Emit websocket
+     *    notifications only after durable commit under WP-BI-004; acknowledgement of
+     *    a source event must mean its required downstream work is durably recorded.
+     * Dependencies: WP-BI-001; store portion of WP-BI-002; then WP-BI-003 worker.
+     * Source: docs/api/OWNER-IDENTITY.md and MySQL 8.4 transaction/locking guidance.
+     * Tests: extend watchlists.test.ts with the injected insertOutbox failure recorded
+     *    in handoff reproductions/intelligence-current-source-results.json; acceptance
+     *    requires restart/replay to leave exactly one notification and one intent.
+     *    Also test duplicate blocks, rate-limit boundary, foreign targets and reorgs.
+     * Command: cd backend && ./node_modules/.bin/jest --runInBand --coverage=false
+     *    --runTestsByPath src/api/intelligence/watchlists/watchlists.test.ts
+     * MySQL crash fault and Signet consumer readback remain NOT TESTED. Rollback retains
+     *    durable notifications/intents and resumes from the last committed checkpoint.
+     */
     const store = ownerStore();
-    const hourAgo = new Date(now - 3_600_000).toISOString();
-    if ((await store.countNotificationsSince(finding.rule.rule_id, hourAgo)) >= finding.rule.rate_limit_per_hour) {
-      return 'rate_limited';
-    }
     const row: NotificationRow = {
       notification_id: EventEnvelopeValidator.generateUuidV7(),
       owner_id: finding.rule.owner_id,
@@ -66,11 +84,7 @@ export class WatchlistMatcher {
       created_at: new Date(now).toISOString(),
       acknowledged_at: null,
     };
-    const outcome = await store.insertNotification(row);
-    if (outcome === 'inserted' && finding.rule.delivery_channel === 'webhook' && finding.rule.webhook_id) {
-      await developerIdentity.enqueueDelivery(row.notification_id, finding.rule.webhook_id, now);
-    }
-    return outcome;
+    return store.recordNotificationWithDelivery(row, finding.rule.delivery_channel === 'webhook' ? finding.rule.webhook_id : null, finding.rule.rate_limit_per_hour);
   }
 
   /** @asyncUnsafe Rules grouped by watchlist, only enabled ones. */
@@ -97,6 +111,35 @@ export class WatchlistMatcher {
 
   /** @asyncUnsafe Callers turn a rejection into an exact HTTP answer. */
   public async observeBlock(block: BlockExtended, transactions: TransactionExtended[], now = Date.now()): Promise<{ inserted: number; duplicates: number; displaced: number }> {
+    /* IMPLEMENTATION-HANDOFF [WP-BI-004] DEF-BI-004; COV-BI-004A/B/C/D/E.
+     * Verified: addEntity accepts outpoint/descriptor but this matcher loads only
+     * txid/address. addRule accepts websocket but record has no websocket dispatch.
+     * Public outpoint/descriptor selectors are in frontend watchlists.component.ts.
+     * 1. After the registration contract beside WatchlistsService.addEntity, hash
+     *    normalized txid:vout for observed outputs and vin spent outpoints, and match
+     *    outpoint confirmation/value-transfer rules with an explicit received/spent
+     *    direction. Use per-rule/per-outpoint stable event IDs to avoid duplicates.
+     * 2. Match registered descriptor-child script hashes against output scriptpubkey
+     *    and input prevout.scriptpubkey. Preserve the parent entity ID, derivation
+     *    index, integer sats, block hash and network for readback and reorg displacement.
+     *    Do not attempt to expand a SHA-256 descriptor hash or infer wallet ownership.
+     * 3. Persist first through WP-BI-002. Wire websocket rules to PROPOSED NEW
+     *    watchlists/watchlist-stream.ts, authenticated by requireOwner('watchlists'),
+     *    with owner/network filtering, notification-ID resume cursor, bounded buffers,
+     *    disconnect cleanup and durable catch-up. Update addRule response/capabilities.
+     * Dependencies: WP-BI-001, WP-BI-002, WP-FE-007; shared transport WP-BI-005 only
+     *    when NATS is selected. No unauthenticated global notification publication.
+     * Sources: docs/api/OWNER-IDENTITY.md; BIP380 public descriptor syntax; BIP141
+     *    scriptPubKey matching; existing advertised entity and delivery contracts.
+     * Tests: extend watchlists.test.ts plus PROPOSED NEW watchlists/watchlist-stream.test.ts.
+     *    Independently assert outpoint create/spend, ranged descriptor receive/spend,
+     *    duplicates, restart/reorg, wrong owner/network, websocket reconnect/cursor and
+     *    REST readback. Run cd backend && ./node_modules/.bin/jest --runInBand
+     *    --coverage=false --runTestsByPath src/api/intelligence/watchlists/watchlists.test.ts
+     * Final acceptance: real Signet observed payments reach each selected consumer.
+     * Rollback preserves child registrations and cursor state; never mark opaque
+     *    legacy descriptors monitored until the user resubmits verified public scripts.
+     */
     const store = ownerStore();
     const rules = await this.rulesByWatchlist();
     const findings: Finding[] = [];
@@ -127,6 +170,10 @@ export class WatchlistMatcher {
     if (rules.size > 0) {
       const watchedTxids = await this.entitiesByHash('txid');
       const watchedAddresses = await this.entitiesByHash('address');
+      const watchedOutpoints = await this.entitiesByHash('outpoint');
+      const descriptors = await ownerStore().listEntitiesByType(this.network,'descriptor');
+      const scripts = await ownerStore().listDescriptorScripts(this.network);
+      const descriptorEntities = new Map(descriptors.map(entity=>[entity.entity_id,entity]));
       for (const tx of transactions) {
         const txidHash = sha256(tx.txid);
         for (const entity of watchedTxids.get(txidHash) ?? []) {
@@ -136,6 +183,25 @@ export class WatchlistMatcher {
               rule, entity, event_id: `${block.id}:${tx.txid}:confirmation`, title: 'Transaction confirmed',
               message: `${entity.label} confirmed in block ${block.height}.`, severity: 'info', entity_type: 'txid', blinded_hash: txidHash, block_height: block.height, block_hash: block.id,
             });
+          }
+        }
+        const observed = [
+          ...(tx.vout ?? []).map((output,index)=>({direction:'received',index,outpoint:tx.txid+':'+index,script:output.scriptpubkey,value:output.value})),
+          ...(tx.vin ?? []).filter(input=>!input.is_coinbase).map((input,index)=>({direction:'spent',index,outpoint:input.txid+':'+input.vout,script:input.prevout?.scriptpubkey,value:input.prevout?.value}))
+        ];
+        for (const item of observed) {
+          const outpointHash = sha256(item.outpoint.toLowerCase());
+          const matches: Array<{entity:WatchlistEntityRow; hash:string; child?:number}> = (watchedOutpoints.get(outpointHash) ?? []).map(entity=>({entity,hash:outpointHash}));
+          if (item.script && /^[0-9a-fA-F]*$/.test(item.script) && item.script.length % 2 === 0) {
+            const hash = crypto.createHash('sha256').update(Buffer.from(item.script,'hex')).digest('hex');
+            for (const child of scripts.filter(child=>child.script_hash===hash)) {
+              const entity = descriptorEntities.get(child.entity_id);
+              if (entity) matches.push({entity,hash:entity.blinded_hash,child:child.derivation_index});
+            }
+          }
+          for (const match of matches) for (const rule of rules.get(match.entity.watchlist_id) ?? []) {
+            if (!['confirmation','value_transfer'].includes(rule.condition_type) || rule.condition_type==='value_transfer' && (item.value===undefined || rule.threshold_value!==null && item.value<rule.threshold_value)) continue;
+            findings.push({rule,entity:match.entity,event_id:`${block.id}:${tx.txid}:${item.index}:${item.direction}:${match.entity.entity_id}:${match.child??''}`,title:item.direction==='spent'?'Watched output spent':'Watched output confirmed',message:`${match.entity.label} ${item.direction} ${item.value??'unknown'} sats in block ${block.height}${match.child===undefined?'':'; derivation '+match.child}.`,severity:item.direction==='spent'?'warning':'info',entity_type:match.entity.entity_type,blinded_hash:match.hash,block_height:block.height,block_hash:block.id});
           }
         }
         if (watchedAddresses.size === 0) { continue; }

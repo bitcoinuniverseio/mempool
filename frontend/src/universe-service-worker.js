@@ -15,7 +15,7 @@
 
 export const SHELL_CACHE = 'universe.shell.v1';
 export const STATIC_CACHE = 'universe.static.v1';
-export const API_CACHE = 'universe.api.v1';
+export const API_CACHE = 'universe.api.v2';
 
 export const ALL_CACHES = [SHELL_CACHE, STATIC_CACHE, API_CACHE];
 
@@ -58,6 +58,13 @@ export function isUpgrade(request) {
   return request.headers.get('upgrade') === 'websocket';
 }
 
+/** Explicit no-store applies to both acquisition and offline replay. */
+export function isNoStore(message) {
+  return message.cache === 'no-store'
+    || String(message.headers.get('cache-control') || '').split(',')
+      .some((directive) => /^no-store(?:\s*=.*)?$/i.test(directive.trim()));
+}
+
 /**
  * Which of the three caches a same origin GET belongs in, or null for none.
  *
@@ -69,7 +76,7 @@ export function isUpgrade(request) {
  * answer for a hashed name is the same bytes forever.
  */
 export function strategyFor(url, request) {
-  if (!isCacheableMethod(request.method) || isNeverCachePath(url) || isUpgrade(request)) {
+  if (!isCacheableMethod(request.method) || isNeverCachePath(url) || isUpgrade(request) || isNoStore(request)) {
     return null;
   }
   if (request.mode === 'navigate') {
@@ -280,10 +287,17 @@ async function navigation(request) {
   }
 }
 
-async function apiGet(request) {
+export async function apiGet(request) {
+  // Normally strategyFor bypasses this handler entirely. Keep the same
+  // boundary if another caller reaches it directly.
+  if (isNoStore(request)) { return fetch(request); }
   const cache = await caches.open(API_CACHE);
   try {
     const response = await fetch(request);
+    if (isNoStore(response)) {
+      await cache.delete(request);
+      return response;
+    }
     if (response.ok) {
       await cache.put(request, await snapshotResponse(response, Date.now()));
       trimApiCache(cache, API_CACHE_MAX_ENTRIES);
@@ -294,7 +308,8 @@ async function apiGet(request) {
     return response;
   } catch {
     const cached = await caches.match(request, { cacheName: API_CACHE });
-    if (cached) { return cached; }
+    if (cached && !isNoStore(cached)) { return cached; }
+    if (cached) { await cache.delete(request); }
     return Response.error();
   }
 }

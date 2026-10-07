@@ -570,12 +570,24 @@ NODE
     --acceptance "$evidence" \
     --acceptance-root "$root_real" \
     || fail "qualified acceptance evidence did not qualify the release candidate"
+  local application_roster="$root_real/docs/acceptance/reconciled-operations.json"
+  local application_evidence="$root_real/docs/acceptance/qualified-application-evidence.json"
+  [ -f "$application_roster" ] && [ -f "$application_evidence" ] \
+    || fail "release carries no complete reconciled application acceptance"
+  node "$dir/scripts/universe/reconciled-release.mjs" check \
+    "$application_roster" "$application_evidence" "$evidence" "$root_real" "$candidate_sha" \
+    || fail "full application acceptance did not qualify the release candidate"
   local evidence_digest contract_digest
   evidence_digest=$(sha256sum "$evidence" | awk '{print $1}') \
     || fail "qualified acceptance evidence identity could not be recorded"
   contract_digest=$(sha256sum "$dir/scripts/universe/protocol-contract.mjs" | awk '{print $1}') \
     || fail "qualified acceptance contract identity could not be recorded"
-  QUALIFIED_ACCEPTANCE_IDENTITY="$candidate_sha:$evidence_digest:$contract_digest"
+  local application_digest roster_digest application_contract_digest reconciler_digest
+  application_digest=$(sha256sum "$application_evidence" | awk '{print $1}') || fail "application acceptance identity missing"
+  roster_digest=$(sha256sum "$application_roster" | awk '{print $1}') || fail "application roster identity missing"
+  application_contract_digest=$(sha256sum "$dir/scripts/universe/reconciled-release.mjs" | awk '{print $1}') || fail "application verifier identity missing"
+  reconciler_digest=$(sha256sum "$dir/scripts/universe/reconciled-operations.mjs" | awk '{print $1}') || fail "application proof reader identity missing"
+  QUALIFIED_ACCEPTANCE_IDENTITY="$candidate_sha:$evidence_digest:$contract_digest:$roster_digest:$application_digest:$application_contract_digest:$reconciler_digest"
   log "qualified acceptance passed for $candidate_sha"
 }
 
@@ -645,6 +657,30 @@ wait_for() {
 
 # Returns non-zero rather than exiting, so a failed check can be rolled back
 # instead of leaving the new release in place with nothing serving.
+# IMPLEMENTATION-HANDOFF [WP-OPS-001] | F-OPS-001 | COV-OPS-AVAILABILITY
+# Observed 2026-10-03 05:01 UTC: public /, backend-info, capabilities, protocols
+# and chains all answered nginx HTTP 502. Scheduled run 37088438880 independently
+# failed with 502. No deployed commit, private process/configuration or outage
+# cause could be read: the connected Windows device was offline. Do not reuse
+# the September Fulcrum diagnosis as evidence for this outage.
+# Source: handoff evidence/public-readonly-probes.json and production smoke log.
+# Prerequisite WP-OPS-000: restore authorized SERVER access and read C:\AGENTS.md.
+# 1. Record the actual release symlinks/manifests, gateway socket/service status,
+# edge upstream, listening ports and bounded recent service logs without secrets.
+# 2. Probe edge -> gateway health -> explorer/overlay directly in that order;
+# stop at the first failing hop and establish its concrete cause before repair.
+# 3. Compare configuration and dependencies with the last accepted release;
+# repair that hop or restore the last accepted route under the deployment lock.
+# Preserve databases, index progress, credentials and uncommitted work.
+# 4. Run this existing verify_live through the documented release process, then
+# protocol-contract.mjs --against <owned-origin> and synthetic-check.mjs. Compare
+# reported frontend/backend/overlay identities with the artifact receipts.
+# Acceptance: expected public routes answer with correct chain data and explicit
+# unavailable states; no 502 remains; no new mainnet transaction is required.
+# This restores operational service only, not the full Signet acceptance gate.
+# Rollback: keep previous immutable release and routing state. Do not cut over a
+# new candidate without qualified functional evidence. Preparation changes no
+# commands, runtime state, deployment defaults, services or databases.
 verify_live() {
   local dir=$1
   wait_for "$GATEWAY/__gateway/health" gateway       || { log "gateway did not come back"; return 1; }

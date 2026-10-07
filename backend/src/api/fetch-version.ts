@@ -28,7 +28,13 @@ function getGitCommit(): string {
 
 const versionInfo = {
   version: getVersion(),
-  gitCommit: getGitCommit()
+  gitCommit: getGitCommit(),
+  // Full revision is measured from this build's checkout, never expanded from a short label.
+  releaseSha: (() => {
+    const result = spawnSync('git', ['rev-parse', 'HEAD']);
+    const value = result.stdout?.toString('utf-8').trim();
+    return result.status === 0 && /^[0-9a-f]{40}$/.test(value) ? value : null;
+  })()
 };
 
 fs.writeFileSync(

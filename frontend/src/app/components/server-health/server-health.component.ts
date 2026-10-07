@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, SecurityContext, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, SecurityContext, ChangeDetectorRef } from '@angular/core';
 import { WebsocketService } from '@app/services/websocket.service';
 import { Observable, map, tap } from 'rxjs';
 import { StateService } from '@app/services/state.service';
@@ -12,7 +12,7 @@ import { DomSanitizer } from '@angular/platform-browser';
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ServerHealthComponent implements OnInit {
+export class ServerHealthComponent implements OnInit, OnDestroy {
   hosts$: Observable<HealthCheckHost[]>;
   maxHeight: number;
   interval: number;
@@ -37,6 +37,7 @@ export class ServerHealthComponent implements OnInit {
   ngOnInit(): void {
     this.hosts$ = this.stateService.serverHealth$.pipe(
       map((hosts) => {
+        hosts = hosts.map((host) => ({...host}));
         const subpath = window.location.pathname.slice(0, -11);
         for (const host of hosts) {
           let statusUrl = '';
@@ -60,6 +61,7 @@ export class ServerHealthComponent implements OnInit {
         for (const host of hosts) {
           newMaxHeight = Math.max(newMaxHeight, host.latestHeight);
         }
+        this.maxHeight = newMaxHeight;
 
         const sortedCoreVersions = [...new Set(
           hosts.map(h => this.parseVersion(h.hashes?.core)).filter(Boolean)
@@ -93,6 +95,10 @@ export class ServerHealthComponent implements OnInit {
       this.now = Date.now();
       this.cd.markForCheck();
     }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    window.clearInterval(this.interval);
   }
 
   trackByFn(index: number, host: HealthCheckHost): string {

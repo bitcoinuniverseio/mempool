@@ -2,6 +2,7 @@ import { Application, Request, Response } from 'express';
 import config from '../../config';
 import { handleError } from '../../utils/api';
 import { StratumV2EvidenceError, stratumV2Service } from './stratum-v2.service';
+import { Sv2Family } from './stratum-v2.types';
 
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(req: Request, res: Response, e: unknown): void {
@@ -13,41 +14,26 @@ function fail(req: Request, res: Response, e: unknown): void {
 }
 
 class StratumV2Routes {
+  private async read(req: Request, res: Response, family: Sv2Family): Promise<void> {
+    const controller = new AbortController(), abort = (): void => { controller.abort(); };
+    const closed = (): void => { if (!res.writableEnded) abort(); };
+    req.once?.('aborted', abort); res.once?.('close', closed);
+    try {
+      if (Object.keys(req.query || {}).some(key => !['network', 'limit', 'cursor'].includes(key))) throw new StratumV2EvidenceError('invalid-sv2-selector', 'Unsupported SV2 query selector.', 400);
+      const page = await stratumV2Service.$getPage(family, req.query || {}, controller.signal);
+      if (!controller.signal.aborted) { res.setHeader?.('Cache-Control', 'no-store'); res.json({ ...page, [family]: page.items }); }
+    } catch (error) { if (!controller.signal.aborted) fail(req, res, error); }
+    finally { req.removeListener?.('aborted', abort); res.removeListener?.('close', closed); }
+  }
   public initRoutes(app: Application): void {
     const prefix = config.MEMPOOL.API_URL_PREFIX + 'stratum-v2/';
 
     app
-      .get(prefix + 'network', this.$getNetwork)
-      .get(prefix + 'templates', this.$getTemplates)
-      .get(prefix + 'declarations', this.$getDeclarations);
+      .get(prefix + 'network', (req, res) => this.read(req, res, 'roles'))
+      .get(prefix + 'templates', (req, res) => this.read(req, res, 'templates'))
+      .get(prefix + 'declarations', (req, res) => this.read(req, res, 'declarations'));
   }
 
-  private async $getNetwork(req: Request, res: Response): Promise<void> {
-    try {
-      const roles = await stratumV2Service.$getRoles();
-      res.json({ roles, total: roles.length });
-    } catch (e) {
-      fail(req, res, e);
-    }
-  }
-
-  private async $getTemplates(req: Request, res: Response): Promise<void> {
-    try {
-      const templates = await stratumV2Service.$getTemplates();
-      res.json({ templates, total: templates.length });
-    } catch (e) {
-      fail(req, res, e);
-    }
-  }
-
-  private async $getDeclarations(req: Request, res: Response): Promise<void> {
-    try {
-      const declarations = await stratumV2Service.$getDeclarations();
-      res.json({ declarations, total: declarations.length });
-    } catch (e) {
-      fail(req, res, e);
-    }
-  }
 }
 
 export default new StratumV2Routes();

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "explorer-authority-source-transitions-v1",
+  "transitions": [
+    {
+      "protocol": "op_names",
+      "chain": "bitcoin",
+      "fromAuthority": "index-op20",
+      "toAuthority": "index-op20-op-names",
+      "sourceRepository": "bitcoinuniverseio/backend-apis",
+      "registrySourceRevision": "1a1a2548a74e419bf7341dd7af1cd57ff98e34c7",
+      "producerRepository": "bitcoinuniverseio/index-op20",
+      "producerSourceRevision": "7c0305a38deb968460a668484b2febf57e099add",
+      "producerPath": "/token-explorer/op-names",
+      "reason": "Dedicated projection over the existing OP Names event journal replaces the incorrect OP20 feed identity; original authority and evidence remain historical.",
+      "functionalAcceptance": false
+    }
+  ]
+}

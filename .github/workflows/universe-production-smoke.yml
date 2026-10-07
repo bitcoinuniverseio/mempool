@@ -33,7 +33,7 @@ jobs:
     # interface mid-run on 9 September 2026 (Chromium: net::ERR_NETWORK_CHANGED)
     # on super-20, super-23, super-46 and super-185 within one afternoon, and a
     # browser step cannot tell that from an origin that stopped answering.
-    runs-on: [self-hosted, linux, x64, universe-linux-ultra]
+    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
     # Ten was for a job that only read the API. It now installs the browser
     # harness and loads two pages in a real browser, which is the only way to
     # see what the origin renders.
@@ -41,6 +41,8 @@ jobs:
     env:
       SMOKE_ORIGIN: ${{ github.event.inputs.origin || 'https://explorer.bitcoinuniverse.io' }}
     steps:
+      - name: Provide universe host tools
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@c9bb29ab2b39ea95dcc430fda80416deb2c4eb85
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

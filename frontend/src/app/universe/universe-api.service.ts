@@ -1,10 +1,15 @@
+import { Sv2Family, Sv2Page } from './stratum-v2/stratum-v2.types';
+import { ArkBatchPage, ArkBatchWindow, ArkNativeProofInput, ArkNativeProofVerdict, readArkBatch, readArkBatchPage, readArkOperator } from './ark/ark-native-view';
+import { configuredSv2Profile, validateSv2Page } from './stratum-v2/stratum-v2.evidence';
+import { LiquidAssetPage, LiquidPegPage, LiquidNetwork, LiquidObservatoryCoverage } from './liquid-observatory/liquid-observatory.types';
+import { liquidProfile, requireLiquid, validateLiquidRead } from './liquid-observatory/liquid-evidence';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take, timeout } from 'rxjs';
 import { TransactionAssetSummary, decodeTransactionAssetSummary } from './transaction-assets/transaction-assets.types';
 import { StateService } from '@app/services/state.service';
 import { ProtocolPageKind, readProtocolFailure, readProtocolPage } from './universe-protocol-contract';
-import { chainNetwork } from './chain-network';
+import { chainNetwork, resolveChainNetwork } from './chain-network';
 import {
   BackendInfo,
   ExplorerTransactionAssetFlow,
@@ -43,7 +48,7 @@ import {
   ArkVirtualTx,
   ArkVtxo,
   BlockTemplateComparison,
-  Bolt12Offer,
+  Bolt12OfferPage,
   Cat20Holder,
   Cat20Token,
   DatasetManifest,
@@ -57,7 +62,6 @@ import {
   LiquidAssetRecord,
   LiquidFederationEpoch,
   LiquidObservatorySummary,
-  LiquidPegRecord,
   McpToolDeclaration,
   ObserverNode,
   PropagationObservation,
@@ -93,6 +97,8 @@ import {
   RpcCatalog,
   RpcResult,
 } from '@app/universe/node-console/node-console.types';
+import { fractalProfile, requireCatTokenId, requireFractal, validateFractalRead } from './fractal/fractal-evidence';
+import { Cat20Page, Cat20PageRequest, Cat20TokenDetail, FractalTip } from './universe.types';
 import { OwnerKeyService } from '@app/universe/intelligence-platform/owner-key.service';
 
 /** Server-side batch ceilings. Callers must not exceed them. */
@@ -143,7 +149,7 @@ export class UniverseApiService {
   }
 
   get network(): ExplorerNetwork {
-    const network = this.stateService.network || 'mainnet';
+    const network = this.stateService.network || this.stateService.env?.ROOT_NETWORK || 'mainnet';
     if (!['mainnet', 'testnet', 'testnet4', 'signet', 'regtest'].includes(network)) {
       throw new Error('unsupported-overlay-network');
     }
@@ -177,17 +183,73 @@ export class UniverseApiService {
    * and the configured UNIVERSE_CHAIN_NETWORKS entry (mainnet when unlisted)
    * for every other chain. The Bitcoin selector never implies another chain's
    * network, so a Signet reader still reads Dogecoin from its configured network.
+   * Throws a ChainNetworkUnavailableError when the chain's entry is invalid;
+   * use {@link chainNetworkLabel} where a page only names the network.
    */
   chainNetwork(chain: ExplorerChain | string): ExplorerNetwork {
     return chainNetwork(chain, this.network, this.stateService.env);
   }
 
-  /** {@link chainNetwork} as a stream: re-emits only when the Bitcoin selection matters. */
+  /** The network a page names for a chain, or null when its configuration is invalid. */
+  chainNetworkLabel(chain: ExplorerChain | string): ExplorerNetwork | null {
+    const resolved = resolveChainNetwork(chain, this.network, this.stateService.env);
+    return resolved.available ? resolved.network : null;
+  }
+
+  /**
+   * {@link chainNetwork} as a stream: re-emits only when the Bitcoin selection
+   * matters, and errors with a ChainNetworkUnavailableError, before any
+   * request, when the chain's configured network is invalid.
+   */
   chainNetwork$(chain: ExplorerChain | string): Observable<ExplorerNetwork> {
     return this.selectedNetwork$().pipe(
       map((network) => chainNetwork(chain, network, this.stateService.env)),
       distinctUntilChanged(),
     );
+  }
+
+  /**
+   * One read of a non-Bitcoin chain route under that chain's configured
+   * network. Deferred so the network is resolved at subscription: an invalid
+   * configuration fails as a ChainNetworkUnavailableError and sends nothing,
+   * and a retry resolves again rather than reusing an earlier network.
+   */
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-006] | D-FE-006 | C-FE-CHAIN-RESPONSE-CONTEXT.
+   * Verified: a request for /dogecoin/dashboard?network=testnet accepts an
+   * explicit {chain:'dogecoin',network:'mainnet'} response. Unlike scopedRequest
+   * and getChains$, this common reader never invokes assertResponseContext;
+   * ChainDashboardService forwards the result without a context check.
+   * Evidence: frontend-reproductions.json. Governing contract: chain-network.ts,
+   * universe.types.ts chain payloads and backend-apis explorer-context.ts;
+   * Angular HttpClient generics are assertions, not runtime response validation
+   * (https://angular.dev/guide/http/making-requests).
+   * 1. Resolve the requested network once inside defer, retain that immutable
+   *    context for this attempt, and validate every response before emission.
+   *    At minimum reject every explicit mismatched chain/network via the shared
+   *    guard; add endpoint decoders for required identity/checkpoint fields.
+   * 2. Preserve legacy payloads only where their owning contract allows omitted
+   *    context; label missing evidence unknown, never fill in a claimed response
+   *    identity from the request. Include nested checkpoints/evidence collections.
+   * 3. Ensure ChainDashboardService and multichain/graphs consumers surface the
+   *    validation error, cancel stale reads and never retain another network's
+   *    last-good view. Keep valid same-network stale data explicitly dated.
+   * 4. Extend universe-api.service.spec.ts for every method using chainRead with
+   *    wrong chain, wrong network, nested mismatch, malformed envelope and valid
+   *    unavailable reply. Run npm test -- --maxWorkers=2 with that file and
+   *    chain-dashboard/multichain-explorer/chain-graphs regressions.
+   * Acceptance: configured testnet Dogecoin/Zcash data reaches its own UI; a
+   *    controlled wrong-context HTTP response is rejected. No mainnet test funds.
+   * Prerequisite: pin each endpoint contract; no schema/data migration needed.
+   * Rollback must retain the context guard and clear incompatible cached views.
+   */
+  private chainRead<T>(chain: Exclude<ExplorerChain, 'bitcoin'>, path: (network: ExplorerNetwork) => string): Observable<T> {
+    return this.chainNetwork$(chain).pipe(switchMap((network) =>
+      this.httpClient.get<T>(this.apiBaseUrl + '/api/v1/' + chain + path(network)).pipe(map(value => {
+        this.assertResponseContext(value, network, chain);
+        return value;
+      })),
+    ));
   }
 
   private requestForNetwork<T>(url: string, network: ExplorerNetwork, body?: unknown, chain = 'bitcoin'): Observable<T> {
@@ -218,7 +280,7 @@ export class UniverseApiService {
       || (row.network !== undefined && row.network !== null && row.network !== network)) {
       throw new Error('authority-network-mismatch');
     }
-    for (const key of ['checkpoint', 'flow', 'evidence', 'source']) {
+    for (const key of ['checkpoint', 'flow', 'evidence', 'source', 'account', 'envelope', 'paging']) {
       if (row[key]) {this.assertResponseContext(row[key], network, chain);}
     }
     for (const key of ['results', 'positions', 'sources', 'inputs', 'outputs', 'actions', 'sourceEvidence', 'utxos',
@@ -383,16 +445,20 @@ export class UniverseApiService {
    * unavailable record under that network, never a mainnet one.
    */
   getChains$(): Observable<ChainCapabilityEnvelope[]> {
-    return this.selectedNetwork$().pipe(switchMap(network => forkJoin(EXPLORER_CHAINS.map(chain => {
-      const expected = chainNetwork(chain, network, this.stateService.env);
-      return this.httpClient.get<ChainCapabilityEnvelope>(
+    return this.selectedNetwork$().pipe(switchMap(network => forkJoin(EXPLORER_CHAINS.flatMap(chain => {
+      const resolved = resolveChainNetwork(chain, network, this.stateService.env);
+      // An invalid configuration is named by the picker itself; asking the
+      // overlay under a substitute network would show another network's health.
+      if (!resolved.available) {return [];}
+      const expected = resolved.network;
+      return [this.httpClient.get<ChainCapabilityEnvelope>(
         this.apiBaseUrl + '/api/v1/chains/' + chain + '?network=' + expected,
       ).pipe(map(row => {
         if (!row || row.chain !== chain) {throw new Error('invalid-chain-capabilities');}
         if (row.network !== expected) {throw new Error('authority-network-mismatch');}
         this.assertResponseContext(row, expected, chain);
         return row;
-      }));
+      }))];
     }))));
   }
 
@@ -430,78 +496,56 @@ export class UniverseApiService {
   }
 
   getChainMempool$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 100): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mempool?network=' + this.chainNetwork(chain) + '&limit='
-        + Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain])
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/mempool?network=' + network + '&limit='
+      + Math.min(Math.max(1, Math.floor(limit)), CHAIN_MEMPOOL_LIMIT[chain]));
   }
 
   getChainCandidateBuckets$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/candidate-buckets?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/candidate-buckets?network=' + network);
   }
 
   /** The one-call dashboard aggregate: blocks, buckets, fees, mempool, mining. */
   getChainDashboard$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainDashboardView> {
-    return this.httpClient.get<ChainDashboardView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/dashboard?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainDashboardView>(chain, (network) => '/dashboard?network=' + network);
   }
 
   getChainRecentBlocks$(chain: Exclude<ExplorerChain, 'bitcoin'>, limit = 15): Observable<RecentBlocksView> {
-    return this.httpClient.get<RecentBlocksView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/blocks/recent?network=' + this.chainNetwork(chain) + '&limit=' + limit
-    );
+    return this.chainRead<RecentBlocksView>(chain, (network) => '/blocks/recent?network=' + network + '&limit=' + limit);
   }
 
   getChainFees$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<FeeRecommendationsView> {
-    return this.httpClient.get<FeeRecommendationsView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/fees?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<FeeRecommendationsView>(chain, (network) => '/fees?network=' + network);
   }
 
   getChainMining$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<MiningSummaryView> {
-    return this.httpClient.get<MiningSummaryView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mining?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<MiningSummaryView>(chain, (network) => '/mining?network=' + network);
   }
 
   getChainMiningPools$(chain: Exclude<ExplorerChain, 'bitcoin'>, window = '1w'): Observable<MiningPoolsView> {
-    return this.httpClient.get<MiningPoolsView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/mining/pools?network=' + this.chainNetwork(chain) + '&window=' + encodeURIComponent(window)
-    );
+    return this.chainRead<MiningPoolsView>(chain, (network) => '/mining/pools?network=' + network + '&window=' + encodeURIComponent(window));
   }
 
   getChainChartSeries$(chain: Exclude<ExplorerChain, 'bitcoin'>, seriesId: string, range = '1w'): Observable<ChartSeriesView> {
-    return this.httpClient.get<ChartSeriesView>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/charts/' + encodeURIComponent(seriesId)
-        + '?network=' + this.chainNetwork(chain) + '&range=' + encodeURIComponent(range)
-    );
+    return this.chainRead<ChartSeriesView>(chain, (network) => '/charts/' + encodeURIComponent(seriesId)
+      + '?network=' + network + '&range=' + encodeURIComponent(range));
   }
 
   getChainTransaction$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/tx/' + encodeURIComponent(txid) + '?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/tx/' + encodeURIComponent(txid) + '?network=' + network);
   }
 
   getChainBlock$(chain: Exclude<ExplorerChain, 'bitcoin'>, reference: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
     const paging = chain === 'dogecoin'
       ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
       : '&limit=' + limit + '&offset=' + offset;
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/block/' + encodeURIComponent(reference) + '?network=' + this.chainNetwork(chain) + paging
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/block/' + encodeURIComponent(reference) + '?network=' + network + paging);
   }
 
   getChainAddress$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 100, offset = 0): Observable<ChainExplorerPayload> {
     const paging = chain === 'dogecoin'
       ? '&page=' + (Math.floor(offset / limit) + 1) + '&limit=' + limit
       : '&limit=' + limit + '&offset=' + offset;
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '?network=' + this.chainNetwork(chain) + paging
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/address/' + encodeURIComponent(address) + '?network=' + network + paging);
   }
 
   /**
@@ -511,9 +555,8 @@ export class UniverseApiService {
    * degrades the asset sections without taking the address page down.
    */
   getChainAddressHoldings$(chain: Exclude<ExplorerChain, 'bitcoin'>, address: string, limit = 50, offset = 0): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/address/' + encodeURIComponent(address) + '/holdings?network=' + this.chainNetwork(chain) + '&limit=' + limit + '&offset=' + offset
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/address/' + encodeURIComponent(address) + '/holdings?network=' + network
+      + '&limit=' + limit + '&offset=' + offset);
   }
 
   /** The Bitcoin address asset-holdings view from the universe overlay. */
@@ -524,38 +567,56 @@ export class UniverseApiService {
   }
 
   getChainOutpoint$(chain: Exclude<ExplorerChain, 'bitcoin'>, txid: string, vout: string): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/outpoint/' + encodeURIComponent(txid) + '/' + encodeURIComponent(vout) + '?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/outpoint/' + encodeURIComponent(txid) + '/' + encodeURIComponent(vout)
+      + '?network=' + network);
   }
 
   getChainProtocols$(chain: Exclude<ExplorerChain, 'bitcoin'>): Observable<ChainExplorerPayload> {
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols?network=' + this.chainNetwork(chain)
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols?network=' + network);
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-011] | OV-F006 / D-FE-011 | C-FE-ZRC20-CATALOG-PAGE.
+   * Verified: Zcash protocol-list URLs omit offset even when the caller supplies
+   * 100; the owning indexer handleTokenList supports offset/limit and returns
+   * total/offset. MultichainExplorerComponent also always calls with offset=0.
+   * This prevents browsing beyond the first ZRC20 catalogue page; no working
+   * protocol-list pager is claimed. Source: index-zcash-metaprotocols pinned in
+   * overlay-authority-sources, src/api/server.mjs handleTokenList; WP-OV-006.
+   * 1. After the owning controller/client accepts a bounded nonnegative offset,
+   *    send it for zcash/zrc20 and preserve the selected ruleset. Keep existing
+   *    chain/protocol-specific cursor contracts separate; do not coerce opaque
+   *    cursors into numbers or add unsupported filters.
+   * 2. Validate page limit/offset/total and checkpoint context; forward exact
+   *    paging data to the component. A malformed or failed continuation stays
+   *    an error with retry, never a reused first page or a terminal empty list.
+   * 3. Extend universe-api.service.spec.ts for distinct page-one/page-two URLs,
+   *    ruleset preservation, invalid bounds and correct chain network. Extend
+   *    multichain/ruleset tests as specified at pageRequest$. Run npm test --
+   *    --maxWorkers=2 src/app/universe/universe-api.service.spec.ts
+   *    src/app/universe/multichain-explorer.
+   * Acceptance: >100 known indexed testnet tokens can all be reached without
+   *    duplication, including direct page-two navigation and refresh; justify
+   *    Zcash testnet because Bitcoin Signet is not this chain's test network.
+   * Dependency: WP-OV-006 end-to-end paging; no migration. Roll back deployment
+   *    coherently if DTOs differ, preserving the previous page and its evidence.
+   */
   getChainProtocolList$(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string, limit = 100, offset = 0, ruleset?: string): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
-    let query = '?network=' + this.chainNetwork(chain) + '&limit=' + limit;
+    let paging = '&limit=' + limit;
     if (chain === 'dogecoin' && protocol !== 'doge-tap') {
-      query += '&cursor=' + offset;
-    } else if (chain === 'dogecoin') {
-      query += '&offset=' + offset;
+      paging += '&cursor=' + offset;
+    } else if (chain === 'dogecoin' || (chain === 'zcash' && protocol === 'zrc20')) {
+      paging += '&offset=' + offset;
     }
-    if (ruleset) {query += '&ruleset=' + encodeURIComponent(ruleset);}
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + query
-    );
+    if (ruleset) {paging += '&ruleset=' + encodeURIComponent(ruleset);}
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols/' + path + '?network=' + network + paging);
   }
 
   getChainProtocolDetail$(chain: Exclude<ExplorerChain, 'bitcoin'>, protocol: string, reference: string, ruleset?: string): Observable<ChainExplorerPayload> {
     const path = this.protocolPath(chain, protocol);
-    let query = '?network=' + this.chainNetwork(chain);
-    if (ruleset) {query += '&ruleset=' + encodeURIComponent(ruleset);}
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + '/' + encodeURIComponent(reference) + query
-    );
+    const extra = ruleset ? '&ruleset=' + encodeURIComponent(ruleset) : '';
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols/' + path + '/' + encodeURIComponent(reference) + '?network=' + network + extra);
   }
 
   getChainProtocolSection$(chain: 'dogecoin', protocol: string, reference: string, section: 'holders' | 'events', limit = 100, offset = 0): Observable<ChainExplorerPayload> {
@@ -563,9 +624,8 @@ export class UniverseApiService {
     const paging = protocol === 'drc20'
       ? '&cursor=' + offset
       : '&offset=' + offset;
-    return this.httpClient.get<ChainExplorerPayload>(
-      this.apiBaseUrl + '/api/v1/' + chain + '/protocols/' + path + '/' + encodeURIComponent(reference) + '/' + section + '?network=' + this.chainNetwork(chain) + '&limit=' + limit + paging
-    );
+    return this.chainRead<ChainExplorerPayload>(chain, (network) => '/protocols/' + path + '/' + encodeURIComponent(reference) + '/' + section
+      + '?network=' + network + '&limit=' + limit + paging);
   }
 
 
@@ -725,98 +785,130 @@ export class UniverseApiService {
   // Product Verticals API Methods
   // ---------------------------------------------------------------------------
 
-  getFractalTip$(): Observable<{ height: number; hash: string; time: number; network: string }> {
-    return this.httpClient.get<{ height: number; hash: string; time: number; network: string }>(
-      this.apiBaseUrl + '/api/v1/fractal/tip'
-    );
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-007 / WP-BE-007 | C-FE-OFFERED-FRACTAL.
+   * The Fractal/CAT20 pages still call this family; the pinned backend service
+   * methods return unavailable unconditionally. This is incomplete offered scope,
+   * not live acceptance or a reason to delete its route.
+   * 1. Complete backend WP-BE-007 first, then align getFractalTip/Mempool/Block/Tx
+   *    and getCat20Tokens/Token/Holders with its pinned DTOs, explicit configured
+   *    Fractal network, pagination, errors and exact quantities.
+   * 2. Update fractal-dashboard.component.ts and cat20-center.component.ts to
+   *    clear stale context, preserve independent partial panels and distinguish
+   *    indexing/empty/error outcomes. Verify block height-versus-hash contract.
+   * 3. Extend fractal/fractal.component.spec.ts and universe-api.service.spec.ts;
+   *    npm test -- --maxWorkers=2 src/app/universe/fractal. Require real indexed
+   *    supported-Fractal-testnet reads and complete list/detail/holder navigation,
+   *    then offline mainnet configuration checks. Signet cannot replace this chain.
+   * Sources/prerequisites: backend WP-BE-007 and frontend-research-register.json.
+   * Rollback restores matching client/server DTOs without deleting authority state;
+   *    unavailable responses remain honest until the real integration passes.
+   */
+  private fractalRead<T>(path: string, schema: string): Observable<T> {
+    return defer(() => {
+      requireFractal(this.chainNetwork('fractal') === 'testnet', 'Only the explicitly configured Fractal testnet source is supported.');
+      const profile = fractalProfile(this.stateService.env.FRACTAL_SOURCE_PROFILE);
+      return this.httpClient.get<T>(this.apiBaseUrl + '/api/v1/fractal/' + path + (path.includes('?') ? '&' : '?') + 'network=testnet', {headers: {'Cache-Control': 'no-store'}})
+        .pipe(timeout(15_000), map(data => validateFractalRead(data, schema, profile)));
+    });
   }
-
-  getFractalMempool$(): Observable<FractalMempoolOverview> {
-    return this.httpClient.get<FractalMempoolOverview>(
-      this.apiBaseUrl + '/api/v1/fractal/mempool'
-    );
+  private catPageQuery(request: Cat20PageRequest): string {
+    const limit = request.limit ?? 50;
+    requireFractal(Number.isInteger(limit) && limit >= 1 && limit <= 500 && (request.cursor === undefined || (typeof request.cursor === 'string' && request.cursor.length > 0 && request.cursor.length <= 4096)), 'Invalid CAT-20 page request.');
+    return '?limit=' + limit + (request.cursor === undefined ? '' : '&cursor=' + encodeURIComponent(request.cursor));
   }
-
+  getFractalTip$(): Observable<FractalTip> { return this.fractalRead('tip', 'fractal-tip-v1'); }
+  getFractalMempool$(): Observable<FractalMempoolOverview> { return this.fractalRead('mempool', 'fractal-mempool-v1'); }
   getFractalBlock$(hash: string): Observable<FractalBlockSummary> {
-    return this.httpClient.get<FractalBlockSummary>(
-      this.apiBaseUrl + '/api/v1/fractal/block/' + encodeURIComponent(hash)
-    );
+    return defer(() => { requireFractal(/^[0-9a-f]{64}$/.test(hash), 'Invalid Fractal block hash.'); return this.fractalRead<FractalBlockSummary>('block/' + hash, 'fractal-block-v1').pipe(map(block => {requireFractal(block.hash === hash, 'The returned Fractal block differs from the requested hash.');return block;})); });
   }
-
   getFractalTx$(txid: string): Observable<FractalTransactionView> {
-    return this.httpClient.get<FractalTransactionView>(
-      this.apiBaseUrl + '/api/v1/fractal/tx/' + encodeURIComponent(txid)
-    );
+    return defer(() => { requireFractal(/^[0-9a-f]{64}$/.test(txid), 'Invalid Fractal transaction ID.'); return this.fractalRead<FractalTransactionView>('tx/' + txid, 'fractal-transaction-v1').pipe(map(tx => {requireFractal(tx.txid === txid);return tx;})); });
+  }
+  getCat20Tokens$(request: Cat20PageRequest = {}): Observable<Cat20Page<Cat20Token>> {
+    return defer(() => this.fractalRead<Cat20Page<Cat20Token>>('cat20/tokens' + this.catPageQuery(request), 'cat20-page-v1').pipe(map(page=>{requireFractal(page.items.every(item=>'tokenId' in item));return page;})));
+  }
+  getCat20Token$(tokenId: string): Observable<Cat20TokenDetail> {
+    return defer(() => {requireCatTokenId(tokenId);return this.fractalRead<Cat20TokenDetail>('cat20/tokens/' + encodeURIComponent(tokenId), 'cat20-token-v1').pipe(map(token=>{requireFractal(token.tokenId===tokenId);return token;}));});
+  }
+  getCat20Holders$(tokenId: string, request: Cat20PageRequest = {}): Observable<Cat20Page<Cat20Holder>> {
+    return defer(() => {requireCatTokenId(tokenId);return this.fractalRead<Cat20Page<Cat20Holder>>('cat20/tokens/' + encodeURIComponent(tokenId) + '/holders' + this.catPageQuery(request), 'cat20-page-v1').pipe(map(page=>{requireFractal(page.items.every(item=>'ownerPubKeyHash' in item));return page;}));});
   }
 
-  getCat20Tokens$(): Observable<{ tokens: Cat20Token[]; total: number }> {
-    return this.httpClient.get<{ tokens: Cat20Token[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens'
-    );
-  }
-
-  getCat20Token$(tokenId: string): Observable<Cat20Token> {
-    return this.httpClient.get<Cat20Token>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens/' + encodeURIComponent(tokenId)
-    );
-  }
-
-  getCat20Holders$(tokenId: string): Observable<{ holders: Cat20Holder[]; total: number }> {
-    return this.httpClient.get<{ holders: Cat20Holder[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/fractal/cat20/tokens/' + encodeURIComponent(tokenId) + '/holders'
-    );
-  }
-
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-014 / WP-BE-014 | C-FE-OFFERED-ZCASH-PRIVACY.
+   * Summary/pool service methods are unfinished and the upgrade catalogue is
+   * stale per WP-BE-014. The privacy page still consumes all three methods here.
+   * 1. Complete WP-BE-014 using pinned Zcash node/ZIP contracts, then bind this
+   *    family to explicit configured Zcash network and validate each response.
+   * 2. Update zcash-privacy.component.ts for current pool/upgrade state, retaining
+   *    missing observations and private local scanner outcomes independently.
+   * 3. Add proposed zcash-privacy.component.spec.ts and extend API tests; npm test
+   *    -- --maxWorkers=2 src/app/universe/zcash-privacy. Acceptance is authoritative
+   *    Zcash testnet readback plus offline mainnet activation-height checks; no
+   *    viewing key should enter logs or server requests. This chain has no Signet.
+   * References, dependency and rollback: WP-BE-014 plus this package's Fractal
+   *    anchor; preserve local scanner data and never invent unknown pool totals.
+   */
   getZcashPrivacySummary$(): Observable<ZcashPrivacySummary> {
-    return this.httpClient.get<ZcashPrivacySummary>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/summary'
-    );
+    return this.chainRead<ZcashPrivacySummary>('zcash', network => '/privacy/summary?network=' + network);
+  }
+
+  getZcashPrivacyHistory$(): Observable<import('./zcash-privacy/zcash-history-view').ZcashPoolHistory> {
+    return this.chainRead<import('./zcash-privacy/zcash-history-view').ZcashPoolHistory>('zcash', network => '/privacy/history?network=' + network);
   }
 
   getZcashPools$(): Observable<{ pools: ZcashValuePool[]; total: number }> {
-    return this.httpClient.get<{ pools: ZcashValuePool[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/pools'
-    );
+    return this.chainRead<{ pools: ZcashValuePool[]; total: number }>('zcash', network => '/privacy/pools?network=' + network);
   }
 
   getZcashUpgrades$(): Observable<{ upgrades: ZcashNetworkUpgrade[]; total: number }> {
-    return this.httpClient.get<{ upgrades: ZcashNetworkUpgrade[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/zcash/privacy/upgrades'
-    );
+    return this.chainRead<{ upgrades: ZcashNetworkUpgrade[]; total: number }>('zcash', network => '/privacy/upgrades?network=' + network);
   }
 
   getLiquidNode$(network: string): Observable<import('./liquid-observatory/liquid-node-view').LiquidNodeView> {
-    return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl + '/api/v1/liquid/observatory/node?network=' + encodeURIComponent(network));
+    return defer(()=>{
+      requireLiquid(['liquidv1','liquidtestnet','elementsregtest'].includes(network),'Unsupported Elements network.');
+      liquidProfile(this.stateService.env.LIQUID_SOURCE_PROFILES ?? {},network as LiquidNetwork);
+      return this.httpClient.get<import('./liquid-observatory/liquid-node-view').LiquidNodeView>(this.apiBaseUrl+'/api/v1/liquid/observatory/node?network='+network,{headers:{'Cache-Control':'no-store'}}).pipe(timeout(20_000),map(node=>{
+        requireLiquid(node?.network===network && Number.isSafeInteger(node.blockHeight) && node.blockHeight>=0 && /^[0-9a-f]{64}$/.test(node.blockHash) && typeof node.initialBlockDownload==='boolean' && node.source==='owned-elements-rpc' && node.scope==='checkpoint-and-policy-only' && [node.signblockScript,node.fedpegScript,node.fedpegProgram].every(s=>typeof s==='string'&&/^(?:[0-9a-f]{2})*$/.test(s)&&s.length<=20000) && node.reserveSats===null && node.activeAssetCount===null && node.signersOnline===null,'The independent node read does not match the selected checkpoint-only contract.');return node;
+      }));
+    });
   }
 
-  getLiquidObservatorySummary$(): Observable<LiquidObservatorySummary> {
-    return this.httpClient.get<LiquidObservatorySummary>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/summary'
-    );
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-010 / WP-BE-010 | C-FE-OFFERED-LIQUID.
+   * Existing Liquid node/unblinding tools do not implement the still-unavailable
+   * summary/assets/asset/pegs/federation family used by liquid-observatory.component.
+   * 1. Complete WP-BE-010 authorities, then align all five clients to its explicit
+   *    Liquid network, exact asset amounts, cursor and federation/peg contracts.
+   * 2. Preserve independent panel state so unavailable registry/peg evidence does
+   *    not erase valid node/proof results or become a zero count.
+   * 3. Extend liquid-observatory.component.spec.ts and API tests; npm test --
+   *    --maxWorkers=2 src/app/universe/liquid-observatory. Require Liquid testnet
+   *    asset/detail/peg/federation readback; test blinded/private inputs locally
+   *    without sending keys. Mainnet parameter differences get offline checks.
+   * Dependency/references: WP-BE-010 and frontend-research-register.json. Rollback
+   *    preserves local proof work and source state; no placeholder success data.
+   */
+  private liquidRead<T>(network: LiquidNetwork, path: string, kind: string, offset=0, limit=50, cursor?: LiquidObservatoryCoverage['cursor']): Observable<T> {
+    return defer(() => {
+      const expected=liquidProfile(this.stateService.env.LIQUID_SOURCE_PROFILES ?? {},network);
+      requireLiquid(Number.isSafeInteger(offset) && offset>=0 && offset<=100000 && Number.isSafeInteger(limit) && limit>=1 && limit<=100);
+      const url=this.apiBaseUrl+'/api/v1/liquid/observatory/'+path+'?network='+network+(['assets','pegs'].includes(kind)?'&offset='+offset+'&limit='+limit:'');
+      const options={headers:{'Cache-Control':'no-store'}};
+      const request=cursor?this.httpClient.post<T>(url,{height:cursor.height,blockHash:cursor.blockHash},options):this.httpClient.get<T>(url,options);
+      return request.pipe(timeout(20_000),map(data=>validateLiquidRead(data,kind,expected,offset,limit)));
+    });
   }
-
-  getLiquidAssets$(): Observable<{ assets: LiquidAssetRecord[]; total: number }> {
-    return this.httpClient.get<{ assets: LiquidAssetRecord[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/assets'
-    );
-  }
-
-  getLiquidAsset$(assetId: string): Observable<LiquidAssetRecord> {
-    return this.httpClient.get<LiquidAssetRecord>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/assets/' + encodeURIComponent(assetId)
-    );
-  }
-
-  getLiquidPegs$(): Observable<{ pegs: LiquidPegRecord[]; total: number }> {
-    return this.httpClient.get<{ pegs: LiquidPegRecord[]; total: number }>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/pegs'
-    );
-  }
-
-  getLiquidFederation$(): Observable<LiquidFederationEpoch> {
-    return this.httpClient.get<LiquidFederationEpoch>(
-      this.apiBaseUrl + '/api/v1/liquid/observatory/federation'
-    );
+  getLiquidObservatorySummary$(network: LiquidNetwork='liquidv1'): Observable<LiquidObservatorySummary> { return this.liquidRead(network,'summary','summary'); }
+  getLiquidAssets$(network: LiquidNetwork='liquidv1',offset=0,limit=50): Observable<LiquidAssetPage> { return this.liquidRead(network,'assets','assets',offset,limit); }
+  getLiquidAsset$(assetId:string,network: LiquidNetwork='liquidv1'): Observable<LiquidAssetRecord> { return defer(()=>{ requireLiquid(/^[0-9a-f]{64}$/.test(assetId));return this.liquidRead<LiquidAssetRecord>(network,'assets/'+assetId,'asset').pipe(map(asset=>{requireLiquid(asset.assetId===assetId);return asset;})); }); }
+  getLiquidPegs$(network: LiquidNetwork='liquidv1',offset=0,limit=50): Observable<LiquidPegPage> { return this.liquidRead(network,'pegs','pegs',offset,limit); }
+  getLiquidFederation$(network: LiquidNetwork='liquidv1'): Observable<LiquidFederationEpoch> { return this.liquidRead(network,'federation','federation'); }
+  getLiquidProjection$(network: LiquidNetwork): Observable<LiquidObservatoryCoverage> { return this.liquidRead(network,'projection','projection'); }
+  advanceLiquidProjection$(network: LiquidNetwork,cursor: LiquidObservatoryCoverage['cursor']): Observable<LiquidObservatoryCoverage> {
+    return defer(()=>{requireLiquid(Number.isSafeInteger(cursor.height)&&cursor.height>=-1 && (cursor.height===-1?cursor.blockHash===null:/^[0-9a-f]{64}$/.test(cursor.blockHash ?? '')));return this.liquidRead<LiquidObservatoryCoverage>(network,'projection/advance','projection',0,50,cursor);});
   }
 
   getDataCatalog$(): Observable<{ datasets: DatasetManifest[]; streams: StreamManifest[]; mcpTools: McpToolDeclaration[] }> {
@@ -879,9 +971,26 @@ export class UniverseApiService {
     return this.httpClient.post<import('./taproot-assets/bolt12-decoded-offer').Bolt12DecodedOffer>(this.backendBase + '/api/v1/lightning/offers/decode', {offer, network:this.network || 'mainnet'});
   }
 
-  getBolt12Offers$(): Observable<{ offers: Bolt12Offer[]; total: number }> {
-    return this.httpClient.get<{ offers: Bolt12Offer[]; total: number }>(
-      this.backendBase + '/api/v1/lightning/offers'
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-013 / WP-BE-013 | C-FE-OFFERED-BOLT12-LIST.
+   * Real local offer decoding does not complete the offered list route: the
+   * backend listing still returns unavailable. 1. Complete WP-BE-013's owned
+   *    offer source, then validate its network, list pagination and offer state.
+   * 2. Keep LightningStandardsComponent decode and listing outcomes separate;
+   *    never infer payment/settlement from decoding or a list row.
+   * 3. Extend lightning-standards.component.spec.ts and universe-api.service.spec.ts;
+   *    npm test -- --maxWorkers=2 src/app/universe/taproot-assets. Accept real
+   *    supported test-network listing/readback; retain BOLT12 parser regressions.
+   * References/prerequisite: WP-BE-013. Rollback keeps actual offers and keys at
+   *    their authority and restores a compatible DTO without synthetic rows.
+   */
+  getBolt12Offers$(limit = 20, cursor?: string): Observable<Bolt12OfferPage> {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50 || cursor !== undefined && (typeof cursor !== 'string' || !cursor.length || cursor.length > 2048)) {
+      return throwError(() => new Error('Invalid bounded offer page request'));
+    }
+    return this.httpClient.get<Bolt12OfferPage>(
+      this.backendBase + '/api/v1/lightning/offers?limit=' + limit + (cursor === undefined ? '' : '&cursor=' + encodeURIComponent(cursor)),
+      { headers: { 'Cache-Control': 'no-store' } },
     );
   }
 
@@ -891,22 +1000,62 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-006 / WP-BE-006 | C-FE-OFFERED-ARK.
+   * ArkDashboard calls operators/batches and ArkVtxoDetail calls vtxos; the
+   * backend family is unconditionally unavailable at this baseline.
+   * 1. Complete WP-BE-006 real operator/batch/VTXO sources before updating these
+   *    four typed clients; require selected network and actual stable identifiers.
+   * 2. Wire ark-dashboard and ark-vpack/ark-vtxo-detail to validated partial/read
+   *    states while preserving V-PACK cryptographic/proof tools separately.
+   * 3. Extend ark-dashboard.component.spec.ts, ark-vtxo-detail tests and API tests;
+   *    npm test -- --maxWorkers=2 src/app/universe/ark src/app/universe/ark-vpack.
+   *    Accept known Signet operator/batch/VTXO readback where the provider supports
+   *    Signet; otherwise document its exact supported testnet and reason.
+   * References/prerequisites/rollback: WP-BE-006 and this package's Fractal anchor.
+   *    Retain provider state and backups; never replace missing evidence with zero.
+   */
   getArkOperators$(): Observable<{ operators: ArkOperator[]; total: number }> {
-    return this.httpClient.get<{ operators: ArkOperator[]; total: number }>(
-      this.backendBase + '/api/v1/ark/operators'
-    );
+    return defer(() => {
+      const network = this.network;
+      return this.httpClient.get<{operators: ArkOperator[]; total:number}>(this.backendBase + '/api/v1/ark/operators', {
+        headers:{'Cache-Control':'no-store'},
+      }).pipe(timeout(20000), map(data => {
+        if (!Array.isArray(data?.operators) || data.operators.length > 100 || data.total !== data.operators.length) {throw Error('Malformed native Ark operator directory.');}
+        data.operators.forEach(operator => readArkOperator(operator, network)); return data;
+      }));
+    });
   }
 
-  getArkBatches$(): Observable<{ batches: ArkBatch[]; total: number }> {
-    return this.httpClient.get<{ batches: ArkBatch[]; total: number }>(
-      this.backendBase + '/api/v1/ark/batches'
-    );
+  getArkBatches$(window: ArkBatchWindow = {after: '0', limit: 10}): Observable<ArkBatchPage> {
+    return defer(() => {
+      const network = this.network;
+      return this.httpClient.get<ArkBatchPage>(this.backendBase + '/api/v1/ark/batches', {
+        params: {after: window.after, limit: String(window.limit), ...(window.before !== undefined ? {before: window.before} : {})},
+        headers: {'Cache-Control': 'no-store'},
+      }).pipe(timeout(20000), map(page => readArkBatchPage(page, network, window)));
+    });
   }
 
   getArkBatch$(batchId: string): Observable<ArkBatch> {
-    return this.httpClient.get<ArkBatch>(
-      this.backendBase + '/api/v1/ark/batches/' + encodeURIComponent(batchId)
-    );
+    return defer(() => {
+      const network = this.network;
+      return this.httpClient.get<ArkBatch>(this.backendBase + '/api/v1/ark/batches/' + encodeURIComponent(batchId), {
+        headers: {'Cache-Control': 'no-store'},
+      }).pipe(timeout(20000), map(batch => {
+        const observed = readArkBatch(batch, network);
+        if (observed.batchId !== batchId) {throw Error('Ark batch detail belongs to a different requested round.');}
+        return observed;
+      }));
+    });
+  }
+
+  verifyArkNativeProof$(proof: ArkNativeProofInput): Observable<ArkNativeProofVerdict> {
+    return defer(() => {
+      if (proof.network !== this.network) {return throwError(() => Error('Native proof does not match the selected Ark network.'));}
+      return this.httpClient.post<ArkNativeProofVerdict>(this.backendBase + '/api/v1/ark/verify/native', proof,
+        {headers: {'Cache-Control': 'no-store'}}).pipe(timeout(30000));
+    });
   }
 
   getArkVtxo$(vtxoId: string): Observable<ArkVtxo> {
@@ -915,24 +1064,46 @@ export class UniverseApiService {
     );
   }
 
-  getStratumV2Network$(): Observable<{ roles: StratumV2RoleStatus[]; total: number }> {
-    return this.httpClient.get<{ roles: StratumV2RoleStatus[]; total: number }>(
-      this.backendBase + '/api/v1/stratum-v2/network'
-    );
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-011 / WP-BE-011 | C-FE-OFFERED-STRATUM.
+   * StratumV2Component requests roles/templates/declarations from unfinished
+   * backend methods. 1. Implement WP-BE-011 and its owned SV2 collector first;
+   *    agree response version, network, freshness, template and declaration IDs.
+   * 2. Validate each client response and retain independent unavailable states;
+   *    never label configured software as observed mining/job activity.
+   * 3. Extend stratum-v2.component.spec.ts/API tests; npm test -- --maxWorkers=2
+   *    src/app/universe/stratum-v2. Accept a real supported Signet/testnet collector
+   *    observation through API/UI with restart and stale-data handling.
+   * Sources/prerequisite: WP-BE-011. Rollback preserves collector state and
+   *    restores matching DTOs; production mining endpoints are not fault targets.
+   */
+  getStratumV2Page$(family: Sv2Family, cursor?: string): Observable<Sv2Page<any>> {
+    return defer(() => {
+      const configured = configuredSv2Profile(this.stateService.env.SV2_SOURCE_PROFILE);
+      const params: Record<string,string> = {network:configured.profile.network,limit:'100'};
+      if(cursor!==undefined) params.cursor=cursor;
+      return this.httpClient.get<Sv2Page<any>>(this.backendBase+'/api/v1/stratum-v2/'+({roles:'network',templates:'templates',declarations:'declarations'} as const)[family], {params,headers:{'Cache-Control':'no-store'}}).pipe(timeout(20000),map(page=>validateSv2Page(page,configured,family)));
+    });
   }
+  getStratumV2Network$(): Observable<Sv2Page<StratumV2RoleStatus>> { return this.getStratumV2Page$('roles'); }
+  getStratumV2Templates$(): Observable<Sv2Page<StratumV2Template>> { return this.getStratumV2Page$('templates'); }
+  getStratumV2Declarations$(): Observable<Sv2Page<StratumV2JobDeclaration>> { return this.getStratumV2Page$('declarations'); }
 
-  getStratumV2Templates$(): Observable<{ templates: StratumV2Template[]; total: number }> {
-    return this.httpClient.get<{ templates: StratumV2Template[]; total: number }>(
-      this.backendBase + '/api/v1/stratum-v2/templates'
-    );
-  }
-
-  getStratumV2Declarations$(): Observable<{ declarations: StratumV2JobDeclaration[]; total: number }> {
-    return this.httpClient.get<{ declarations: StratumV2JobDeclaration[]; total: number }>(
-      this.backendBase + '/api/v1/stratum-v2/declarations'
-    );
-  }
-
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-009 / WP-BE-009 | C-FE-OFFERED-L2.
+   * L2Observatory still calls systems/challenges backed by unfinished methods;
+   * system detail/reserve audit APIs remain part of the offered denominator.
+   * 1. Complete WP-BE-009 pinned bridge adapters before wiring these DTOs.
+   *    Preserve protocol-specific network/finality/challenge/reserve semantics.
+   * 2. Update l2-observatory.component.ts for real typed results, cursors and
+   *    distinct unavailable/empty/pending/disputed/resolved outcomes.
+   * 3. Extend l2-observatory.component.spec.ts and API tests; npm test --
+   *    --maxWorkers=2 src/app/universe/l2-observatory. Accept each supported
+   *    bridge's justified test network with authoritative persisted readback;
+   *    one bridge does not validate another. No invented deposit/trade workflow.
+   * References/prerequisite: WP-BE-009. Rollback preserves bridge observations
+   *    and uses compatible DTOs without asserting unobserved reserves/finality.
+   */
   getL2Systems$(): Observable<{ systems: L2BridgeSystem[]; total: number }> {
     return this.httpClient.get<{ systems: L2BridgeSystem[]; total: number }>(
       this.backendBase + '/api/v1/l2/systems'
@@ -976,12 +1147,39 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-012 / WP-BE-012 | C-FE-OFFERED-UTREEXO.
+   * UtxoSetComponent now reads this family through UtxoEvidenceService.watch$;
+   * both paths still require WP-BE-012's actual protocol-UTXO/accumulator source.
+   * 1. Complete that backend package, then align this legacy typed client and
+   *    the active UtxoEvidenceService with one validated network/checkpoint DTO.
+   * 2. Preserve independently available Core checkpoints; accumulator roots or
+   *    complete protocol-UTXO coverage cannot be inferred from them.
+   * 3. Extend utxo-set.component.spec.ts and API tests; npm test -- --maxWorkers=2
+   *    src/app/universe/utxo-set. Accept actual supported Signet accumulator and
+   *    protocol index readback with reorg/restart checks. References: WP-BE-012.
+   * Rollback preserves index state and requires a compatible response contract.
+   */
   getUtreexoRoots$(): Observable<UtreexoRootsView> {
     return this.httpClient.get<UtreexoRootsView>(
       this.backendBase + '/api/v1/utreexo/roots'
     );
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [WP-FE-009] | BE-008 / WP-BE-008 | C-FE-OFFERED-WILDKIN.
+   * Wildkin status, creatures list/detail and braid pages all remain wired to
+   * backend methods that unconditionally report unavailable.
+   * 1. Complete WP-BE-008 against the pinned Wildkin authority; bind these four
+   *    clients to real entity/lineage/braid IDs, selected network and pagination.
+   * 2. Update the three wildkin components together for actual lifecycle/read
+   *    states, route changes and refresh; preserve unknown ownership/lineage.
+   * 3. Extend wildkin.component.spec.ts and API tests; npm test -- --maxWorkers=2
+   *    src/app/universe/wildkin. Accept known Signet or explicitly supported
+   *    testnet records through status/list/detail/braid UI with authority readback.
+   * Sources/prerequisite: WP-BE-008. Rollback preserves entity state and restores
+   *    compatible views; missing integrations remain required implementation work.
+   */
   getWildkinStatus$(): Observable<WildkinStatusSummary> {
     return this.httpClient.get<WildkinStatusSummary>(
       this.backendBase + '/api/v1/wildkin/status'
