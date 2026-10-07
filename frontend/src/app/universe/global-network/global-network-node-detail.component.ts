@@ -48,7 +48,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
           <summary>Source details</summary>
           <p class="small text-muted text-break">{{ node.scope }} Chain {{ node.chain_network }}; genesis {{ node.genesis_hash }};
           observed {{ node.observed_at_utc }} (reported age {{ node.age_ms }} ms / freshness {{ node.freshness_limit_ms }} ms).
-          Peer transport {{ node.network }}. No independent operator or Signet challenge attestation.</p>
+          Address network {{ node.network }}. No independent operator or Signet challenge attestation.</p>
         </details>
         <!-- Endpoint Primary Summary -->
         <div class="card p-4 mb-4 bg-body-tertiary border">
