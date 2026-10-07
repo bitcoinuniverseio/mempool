@@ -16,6 +16,11 @@
   position: relative;
 }
 
+.address-retry {
+  min-height: var(--u-touch-target, 44px);
+  min-width: var(--u-touch-target, 44px);
+}
+
 .qrSpan {
   align-items: center;
   background: transparent;

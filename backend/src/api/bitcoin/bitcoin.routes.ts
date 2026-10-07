@@ -23,6 +23,7 @@ import rbfCache from '../rbf-cache';
 import { calculateMempoolTxCpfp } from '../cpfp';
 import { handleError } from '../../utils/api';
 import { classifyAddressError, sendAddressError } from './address-errors';
+import { addressReadAdmission } from './address-read-admission';
 import poolsUpdater from '../../tasks/pools-updater';
 import chainTips from '../chain-tips';
 import { readUnsignedInteger, sourceNotFound } from './route-input';
@@ -696,7 +697,7 @@ class BitcoinRoutes {
     }
 
     try {
-      const addressData = await bitcoinApi.$getAddress(req.params.address);
+      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getAddress(req.params.address));
       res.json(addressData);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -718,7 +719,7 @@ class BitcoinRoutes {
       if (req.query.after_txid && typeof req.query.after_txid === 'string') {
         lastTxId = req.query.after_txid;
       }
-      const transactions = await bitcoinApi.$getAddressTransactions(req.params.address, lastTxId);
+      const transactions = await addressReadAdmission.run(() => bitcoinApi.$getAddressTransactions(req.params.address, lastTxId));
       res.json(transactions);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -736,7 +737,7 @@ class BitcoinRoutes {
     }
 
     try {
-      const addressData = await bitcoinApi.$getAddressUtxos(req.params.address);
+      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getAddressUtxos(req.params.address));
       res.json(addressData);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -763,7 +764,7 @@ class BitcoinRoutes {
     }
 
     try {
-      const summary = await bitcoinApi.$getAddressTransactionSummary(req.params.address, afterTxid as string | undefined);
+      const summary = await addressReadAdmission.run(() => bitcoinApi.$getAddressTransactionSummary(req.params.address, afterTxid as string | undefined));
       res.json(summary);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -783,7 +784,7 @@ class BitcoinRoutes {
     try {
       // electrum expects scripthashes in little-endian
       const electrumScripthash = req.params.scripthash.match(/../g)?.reverse().join('') ?? '';
-      const addressData = await bitcoinApi.$getScriptHash(electrumScripthash);
+      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getScriptHash(electrumScripthash));
       res.json(addressData);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -807,7 +808,7 @@ class BitcoinRoutes {
       if (req.query.after_txid && typeof req.query.after_txid === 'string') {
         lastTxId = req.query.after_txid;
       }
-      const transactions = await bitcoinApi.$getScriptHashTransactions(electrumScripthash, lastTxId);
+      const transactions = await addressReadAdmission.run(() => bitcoinApi.$getScriptHashTransactions(electrumScripthash, lastTxId));
       res.json(transactions);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -827,7 +828,7 @@ class BitcoinRoutes {
     try {
       // electrum expects scripthashes in little-endian
       const electrumScripthash = req.params.scripthash.match(/../g)?.reverse().join('') ?? '';
-      const addressData = await bitcoinApi.$getScriptHashUtxos(electrumScripthash);
+      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getScriptHashUtxos(electrumScripthash));
       res.json(addressData);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));

@@ -16,6 +16,8 @@ import { HttpErrorResponse } from '@angular/common/http';
  * status line but it does not invent a body.
  */
 export type AddressFailure =
+  /** Capacity is temporarily occupied, and the request can be retried. */
+  | 'busy'
   /** No index is configured, or the one that is cannot be reached. */
   | 'backend-unavailable'
   /** An index is there and still building. */
@@ -33,6 +35,7 @@ export type AddressFailure =
 
 /** The names the backend and the gateway use, mapped to what the page renders. */
 const BY_CODE: Readonly<Record<string, AddressFailure>> = {
+  'address-backend-busy': 'busy',
   'address-backend-unavailable': 'backend-unavailable',
   'address-backend-syncing': 'backend-syncing',
   'address-history-too-large': 'history-too-large',
@@ -52,6 +55,7 @@ const BY_CODE: Readonly<Record<string, AddressFailure>> = {
  * happen again is that status being read as a statement about the address.
  */
 const BY_STATUS: Readonly<Record<number, AddressFailure>> = {
+  429: 'busy',
   400: 'invalid-address',
   404: 'not-found',
   405: 'backend-unavailable',

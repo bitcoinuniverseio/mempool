@@ -17,6 +17,8 @@ import { Request, Response } from 'express';
  * status stays a transport signal, and the reader is told which of these it is.
  */
 export type AddressErrorCode =
+  /** Address read capacity is occupied; no work was queued for this request. */
+  | 'address-backend-busy'
   /** No address index is configured for this deployment. */
   | 'address-backend-unavailable'
   /** An index is configured and running, but has not caught up to the chain. */
@@ -48,6 +50,7 @@ export interface AddressErrorBody {
  * refuses on size, and an invalid address is the caller's mistake.
  */
 const STATUS: Readonly<Record<AddressErrorCode, number>> = {
+  'address-backend-busy': 429,
   'address-backend-unavailable': 503,
   'address-backend-syncing': 503,
   'address-history-too-large': 413,
@@ -58,6 +61,7 @@ const STATUS: Readonly<Record<AddressErrorCode, number>> = {
 };
 
 const MESSAGE: Readonly<Record<AddressErrorCode, string>> = {
+  'address-backend-busy': 'Address lookup is busy. Please try again shortly.',
   'address-backend-unavailable': 'This deployment has no Bitcoin address index, so address history cannot be served.',
   'address-backend-syncing': 'The Bitcoin address index is still catching up to the chain.',
   'address-history-too-large': 'This address has more history or unspent outputs than the configured lookup limit can serve.',
@@ -87,6 +91,7 @@ export function classifyAddressError(e: unknown): AddressErrorCode {
   const message = e instanceof Error ? e.message : typeof e === 'string' ? e : '';
   const code = (e as { code?: string } | null)?.code;
   const response = (e as { response?: { status?: number; data?: unknown } } | null)?.response;
+  if (code === 'EADDRESSBUSY') return 'address-backend-busy';
   if (response?.status === 400 && typeof response.data === 'string' && /^Too many unspent transaction outputs \(>\d+\)\./.test(response.data)) {
     return 'address-history-too-large';
   }
@@ -121,6 +126,7 @@ export function sendAddressError(req: Request, res: Response, code: AddressError
     code,
   };
   res.status(STATUS[code]);
+  if (code === 'address-backend-busy') res.setHeader('Retry-After', '2');
   if (req.accepts('json')) {
     res.json(body);
   } else {

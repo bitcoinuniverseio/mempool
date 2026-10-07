@@ -26,6 +26,11 @@ function httpError(status: number, body?: unknown, statusText = 'OK'): HttpError
 }
 
 describe('address failure classification', () => {
+  it('describes bounded capacity as busy without another capability request', () => {
+    expect(classifyAddressFailure(httpError(429, { code: 'address-backend-busy' }))).toBe('busy');
+    expect(classifyAddressFailure(httpError(429))).toBe('busy');
+    expect(shouldConsultCapability('busy')).toBe(false);
+  });
   it('reads the reason the backend named, in preference to the status', () => {
     // The body is the only part of the response a proxy does not rewrite.
     const error = httpError(503, { error: 'still catching up', code: 'address-backend-syncing' });
