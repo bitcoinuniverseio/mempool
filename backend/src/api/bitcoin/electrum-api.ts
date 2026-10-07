@@ -1,6 +1,5 @@
 import config from '../../config';
 import { createHash } from 'crypto';
-import {utxoListProblems} from './esplora-contract';
 import { verifyAddressSource } from './address-source-checkpoint';
 import Client from '@mempool/electrum-client';
 import { withElectrumDeadline } from './electrum-deadline';
@@ -15,6 +14,7 @@ import memoryCache from '../memory-cache';
 import { readIndexedTip } from './electrum-indexed-tip';
 import { fetchElectrumTransactionPage } from './electrum-transaction-page';
 import { collectElectrumAddressStats } from './electrum-address-stats';
+import { readElectrumUtxoMetadata } from './electrum-utxo-metadata';
 
 class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   private electrumClient: any;
@@ -195,38 +195,12 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   /** @asyncUnsafe */
   /** @asyncUnsafe */
   async $getScriptHashUtxos(scripthash: string): Promise<IEsploraApi.UTXO[]> {
-    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
+    const checkpoint = await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
     const utxos = await this.$getScriptHashUnspent(scripthash);
-    const result: IEsploraApi.UTXO[] = [];
-    for(const utxo of utxos) {
-      if(utxo.height===0) {
-        //Unconfirmed
-        result.push({
-          txid: utxo.tx_hash,
-          vout: utxo.tx_pos,
-          status: {
-            confirmed: false
-          },
-          value: utxo.value
-        });
-      } else {
-        //Confirmed
-        const blockHash = await this.$getBlockHash(utxo.height);
-        const block = await this.$getBlock(blockHash);
-        result.push({
-          txid: utxo.tx_hash,
-          vout: utxo.tx_pos,
-          status: {
-            confirmed: true,
-            block_height: utxo.height,
-            block_hash: blockHash,
-            block_time: block.timestamp
-          },
-          value: utxo.value
-        });
-      }
-    }
-    if (utxoListProblems(result).length) throw new Error('Electrum returned an invalid UTXO contract');
+    if (utxos.some(row => row.height > checkpoint.blockHeight)) throw new Error('UTXO block exceeds the verified address checkpoint');
+    const result = await readElectrumUtxoMetadata(utxos, (method, params, signal) => this.bitcoindClient.rpc.call(method, params, { signal }));
+    const after = await verifyAddressSource(checkpoint.blockHeight, height => this.$getIndexBlockHash(height));
+    if (after.blockHash !== checkpoint.blockHash || after.genesisHash !== checkpoint.genesisHash || after.network !== checkpoint.network) throw new Error('Address source changed during UTXO acquisition');
     return result;
   }
 

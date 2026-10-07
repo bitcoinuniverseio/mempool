@@ -168,16 +168,15 @@ export function addressIndexState(facts: AddressIndexFacts): AddressIndexVerdict
 /**
  * The address the readiness probe asks about.
  *
- * It is the receiving output of the first Bitcoin transaction ever sent
- * between two people, in block 170, January 2009. Nothing about that can be
- * undone, so the probe cannot start failing because somebody moved coins, and
- * its history is a handful of entries rather than a hundred thousand, so
- * asking about it costs the index almost nothing.
+ * This fixed P2WPKH hash is the first 20 bytes of SHA256 of
+ * "Universe Explorer health probe v1". It has no assigned wallet or signer.
+ * A capability check measures responsive canonical reads; the release gate
+ * separately checks the populated historical address and must remain intact.
  *
  * The probe asserts shape and never a balance. Anyone may pay this address, so
  * its numbers are free to change and none of them means the index is broken.
  */
-export const ADDRESS_PROBE = '1Q2TWHE3GMdB6BZKafqwxXtWAWgFt5Jvm3';
+export const ADDRESS_PROBE = bech32.encode('bc', [0, ...bech32.toWords(Buffer.from('00f989dec2228b0b15755ab98e6de0adaf978e00', 'hex'))]);
 
 /** A valid read-only probe for the configured chain; no balance is assumed. */
 export function addressProbeForNetwork(network: string): string {
