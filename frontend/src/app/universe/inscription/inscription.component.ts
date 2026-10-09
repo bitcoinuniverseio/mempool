@@ -1,13 +1,41 @@
-import { NamesAssetViewState, NAMES_INSCRIPTION_ID, namesAssetState$ } from '../names-explorer-asset';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { assetRouteContext$, assetRouteState$ } from '../asset-route-context';
+import {
+  NamesAssetViewState,
+  NAMES_INSCRIPTION_ID,
+  namesAssetState$,
+  namesObservationState$,
+} from '../names-explorer-asset';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  Optional,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, Subscription, switchMap, combineLatest, of, shareReplay, catchError, Subject, startWith, defer } from 'rxjs';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
+import {
+  Observable,
+  Subscription,
+  switchMap,
+  combineLatest,
+  of,
+  shareReplay,
+  catchError,
+  Subject,
+  startWith,
+  defer,
+  map,
+  distinctUntilChanged,
+} from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-button.component';
-import { OrdInscriptionView } from '@app/universe/universe.types';
+import {
+  OrdInscriptionView,
+  ExplorerNetwork,
+} from '@app/universe/universe.types';
 import {
   AssetViewState,
   assetState$,
@@ -16,7 +44,10 @@ import {
   assetTone,
   utcFromSeconds,
 } from '@app/universe/asset-lookup';
-import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
+import {
+  formatAtomicAmount,
+  shortenIdentifier,
+} from '@app/universe/universe-evidence';
 
 const INSCRIPTION_ID = /^[0-9a-f]{64}i(0|[1-9][0-9]{0,9})$/;
 const INSCRIPTION_NUMBER = /^-?(0|[1-9][0-9]{0,18})$/;
@@ -55,38 +86,151 @@ export class InscriptionComponent implements OnInit, OnDestroy {
     public api: UniverseApiService,
     private local: UniverseLocalService,
     private seo: SeoService,
+    @Optional() private router?: Router
   ) {}
 
   ngOnInit(): void {
-    this.state$ = this.retryTrigger$.pipe(startWith(undefined), switchMap(() =>
-      combineLatest([this.route.paramMap, defer(() => this.api.selectedNetwork$()).pipe(catchError(() => of(null)))]).pipe(
-        switchMap(([params, network]) => {
-          const reference = (params.get('reference') || '').trim();
-          this.seo.setTitle(`Inscription ${shortenIdentifier(reference, 10)}`);
-          return assetState$<OrdInscriptionView>(reference, () => {
-            if (network === null) {throw new Error('Unsupported inscription network context');}
-            return this.api.getInscription$(reference, network);
-          }, {firstResponseTimeoutMs:this.api.assetLookupDeadlineMs ?? ASSET_LOOKUP_GATEWAY_RESPONSE_MS});
-        }),
-      )), shareReplay({bufferSize:1,refCount:true}),
+    const reference$ = this.route.paramMap.pipe(
+      map((params) => (params.get('reference') || '').trim()),
+      distinctUntilChanged()
     );
-
-    this.namesState$ = this.namesRetryTrigger$.pipe(startWith(undefined), switchMap(() =>
-      combineLatest([this.route.paramMap, this.route.queryParamMap]).pipe(
-      switchMap(([params, query]) => {
-        const protocols = query.getAll('protocol');
-        if (!protocols.includes('names')) {return of<NamesAssetViewState>({kind:'absent'});}
-        if (protocols.length !== 1 || protocols[0] !== 'names') {return of<NamesAssetViewState>({kind:'unavailable',reason:'Names context query must be a single protocol=names value.'});}
-        const reference = (params.get('reference') || '').trim();
-        if (!NAMES_INSCRIPTION_ID.test(reference)) {return of<NamesAssetViewState>({kind:'unavailable',reason:'Names details require an exact inscription id.'});}
-        return this.api.selectedNetwork$().pipe(switchMap(network =>
-          namesAssetState$(this.api.getNamesObject$(reference, network), reference, network)));
-      }), catchError(() => of<NamesAssetViewState>({kind:'unavailable',reason:'The selected Names network context is unavailable.'})))),
-      shareReplay({bufferSize:1,refCount:true}),
+    const network$ = defer(() => this.api.selectedNetwork$()).pipe(
+      catchError(() => of(null))
+    );
+    const ordinaryEqual = (
+      a: { reference: string; network: ExplorerNetwork | null },
+      b: { reference: string; network: ExplorerNetwork | null }
+    ): boolean => a.reference === b.reference && a.network === b.network;
+    const ordinaryContext$ = assetRouteContext$(
+      combineLatest([reference$, network$]).pipe(
+        map(([reference, network]) => ({ reference, network })),
+        distinctUntilChanged(ordinaryEqual)
+      ),
+      this.router
+    );
+    this.state$ = this.retryTrigger$.pipe(
+      startWith(undefined),
+      switchMap(() =>
+        assetRouteState$(
+          ordinaryContext$,
+          ({ reference, network }) => {
+            this.seo.setTitle(
+              `Inscription ${shortenIdentifier(reference, 10)}`
+            );
+            return assetState$<OrdInscriptionView>(
+              reference,
+              () => {
+                if (network === null) {
+                  throw new Error('Unsupported inscription network context');
+                }
+                return this.api.getInscription$(reference, network);
+              },
+              {
+                firstResponseTimeoutMs:
+                  this.api.assetLookupDeadlineMs ??
+                  ASSET_LOOKUP_GATEWAY_RESPONSE_MS,
+              }
+            );
+          },
+          ({ reference }): AssetViewState<OrdInscriptionView> => ({
+            kind: 'loading',
+            reference,
+          }),
+          ({ reference }): AssetViewState<OrdInscriptionView> => ({
+            kind: 'unavailable',
+            reference,
+          }),
+          ordinaryEqual
+        )
+      ),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+    const protocols$ = this.route.queryParamMap.pipe(
+      map((query) => query.getAll('protocol')),
+      distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
+    );
+    const namesEqual = (
+      a: {
+        reference: string;
+        network: ExplorerNetwork | null;
+        protocols: string[];
+      },
+      b: {
+        reference: string;
+        network: ExplorerNetwork | null;
+        protocols: string[];
+      }
+    ): boolean =>
+      ordinaryEqual(a, b) &&
+      JSON.stringify(a.protocols) === JSON.stringify(b.protocols);
+    const namesContext$ = assetRouteContext$(
+      combineLatest([reference$, protocols$, network$]).pipe(
+        map(([reference, protocols, network]) => ({
+          reference,
+          protocols,
+          network,
+        })),
+        distinctUntilChanged(namesEqual)
+      ),
+      this.router
+    );
+    this.namesState$ = this.namesRetryTrigger$.pipe(
+      startWith(undefined),
+      switchMap(() =>
+        assetRouteState$(
+          namesContext$,
+          ({
+            reference,
+            protocols,
+            network,
+          }): Observable<NamesAssetViewState> => {
+            if (!protocols.includes('names')) {
+              return of({ kind: 'absent' });
+            }
+            if (protocols.length !== 1 || protocols[0] !== 'names') {
+              return of({
+                kind: 'unavailable',
+                reason:
+                  'Names context query must be a single protocol=names value.',
+              });
+            }
+            if (!NAMES_INSCRIPTION_ID.test(reference)) {
+              return of({
+                kind: 'unavailable',
+                reason: 'Names details require an exact inscription id.',
+              });
+            }
+            if (network === null) {
+              return of({
+                kind: 'unavailable',
+                reason: 'The selected Names network context is unavailable.',
+              });
+            }
+            return namesAssetState$(
+              this.api.getNamesObject$(reference, network),
+              reference,
+              network
+            );
+          },
+          ({ protocols }): NamesAssetViewState =>
+            protocols.includes('names')
+              ? { kind: 'loading' }
+              : { kind: 'absent' },
+          (): NamesAssetViewState => ({
+            kind: 'unavailable',
+            reason: 'The selected Names network context is unavailable.',
+          }),
+          namesEqual,
+          (state) => namesObservationState$(state)
+        )
+      ),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.visitSubscription = this.state$.subscribe((state) => {
-      if (state.kind !== 'ready' || !state.result?.value) {return;}
+      if (state.kind !== 'ready' || !state.result?.value) {
+        return;
+      }
       const inscription = state.result.value;
       this.local.recordVisit({
         chain: 'bitcoin',
@@ -99,9 +243,13 @@ export class InscriptionComponent implements OnInit, OnDestroy {
     });
   }
 
-  retryNames(): void { this.namesRetryTrigger$.next(); }
+  retryNames(): void {
+    this.namesRetryTrigger$.next();
+  }
 
-  retry(): void { this.retryTrigger$.next(); }
+  retry(): void {
+    this.retryTrigger$.next();
+  }
 
   ngOnDestroy(): void {
     this.visitSubscription?.unsubscribe();
@@ -113,11 +261,17 @@ export class InscriptionComponent implements OnInit, OnDestroy {
 
   /** The output the inscription currently sits on, so it can be opened directly. */
   outpointRoute(satpoint: string | null): string[] | null {
-    if (!satpoint) {return null;}
+    if (!satpoint) {
+      return null;
+    }
     const parts = satpoint.split(':');
-    if (parts.length !== 3) {return null;}
+    if (parts.length !== 3) {
+      return null;
+    }
     const [txid, vout] = parts;
-    if (!/^[0-9a-f]{64}$/.test(txid) || !/^(0|[1-9][0-9]{0,9})$/.test(vout)) {return null;}
+    if (!/^[0-9a-f]{64}$/.test(txid) || !/^(0|[1-9][0-9]{0,9})$/.test(vout)) {
+      return null;
+    }
     return [this.networkPath('/outpoint'), txid, vout];
   }
 
@@ -127,7 +281,9 @@ export class InscriptionComponent implements OnInit, OnDestroy {
   }
 
   networkPath(path: string): string {
-    return (this.api.network === 'mainnet' ? '' : '/' + this.api.network) + path;
+    return (
+      (this.api.network === 'mainnet' ? '' : '/' + this.api.network) + path
+    );
   }
 
   charmLabel(charm: string): string {
