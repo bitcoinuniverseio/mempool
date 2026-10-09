@@ -24,7 +24,7 @@
 .universe-portfolio-link > a {
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
+  min-height: max(44px, var(--u-touch-target, 44px));
 }
 
 .qrSpan {
