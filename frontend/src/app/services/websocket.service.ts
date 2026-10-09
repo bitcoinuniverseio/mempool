@@ -10,6 +10,7 @@ import { TransferState, makeStateKey } from '@angular/core';
 import { CacheService } from '@app/services/cache.service';
 import { uncompressDeltaChange, uncompressTx } from '@app/shared/common.utils';
 import { decodeFeeEstimate } from './fee-estimate';
+import { websocketResponseMatchesScope } from './websocket-response-scope';
 
 const OFFLINE_RETRY_AFTER_MS = 2000;
 const OFFLINE_PING_CHECK_AFTER_MS = 30000;
@@ -47,6 +48,7 @@ export class WebsocketService {
   private retryTimeout: number;
   private subscription: Subscription;
   private network = '';
+  private contextGeneration = 0;
 
   constructor(
     private stateService: StateService,
@@ -55,25 +57,35 @@ export class WebsocketService {
     private cacheService: CacheService,
   ) {
     if (!this.stateService.isBrowser) {
+      let selected = this.stateService.network;
+      this.stateService.networkChanged$.subscribe(network => {
+        if (selected !== network) { selected = network; this.contextGeneration += 1; }
+      });
+      const generation = this.contextGeneration;
+      const network = this.stateService.network;
       // @ts-ignore
       this.websocketSubject = { next: () => {}};
       this.stateService.isLoadingWebSocket$.next(false);
       this.apiService.getInitData$()
         .pipe(take(1))
-        .subscribe((response) => this.handleResponse(response));
+        .subscribe((response) => {
+          if (generation === this.contextGeneration && network === this.stateService.network) this.handleResponse(response);
+        });
     } else {
       this.network = this.stateService.network === this.stateService.env.ROOT_NETWORK ? '' : this.stateService.network;
       this.websocketSubject = webSocket<WebsocketResponse>(this.webSocketUrl.replace('{network}', this.network ? '/' + this.network : ''));
 
       const { response: theInitData } = this.transferState.get<any>(initData, null) || {};
       if (theInitData) {
-        if (theInitData.body.blocks) {
+        if (websocketResponseMatchesScope(theInitData.body, this.stateService.network) && theInitData.body.blocks) {
           theInitData.body.blocks = theInitData.body.blocks.reverse();
         }
-        this.stateService.backend$.next(theInitData.backend);
-        this.stateService.isLoadingWebSocket$.next(false);
-        this.handleResponse(theInitData.body);
-        this.startSubscription(false, true);
+        const accepted = this.handleResponse(theInitData.body);
+        if (accepted) {
+          this.stateService.backend$.next(theInitData.backend);
+          this.stateService.isLoadingWebSocket$.next(false);
+        }
+        this.startSubscription(false, accepted);
       } else {
         this.startSubscription();
       }
@@ -95,6 +107,9 @@ export class WebsocketService {
   }
 
   reconnectWebsocket(retrying = false, hasInitData = false) {
+    this.contextGeneration += 1;
+    clearTimeout(this.onlineCheckTimeout);
+    clearTimeout(this.onlineCheckTimeoutTwo);
     console.log('reconnecting websocket');
     clearTimeout(this.retryTimeout);
     this.stateService.retryLiveFeed();
@@ -116,11 +131,13 @@ export class WebsocketService {
       this.stateService.connectionState$.next(1);
     }
     const subscriptionNetwork = this.network;
+    const generation = this.contextGeneration;
+    const subject = this.websocketSubject;
     this.subscription = this.websocketSubject
       .subscribe((response: WebsocketResponse) => {
-        if (subscriptionNetwork !== this.network) return;
+        if (subscriptionNetwork !== this.network || generation !== this.contextGeneration) return;
+        if (!this.handleResponse(response)) return;
         this.stateService.isLoadingWebSocket$.next(false);
-        this.handleResponse(response);
 
         if (this.goneOffline === true) {
           this.goneOffline = false;
@@ -161,13 +178,13 @@ export class WebsocketService {
           this.stateService.connectionState$.next(2);
         }
 
-        this.startOnlineCheck();
+        this.startOnlineCheck(generation, subject);
       },
       (err: Error) => {
         console.log(err);
         console.log(`WebSocket error`);
-        this.goOffline();
-      }, () => this.goOffline());
+        this.goOffline(generation, subject);
+      }, () => this.goOffline(generation, subject));
   }
 
   startTrackTransaction(txId: string) {
@@ -253,7 +270,10 @@ export class WebsocketService {
       clearTimeout(this.stoppingTrackMempoolBlock);
     }
     this.isTrackingMempoolBlock = false;
+    const generation = this.contextGeneration;
+    const subject = this.websocketSubject;
     this.stoppingTrackMempoolBlock = setTimeout(() => {
+      if (generation !== this.contextGeneration || subject !== this.websocketSubject) return;
       this.stoppingTrackMempoolBlock = null;
       this.websocketSubject.next({ 'track-mempool-block': -1 });
       this.trackingMempoolBlock = null;
@@ -327,7 +347,8 @@ export class WebsocketService {
     this.lastWant = JSON.stringify(data);
   }
 
-  goOffline() {
+  goOffline(generation = this.contextGeneration, subject = this.websocketSubject) {
+    if (generation !== this.contextGeneration || subject !== this.websocketSubject) return;
     clearTimeout(this.onlineCheckTimeout);
     clearTimeout(this.onlineCheckTimeoutTwo);
     clearTimeout(this.retryTimeout);
@@ -336,28 +357,40 @@ export class WebsocketService {
     this.goneOffline = true;
     this.stateService.connectionState$.next(0);
     this.retryTimeout = window.setTimeout(() => {
-      this.reconnectWebsocket(true);
+      if (generation === this.contextGeneration && subject === this.websocketSubject) this.reconnectWebsocket(true);
     }, retryDelay);
   }
 
-  startOnlineCheck() {
+  startOnlineCheck(generation = this.contextGeneration, subject = this.websocketSubject) {
     clearTimeout(this.onlineCheckTimeout);
     clearTimeout(this.onlineCheckTimeoutTwo);
 
     this.onlineCheckTimeout = window.setTimeout(() => {
-      this.websocketSubject.next({action: 'ping'});
+      if (generation !== this.contextGeneration || subject !== this.websocketSubject) return;
+      subject.next({action: 'ping'});
       this.onlineCheckTimeoutTwo = window.setTimeout(() => {
+        if (generation !== this.contextGeneration || subject !== this.websocketSubject) return;
         if (!this.goneOffline) {
           console.log('WebSocket response timeout, force closing');
           this.subscription.unsubscribe();
           this.websocketSubject.complete();
-          this.goOffline();
+          this.goOffline(generation, subject);
         }
       }, EXPECT_PING_RESPONSE_AFTER_MS);
     }, OFFLINE_PING_CHECK_AFTER_MS);
   }
 
   handleResponse(response: WebsocketResponse) {
+    if (!websocketResponseMatchesScope(response, this.stateService.network)) return false;
+    const live = response.liveObservation;
+    const proof = live?.schemaVersion === 'universe-live-observation-v1' ? decodeFeeEstimate({ ...live,
+      schemaVersion: 'universe-fee-estimate-v1', values: live.status === 'ready'
+        ? { fastestFee: 0, halfHourFee: 0, hourFee: 0, economyFee: 0, minimumFee: 0 } : null }, this.stateService.network) : null;
+    // Legacy scoped data remains usable, but a chain payload without a valid
+    // ready observation cannot inherit currentness from a prior snapshot.
+    if ((live || response.blocks?.length || response.block || response.mempoolInfo) && proof?.status !== 'ready') {
+      this.stateService.invalidateLiveObservation();
+    }
     let reinitBlocks = false;
 
     if (response.backend) {
@@ -464,13 +497,8 @@ export class WebsocketService {
     if ('feeEstimate' in response || response.fees || response.loadingIndicators) {
       this.stateService.acceptFeeEstimate(response.feeEstimate);
     }
-    const live = response.liveObservation;
-    if (live?.schemaVersion === 'universe-live-observation-v1') {
-      const proof = decodeFeeEstimate({ ...live, schemaVersion: 'universe-fee-estimate-v1',
-        values: live.status === 'ready' ? { fastestFee: 0, halfHourFee: 0, hourFee: 0, economyFee: 0, minimumFee: 0 } : null }, this.stateService.network);
-      if (proof?.status === 'ready' && (response.blocks?.length || response.block || response.mempoolInfo?.loaded)) {
-        this.stateService.acceptLiveObservation(proof.observedAt);
-      } else if (proof && proof.status !== 'ready') this.stateService.invalidateLiveObservation();
+    if (proof?.status === 'ready' && (response.blocks?.length || response.block || response.mempoolInfo?.loaded)) {
+      this.stateService.acceptLiveObservation(proof.observedAt);
     }
 
     if (response.backendInfo) {
@@ -480,8 +508,9 @@ export class WebsocketService {
         this.latestGitCommit = response.backendInfo.gitCommit;
       } else {
         if (this.latestGitCommit !== response.backendInfo.gitCommit) {
+          const generation = this.contextGeneration;
           setTimeout(() => {
-            window.location.reload();
+            if (generation === this.contextGeneration) window.location.reload();
           }, Math.floor(Math.random() * 60000) + 60000);
         }
       }
@@ -589,11 +618,15 @@ export class WebsocketService {
     if (reinitBlocks) {
       this.websocketSubject.next({'refresh-blocks': true});
     }
+    return true;
   }
 
   async initRbfSummary(): Promise<void> {
     if (!this.stateService.isBrowser) {
+      const generation = this.contextGeneration;
+      const network = this.stateService.network;
       const rbfList = await firstValueFrom(this.apiService.getRbfList$(false));
+      if (generation !== this.contextGeneration || network !== this.stateService.network) return;
       if (rbfList) {
         const rbfSummary = rbfList.slice(0, 6).map(rbfTree => {
           let oldFee = 0;
