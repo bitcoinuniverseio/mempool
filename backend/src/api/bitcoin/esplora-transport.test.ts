@@ -1,4 +1,7 @@
-jest.mock('./bitcoin-client', () => ({__esModule:true,default:{getBlockchainInfo:/** @asyncUnsafe */ async()=>({chain:'signet',blocks:100,bestblockhash:'1'.repeat(64),signet_challenge:'51'}),getBlockHash:/** @asyncUnsafe */ async(height: number)=>height===0?'0'.repeat(64):'1'.repeat(64)}}));
+jest.mock('./bitcoin-client', () => {
+  const core = {getBlockchainInfo:/** @asyncUnsafe */ async()=>({chain:'signet',blocks:100,bestblockhash:'1'.repeat(64),signet_challenge:'51'}),getBlockHash:/** @asyncUnsafe */ async(height: number)=>height===0?'0'.repeat(64):'1'.repeat(64)};
+  return {__esModule:true,default:core,addressBitcoinClient:core};
+});
 
 jest.mock('./bitcoin-api-factory', () => ({ bitcoinCoreApi: {} }));
 
