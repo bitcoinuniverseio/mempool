@@ -1,4 +1,54 @@
-# Mempool API repair preparation, 9 October 2026
+# Mempool API repair handoff, 9 October 2026
+
+## Implementation qualification status
+
+Implementation is in progress. The preparation account below remains historical;
+it does not describe the current candidate. No public Mainnet release or complete
+functional acceptance has been performed. The acceptance denominator remains
+632 rows, 39 protocols and 123 declared protocol operations.
+
+The candidate preserves the original cancellation repair and concurrent PWA
+update fix. It adds scoped fee and live-source proofs, truthful freshness states,
+Core network alias normalization in the paired overlay, bounded RPC profiles,
+and a configuration-hash cache epoch for frontend bootstrap. The paired overlay
+candidate is `bde3982349d69a4330a67de7bc0939492f8a52f6`.
+
+The private Signet API qualification at
+`f77c1f1cc42878eff87f4f8d5c6a775abcd897ba` uses the existing owned Core and
+Electrs processes. Explicitly configured native Electrum HTTP address reads now
+support the existing V1–V4 reconstruction sources, retaining identity,
+checkpoint, mempool, history, size and cancellation guards. Ordinary native/API
+reconstruction and cancellation passed for all four versions. Browser V1, V2
+and V3 completed with exact zero outputs and balance. V4 exposed a frontend
+strict-fallback metadata validation mismatch. Candidate
+`279a6c0c953e11df64acd2f0db3b846786d49b39` validates the exact 512-byte
+metadata reservation with native response replay and negative controls; browser
+requalification remains required.
+Large-address bounded history and cancellation were exercised; full reconstruction
+and independent output comparison remain unqualified.
+
+Public confirmed transaction decoding and the nonbroadcast rejection of an
+already-known transaction were exercised through the Signet UI. They do not
+establish positive funded transaction acceptance. The documented audit wallet
+is unloaded, its first public address is empty, and funding across other wallet
+addresses has not been measured.
+
+TAP candidate `6f5d2945e26c0e23fa5d0ae60267eb9b16a853d7` now returns stale
+readiness before the quarantine count query. Initial metadata reads can still
+stall, and fresh readiness retains the count; earlier descriptions of count-free
+readiness were incorrect. DMT candidate
+`0128c8e2b05d7a0c9318bf385dc41a74f74d06dd` retains bounded worker publication
+and keyset reads. Neither candidate has been adopted into a native producer;
+TAP's active database work and DMT's insufficient durable I/O headroom remain
+qualification prerequisites.
+
+Current receipts are stored separately at
+`C:\universe\mempool\audits\implementation-20261009-api`.
+Read `CONTINUATION-HANDOFF.json`, `IMPLEMENTATION-RECORD.json` and operation
+receipts there for exact revisions and limitations. Native readiness/history,
+remaining operation acceptance, integration and public deployment remain required.
+
+## Historical preparation account
 
 This is an applied source annotation handoff, not an implemented or released repair.
 The preparation baseline is mempool `81ab0f1523155e1f678812864fc1cdcb9acaa9d8`.
