@@ -1,3 +1,4 @@
+import { qualifiedCoverageFixture } from '../protocol-coverage.fixture';
 import { describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, NEVER, Observable, Subject, filter, firstValueFrom, of, throwError } from 'rxjs';
 import { ProtocolDirectoryComponent, type DirectoryViewModel } from '@app/universe/protocol-directory/protocol-directory.component';
@@ -470,5 +471,19 @@ describe('ProtocolDirectoryComponent authority evidence', () => {
       .toBe(1787911200);
     expect(subject.checkedAtSeconds(source({ checkedAt: 'not a date' }))).toBeNull();
     expect(subject.checkedAtSeconds(null)).toBeNull();
+  });
+});
+
+
+describe('Protocol directory qualified acceptance rendering', () => {
+  it('passes registry bindings and the request network to the dated test-network label', async () => {
+    const response = qualifiedCoverageFixture();
+    const page = component(response, undefined, 'mainnet');
+    const vm = await settled(page);
+    const row = vm.groups.flatMap(group => group.protocols).find(item => item.id === response.protocols[0].id);
+    expect(page.coverageLabel(row, vm.registry, vm.network)).toBe('Functionality verified on Signet (2026-10-09)');
+    expect(page.coverageKnown(row, vm.registry, vm.network)).toBe(true);
+    expect(page.coverageLabel(row, vm.registry, 'signet')).toBe('Functional coverage: Unverified');
+    expect(page.registryCoverageLabel(row)).toBeTruthy();
   });
 });

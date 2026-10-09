@@ -1,3 +1,4 @@
+import { qualifiedCoverageFixture } from '../protocol-coverage.fixture';
 // New WP01/WP07 consumer regressions. Fixture responses are not real authority acceptance.
 import { describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
@@ -341,5 +342,17 @@ describe('Protocol detail availability', () => {
     const unconfigured = readyVm(definition(), []);
     expect(unconfigured.availability).toBe('unconfigured');
     expect(component.limitation(unconfigured)).toContain('No first-party authority');
+  });
+});
+
+
+describe('Protocol detail qualified acceptance rendering', () => {
+  it('keeps dated accepted functionality separate from unavailable native data', () => {
+    const response = qualifiedCoverageFixture(); const row = response.protocols[0];
+    const page = routed({ registry: () => of(response) }).component;
+    expect(page.coverageLabel(row, response, 'mainnet')).toBe('Functionality verified on Signet (2026-10-09)');
+    expect(page.coverageLabel(row, response, 'signet')).toBe('Functional coverage: Unverified');
+    expect(page.registryCoverageLabel(row)).toBeTruthy();
+    page.ngOnDestroy();
   });
 });

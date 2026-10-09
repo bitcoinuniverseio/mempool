@@ -33,6 +33,7 @@ export interface DirectoryViewModel {
   /** The network the registry request was addressed to; what the copy names. */
   network: ExplorerNetwork;
   registryVersion?: string;
+  registry?: ProtocolsResponse;
   groups?: FamilyGroup[];
   otherChainCount?: number;
   liveCount?: number;
@@ -128,6 +129,7 @@ export class ProtocolDirectoryComponent implements OnInit {
           error: false,
           network,
           registryVersion: response.registryVersion,
+          registry: response,
           groups: this.groupByFamily(bitcoinProtocols),
           otherChainCount,
           liveCount: bitcoinProtocols.filter(p => this.isLive(p, sourcesByAuthority)).length,
@@ -293,12 +295,12 @@ export class ProtocolDirectoryComponent implements OnInit {
    * from these unit checks. No production config/migration is changed here.
    * Roll back frontend and backend contract versions together if incompatible.
    */
-  coverageLabel(protocol: ExplorerProtocolDefinition): string {
-    return protocolCoverageView(protocol).functionalLabel;
+  coverageLabel(protocol: ExplorerProtocolDefinition, registry?: ProtocolsResponse, network?: string): string {
+    return protocolCoverageView(protocol, registry, network).functionalLabel;
   }
 
-  coverageKnown(protocol: ExplorerProtocolDefinition): boolean {
-    return protocolCoverageView(protocol).functionalKnown;
+  coverageKnown(protocol: ExplorerProtocolDefinition, registry?: ProtocolsResponse, network?: string): boolean {
+    return protocolCoverageView(protocol, registry, network).functionalKnown;
   }
 
   registryCoverageLabel(protocol: ExplorerProtocolDefinition): string | null {

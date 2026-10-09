@@ -73,7 +73,7 @@
               </dd>
             </ng-container>
 
-            <ng-container *ngIf="coverageLabel(vm.protocol) as coverage">
+            <ng-container *ngIf="coverageLabel(vm.protocol, vm.registry, vm.network) as coverage">
               <dt i18n="universe.detail.field-coverage">Coverage</dt>
               <dd>{{ coverage }}</dd>
             </ng-container>
