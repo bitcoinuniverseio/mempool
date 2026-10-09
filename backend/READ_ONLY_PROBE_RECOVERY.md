@@ -26,3 +26,11 @@ must be checked through its actual mounted module hashes before activation is
 claimed. Retain the previous overlay for pointer rollback. Fee availability
 still requires the real mempool cache to synchronize. This repair does not
 alter the fee readiness guard, cache data, credentials or shared RPC budgets.
+
+The overlay naturally activated on INDEXERS-1 at 2026-10-09 04:26:34 UTC.
+Actual process-mounted module hashes and the unchanged RPC override were
+verified at 04:49 UTC. At 05:39:31 UTC the same process remained active;
+bounded native and public Core reads returned matching fee estimates
+(`2/1/1/1/1`) and chain tip `970589`. This later observation supersedes the
+earlier guarded fee response. The cache became ready naturally. These two
+read operations do not establish complete explorer or Core acceptance.
