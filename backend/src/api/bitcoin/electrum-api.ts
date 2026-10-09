@@ -21,6 +21,8 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   private electrumClient: any;
   private readonly addressApi = new BitcoinApi(addressBitcoinClient);
 
+  public closeTransport(): void { this.electrumClient.close(); }
+
   constructor(bitcoinClient: any) {
     super(bitcoinClient);
 

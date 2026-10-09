@@ -15,6 +15,9 @@ import { Common } from '../api/common';
  * Maintain the most recent version of pools-v2.json
  */
 class PoolsUpdater {
+  private stopping = false;
+
+  public stop(): void { this.stopping = true; }
   tag = 'PoolsUpdater';
 
   lastRun: number = 0;
@@ -25,13 +28,13 @@ class PoolsUpdater {
 
   /** @asyncSafe */
   public async $startService(): Promise<void> {
-    while ('Bitcoin is still alive') {
+    while (!this.stopping) {
       try {
         await this.updatePoolsJson();
       } catch (e: any) {
         logger.info(`Exception ${e} in PoolsUpdater::$startService. Code: ${e.code}. Message: ${e.message}`, this.tag);
       }
-      await Common.sleep$(10000);
+      if (!this.stopping) await Common.sleep$(10000);
     }
   }
 
