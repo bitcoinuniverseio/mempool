@@ -150459,8 +150459,8 @@
           "sha256": "66eb7953b99ead9f77ee0e6e26199ce9c729ea7944b21e900d18a450fbfbab5b"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
           "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
@@ -150567,12 +150567,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ]
     },
@@ -150617,12 +150617,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ]
     },
@@ -150651,12 +150651,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ]
     },
@@ -150685,12 +150685,30 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
+        }
+      ]
+    },
+    {
+      "id": "current:clock-history-window-ac8ec2-20261009",
+      "reason": "Distinct current alias/history and safe window semantics after actual1501 failures; source checks do not establish functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
+        },
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
+        },
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock-routing-history.spec.ts",
+          "sha256": "798d62b1332732aac99acfe0f20e83a7d78fe6745c56dbec9c095e354eb5d905"
         }
       ]
     }
@@ -152665,8 +152683,8 @@
           "sha256": "66eb7953b99ead9f77ee0e6e26199ce9c729ea7944b21e900d18a450fbfbab5b"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
           "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
@@ -152785,12 +152803,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ]
     },
@@ -152838,12 +152856,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ]
     },
@@ -152875,12 +152893,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ]
     },
@@ -152912,12 +152930,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ]
     },
@@ -152993,6 +153011,27 @@
         {
           "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
           "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
+    },
+    {
+      "candidateId": "current:clock-history-window-ac8ec2-20261009",
+      "operationIds": [
+        "reviewed:signet-clock-history-window"
+      ],
+      "reason": "Distinct current alias/history and safe window semantics after actual1501 failures; source checks do not establish functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
+        },
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
+        },
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock-routing-history.spec.ts",
+          "sha256": "798d62b1332732aac99acfe0f20e83a7d78fe6745c56dbec9c095e354eb5d905"
         }
       ]
     }
@@ -153098,8 +153137,8 @@
           "sha256": "66eb7953b99ead9f77ee0e6e26199ce9c729ea7944b21e900d18a450fbfbab5b"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
           "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
@@ -153345,12 +153384,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ],
       "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
@@ -153430,12 +153469,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ],
       "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
@@ -153500,12 +153539,12 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ],
       "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
@@ -153572,15 +153611,75 @@
           "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
         },
         {
-          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
         }
       ],
       "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
+      "status": "NOT TESTED",
+      "actualResult": null,
+      "evidence": [],
+      "environment": null,
+      "revision": null,
+      "ranAt": null
+    },
+    {
+      "role": "public-reader",
+      "chain": "bitcoin",
+      "network": "signet",
+      "specificationRevision": "implementation-handoff-2026-10-09/API-03/API-04/API-05/API-06",
+      "owner": "Application and source contract owners",
+      "prerequisites": [
+        "Candidate identity pinned",
+        "Owned source context verified",
+        "Complete required-row variants reviewed separately"
+      ],
+      "id": "reviewed:signet-clock-history-window",
+      "method": "UI",
+      "entryPoint": "/signet/clock/:mode/:index",
+      "inputContract": "Offered block alias, mined/mempool modes, query/fragment, back/forward, malformed or positive safe integer index, observed mined window and configured projected window",
+      "outputContract": "Replace alias/invalid index history entry while preserving selected network/query/fragment; valid out-of-window index retained with explicit unavailable UI when observed blocks exist; never invent block zero or dereference absent height/size/tx_count",
+      "lifecycle": "Direct navigation, alias normalization, back/back/forward/forward, refresh, observed block-window changes and existing shared fee availability; source revision ac8ec2a645520ac58e007f5a974561e12e65928d",
+      "expectedResult": "Correct source semantics and controlled Router regression tests; separate actual bounded repair validation is PASS, while complete required APP-CLOCK acceptance remains NOT TESTED",
+      "inputs": [
+        "block/0?stats=false#clock",
+        "-1, nonnumeric, fractional, suffixed and unsafe index",
+        "mined/15 versus mined/999",
+        "mempool/7 versus mempool/8 with default8; configured12/index11",
+        "empty or shortened observed window"
+      ],
+      "execution": [
+        "Use actual scoped router and Clock template",
+        "Normalize through replaceUrl preserving query/fragment; exercise real popstate",
+        "Keep positive index and gate every block dereference through selectedBlock",
+        "Compare future actual bundle against preserved actual1501 failure separately"
+      ],
+      "assertions": [
+        "Whole-decimal nonnegative safe integer parsing; invalid values become zero",
+        "Selected network/query/fragment and forward history persist",
+        "Mined availability follows observed slice of at most16blocks",
+        "Projected availability follows configured positive safe integer capacity, default8 only when invalid configuration",
+        "No absent-block crash or valid out-of-window block0 fallback",
+        "All original APP-CLOCK variants and candidate-bound functional proof remain unresolved"
+      ],
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e"
+        },
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086"
+        },
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock-routing-history.spec.ts",
+          "sha256": "798d62b1332732aac99acfe0f20e83a7d78fe6745c56dbec9c095e354eb5d905"
+        }
+      ],
       "status": "NOT TESTED",
       "actualResult": null,
       "evidence": [],
@@ -166083,8 +166182,8 @@
     },
     {
       "path": "frontend/src/app/components/clock/clock.component.ts",
-      "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
-      "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531",
+      "snapshotPath": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+      "sha256": "62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e",
       "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
     },
     {
@@ -166103,6 +166202,18 @@
       "path": "frontend/src/app/services/websocket-response-scope.ts",
       "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket-response-scope.ts",
       "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/components/clock/clock.component.html",
+      "snapshotPath": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+      "sha256": "ab17531fd17d8eb031cb0cf9aa2dc1ad191c537495f2c5c9f8e9c8b3167cd086",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/components/clock/clock-routing-history.spec.ts",
+      "snapshotPath": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/frontend/src/app/components/clock/clock-routing-history.spec.ts",
+      "sha256": "798d62b1332732aac99acfe0f20e83a7d78fe6745c56dbec9c095e354eb5d905",
       "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
     },
     {
@@ -166146,14 +166257,45 @@
       "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
       "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3",
       "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
-    },
-    {
-      "path": "frontend/src/app/components/clock/clock.component.html",
-      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
-      "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610",
-      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
     }
   ],
+  "currentClockReviewLineage": {
+    "schemaVersion": "universe-clock-history-semantic-lineage-v1",
+    "sourceRevision": "ac8ec2a645520ac58e007f5a974561e12e65928d",
+    "previousRoster": {
+      "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/prior-nine-definition-roster.json.gz",
+      "sha256": "70956404f50ae56de8818220a2d7e6bcaae3622a3e386f2802efcbd7c11277c9",
+      "decompressedSha256": "ac0b51a7e8e817fd7d7083aaa9c8384ddbe2d9daf75cda1a8db308886c316795",
+      "encoding": "gzip original raw roster bytes",
+      "reviewedDefinitionCount": 9
+    },
+    "historicalActualFailure": {
+      "sourceRevision": "1501dbc53067ca0e69b440bc15bcee6e18a86b49",
+      "result": "FAIL",
+      "evidence": [
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/clock-1501-actual-history-defect.json",
+          "sha256": "9bfa568f2768db1ed62de17efeb790741a12c404a58632eb6e755d8968b9b8fa"
+        },
+        {
+          "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/clock-1501-out-of-window-console.json",
+          "sha256": "f6f76dd0af13c2bc887e16f5251c02235988edb7dc390375c56507d7509c4f73"
+        }
+      ]
+    },
+    "requiredClockFunctionalAcceptance": "NOT TESTED",
+    "boundedRepairValidation": {
+      "sourceRevision": "ac8ec2a645520ac58e007f5a974561e12e65928d",
+      "result": "PASS",
+      "scope": "Clock alias history/index safety and selected positive refresh, not complete fee/Clock acceptance",
+      "fullRequiredOperationAcceptance": false,
+      "evidence": {
+        "path": "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/clock-ac8-actual-repair-readback.json",
+        "sha256": "41e1d264a73416a64d8ff989e09d98e1f7bc5af1e52b0fe3589963f24e7bf955"
+      }
+    },
+    "functionalAcceptance": false
+  },
   "requiredApplicationCoverage": {
     "schemaVersion": "universe-required-application-coverage-v1",
     "snapshot": {
@@ -175941,12 +176083,14 @@
         "candidateIds": [
           "current:clock-network-routes-20261009",
           "current:signet-fees-box-view-20261009",
-          "current:signet-fee-network-recovery-20261009"
+          "current:signet-fee-network-recovery-20261009",
+          "current:clock-history-window-ac8ec2-20261009"
         ],
         "operationIds": [
           "reviewed:signet-clock-route",
           "reviewed:signet-fees-box-view",
-          "reviewed:signet-fee-network-recovery"
+          "reviewed:signet-fee-network-recovery",
+          "reviewed:signet-clock-history-window"
         ],
         "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
@@ -188202,8 +188346,19 @@
       ],
       "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
       "functionalAcceptance": false
+    },
+    {
+      "candidateId": "current:clock-history-window-ac8ec2-20261009",
+      "reviewedOperationIds": [
+        "reviewed:signet-clock-history-window"
+      ],
+      "coverageIds": [
+        "APP-CLOCK"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
+      "functionalAcceptance": false
     }
   ],
-  "reviewedSelectedOperationDefinitions": 9,
+  "reviewedSelectedOperationDefinitions": 10,
   "reviewVersion": "required-application-roster-2026-10-09-v1"
 }

@@ -4,6 +4,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
+import {
+  clockSnapshotPath,
+  clockHistorySemanticReview,
+} from "./clock-history-semantic-review.mjs";
 import { feeSemanticReview } from "./fee-semantic-review.mjs";
 import {
   reconcileOperations,
@@ -103,7 +107,7 @@ export function buildRequiredApplicationRoster(
   const frontendProof = (paths) =>
     proof(
       paths.map((path) => {
-        const snapshotPath = frontendSource + path;
+        const snapshotPath = clockSnapshotPath(path, frontendSource + path);
         const currentHash = digest(lfBytes(readProof(path)));
         assert.equal(
           digest(readProof(snapshotPath)),
@@ -236,6 +240,17 @@ export function buildRequiredApplicationRoster(
   ];
   const feeReview = feeSemanticReview(historical, common, readProof);
   operations.push(...feeReview.definitions);
+  const clockReview = clockHistorySemanticReview(historical, common, readProof);
+  operations.push(clockReview.definition);
+  feeReview.coverageLinks["APP-CLOCK"].push(clockReview.definition.id);
+  currentSourceBindings.push(
+    ...clockReview.bindings.filter(
+      (binding) =>
+        !currentSourceBindings.some(
+          (existing) => existing.path === binding.path,
+        ),
+    ),
+  );
   currentSourceBindings.push(
     ...feeReview.bindings.filter(
       (binding) =>
@@ -258,7 +273,7 @@ export function buildRequiredApplicationRoster(
       sources: websocketProof,
     },
   ];
-  currentSourceCandidates.push(...feeReview.candidates);
+  currentSourceCandidates.push(...feeReview.candidates, clockReview.candidate);
   const mappings = historical.rows
     .filter(
       (row) =>
@@ -289,7 +304,7 @@ export function buildRequiredApplicationRoster(
       sources: websocketProof,
     },
   );
-  mappings.push(...feeReview.mappings);
+  mappings.push(...feeReview.mappings, clockReview.mapping);
   const roster = reconcileOperations(
     historical,
     {
@@ -314,6 +329,7 @@ export function buildRequiredApplicationRoster(
       "Current 1617-row source-candidate document at review time; not the unrecovered original243-row acceptance bundle",
   };
   roster.currentSourceBindings = currentSourceBindings;
+  roster.currentClockReviewLineage = clockReview.lineage;
   const candidateMap = new Map(
     mappings.map((mapping) => [mapping.candidateId, mapping.operationIds]),
   );

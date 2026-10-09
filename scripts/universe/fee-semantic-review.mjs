@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
+import { clockSnapshotPath } from "./clock-history-semantic-review.mjs";
+
 const prefix = "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/";
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const lf = (bytes) =>
@@ -25,7 +27,7 @@ export function feeSemanticReview(historical, common, readProof) {
     "frontend/src/app/components/clock/clock.component.html",
   ];
   const allProof = paths.map((path) => {
-    const snapshotPath = prefix + path;
+    const snapshotPath = clockSnapshotPath(path, prefix + path);
     const sha256 = hash(lf(readProof(path)));
     assert.equal(
       hash(readProof(snapshotPath)),
