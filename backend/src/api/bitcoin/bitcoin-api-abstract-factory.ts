@@ -2,6 +2,8 @@ import { IBitcoinApi, SubmitPackageResult, TestMempoolAcceptResult } from './bit
 import { IEsploraApi } from './esplora-api.interface';
 
 export interface AbstractBitcoinApi {
+  /** Close a read-only transport only after producer and HTTP completion. */
+  closeTransport?(): void;
   $getRawMempool(): Promise<IEsploraApi.Transaction['txid'][]>;
   $getRawTransaction(txId: string, skipConversion?: boolean, addPrevout?: boolean, lazyPrevouts?: boolean): Promise<IEsploraApi.Transaction>;
   $getRawTransactions(txids: string[]): Promise<IEsploraApi.Transaction[]>;

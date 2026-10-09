@@ -3,8 +3,20 @@ import logger from '../../logger';
 import { TransactionExtended, OptimizedStatistic } from '../../mempool.interfaces';
 import { Common } from '../common';
 import statisticsApi from './statistics-api';
+import { TaskDrain } from '../task-drain';
 
 class Statistics {
+  private stopping = false;
+  private initialTimer: NodeJS.Timeout | undefined;
+  private readonly work = new TaskDrain();
+
+  public stop(): void {
+    this.stopping = true;
+    if (this.initialTimer) clearTimeout(this.initialTimer);
+    if (this.intervalTimer) clearInterval(this.intervalTimer as NodeJS.Timeout);
+  }
+
+  public drain(): Promise<void> { return this.work.drain(); }
   protected intervalTimer: NodeJS.Timer | undefined;
   protected lastRun: number = 0;
   protected newStatisticsEntryCallback: ((stats: OptimizedStatistic) => void) | undefined;
@@ -14,6 +26,7 @@ class Statistics {
   }
 
   public startStatistics(): void {
+    if (this.stopping) return;
     logger.info('Starting statistics service');
 
     const now = new Date();
@@ -21,7 +34,8 @@ class Statistics {
       Math.floor(now.getMinutes() / 1) * 1 + 1, 0, 0);
     const difference = nextInterval.getTime() - now.getTime();
 
-    setTimeout(() => {
+    this.initialTimer = setTimeout(() => {
+      if (this.stopping) return;
       void this.runStatistics();
       this.intervalTimer = setInterval(() => {
         void this.runStatistics(true);
@@ -30,7 +44,13 @@ class Statistics {
   }
 
   /** @asyncSafe */
-  public async runStatistics(skipIfRecent = false): Promise<void> {
+  public runStatistics(skipIfRecent = false): Promise<void> {
+    if (this.stopping) return Promise.resolve();
+    return this.work.track(this.executeStatistics(skipIfRecent));
+  }
+
+  /** @asyncSafe */
+  private async executeStatistics(skipIfRecent = false): Promise<void> {
     if (!memPool.isInSync()) {
       return;
     }
