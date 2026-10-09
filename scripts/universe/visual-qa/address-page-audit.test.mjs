@@ -54,7 +54,10 @@ test('bitcoin.routes.ts implements getAddressTransactionSummary correctly', () =
   assert.match(fnBody, /config\.MEMPOOL\.BACKEND !== 'esplora'/, 'checks for esplora backend');
   assert.match(fnBody, /sendAddressError\(req, res, 'address-backend-unavailable'/, 'sends address-backend-unavailable when not esplora');
   assert.match(fnBody, /ADDRESS_REGEX\.test\(req\.params\.address\)/, 'validates address parameter format');
-  assert.match(fnBody, /bitcoinApi\.\$getAddressTransactionSummary\(req\.params\.address\)/, 'calls bitcoinApi.$getAddressTransactionSummary');
+  assert.match(fnBody, /const afterTxid = req\.params\.afterTxid \?\? req\.query\.after_txid;/, 'accepts both mounted cursor forms');
+  assert.match(fnBody, /req\.params\.afterTxid !== req\.query\.after_txid/, 'rejects conflicting cursor forms');
+  assert.match(fnBody, /typeof afterTxid !== 'string' \|\| !TXID_REGEX\.test\(afterTxid\)/, 'validates the cursor before reading');
+  assert.match(fnBody, /addressReadAdmission\.run\(\(\) => bitcoinApi\.\$getAddressTransactionSummary\(req\.params\.address, afterTxid as string \| undefined\)\)/, 'bounds the source read and forwards the validated cursor');
   assert.match(fnBody, /res\.json\(summary\)/, 'responds with json summary');
 });
 
