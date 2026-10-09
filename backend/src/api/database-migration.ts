@@ -1596,6 +1596,10 @@ class DatabaseMigration {
   private async $ensureStep29Schema(): Promise<void> {
     // CREATE/ALTER implicitly commit. A crash before marker 29 must resume
     // from verified schema, not from table existence or a swallowed DDL error.
+    // MariaDB exposes nullable SQL DEFAULT NULL as unquoted "NULL", whereas
+    // MySQL returns null. A quoted 'NULL' remains a different literal default.
+    const nullDefault = (column: { COLUMN_DEFAULT: unknown; IS_NULLABLE: unknown }): boolean =>
+      column.COLUMN_DEFAULT === null || column.IS_NULLABLE === 'YES' && column.COLUMN_DEFAULT === 'NULL';
     if (!await this.$checkIfTableExists('geo_names')) {
       await this.$executeQuery(this.getCreateGeoNamesTableQuery());
     }
@@ -1609,7 +1613,8 @@ class DatabaseMigration {
     if (geoColumns.length !== 3 || !geoColumns.every(column => {
       const expected = expectedGeo[column.COLUMN_NAME];
       return expected && expected.type.test(column.COLUMN_TYPE) && column.IS_NULLABLE === expected.nullable &&
-        column.COLUMN_DEFAULT === null && column.EXTRA === '' && column.CHARACTER_SET_NAME === expected.charset;
+        nullDefault(column) && column.EXTRA === '' && (column.CHARACTER_SET_NAME === expected.charset ||
+          expected.charset === 'utf8mb3' && column.CHARACTER_SET_NAME === 'utf8');
     })) throw new Error('Interrupted migration 29 geo_names columns do not match the required schema');
     const [geoIndexes]: any[] = await this.$executeQuery(`SELECT INDEX_NAME, COLUMN_NAME, SEQ_IN_INDEX, NON_UNIQUE, SUB_PART
       FROM information_schema.statistics WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='geo_names'`, true);
@@ -1632,7 +1637,7 @@ class DatabaseMigration {
     const before = await readNodes();
     if (!before.filter(column => Object.prototype.hasOwnProperty.call(additions, column.COLUMN_NAME)).every(column =>
       column.COLUMN_TYPE.replace('(11)', '') === additions[column.COLUMN_NAME].replace('(11)', '') &&
-      column.IS_NULLABLE === 'YES' && column.COLUMN_DEFAULT === null && column.EXTRA === '')) {
+      column.IS_NULLABLE === 'YES' && nullDefault(column) && column.EXTRA === '')) {
       throw new Error('Interrupted migration 29 existing nodes columns do not match the required schema');
     }
     for (const [name, type] of Object.entries(additions)) {
@@ -1645,7 +1650,7 @@ class DatabaseMigration {
       const columns = after.filter(column => column.COLUMN_NAME === name);
       const expected = type.replace('(11)', '');
       return columns.length === 1 && columns[0].COLUMN_TYPE.replace('(11)', '') === expected &&
-        columns[0].IS_NULLABLE === 'YES' && columns[0].COLUMN_DEFAULT === null && columns[0].EXTRA === '';
+        columns[0].IS_NULLABLE === 'YES' && nullDefault(columns[0]) && columns[0].EXTRA === '';
     })) throw new Error('Interrupted migration 29 nodes columns do not match the required schema');
   }
 

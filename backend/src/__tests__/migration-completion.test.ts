@@ -45,28 +45,32 @@ describe('ordered migration completion',()=>{
   it('inspects and repairs a falsely advanced version before newer markers',async()=>{
     const test=setup(112,true);await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow();expect(test.markers).toEqual([]);
   });
-  function interrupted29(malformed: 'none'|'column'|'key' = 'none') {
+  function interrupted29(malformed: 'none'|'column'|'key' = 'none', dialect: 'mysql'|'mariadb-10.5'|'mariadb-11.4' = 'mysql', fresh=false) {
+    let geoExists=!fresh;
+    const charset=dialect==='mariadb-10.5'?'utf8':'utf8mb3', nullableDefault=dialect==='mysql'?null:'NULL';
     const test=setup(28);test.subject.constructor.currentVersion=29;
     const query=test.db.query;
     const geo=[
       {COLUMN_NAME:'id',COLUMN_TYPE:'int unsigned',IS_NULLABLE:'NO',CHARACTER_SET_NAME:null},
-      {COLUMN_NAME:'type',COLUMN_TYPE:"enum('city','country','division','continent')",IS_NULLABLE:'NO',CHARACTER_SET_NAME:'utf8mb3'},
-      {COLUMN_NAME:'names',COLUMN_TYPE:malformed==='column'?'varchar(255)':'text',IS_NULLABLE:'YES',CHARACTER_SET_NAME:'utf8mb3'},
-    ].map(column=>({...column,COLUMN_DEFAULT:null,EXTRA:''}));
+      {COLUMN_NAME:'type',COLUMN_TYPE:"enum('city','country','division','continent')",IS_NULLABLE:'NO',CHARACTER_SET_NAME:charset},
+      {COLUMN_NAME:'names',COLUMN_TYPE:malformed==='column'?'varchar(255)':'text',IS_NULLABLE:'YES',CHARACTER_SET_NAME:charset},
+    ].map(column=>({...column,COLUMN_DEFAULT:column.IS_NULLABLE==='YES'?nullableDefault:null,EXTRA:''}));
     const keys=[{INDEX_NAME:'id',COLUMN_NAME:'id',SEQ_IN_INDEX:1,NON_UNIQUE:0,SUB_PART:null},
       {INDEX_NAME:'id',COLUMN_NAME:'type',SEQ_IN_INDEX:2,NON_UNIQUE:malformed==='key'?1:0,SUB_PART:null},
       {INDEX_NAME:'id_2',COLUMN_NAME:'id',SEQ_IN_INDEX:1,NON_UNIQUE:1,SUB_PART:null}];
-    const nodes=new Map(['as_number','city_id'].map(name=>[name,{COLUMN_NAME:name,COLUMN_TYPE:'int unsigned',IS_NULLABLE:'YES',COLUMN_DEFAULT:null,EXTRA:''}]));
+    const nodes=new Map((fresh?[]:['as_number','city_id']).map(name=>[name,{COLUMN_NAME:name,COLUMN_TYPE:'int unsigned',IS_NULLABLE:'YES',COLUMN_DEFAULT:nullableDefault,EXTRA:''}]));
     test.db.query=async(input:any)=>{
       const sql=typeof input==='string'?input:input.sql;
+      if(sql.includes('COUNT(*) FROM information_schema.tables')&&/table_name\s*=\s*'geo_names'/i.test(sql))return [[{'COUNT(*)':geoExists?1:0}]];
+      if(sql.startsWith('CREATE TABLE geo_names'))geoExists=true;
       if(sql.includes("TABLE_NAME='geo_names'")&&sql.includes('information_schema.columns'))return [geo];
       if(sql.includes("TABLE_NAME='geo_names'")&&sql.includes('information_schema.statistics'))return [keys];
       if(sql.includes("TABLE_NAME='nodes'")&&sql.includes('information_schema.columns'))return [[...nodes.values()]];
       const add=sql.match(/^ALTER TABLE nodes ADD (\w+) (.+) NULL DEFAULT NULL$/);
-      if(add) nodes.set(add[1],{COLUMN_NAME:add[1],COLUMN_TYPE:add[2].replace('(11)',''),IS_NULLABLE:'YES',COLUMN_DEFAULT:null,EXTRA:''});
+      if(add) nodes.set(add[1],{COLUMN_NAME:add[1],COLUMN_TYPE:add[2].replace('(11)',''),IS_NULLABLE:'YES',COLUMN_DEFAULT:nullableDefault,EXTRA:''});
       return query(input);
     };
-    return test;
+    return {...test,geo,nodes,keys};
   }
   it('resumes a verified geo_names table and partly added nodes columns before marker29',async()=>{
     const test=interrupted29();await test.subject.$initializeOrMigrateDatabase();
@@ -78,6 +82,50 @@ describe('ordered migration completion',()=>{
     const test=interrupted29(kind);await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');
     expect(test.getVersion()).toBe(28);expect(test.markers).toEqual([]);
     expect(test.statements.some(sql=>sql.startsWith('ALTER TABLE nodes ADD'))).toBe(false);
+  });
+  it.each(['mysql','mariadb-10.5','mariadb-11.4'] as const)('preserves step29 completion and restart using %s semantic metadata',async dialect=>{
+    const test=interrupted29('none',dialect),query=test.db.query;let interrupt=true;
+    test.db.query=async(input:any)=>{
+      const sql=typeof input==='string'?input:input.sql;
+      if(interrupt&&sql.includes('UPDATE state SET number = 29'))throw Error('interrupted after committed step29 DDL');
+      return query(input);
+    };
+    await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');
+    expect(test.getVersion()).toBe(28);expect(test.markers).toEqual([]);expect(test.nodes.size).toBe(7);
+    interrupt=false;await expect(test.subject.$initializeOrMigrateDatabase()).resolves.toBeUndefined();
+    expect(test.getVersion()).toBe(29);expect(test.markers).toEqual([29]);
+    expect(test.statements.filter(sql=>sql.startsWith('ALTER TABLE nodes ADD'))).toHaveLength(5);
+  });
+  it.each(['mysql','mariadb-10.5','mariadb-11.4'] as const)('verifies fresh step29 DDL before recording completion with %s metadata',async dialect=>{
+    const test=interrupted29('none',dialect,true);await test.subject.$initializeOrMigrateDatabase();
+    expect(test.getVersion()).toBe(29);expect(test.markers).toEqual([29]);
+    expect(test.statements.filter(sql=>sql.startsWith('CREATE TABLE geo_names'))).toHaveLength(1);
+    expect(test.statements.filter(sql=>sql.startsWith('ALTER TABLE nodes ADD'))).toHaveLength(7);
+  });
+  it.each(['utf8mb4','latin1',null,undefined])('rejects incompatible step29 charset %s without publishing a completed marker',async charset=>{
+    const test=interrupted29('none','mariadb-10.5');test.geo.find(column=>column.COLUMN_NAME==='names')!.CHARACTER_SET_NAME=charset as never;
+    await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');expect(test.markers).toEqual([]);expect(test.getVersion()).toBe(28);
+  });
+  it.each(["'NULL'",'null','(NULL)','NULL ',0,undefined])('does not confuse default %s with nullable SQLNULL metadata',async value=>{
+    for(const target of ['geo','nodes'] as const){
+      const test=interrupted29('none','mariadb-11.4');
+      if(target==='geo')test.geo.find(column=>column.COLUMN_NAME==='names')!.COLUMN_DEFAULT=value as never;
+      else test.nodes.get('as_number')!.COLUMN_DEFAULT=value as never;
+      await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');expect(test.markers).toEqual([]);expect(test.getVersion()).toBe(28);
+    }
+  });
+  it('requires no-default NOTNULL metadata and preserves every structural step29 guard',async()=>{
+    for(const fault of ['notNullDefault','nullable','extra','signedType','missingColumn','extraColumn','key'] as const){
+      const test=interrupted29('none','mariadb-11.4');
+      if(fault==='notNullDefault')test.geo[0].COLUMN_DEFAULT='NULL';
+      if(fault==='nullable')test.geo[2].IS_NULLABLE='NO';
+      if(fault==='extra')test.geo[2].EXTRA='VIRTUAL GENERATED';
+      if(fault==='signedType')test.geo[0].COLUMN_TYPE='int';
+      if(fault==='missingColumn')test.geo.pop();
+      if(fault==='extraColumn')test.geo.push({...test.geo[2],COLUMN_NAME:'other'});
+      if(fault==='key')test.keys[0].NON_UNIQUE=1;
+      await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');expect(test.markers).toEqual([]);expect(test.getVersion()).toBe(28);
+    }
   });
   it.each([105,106,109,110,111])('advances monotonically from %i',async(version)=>{
     const test=setup(version);await test.subject.$initializeOrMigrateDatabase();expect(test.getVersion()).toBe(113);expect(test.markers).toEqual(Array.from({length:113-version},(_,i)=>version+i+1));
