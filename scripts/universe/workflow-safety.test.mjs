@@ -8,6 +8,23 @@ import test from 'node:test';
 const workflow = name => readFileSync(new URL(`../../.github/workflows/${name}.yml`, import.meta.url), 'utf8').replaceAll('\r\n', '\n');
 const payload = 'literal-$(printf INJECTED)-`printf INJECTED`-"; printf INJECTED; #';
 
+test('focused Firefox regression shares the established container launch environment', () => {
+  const source = workflow('universe-ci');
+  const validate = text => {
+    const steps = text.split(/\n      - name:/);
+    const focused = steps.filter(step => step.includes('UNIVERSE_BROWSER_ENGINE=firefox node --test address-portfolio-target.ci.test.mjs'));
+    assert.equal(focused.length, 1);
+    assert.match(focused[0], /env:\s*\n(?:\s*#[^\n]*\n)*\s*HOME: \/root\s*\n/);
+    assert.match(focused[0], /--browser=firefox --routes=home,tx,address,blocks,docs/);
+    assert.ok(focused[0].indexOf('node --test address-portfolio-target') < focused[0].indexOf('node mobile-check.mjs'));
+  };
+  validate(source);
+  // Reproduce the actual failing job: a separate regression step launched
+  // Firefox as root with the container's pwuser-owned inherited home.
+  const misplaced = source.replace('          UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT UNIVERSE_BROWSER_ENGINE=firefox node --test address-portfolio-target.ci.test.mjs', '      - name: Misplaced regression\n        run: UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT UNIVERSE_BROWSER_ENGINE=firefox node --test address-portfolio-target.ci.test.mjs');
+  assert.throws(() => validate(misplaced));
+});
+
 test('smoke origin remains one literal argument in every actual smoke command', () => {
   const source = workflow('universe-production-smoke');
   const commands = source.split('\n').filter(line => /run: node .*\$SMOKE_ORIGIN/.test(line)).map(line => line.trim().slice(5));

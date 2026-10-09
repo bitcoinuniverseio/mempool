@@ -906,10 +906,6 @@ jobs:
       # The full window set and the full route list, on the engine Safari is
       # built on. This is the closest an automated run gets to an iPhone, so it
       # is the one place worth paying for the whole matrix twice.
-      - name: The address portfolio target holds on Firefox
-        working-directory: scripts/universe/visual-qa
-        run: UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT UNIVERSE_BROWSER_ENGINE=firefox node --test address-portfolio-target.ci.test.mjs
-
       - name: Every window a phone can be, on WebKit
         working-directory: scripts/universe/visual-qa
         run: |
@@ -941,10 +937,13 @@ jobs:
           # which is what the container image gives it. Its own message names
           # this as the fix.
           HOME: /root
-        run: >-
-          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
-          --browser=firefox --routes=home,tx,address,blocks,docs
-          --out=./artifacts-mobile-firefox
+        run: |
+          # The focused regression needs the same existing Firefox launch
+          # environment as the full third-engine gate below.
+          UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT UNIVERSE_BROWSER_ENGINE=firefox node --test address-portfolio-target.ci.test.mjs
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT \
+            --browser=firefox --routes=home,tx,address,blocks,docs \
+            --out=./artifacts-mobile-firefox
 
       - name: Keep the engine reports
         if: failure()
