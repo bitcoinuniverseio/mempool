@@ -1,3 +1,4 @@
+import { LIQUID_OBSERVATORY_V1_SCOPE } from '../../shared/liquid-observatory-wire';
 import { LiquidConfiguredPair, LiquidNetwork, LiquidObservatoryCoverage } from './liquid-observatory.types';
 const hash = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
 const integer = (v: unknown, max=Number.MAX_SAFE_INTEGER): v is number => Number.isSafeInteger(v) && Number(v)>=0 && Number(v)<=max;
@@ -15,7 +16,7 @@ export function liquidProfile(configured: unknown, network: LiquidNetwork): Liqu
 }
 export function validateLiquidCoverage(value: unknown, expected: LiquidConfiguredPair): LiquidObservatoryCoverage {
  const c=value as any, s=c?.source, p=s?.profile;
- requireLiquid(c?.schemaVersion==='universe-liquid-observatory-v1' && c.scope==='canonical-public-blocks-and-parent-peg-evidence' && ['PARTIAL','COMPLETE_AT_OBSERVED_PAIR'].includes(c.status));
+ requireLiquid(c?.schemaVersion==='universe-liquid-observatory-v1' && c.scope===LIQUID_OBSERVATORY_V1_SCOPE && ['PARTIAL','COMPLETE_AT_OBSERVED_PAIR'].includes(c.status));
  requireLiquid(s?.profileSha256===expected.profileSha256 && p && Object.keys(p).length===Object.keys(expected.profile).length && Object.keys(expected.profile).every(key=>p[key]===expected.profile[key as keyof typeof expected.profile]), 'The observed Liquid pair differs from the independently configured profile.');
  requireLiquid(s.elements?.genesis===p.elementsGenesis && s.parent?.genesis===p.parentGenesis && integer(s.elements.height) && integer(s.parent.height) && hash(s.elements.hash) && hash(s.parent.hash) && hash(s.elements.parametersRoot) && s.elements.epochLength===p.epochLength && integer(s.elements.epochAge,p.epochLength-1) && Number.isFinite(Date.parse(s.observedAt)) && hex(s.federation?.signblockScript) && hex(s.federation?.fedpegScript) && hex(s.federation?.fedpegProgram));
  const q=c.progress;
