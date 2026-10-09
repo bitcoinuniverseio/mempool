@@ -8,15 +8,17 @@ import { ClockComponent } from '@components/clock/clock.component';
 import { StatusViewComponent } from '@components/status-view/status-view.component';
 import { AddressGroupComponent } from '@components/address-group/address-group.component';
 import { TrackerGuard } from '@app/route-guards';
+import { bitcoinClockRoutes } from '@app/bitcoin-clock-routes';
 
 const browserWindow = window || {};
 // @ts-ignore
 const browserWindowEnv = browserWindow.__env || {};
 
-let routes: Routes = [
+export let routes: Routes = [
   {
     path: 'testnet',
     children: [
+      ...bitcoinClockRoutes(),
       {
         path: '',
         pathMatch: 'full',
@@ -55,6 +57,7 @@ let routes: Routes = [
   {
     path: 'testnet4',
     children: [
+      ...bitcoinClockRoutes(),
       {
         path: '',
         pathMatch: 'full',
@@ -93,6 +96,7 @@ let routes: Routes = [
   {
     path: 'signet',
     children: [
+      ...bitcoinClockRoutes(),
       {
         path: 'mining/blocks',
         redirectTo: 'blocks',
@@ -136,6 +140,7 @@ let routes: Routes = [
   {
     path: 'regtest',
     children: [
+      ...bitcoinClockRoutes(),
       {
         path: 'mining/blocks',
         redirectTo: 'blocks',
