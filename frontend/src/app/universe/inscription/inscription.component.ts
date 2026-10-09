@@ -1,7 +1,8 @@
+import { NamesAssetViewState, NAMES_INSCRIPTION_ID, namesAssetState$ } from '../names-explorer-asset';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, Subscription, switchMap } from 'rxjs';
+import { Observable, Subscription, switchMap, combineLatest, of, shareReplay, catchError, Subject, startWith, defer } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
@@ -10,6 +11,7 @@ import { OrdInscriptionView } from '@app/universe/universe.types';
 import {
   AssetViewState,
   assetState$,
+  ASSET_LOOKUP_GATEWAY_RESPONSE_MS,
   assetStatusMessage,
   assetTone,
   utcFromSeconds,
@@ -36,6 +38,7 @@ const INSCRIPTION_NUMBER = /^-?(0|[1-9][0-9]{0,18})$/;
 })
 export class InscriptionComponent implements OnInit, OnDestroy {
   state$: Observable<AssetViewState<OrdInscriptionView>>;
+  namesState$: Observable<NamesAssetViewState>;
 
   readonly shorten = shortenIdentifier;
   readonly statusMessage = assetStatusMessage;
@@ -43,6 +46,8 @@ export class InscriptionComponent implements OnInit, OnDestroy {
   readonly utc = utcFromSeconds;
   readonly amount = formatAtomicAmount;
 
+  private readonly namesRetryTrigger$ = new Subject<void>();
+  private readonly retryTrigger$ = new Subject<void>();
   private visitSubscription?: Subscription;
 
   constructor(
@@ -53,15 +58,31 @@ export class InscriptionComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.state$ = this.route.paramMap.pipe(
-      switchMap((params) => {
+    this.state$ = this.retryTrigger$.pipe(startWith(undefined), switchMap(() =>
+      combineLatest([this.route.paramMap, defer(() => this.api.selectedNetwork$()).pipe(catchError(() => of(null)))]).pipe(
+        switchMap(([params, network]) => {
+          const reference = (params.get('reference') || '').trim();
+          this.seo.setTitle(`Inscription ${shortenIdentifier(reference, 10)}`);
+          return assetState$<OrdInscriptionView>(reference, () => {
+            if (network === null) {throw new Error('Unsupported inscription network context');}
+            return this.api.getInscription$(reference, network);
+          }, {firstResponseTimeoutMs:this.api.assetLookupDeadlineMs ?? ASSET_LOOKUP_GATEWAY_RESPONSE_MS});
+        }),
+      )), shareReplay({bufferSize:1,refCount:true}),
+    );
+
+    this.namesState$ = this.namesRetryTrigger$.pipe(startWith(undefined), switchMap(() =>
+      combineLatest([this.route.paramMap, this.route.queryParamMap]).pipe(
+      switchMap(([params, query]) => {
+        const protocols = query.getAll('protocol');
+        if (!protocols.includes('names')) {return of<NamesAssetViewState>({kind:'absent'});}
+        if (protocols.length !== 1 || protocols[0] !== 'names') {return of<NamesAssetViewState>({kind:'unavailable',reason:'Names context query must be a single protocol=names value.'});}
         const reference = (params.get('reference') || '').trim();
-        this.seo.setTitle(`Inscription ${shortenIdentifier(reference, 10)}`);
-        return assetState$<OrdInscriptionView>(
-          reference,
-          this.api.getInscription$(reference),
-        );
-      }),
+        if (!NAMES_INSCRIPTION_ID.test(reference)) {return of<NamesAssetViewState>({kind:'unavailable',reason:'Names details require an exact inscription id.'});}
+        return this.api.selectedNetwork$().pipe(switchMap(network =>
+          namesAssetState$(this.api.getNamesObject$(reference, network), reference, network)));
+      }), catchError(() => of<NamesAssetViewState>({kind:'unavailable',reason:'The selected Names network context is unavailable.'})))),
+      shareReplay({bufferSize:1,refCount:true}),
     );
 
     this.visitSubscription = this.state$.subscribe((state) => {
@@ -77,6 +98,10 @@ export class InscriptionComponent implements OnInit, OnDestroy {
       });
     });
   }
+
+  retryNames(): void { this.namesRetryTrigger$.next(); }
+
+  retry(): void { this.retryTrigger$.next(); }
 
   ngOnDestroy(): void {
     this.visitSubscription?.unsubscribe();

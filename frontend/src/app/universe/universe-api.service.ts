@@ -1,3 +1,5 @@
+import { ASSET_LOOKUP_GATEWAY_RESPONSE_MS, ASSET_LOOKUP_EXTENDED_RESPONSE_MS } from './asset-lookup';
+import { NamesExplorerAssetResponse, NAMES_INSCRIPTION_ID } from './names-explorer-asset';
 import { Sv2Family, Sv2Page } from './stratum-v2/stratum-v2.types';
 import { ArkBatchPage, ArkBatchWindow, ArkNativeProofInput, ArkNativeProofVerdict, readArkBatch, readArkBatchPage, readArkOperator } from './ark/ark-native-view';
 import { configuredSv2Profile, validateSv2Page } from './stratum-v2/stratum-v2.evidence';
@@ -299,6 +301,15 @@ export class UniverseApiService {
     );
   }
 
+  /** A consumer already owns scope switching; this attempt must match its captured scope. */
+  private assetRequest<T>(url: string, network?: ExplorerNetwork): Observable<T> {
+    if (network === undefined) {return this.scopedRequest<T>(url);}
+    return defer(() => {
+      if (this.network !== network) {throw new Error('asset-request-context-changed');}
+      return this.requestForNetwork<T>(url, network);
+    });
+  }
+
   private assertResponseContext(value: unknown, network: ExplorerNetwork, chain = 'bitcoin'): void {
     if (!value || typeof value !== 'object') {return;}
     const row = value as Record<string, unknown>;
@@ -449,23 +460,35 @@ export class UniverseApiService {
   }
 
   /** One inscription, addressed by id or by inscription number. */
-  getInscription$(reference: string): Observable<AssetLookupResult<OrdInscriptionView>> {
-    return this.scopedRequest<AssetLookupResult<OrdInscriptionView>>(
-      this.apiBaseUrl + '/api/v1/universe/inscriptions/' + encodeURIComponent(reference)
+  getInscription$(reference: string, network?: ExplorerNetwork): Observable<AssetLookupResult<OrdInscriptionView>> {
+    return this.assetRequest<AssetLookupResult<OrdInscriptionView>>(
+      this.apiBaseUrl + '/api/v1/universe/inscriptions/' + encodeURIComponent(reference), network
     );
   }
 
+  /** Existing gateway/direct source budgets determine the display deadline. */
+  get assetLookupDeadlineMs(): number {
+    return this.stateService.isBrowser ? ASSET_LOOKUP_GATEWAY_RESPONSE_MS : ASSET_LOOKUP_EXTENDED_RESPONSE_MS;
+  }
+
+  /** Explicit Names inscription request; ordinary reads never call this lane. */
+  getNamesObject$(reference: string, network?: ExplorerNetwork): Observable<NamesExplorerAssetResponse> {
+    if (!NAMES_INSCRIPTION_ID.test(reference)) {return throwError(() => new Error('Exact Names inscription id required'));}
+    return this.assetRequest<NamesExplorerAssetResponse>(
+      this.apiBaseUrl + '/api/v1/universe/protocols/names/objects/' + encodeURIComponent(reference), network);
+  }
+
   /** One rune, addressed by name or by rune id. */
-  getRune$(reference: string): Observable<AssetLookupResult<OrdRuneView>> {
-    return this.scopedRequest<AssetLookupResult<OrdRuneView>>(
-      this.apiBaseUrl + '/api/v1/universe/runes/' + encodeURIComponent(reference)
+  getRune$(reference: string, network?: ExplorerNetwork): Observable<AssetLookupResult<OrdRuneView>> {
+    return this.assetRequest<AssetLookupResult<OrdRuneView>>(
+      this.apiBaseUrl + '/api/v1/universe/runes/' + encodeURIComponent(reference), network
     );
   }
 
   /** One satoshi, addressed by its ordinal number. */
-  getSat$(reference: string): Observable<AssetLookupResult<OrdSatView>> {
-    return this.scopedRequest<AssetLookupResult<OrdSatView>>(
-      this.apiBaseUrl + '/api/v1/universe/sats/' + encodeURIComponent(reference)
+  getSat$(reference: string, network?: ExplorerNetwork): Observable<AssetLookupResult<OrdSatView>> {
+    return this.assetRequest<AssetLookupResult<OrdSatView>>(
+      this.apiBaseUrl + '/api/v1/universe/sats/' + encodeURIComponent(reference), network
     );
   }
 

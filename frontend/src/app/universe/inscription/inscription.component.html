@@ -41,6 +41,7 @@
     <div *ngSwitchCase="'unavailable'" class="panel state-panel unavailable">
       <h2 i18n="universe.inscription.unavailable-title">The asset authority did not answer</h2>
       <p>{{ statusMessage(state.result?.status) }}</p>
+      <button type="button" class="btn btn-sm btn-outline-light" (click)="retry()" i18n="universe.inscription.retry">Retry inscription read</button>
     </div>
 
     <ng-container *ngSwitchCase="'ready'">
@@ -139,5 +140,27 @@
         </ng-container>
       </p>
     </ng-container>
+  </ng-container>
+  <ng-container *ngIf="namesState$ | async as names">
+    <section class="panel names-detail" *ngIf="names.kind !== 'absent'">
+      <h2 i18n="universe.inscription.names-title">Names claim details</h2>
+      <p *ngIf="names.kind === 'loading'" aria-busy="true" i18n="universe.inscription.names-loading">Reading the Names authority…</p>
+      <ng-container *ngIf="names.kind === 'unavailable'">
+        <p role="status">{{ names.reason }}</p>
+        <button type="button" class="btn btn-sm btn-outline-light" (click)="retryNames()" i18n="universe.inscription.names-retry">Retry Names details</button>
+      </ng-container>
+      <ng-container *ngIf="names.kind === 'ready'">
+        <dl>
+          <dt i18n="universe.inscription.names-kind">Claim kind</dt><dd>{{ names.value.kind }}</dd>
+          <dt *ngIf="names.value.name" i18n="universe.inscription.names-name">Name</dt><dd *ngIf="names.value.name">{{ names.value.name }}</dd>
+          <dt i18n="universe.inscription.names-namespace">Namespace</dt><dd>{{ names.value.namespace }}</dd>
+          <dt i18n="universe.inscription.names-owner">Observed inscription owner</dt><dd class="identifier">{{ names.value.ownership.owner }}</dd>
+          <dt i18n="universe.inscription.names-output">Observed output</dt><dd class="identifier">{{ names.value.ownership.outpoint }}</dd>
+        </dl>
+        <p class="asof" i18n="universe.inscription.names-asof">Names source observation: block {{ names.value.checkpoint.heightAtomic }}, {{ names.value.observedAt }}.</p>
+        <p *ngIf="names.value.kind === 'namespace'" i18n="universe.inscription.namespace-privileges">Holding this namespace inscription grants no special permission to register names.</p>
+        <p i18n="universe.inscription.names-coverage">This is a first claim in the indexed range. Complete SNS membership has not been verified.</p>
+      </ng-container>
+    </section>
   </ng-container>
 </div>
