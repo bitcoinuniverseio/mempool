@@ -110,7 +110,8 @@ class WebsocketHandler {
 
   private refreshFeeState(): ReturnType<typeof feeApi.getFeeEstimate> {
     const feeEstimate = feeApi.getFeeEstimate();
-    this.updateSocketDataFields({ feeEstimate, fees: feeEstimate.values, liveObservation: this.getLiveObservation() });
+    this.updateSocketDataFields({ feeEstimate, fees: feeEstimate.values, liveObservation: this.getLiveObservation(),
+      backendInfo: backendInfo.getBackendInfo() });
     return feeEstimate;
   }
 
@@ -132,7 +133,7 @@ class WebsocketHandler {
     if (onlyChanged && this.publishedFeeState === signature) return;
     this.publishedFeeState = signature;
     const response = JSON.stringify({ feeEstimate, fees: feeEstimate.values, liveObservation: this.getLiveObservation(),
-      mempoolInfo: memPool.getMempoolInfo() });
+      mempoolInfo: memPool.getMempoolInfo(), backendInfo: backendInfo.getBackendInfo() });
     for (const server of this.webSocketServers) {
       server.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN && (client['want-stats'] || client['want-blocks'])) client.send(response);
