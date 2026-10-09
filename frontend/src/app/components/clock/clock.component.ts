@@ -66,8 +66,8 @@ export class ClockComponent implements OnInit {
         this.blocks = blocks.slice(0, 16);
         if (this.blocks[this.blockIndex]) {
           this.blockStyle = this.getStyleForBlock(this.blocks[this.blockIndex]);
-          this.cd.markForCheck();
         }
+        this.cd.markForCheck();
       });
 
     /**
@@ -94,9 +94,13 @@ export class ClockComponent implements OnInit {
       switchMap((params: ParamMap) => {
         const rawMode: string = params.get('mode');
         const mode = rawMode === 'mempool' ? 'mempool' : 'mined';
-        const index: number = Number.parseInt(params.get('index'));
-        if (mode !== rawMode || index < 0 || isNaN(index)) {
-          this.router.navigate([this.relativeUrlPipe.transform('/clock'), mode, index || 0]);
+        const rawIndex = params.get('index') ?? '';
+        const parsedIndex = /^\d+$/.test(rawIndex) ? Number(rawIndex) : NaN;
+        const index = Number.isSafeInteger(parsedIndex) && parsedIndex >= 0 ? parsedIndex : 0;
+        if (mode !== rawMode || rawIndex !== String(index)) {
+          this.router.navigate([this.relativeUrlPipe.transform('/clock'), mode, index], {
+            replaceUrl: true, queryParamsHandling: 'preserve', preserveFragment: true,
+          });
         }
         return of({
           mode,
@@ -105,13 +109,24 @@ export class ClockComponent implements OnInit {
       }),
       tap((page: { mode: 'mempool' | 'mined', index: number }) => {
         this.mode = page.mode;
-        this.blockIndex = page.index || 0;
+        this.blockIndex = page.index;
         if (this.blocks[this.blockIndex]) {
           this.blockStyle = this.getStyleForBlock(this.blocks[this.blockIndex]);
-          this.cd.markForCheck();
         }
+        this.cd.markForCheck();
       })
     ).subscribe();
+  }
+
+  /** Retain a valid requested index; missing observed data is not block zero. */
+  get selectedBlock(): BlockExtended | null {
+    if (this.mode === 'mempool') {
+      const configured = this.stateService.env.MEMPOOL_BLOCKS_AMOUNT;
+      const capacity = Number.isSafeInteger(configured) && configured > 0 ? configured : 8;
+      if (this.blockIndex >= capacity) {return null;}
+      return this.blocks[0] ?? null;
+    }
+    return this.blocks[this.blockIndex] ?? null;
   }
 
   retryFees(): void {
