@@ -16,12 +16,12 @@ jobs:
         node: ["24.19.0"]
         flavor: ["dev", "prod"]
       fail-fast: false
-    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, universe-runners-1]
 
     name: Backend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@c9bb29ab2b39ea95dcc430fda80416deb2c4eb85
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -101,10 +101,10 @@ jobs:
     strategy:
       matrix:
         node: ["24.19.0"]
-    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, universe-runners-1]
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@c9bb29ab2b39ea95dcc430fda80416deb2c4eb85
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -212,12 +212,12 @@ jobs:
         node: ["24.19.0"]
         flavor: ["dev", "prod"]
       fail-fast: false
-    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, universe-runners-1]
 
     name: Frontend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@c9bb29ab2b39ea95dcc430fda80416deb2c4eb85
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -309,7 +309,7 @@ jobs:
   
   e2e:
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
-    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, universe-runners-1]
     needs: [frontend]
     strategy:
       fail-fast: false
@@ -320,7 +320,7 @@ jobs:
     name: E2E tests for ${{ matrix.module }}
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@c9bb29ab2b39ea95dcc430fda80416deb2c4eb85
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -453,12 +453,12 @@ jobs:
           CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
   validate_docker_json:
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
-    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, universe-runners-1]
     name: Validate generated backend Docker JSON
 
     steps: 
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@c9bb29ab2b39ea95dcc430fda80416deb2c4eb85
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
       - name: Checkout
         uses: actions/checkout@v3
         with:
