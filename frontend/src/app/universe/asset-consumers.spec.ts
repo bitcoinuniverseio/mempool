@@ -71,15 +71,58 @@ describe.each(['rune', 'sat'] as const)('%s asset attempt lifecycle', kind => {
     const subscription = component.state$.subscribe(value => seen.push(value.kind));
     expect(get).toHaveBeenCalledTimes(1);
     responses[0].next(ready('1'));
+    // Angular can publish a fresh ParamMap for an unchanged child route while
+    // the parent network selector changes; its object identity is not scope.
+    route.paramMap.next(convertToParamMap({ reference: '1', unrelated: 'router-refresh' }));
+    expect(get).toHaveBeenCalledTimes(1);
     state.network = 'signet'; changed.next('signet');
+    route.paramMap.next(convertToParamMap({ reference: '1' }));
+    changed.next('signet');
     expect(get).toHaveBeenCalledTimes(2);
     expect(urls[1]).toContain('network=signet');
     expect(responses[0].observed).toBe(false);
     expect(seen.at(-1)).toBe('loading');
     component.retry();
     expect(get).toHaveBeenCalledTimes(3);
+    route.paramMap.next(convertToParamMap({ reference: ' 1 ' }));
+    expect(get).toHaveBeenCalledTimes(3);
     subscription.unsubscribe(); component.ngOnDestroy();
     expect(responses[2].observed).toBe(false);
+  });
+
+  it('deduplicates unchanged semantic scope without hiding reference changes or explicit retry', () => {
+    const f = setup(kind);
+    f.responses[0].next(ready('1'));
+    f.params.next(convertToParamMap({ reference: ' 1 ' }));
+    f.network.next('mainnet');
+    expect(f.request).toHaveBeenCalledTimes(1);
+    expect(f.states).toEqual(['loading', 'ready']);
+    f.params.next(convertToParamMap({ reference: '1' }));
+    f.network.next('signet');
+    f.params.next(convertToParamMap({ reference: '1' }));
+    f.network.next('signet');
+    expect(f.request).toHaveBeenCalledTimes(2);
+    expect(f.states.at(-1)).toBe('loading');
+    f.component.retry();
+    expect(f.request).toHaveBeenCalledTimes(3);
+    f.params.next(convertToParamMap({ reference: '2' }));
+    expect(f.request).toHaveBeenCalledTimes(4);
+    f.close();
+  });
+
+  it('does not restore an earlier ready A observation after an A-B-A context switch', () => {
+    const f = setup(kind);
+    f.responses[0].next(ready('1'));
+    f.responses[0].complete();
+    f.network.next('signet');
+    f.network.next('mainnet');
+    expect(f.request).toHaveBeenCalledTimes(3);
+    expect(f.states.at(-1)).toBe('loading');
+    f.responses[1].next(ready('old-B'));
+    expect(f.states.at(-1)).toBe('loading');
+    f.responses[2].next(ready('new-A'));
+    expect(f.states.at(-1)).toBe('ready');
+    f.close();
   });
 
   it('shares consumers, resets context immediately and rejects late old results', () => {

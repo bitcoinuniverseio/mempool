@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, Subject, Subscription, catchError, combineLatest, defer, of, shareReplay, startWith, switchMap } from 'rxjs';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Observable, Subject, Subscription, catchError, combineLatest, defer, distinctUntilChanged, map, of, shareReplay, startWith, switchMap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-button.component';
-import { OrdRuneView } from '@app/universe/universe.types';
+import { ExplorerNetwork, OrdRuneView } from '@app/universe/universe.types';
 import {
   ASSET_LOOKUP_GATEWAY_RESPONSE_MS,
   AssetViewState,
@@ -17,6 +17,7 @@ import {
   mintProgressPercent,
   utcFromSeconds,
 } from '@app/universe/asset-lookup';
+import { assetRouteContext$, assetRouteState$ } from '@app/universe/asset-route-context';
 import { formatAtomicAmount, shortenIdentifier } from '@app/universe/universe-evidence';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -53,24 +54,28 @@ export class RuneComponent implements OnInit, OnDestroy {
     private api: UniverseApiService,
     private local: UniverseLocalService,
     private seo: SeoService,
+    @Optional() private router?: Router,
   ) {}
 
   ngOnInit(): void {
+    type Context = { reference: string; network: ExplorerNetwork | null };
+    const equal = (previous: Context, current: Context): boolean => previous.reference === current.reference && previous.network === current.network;
+    const contexts$ = assetRouteContext$(combineLatest([
+      this.route.paramMap.pipe(map(params => (params.get('reference') || '').trim()), distinctUntilChanged()),
+      defer(() => this.api.selectedNetwork$()).pipe(catchError(() => of(null))),
+    ]).pipe(
+      map(([reference, network]): Context => ({ reference, network })), distinctUntilChanged(equal),
+    ), this.router);
     this.state$ = this.retrySubject.pipe(
       startWith(undefined),
-      switchMap(() => combineLatest([
-        this.route.paramMap,
-        defer(() => this.api.selectedNetwork$()).pipe(catchError(() => of(null))),
-      ]).pipe(
-        switchMap(([params, network]) => {
-          const reference = (params.get('reference') || '').trim();
-          this.seo.setTitle(`Rune ${reference}`);
-          return assetState$<OrdRuneView>(reference, () => {
-            if (network === null) {throw new Error('Unsupported asset context');}
-            return this.api.getRune$(reference, network);
-          }, { firstResponseTimeoutMs: this.api.assetLookupDeadlineMs ?? ASSET_LOOKUP_GATEWAY_RESPONSE_MS });
-        }),
-      )),
+      switchMap(() => assetRouteState$(contexts$, ({ reference, network }) => {
+        this.seo.setTitle(`Rune ${reference}`);
+        return assetState$<OrdRuneView>(reference, () => {
+          if (network === null) {throw new Error('Unsupported asset context');}
+          return this.api.getRune$(reference, network);
+        }, { firstResponseTimeoutMs: this.api.assetLookupDeadlineMs ?? ASSET_LOOKUP_GATEWAY_RESPONSE_MS });
+      }, ({ reference }): AssetViewState<OrdRuneView> => ({ kind: 'loading', reference }),
+      ({ reference }): AssetViewState<OrdRuneView> => ({ kind: 'unavailable', reference }), equal)),
       shareReplay({ bufferSize: 1, refCount: true }),
     );
 
