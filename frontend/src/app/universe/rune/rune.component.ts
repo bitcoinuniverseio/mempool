@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, Subscription, switchMap } from 'rxjs';
+import { Observable, Subject, Subscription, catchError, combineLatest, defer, of, shareReplay, startWith, switchMap } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
 import { BookmarkButtonComponent } from '@app/universe/bookmark-button/bookmark-button.component';
 import { OrdRuneView } from '@app/universe/universe.types';
 import {
+  ASSET_LOOKUP_GATEWAY_RESPONSE_MS,
   AssetViewState,
   applyDivisibility,
   assetState$,
@@ -45,6 +46,7 @@ export class RuneComponent implements OnInit, OnDestroy {
   readonly amount = formatAtomicAmount;
 
   private visitSubscription?: Subscription;
+  private readonly retrySubject = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
@@ -54,12 +56,22 @@ export class RuneComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.state$ = this.route.paramMap.pipe(
-      switchMap((params) => {
-        const reference = (params.get('reference') || '').trim();
-        this.seo.setTitle(`Rune ${reference}`);
-        return assetState$<OrdRuneView>(reference, this.api.getRune$(reference));
-      }),
+    this.state$ = this.retrySubject.pipe(
+      startWith(undefined),
+      switchMap(() => combineLatest([
+        this.route.paramMap,
+        defer(() => this.api.selectedNetwork$()).pipe(catchError(() => of(null))),
+      ]).pipe(
+        switchMap(([params, network]) => {
+          const reference = (params.get('reference') || '').trim();
+          this.seo.setTitle(`Rune ${reference}`);
+          return assetState$<OrdRuneView>(reference, () => {
+            if (network === null) {throw new Error('Unsupported asset context');}
+            return this.api.getRune$(reference, network);
+          }, { firstResponseTimeoutMs: this.api.assetLookupDeadlineMs ?? ASSET_LOOKUP_GATEWAY_RESPONSE_MS });
+        }),
+      )),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
 
     this.visitSubscription = this.state$.subscribe((state) => {
@@ -72,6 +84,10 @@ export class RuneComponent implements OnInit, OnDestroy {
         label: rune.spacedRune,
       });
     });
+  }
+
+  retry(): void {
+    this.retrySubject.next();
   }
 
   ngOnDestroy(): void {
