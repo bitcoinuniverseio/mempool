@@ -12,7 +12,7 @@
   <div class="clock-face">
     <app-clock-face [size]="clockSize">
       <div class="block-wrapper">
-        <ng-container *ngIf="blocks && blocks.length">
+        <ng-container *ngIf="selectedBlock as block; else blockUnavailable">
           <ng-container *ngIf="mode === 'mined'; else mempoolMode;">
             <div class="block-cube">
               <div class="side top"></div>
@@ -30,9 +30,12 @@
           </ng-template>
           <div class="fader"></div>
           <div class="title-wrapper">
-            <h1 class="block-height">{{ blocks[mode === 'mempool' ? 0 : blockIndex].height }}</h1>
+            <h1 class="block-height">{{ block.height }}</h1>
           </div>
         </ng-container>
+        <ng-template #blockUnavailable>
+          <p class="label" role="status" *ngIf="blocks.length" i18n="clock.block-unavailable">The requested block is outside the available Clock window.</p>
+        </ng-template>
       </div>
     </app-clock-face>
   </div>
@@ -71,13 +74,13 @@
         </p>
       </ng-container>
     </div>
-    <div *ngIf="mode !== 'mempool' && blocks?.length" class="stats bottom left">
-      <p [innerHTML]="blocks[blockIndex].size | bytes: 2"></p>
+    <div *ngIf="mode !== 'mempool' && selectedBlock as block" class="stats bottom left">
+      <p [innerHTML]="block.size | bytes: 2"></p>
       <p class="label" i18n="block.size">Size</p>
     </div>
-    <div *ngIf="mode !== 'mempool' && blocks?.length" class="stats bottom right">
+    <div *ngIf="mode !== 'mempool' && selectedBlock as block" class="stats bottom right">
       <p class="force-wrap">
-        {{ blocks[blockIndex].tx_count | number }}
+        {{ block.tx_count | number }}
         <span class="label" i18n="dashboard.txs">Transactions</span>
       </p>
     </div>
