@@ -16,10 +16,15 @@ import { fetchElectrumTransactionPage } from './electrum-transaction-page';
 import { collectElectrumAddressStats } from './electrum-address-stats';
 import { readElectrumUtxoMetadata } from './electrum-utxo-metadata';
 import { addressBitcoinClient } from './bitcoin-client';
+import { AddressHttpReader, verifyAddressHttpSource } from './address-http-reader';
 
 class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   private electrumClient: any;
   private readonly addressApi = new BitcoinApi(addressBitcoinClient);
+  private readonly addressHttp = config.ELECTRUM.ADDRESS_HTTP_URL === undefined ? null : new AddressHttpReader(
+    config.ELECTRUM.ADDRESS_HTTP_URL,
+    (height, readHash, signal) => verifyAddressHttpSource(height, readHash, addressBitcoinClient, signal, config.ESPLORA.MAX_BEHIND_TIP ?? 2),
+  );
 
   constructor(bitcoinClient: any) {
     super(bitcoinClient);
@@ -73,7 +78,19 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   }
 
   /** @asyncUnsafe */
-  async $getAddress(address: string): Promise<IEsploraApi.Address> {
+  async $getAddress(address: string, signal?: AbortSignal): Promise<IEsploraApi.Address> {
+    if (this.addressHttp) {
+      let selected: string;
+      return this.addressHttp.summary(address, /** @asyncUnsafe */ async active => {
+        if (active.aborted) throw new Error('Address HTTP timeout or cancellation');
+        if (!selected) {
+          const info = await addressBitcoinClient.rpc.call('validateaddress', [address], { signal: active });
+          if (!info?.isvalid || typeof info.scriptPubKey !== 'string' || !/^(?:[0-9a-f]{2})+$/.test(info.scriptPubKey)) throw new Error('Invalid Bitcoin address');
+          selected = this.encodeScriptHash(info.scriptPubKey);
+        }
+        return withElectrumDeadline(this.electrumClient.request('blockchain.scripthash.get_balance', [selected]), 'blockchain.scripthash.get_balance', 15000);
+      }, signal);
+    }
     let scripthash = '';
     const stats = await this.$getExactScriptStatistics(/** @asyncUnsafe */ async signal => {
       const info = await addressBitcoinClient.rpc.call('validateaddress', [address], { signal });
@@ -84,7 +101,12 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   }
 
   /** @asyncUnsafe */
-  async $getAddressTransactions(address: string, lastSeenTxId: string): Promise<IEsploraApi.Transaction[]> {
+  async $getAddressTransactions(address: string, lastSeenTxId: string, signal?: AbortSignal): Promise<IEsploraApi.Transaction[]> {
+    if (this.addressHttp) return this.addressHttp.history(address, lastSeenTxId, signal, /** @asyncUnsafe */ async active => {
+      if (active.aborted) throw new Error('Address HTTP timeout or cancellation');
+      const info = await addressBitcoinClient.rpc.call('validateaddress', [address], { signal: active });
+      if (!info?.isvalid) throw new Error('Invalid Bitcoin address');
+    });
     await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
     const addressInfo = await addressBitcoinClient.validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
