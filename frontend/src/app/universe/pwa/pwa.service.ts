@@ -36,6 +36,7 @@ export class PwaService {
   private installEvent: any = null;
   private reloading = false;
   private hadController = false;
+  private registration: ServiceWorkerRegistration | null = null;
 
   readonly offline$: Observable<boolean> = this.offlineSubject.asObservable();
   readonly updateReady$: Observable<boolean> = this.updateSubject.asObservable();
@@ -65,18 +66,18 @@ export class PwaService {
    */
   private register(): void {
     if (!this.supported) { return; }
+    this.hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register(WORKER_URL, { type: 'module' }).then((registration) => {
+      this.registration = registration;
       const queue = (): void => {
-        if (registration.waiting && navigator.serviceWorker.controller) {
-          this.updateSubject.next(true);
-        }
+        this.updateSubject.next(!!registration.waiting && !!navigator.serviceWorker.controller);
       };
       queue();
       registration.addEventListener('updatefound', () => {
         const installing = registration.installing;
         installing?.addEventListener('statechange', () => {
           if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-            this.updateSubject.next(true);
+            queue();
           }
         });
       });
@@ -87,6 +88,7 @@ export class PwaService {
         }
       });
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        this.updateSubject.next(false);
         // The first controller is this registration claiming the page after
         // install; adopting it needs no reload. Only a later change of
         // controller is an applied update, and the visitor asked for it.
@@ -127,7 +129,17 @@ export class PwaService {
 
   /** Applies the waiting update, at the visitor's instruction. */
   applyUpdate(): void {
-    navigator.serviceWorker?.controller?.postMessage({ type: 'SKIP_WAITING' });
+    if (!this.supported || this.reloading) { return; }
+    this.updateSubject.next(false);
+    const waiting = this.registration?.waiting;
+    if (waiting) {
+      // Only the waiting worker can activate the downloaded update.
+      waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      // Another tab may already have activated the offered update.
+      this.reloading = true;
+      window.location.reload();
+    }
   }
 
   /** Asks the worker and the browser for a fresh storage report. */
