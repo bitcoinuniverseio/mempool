@@ -21,6 +21,12 @@
   min-width: var(--u-touch-target, 44px);
 }
 
+.universe-portfolio-link > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
 .qrSpan {
   align-items: center;
   background: transparent;
