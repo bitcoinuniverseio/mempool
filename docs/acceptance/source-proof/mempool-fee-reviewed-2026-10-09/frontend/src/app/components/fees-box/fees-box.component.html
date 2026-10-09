@@ -1,0 +1,122 @@
+<!--
+  IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-TEMPLATE | F-FE-001 | FAIL.
+  The primary branch below bypasses liveFeed error once cached rates exist.
+  1. Bind the repaired feeEstimate state from FeesBoxComponent; render current
+     numbers only for ready metadata, with explicit stale/syncing/unavailable
+     feedback and original observation where last-good values are retained.
+  2. Move failure/recovery feedback into the state selector so it cannot be
+     hidden inside loadingFees when rates were received earlier. Preserve the
+     scale, priority order, tokens, sat/vB units and accessible labels.
+  3. Use the shared retry action; verify stale init, REST 503, reconnect, network
+     switch and fresh recovery in the proposed fees-box.component.spec.ts and
+     desktop/mobile Signet screenshots. No new per-widget polling.
+  Dependencies API-01..API-04 plus API-05-FEES-CONTRACT/STATE/VIEW.
+  Evidence frontend-source-reproductions.json; rollback producer and view
+  together. These source comments do not change functional FAIL.
+-->
+<ng-container *ngIf="feeEstimate$ | async as estimate">
+  <p class="feed-unavailable" role="status" *ngIf="estimate.status !== 'ready'">
+    @if (estimate.status === 'stale') {
+      <span i18n="fees-box.stale">Last known fee estimates, stale.</span>
+      <time>{{ estimate.observedAt | date:'medium' }}</time>
+    } @else if (estimate.status === 'syncing') {
+      <span i18n="fees-box.syncing">Waiting for synchronized fee estimates.</span>
+    } @else {
+      <span i18n="fees-box.unavailable">Fee estimates unavailable.</span>
+    }
+    <button type="button" class="btn btn-sm btn-outline-light" (click)="retry()" [disabled]="estimate.status === 'syncing'" i18n="fees-box.retry">Retry</button>
+  </p>
+<div class="fee-estimation-wrapper" *ngIf="estimate.values as recommendedFees; else loadingFees">
+  <div class="fee-scale">
+    <div class="fee-scale-track" aria-hidden="true">
+      <div class="fee-progress-bar" [style.background]="noPriority"></div>
+      <div class="band-separator fill"></div>
+      <div class="fee-progress-bar priority" [style.background]="gradient"></div>
+    </div>
+    <div class="fee-scale-labels">
+      <span class="fee-label" i18n="fees-box.no-priority" i18n-ngbTooltip="Transaction feerate tooltip (economy)" ngbTooltip="Either 2x the minimum, or the Low Priority rate (whichever is lower)" placement="top">No Priority</span>
+      <span class="band-separator"></span>
+      <span class="fee-label prority" i18n="fees-box.low-priority" i18n-ngbTooltip="Transaction feerate tooltip (low priority)" ngbTooltip="Usually places your transaction in between the second and third mempool blocks" placement="top">Low Priority</span>
+      <span class="fee-label prority" i18n="fees-box.medium-priority" i18n-ngbTooltip="Transaction feerate tooltip (medium priority)" ngbTooltip="Usually places your transaction in between the first and second mempool blocks" placement="top">Medium Priority</span>
+      <span class="fee-label prority" i18n="fees-box.high-priority" i18n-ngbTooltip="Transaction feerate tooltip (high priority)" ngbTooltip="Places your transaction in the first mempool block" placement="top">High Priority</span>
+    </div>
+  </div>
+
+  <div class="fee-estimation-container">
+    <div class="item">
+      <div class="card-text">
+        <div class="fee-text"><app-fee-rate [fee]="recommendedFees.economyFee" [dp]="1"></app-fee-rate></div> <span class="fiat"><app-fiat i18n-ngbTooltip="Transaction fee tooltip" ngbTooltip="Based on average native segwit transaction of 140 vBytes" placement="bottom" [value]="recommendedFees.economyFee * 140" ></app-fiat></span>
+      </div>
+    </div>
+    <div class="band-separator"></div>
+    <div class="item">
+      <div class="card-text">
+        <div class="fee-text"><app-fee-rate [fee]="recommendedFees.hourFee" [dp]="1"></app-fee-rate></div> <span class="fiat"><app-fiat i18n-ngbTooltip="Transaction fee tooltip" ngbTooltip="Based on average native segwit transaction of 140 vBytes" placement="bottom" [value]="recommendedFees.hourFee * 140" ></app-fiat></span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="card-text">
+        <div class="fee-text"><app-fee-rate [fee]="recommendedFees.halfHourFee" [dp]="1"></app-fee-rate></div> <span class="fiat"><app-fiat i18n-ngbTooltip="Transaction fee tooltip" ngbTooltip="Based on average native segwit transaction of 140 vBytes" placement="bottom" [value]="recommendedFees.halfHourFee * 140" ></app-fiat></span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="card-text">
+        <div class="fee-text"><app-fee-rate [fee]="recommendedFees.fastestFee" [dp]="1"></app-fee-rate></div> <span class="fiat"><app-fiat i18n-ngbTooltip="Transaction fee tooltip" ngbTooltip="Based on average native segwit transaction of 140 vBytes" placement="bottom" [value]="recommendedFees.fastestFee * 140" ></app-fiat></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingFees>
+  <div class="fee-scale">
+    <div class="fee-scale-track" aria-hidden="true">
+      <div class="fee-progress-bar" [style.background]="noPriority"></div>
+      <div class="band-separator fill"></div>
+      <div class="fee-progress-bar priority" [style.background]="gradient"></div>
+    </div>
+    <div class="fee-scale-labels">
+      <span class="fee-label" i18n="fees-box.no-priority">No Priority</span>
+      <span class="band-separator"></span>
+      <span class="fee-label prority" i18n="fees-box.low-priority">Low Priority</span>
+      <span class="fee-label prority" i18n="fees-box.medium-priority">Medium Priority</span>
+      <span class="fee-label prority" i18n="fees-box.high-priority">High Priority</span>
+    </div>
+  </div>
+  <!-- These numbers only ever arrive over the socket, and the socket does not
+       fail: when the backend is down it connects and then says nothing. Once
+       the feed has given up, placeholders that keep pulsing are promising an
+       answer that is not coming. -->
+  @if ((isLoading$ | async) === false) {
+    <p class="feed-unavailable" i18n="fees-box.feed-unavailable">No live fee estimates: the chain feed is not answering.</p>
+  } @else {
+    <div class="fee-estimation-container loading-container">
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="band-separator"></div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="card-text">
+          <div class="skeleton-loader"></div>
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+    </div>
+  }
+</ng-template>
+
+</ng-container>

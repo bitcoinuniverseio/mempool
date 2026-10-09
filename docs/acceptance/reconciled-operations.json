@@ -150481,6 +150481,218 @@
           "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522"
         }
       ]
+    },
+    {
+      "id": "current:signet-fees-rounded-rest-20261009",
+      "reason": "Current repaired fee producer/shared state/consumer contract is separately reviewed; not a filename occurrence or historical PASS",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
+    },
+    {
+      "id": "current:signet-fees-precise-rest-20261009",
+      "reason": "Current repaired fee producer/shared state/consumer contract is separately reviewed; not a filename occurrence or historical PASS",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
+    },
+    {
+      "id": "current:signet-fee-bootstrap-20261009",
+      "reason": "Current repaired fee producer/shared state/consumer contract is separately reviewed; not a filename occurrence or historical PASS",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
+    },
+    {
+      "id": "current:signet-fee-websocket-20261009",
+      "reason": "Current repaired fee producer/shared state/consumer contract is separately reviewed; not a filename occurrence or historical PASS",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
+    },
+    {
+      "id": "current:signet-fees-box-view-20261009",
+      "reason": "Current repaired fee producer/shared state/consumer contract is separately reviewed; not a filename occurrence or historical PASS",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
+    },
+    {
+      "id": "current:signet-fee-network-recovery-20261009",
+      "reason": "Current repaired fee producer/shared state/consumer contract is separately reviewed; not a filename occurrence or historical PASS",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
     }
   ],
   "countingPolicy": "Reviewed semantic operations only; source candidates and component checks are separate. No percentage while unresolved.",
@@ -152478,6 +152690,311 @@
           "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522"
         }
       ]
+    },
+    {
+      "candidateId": "current:signet-fees-rounded-rest-20261009",
+      "operationIds": [
+        "reviewed:signet-fees-rounded-rest"
+      ],
+      "reason": "Exact code path and typed data flow establish this definition; source presence/tests do not qualify functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
+    },
+    {
+      "candidateId": "current:signet-fees-precise-rest-20261009",
+      "operationIds": [
+        "reviewed:signet-fees-precise-rest"
+      ],
+      "reason": "Exact code path and typed data flow establish this definition; source presence/tests do not qualify functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
+    },
+    {
+      "candidateId": "current:signet-fee-bootstrap-20261009",
+      "operationIds": [
+        "reviewed:signet-fee-bootstrap"
+      ],
+      "reason": "Exact code path and typed data flow establish this definition; source presence/tests do not qualify functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
+    },
+    {
+      "candidateId": "current:signet-fee-websocket-20261009",
+      "operationIds": [
+        "reviewed:signet-fee-websocket"
+      ],
+      "reason": "Exact code path and typed data flow establish this definition; source presence/tests do not qualify functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
+    },
+    {
+      "candidateId": "current:signet-fees-box-view-20261009",
+      "operationIds": [
+        "reviewed:signet-fees-box-view"
+      ],
+      "reason": "Exact code path and typed data flow establish this definition; source presence/tests do not qualify functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
+    },
+    {
+      "candidateId": "current:signet-fee-network-recovery-20261009",
+      "operationIds": [
+        "reviewed:signet-fee-network-recovery"
+      ],
+      "reason": "Exact code path and typed data flow establish this definition; source presence/tests do not qualify functionality",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ]
+    },
+    {
+      "candidateId": "API-d9ecd7443173",
+      "operationIds": [
+        "reviewed:signet-fees-rounded-rest"
+      ],
+      "reason": "Exact method/registered route/handler lineage; selected Signet qualification and remaining required variants are separate",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
+    },
+    {
+      "candidateId": "API-69f42dde6f4c",
+      "operationIds": [
+        "reviewed:signet-fees-precise-rest"
+      ],
+      "reason": "Exact method/registered route/handler lineage; selected Signet qualification and remaining required variants are separate",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
+    },
+    {
+      "candidateId": "API-acb46fc98372",
+      "operationIds": [
+        "reviewed:signet-fee-bootstrap"
+      ],
+      "reason": "Exact method/registered route/handler lineage; selected Signet qualification and remaining required variants are separate",
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ]
     }
   ],
   "operations": [
@@ -152640,6 +153157,430 @@
           "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522"
         }
       ],
+      "status": "NOT TESTED",
+      "actualResult": null,
+      "evidence": [],
+      "environment": null,
+      "revision": null,
+      "ranAt": null
+    },
+    {
+      "role": "public-reader",
+      "chain": "bitcoin",
+      "network": "signet",
+      "specificationRevision": "implementation-handoff-2026-10-09/API-03/API-04/API-05/API-06",
+      "owner": "Application and source contract owners",
+      "prerequisites": [
+        "Candidate identity pinned",
+        "Owned source context verified",
+        "Complete required-row variants reviewed separately"
+      ],
+      "id": "reviewed:signet-fees-rounded-rest",
+      "method": "GET",
+      "entryPoint": "/signet/api/v1/fees/recommended",
+      "inputContract": "No query/body; effective backend Bitcoin Signet profile; public read",
+      "outputContract": "Legacy five numeric sat/vB recommendations from cached rounded producer observation; HTTP503 when syncing, stale, unavailable or checkpoint-unverified; no versioned freshness in this legacy body alone",
+      "lifecycle": "Read cached producer observation only, never create a poll or refresh its timestamp; require complete shared poll/Core checkpoint agreement within120s",
+      "inputs": [
+        "Ready owned Signet producer",
+        "Unsynced/expired/missing/checkpoint-mismatched observation"
+      ],
+      "execution": [
+        "Call exact legacy route/handler",
+        "Correlate rounded values with same-context versioned producer observation and503 transitions"
+      ],
+      "assertions": [
+        "getRecommendedFees uses getObservedRecommendedFee(false)",
+        "Neither reader nor new block alone renews mempool observation",
+        "No503 is converted to zero or current cached values"
+      ],
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ],
+      "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
+      "status": "NOT TESTED",
+      "actualResult": null,
+      "evidence": [],
+      "environment": null,
+      "revision": null,
+      "ranAt": null
+    },
+    {
+      "role": "public-reader",
+      "chain": "bitcoin",
+      "network": "signet",
+      "specificationRevision": "implementation-handoff-2026-10-09/API-03/API-04/API-05/API-06",
+      "owner": "Application and source contract owners",
+      "prerequisites": [
+        "Candidate identity pinned",
+        "Owned source context verified",
+        "Complete required-row variants reviewed separately"
+      ],
+      "id": "reviewed:signet-fees-precise-rest",
+      "method": "GET",
+      "entryPoint": "/signet/api/v1/fees/precise",
+      "inputContract": "No query/body; effective backend Bitcoin Signet profile; public read",
+      "outputContract": "Same five sat/vB fields using fractional producer values rounded to0.001sat/vB; highest priority policy floors/offsets retained; HTTP503 unless observation ready",
+      "lifecycle": "Read the same dated shared producer observation as rounded REST, preserving fractional precision and availability independently of display rounding",
+      "inputs": [
+        "Fractional fee values",
+        "Same ready/unavailable/stale/checkpoint cases as rounded route"
+      ],
+      "execution": [
+        "Call getPreciseRecommendedFees",
+        "Compare precise/rounded routes against one observation without treating numeric legacy bodies as standalone readiness"
+      ],
+      "assertions": [
+        "Handler uses getObservedRecommendedFee(true)",
+        "Lower-priority fractional fees are not silently integer-rounded",
+        "Both REST paths fail closed with shared producer state"
+      ],
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        }
+      ],
+      "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
+      "status": "NOT TESTED",
+      "actualResult": null,
+      "evidence": [],
+      "environment": null,
+      "revision": null,
+      "ranAt": null
+    },
+    {
+      "role": "public-reader",
+      "chain": "bitcoin",
+      "network": "signet",
+      "specificationRevision": "implementation-handoff-2026-10-09/API-03/API-04/API-05/API-06",
+      "owner": "Application and source contract owners",
+      "prerequisites": [
+        "Candidate identity pinned",
+        "Owned source context verified",
+        "Complete required-row variants reviewed separately"
+      ],
+      "id": "reviewed:signet-fee-bootstrap",
+      "method": "GET",
+      "entryPoint": "/signet/api/v1/init-data",
+      "inputContract": "Selected Signet bootstrap request captured by the owning HTTP/socket context generation",
+      "outputContract": "Serialized init data with refreshed universe-fee-estimate-v1 observation and nullable legacy fees, plus useful blocks and independently dated liveObservation; unavailable fees do not fail the whole bootstrap",
+      "lifecycle": "Refresh cached fee validity at serialization, not producer poll time; client scope validation before all state writes, closure ignores replacement contexts",
+      "inputs": [
+        "Cached bootstrap after producer loses readiness",
+        "Correctly scoped HTTP body with wrong explicit network/Core claim",
+        "Late old-context bootstrap"
+      ],
+      "execution": [
+        "Serialize via getSerializedInitData after refreshFeeState",
+        "Validate frame scope before installing bootstrap state"
+      ],
+      "assertions": [
+        "Read does not manufacture observedAt",
+        "Useful block data can remain without fee currentness",
+        "Late or explicit foreign context cannot install current fee state"
+      ],
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ],
+      "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
+      "status": "NOT TESTED",
+      "actualResult": null,
+      "evidence": [],
+      "environment": null,
+      "revision": null,
+      "ranAt": null
+    },
+    {
+      "role": "public-reader",
+      "chain": "bitcoin",
+      "network": "signet",
+      "specificationRevision": "implementation-handoff-2026-10-09/API-03/API-04/API-05/API-06",
+      "owner": "Application and source contract owners",
+      "prerequisites": [
+        "Candidate identity pinned",
+        "Owned source context verified",
+        "Complete required-row variants reviewed separately"
+      ],
+      "id": "reviewed:signet-fee-websocket",
+      "method": "WS",
+      "entryPoint": "/signet/api/v1/ws#feeEstimate",
+      "inputContract": "Existing shared producer complete/unchanged poll or block projection and scoped base websocket frame; universe-fee-estimate-v1 metadata",
+      "outputContract": "Fee values/currentness only from schema/network/timestamp/tip-validated fee observation; chain-data liveObservation remains separately validated; legacy raw fees do not substitute for missing feeEstimate",
+      "lifecycle": "Shared poll publication, bootstrap and updates, socket generation changes and independent observation expiry; block-only projection retains original poll age",
+      "inputs": [
+        "Ready fee observation",
+        "Wrong network/invalid/future/expired observation",
+        "Legacy fees frame without fee metadata"
+      ],
+      "execution": [
+        "Publish through shared handleMempoolObservation/refreshFeeState",
+        "Pass whole-frame scope ingress then FeeEstimateState decoding"
+      ],
+      "assertions": [
+        "One producer/shared state, no widget poll",
+        "Incoming fee metadata cannot inherit prior ready state after invalid proof",
+        "Chain freshness does not itself renew fee source age"
+      ],
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+          "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+          "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+          "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+          "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ],
+      "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
+      "status": "NOT TESTED",
+      "actualResult": null,
+      "evidence": [],
+      "environment": null,
+      "revision": null,
+      "ranAt": null
+    },
+    {
+      "role": "public-reader",
+      "chain": "bitcoin",
+      "network": "signet",
+      "specificationRevision": "implementation-handoff-2026-10-09/API-03/API-04/API-05/API-06",
+      "owner": "Application and source contract owners",
+      "prerequisites": [
+        "Candidate identity pinned",
+        "Owned source context verified",
+        "Complete required-row variants reviewed separately"
+      ],
+      "id": "reviewed:signet-fees-box-view",
+      "method": "UI",
+      "entryPoint": "/signet#fees-box",
+      "inputContract": "StateService feeEstimate$ shared snapshot and theme/unit state; no private fee RPC",
+      "outputContract": "Current ready fee display, or explicit stale/syncing/unavailable label and dated historical values when retained; per-display fee-rate/fiat formatting is separate from source precision",
+      "lifecycle": "Subscribe existing shared snapshot, theme gradient changes, source expiry/disconnect and bounded retry; Clock consumes the same state",
+      "inputs": [
+        "Ready shared values",
+        "Stale historical values",
+        "Unavailable/syncing null values",
+        "Retry while not syncing"
+      ],
+      "execution": [
+        "Render FeesBox status/age alongside values",
+        "Use existing websocket reconnect retry and compare Clock state"
+      ],
+      "assertions": [
+        "Stale values are labeled historical, not current",
+        "Null values produce loading/unavailable UI and no invented zero",
+        "Display rounding/fiat/node/network variants still need required functional checks"
+      ],
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ],
+      "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
+      "status": "NOT TESTED",
+      "actualResult": null,
+      "evidence": [],
+      "environment": null,
+      "revision": null,
+      "ranAt": null
+    },
+    {
+      "role": "public-reader",
+      "chain": "bitcoin",
+      "network": "signet",
+      "specificationRevision": "implementation-handoff-2026-10-09/API-03/API-04/API-05/API-06",
+      "owner": "Application and source contract owners",
+      "prerequisites": [
+        "Candidate identity pinned",
+        "Owned source context verified",
+        "Complete required-row variants reviewed separately"
+      ],
+      "id": "reviewed:signet-fee-network-recovery",
+      "method": "UI",
+      "entryPoint": "StateService.networkChanged$ / WebsocketService.reconnectWebsocket",
+      "inputContract": "Selected network change, connectionState transition, observation replay and explicit retry",
+      "outputContract": "Fee state reset on network change, bounded syncing->unavailable/stale at5s recovery or120s source age, onlyready snapshots feed legacy recommendedFees$",
+      "lifecycle": "A-B-A switching, disconnect/reconnect and timer ownership; reject pre-retry or non-monotonic ready observations, preserve original source age, require a newer valid observation for recovery",
+      "inputs": [
+        "Signet->other network->Signet",
+        "Disconnect and retry",
+        "Old/replayed/wrong-network observations",
+        "New valid owned observation"
+      ],
+      "execution": [
+        "Reset shared FeeEstimateState and socket generation",
+        "Expire bounded recovery timer",
+        "Accept only subsequent valid same-context observation"
+      ],
+      "assertions": [
+        "No prior-network values after reset",
+        "Retry cannot relabel cached replay fresh",
+        "Legacy recommendedFees$ receives null outside ready",
+        "All actual switch/consumer/phone/desktop variants remain required"
+      ],
+      "sources": [
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+          "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+          "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+          "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
+        },
+        {
+          "path": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+          "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610"
+        }
+      ],
+      "expectedResult": "Exact reviewed selected-context source behavior; original required consumer/context/lifecycle obligations and functional receipts remain unresolved",
       "status": "NOT TESTED",
       "actualResult": null,
       "evidence": [],
@@ -155866,23 +156807,11 @@
       "reason": "Actual method, role, context, contract and lifecycle have not been semantically mapped or evidenced as excluded."
     },
     {
-      "candidateId": "API-acb46fc98372",
-      "reason": "Actual method, role, context, contract and lifecycle have not been semantically mapped or evidenced as excluded."
-    },
-    {
       "candidateId": "API-c3a958296e1a",
       "reason": "Actual method, role, context, contract and lifecycle have not been semantically mapped or evidenced as excluded."
     },
     {
       "candidateId": "API-53723acf2f32",
-      "reason": "Actual method, role, context, contract and lifecycle have not been semantically mapped or evidenced as excluded."
-    },
-    {
-      "candidateId": "API-69f42dde6f4c",
-      "reason": "Actual method, role, context, contract and lifecycle have not been semantically mapped or evidenced as excluded."
-    },
-    {
-      "candidateId": "API-d9ecd7443173",
       "reason": "Actual method, role, context, contract and lifecycle have not been semantically mapped or evidenced as excluded."
     },
     {
@@ -164728,7 +165657,7 @@
     {
       "coverageId": "APP-BOOTSTRAP",
       "kind": "required-application-coverage",
-      "reason": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -164738,7 +165667,7 @@
     {
       "coverageId": "APP-FEE-ESTIMATE",
       "kind": "required-application-coverage",
-      "reason": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -164748,7 +165677,7 @@
     {
       "coverageId": "APP-DASHBOARD-LIVE",
       "kind": "required-application-coverage",
-      "reason": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -164758,7 +165687,7 @@
     {
       "coverageId": "APP-CLOCK",
       "kind": "required-application-coverage",
-      "reason": "Current selected Signet route/UI contract reviewed; full root/other-network/consumer/lifecycle variants remain unresolved.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -164868,7 +165797,7 @@
     {
       "coverageId": "APP-REST-NETWORK",
       "kind": "required-application-coverage",
-      "reason": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -164878,7 +165807,7 @@
     {
       "coverageId": "APP-CORE-WS",
       "kind": "required-application-coverage",
-      "reason": "Current selected Signet base socket contract reviewed; full consumer/channel/lifecycle/context variants remain unresolved.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -164898,7 +165827,7 @@
     {
       "coverageId": "APP-SHARED-RECOVERY",
       "kind": "required-application-coverage",
-      "reason": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -165088,7 +166017,7 @@
     {
       "coverageId": "PROOF-F-FE-001",
       "kind": "required-application-coverage",
-      "reason": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+      "reason": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
       "unresolved": [
         "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
         "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -165174,6 +166103,54 @@
       "path": "frontend/src/app/services/websocket-response-scope.ts",
       "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket-response-scope.ts",
       "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "backend/src/api/fee-api.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/fee-api.ts",
+      "sha256": "6d25e1dfca9626417ca1ad6b430d331c2aa0d60564f901f925b2a3c14c5b032d",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "backend/src/api/bitcoin/bitcoin.routes.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin.routes.ts",
+      "sha256": "ae530672041282d3b0d3a6d7d16b530e9223e8abb424cfbee2c50ac21be678a4",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "backend/src/api/websocket-handler.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/websocket-handler.ts",
+      "sha256": "69a38bcfccfe96e8ff7af9c6f6a0f8260ef7eac8593d6cdd057ee54cf287ea9a",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "backend/src/api/bitcoin/bitcoin-source-observation.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/backend/src/api/bitcoin/bitcoin-source-observation.ts",
+      "sha256": "e577fefddab940111c939685e845f5a04cdd322930b49e665135692e5f9f5c31",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/services/fee-estimate.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/services/fee-estimate.ts",
+      "sha256": "c420f4747fabe6bb5ea8572ecee7def69121b848e57a2d8af6f8174b670744ff",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/components/fees-box/fees-box.component.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.ts",
+      "sha256": "733f2b32060701ab13969c160b0d12ee9995f9fd4900793a42a17b627fbb3d4d",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/components/fees-box/fees-box.component.html",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/fees-box/fees-box.component.html",
+      "sha256": "f68380aa933dc7e1fbe9740f50e45269b491f7fcd10225e8de9e2ba2a38b86d3",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/components/clock/clock.component.html",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-fee-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.html",
+      "sha256": "67f6554709e257c50ea4a8d56ddcfb9f4d42738536dc7ab99bed3e73e1e06610",
       "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
     }
   ],
@@ -174887,10 +175864,15 @@
         "coverageId": "APP-BOOTSTRAP",
         "rowPointer": "/rows/592",
         "fullRequirementSha256": "27bf1b1ae00daac6212fc9833de1228cd23b1b1bc1d419e5a54238b75a53d299",
-        "mappingStatus": "BLOCKED_UNRESOLVED",
-        "candidateIds": [],
-        "operationIds": [],
-        "basis": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+        "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
+        "candidateIds": [
+          "current:signet-fee-bootstrap-20261009",
+          "API-acb46fc98372"
+        ],
+        "operationIds": [
+          "reviewed:signet-fee-bootstrap"
+        ],
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -174902,10 +175884,27 @@
         "coverageId": "APP-FEE-ESTIMATE",
         "rowPointer": "/rows/593",
         "fullRequirementSha256": "67ff5b8efa270825b31525eaa0359e98826d3257319312fe8b065c7d52d78a1d",
-        "mappingStatus": "BLOCKED_UNRESOLVED",
-        "candidateIds": [],
-        "operationIds": [],
-        "basis": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+        "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
+        "candidateIds": [
+          "current:signet-fees-rounded-rest-20261009",
+          "current:signet-fees-precise-rest-20261009",
+          "current:signet-fee-bootstrap-20261009",
+          "current:signet-fee-websocket-20261009",
+          "current:signet-fees-box-view-20261009",
+          "current:signet-fee-network-recovery-20261009",
+          "API-d9ecd7443173",
+          "API-69f42dde6f4c",
+          "API-acb46fc98372"
+        ],
+        "operationIds": [
+          "reviewed:signet-fees-rounded-rest",
+          "reviewed:signet-fees-precise-rest",
+          "reviewed:signet-fee-bootstrap",
+          "reviewed:signet-fee-websocket",
+          "reviewed:signet-fees-box-view",
+          "reviewed:signet-fee-network-recovery"
+        ],
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -174917,10 +175916,16 @@
         "coverageId": "APP-DASHBOARD-LIVE",
         "rowPointer": "/rows/594",
         "fullRequirementSha256": "d63ee75eac8509621284aefea1d04751b2f94cf821bb95f23f6c495882d47b3a",
-        "mappingStatus": "BLOCKED_UNRESOLVED",
-        "candidateIds": [],
-        "operationIds": [],
-        "basis": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+        "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
+        "candidateIds": [
+          "current:signet-fee-websocket-20261009",
+          "current:signet-fees-box-view-20261009"
+        ],
+        "operationIds": [
+          "reviewed:signet-fee-websocket",
+          "reviewed:signet-fees-box-view"
+        ],
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -174934,12 +175939,16 @@
         "fullRequirementSha256": "1c990139d735d3e64d13f5b8846ae42a2e02a3a195beedaf0ab35bdec8794089",
         "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
         "candidateIds": [
-          "current:clock-network-routes-20261009"
+          "current:clock-network-routes-20261009",
+          "current:signet-fees-box-view-20261009",
+          "current:signet-fee-network-recovery-20261009"
         ],
         "operationIds": [
-          "reviewed:signet-clock-route"
+          "reviewed:signet-clock-route",
+          "reviewed:signet-fees-box-view",
+          "reviewed:signet-fee-network-recovery"
         ],
-        "basis": "Current selected Signet route/UI contract reviewed; full root/other-network/consumer/lifecycle variants remain unresolved.",
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -175101,10 +176110,21 @@
         "coverageId": "APP-REST-NETWORK",
         "rowPointer": "/rows/606",
         "fullRequirementSha256": "7be96b8cfeb5d2446c1c0136acc76a04593c318d6cff1dc9e71e05ae33840120",
-        "mappingStatus": "BLOCKED_UNRESOLVED",
-        "candidateIds": [],
-        "operationIds": [],
-        "basis": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+        "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
+        "candidateIds": [
+          "current:signet-fees-rounded-rest-20261009",
+          "current:signet-fees-precise-rest-20261009",
+          "current:signet-fee-bootstrap-20261009",
+          "API-d9ecd7443173",
+          "API-69f42dde6f4c",
+          "API-acb46fc98372"
+        ],
+        "operationIds": [
+          "reviewed:signet-fees-rounded-rest",
+          "reviewed:signet-fees-precise-rest",
+          "reviewed:signet-fee-bootstrap"
+        ],
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -175118,12 +176138,16 @@
         "fullRequirementSha256": "d522b1e9b6935d35bb1661e1a7b69bee027a1a1fbc3286d200e9a297c48d0ce7",
         "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
         "candidateIds": [
-          "current:base-websocket-scope-ingress-20261009"
+          "current:base-websocket-scope-ingress-20261009",
+          "current:signet-fee-websocket-20261009",
+          "current:signet-fee-network-recovery-20261009"
         ],
         "operationIds": [
-          "reviewed:signet-core-websocket"
+          "reviewed:signet-core-websocket",
+          "reviewed:signet-fee-websocket",
+          "reviewed:signet-fee-network-recovery"
         ],
-        "basis": "Current selected Signet base socket contract reviewed; full consumer/channel/lifecycle/context variants remain unresolved.",
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -175150,10 +176174,14 @@
         "coverageId": "APP-SHARED-RECOVERY",
         "rowPointer": "/rows/609",
         "fullRequirementSha256": "9de367e2db2fd824a631b2f080429ea7bfff4065cfefc128546bdbe48f247332",
-        "mappingStatus": "BLOCKED_UNRESOLVED",
-        "candidateIds": [],
-        "operationIds": [],
-        "basis": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+        "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
+        "candidateIds": [
+          "current:signet-fee-network-recovery-20261009"
+        ],
+        "operationIds": [
+          "reviewed:signet-fee-network-recovery"
+        ],
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -175435,10 +176463,18 @@
         "coverageId": "PROOF-F-FE-001",
         "rowPointer": "/rows/628",
         "fullRequirementSha256": "35a3df5ec35c924d48eb7f2d7d0fba94c38d89fb6916d6f4dde864f80dd623bc",
-        "mappingStatus": "BLOCKED_UNRESOLVED",
-        "candidateIds": [],
-        "operationIds": [],
-        "basis": "No exact reviewed source operation/context/lifecycle mapping exists for this entire required row.",
+        "mappingStatus": "PARTIALLY_REVIEWED_BLOCKED",
+        "candidateIds": [
+          "current:signet-fee-websocket-20261009",
+          "current:signet-fees-box-view-20261009",
+          "current:signet-fee-network-recovery-20261009"
+        ],
+        "operationIds": [
+          "reviewed:signet-fee-websocket",
+          "reviewed:signet-fees-box-view",
+          "reviewed:signet-fee-network-recovery"
+        ],
+        "basis": "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.",
         "unresolved": [
           "All original executionSteps/expectedAssertions/testInputs/prerequisites/network variants remain required",
           "Complete semantic mapping of the required consumer, lifecycle and context variants",
@@ -181477,9 +182513,15 @@
     },
     {
       "candidateId": "API-acb46fc98372",
-      "reviewedOperationIds": [],
-      "coverageIds": [],
-      "status": "BLOCKED_UNRESOLVED",
+      "reviewedOperationIds": [
+        "reviewed:signet-fee-bootstrap"
+      ],
+      "coverageIds": [
+        "APP-BOOTSTRAP",
+        "APP-FEE-ESTIMATE",
+        "APP-REST-NETWORK"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
       "functionalAcceptance": false
     },
     {
@@ -181498,16 +182540,26 @@
     },
     {
       "candidateId": "API-69f42dde6f4c",
-      "reviewedOperationIds": [],
-      "coverageIds": [],
-      "status": "BLOCKED_UNRESOLVED",
+      "reviewedOperationIds": [
+        "reviewed:signet-fees-precise-rest"
+      ],
+      "coverageIds": [
+        "APP-FEE-ESTIMATE",
+        "APP-REST-NETWORK"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
       "functionalAcceptance": false
     },
     {
       "candidateId": "API-d9ecd7443173",
-      "reviewedOperationIds": [],
-      "coverageIds": [],
-      "status": "BLOCKED_UNRESOLVED",
+      "reviewedOperationIds": [
+        "reviewed:signet-fees-rounded-rest"
+      ],
+      "coverageIds": [
+        "APP-FEE-ESTIMATE",
+        "APP-REST-NETWORK"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
       "functionalAcceptance": false
     },
     {
@@ -187070,8 +188122,88 @@
       ],
       "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
       "functionalAcceptance": false
+    },
+    {
+      "candidateId": "current:signet-fees-rounded-rest-20261009",
+      "reviewedOperationIds": [
+        "reviewed:signet-fees-rounded-rest"
+      ],
+      "coverageIds": [
+        "APP-FEE-ESTIMATE",
+        "APP-REST-NETWORK"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
+      "functionalAcceptance": false
+    },
+    {
+      "candidateId": "current:signet-fees-precise-rest-20261009",
+      "reviewedOperationIds": [
+        "reviewed:signet-fees-precise-rest"
+      ],
+      "coverageIds": [
+        "APP-FEE-ESTIMATE",
+        "APP-REST-NETWORK"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
+      "functionalAcceptance": false
+    },
+    {
+      "candidateId": "current:signet-fee-bootstrap-20261009",
+      "reviewedOperationIds": [
+        "reviewed:signet-fee-bootstrap"
+      ],
+      "coverageIds": [
+        "APP-BOOTSTRAP",
+        "APP-FEE-ESTIMATE",
+        "APP-REST-NETWORK"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
+      "functionalAcceptance": false
+    },
+    {
+      "candidateId": "current:signet-fee-websocket-20261009",
+      "reviewedOperationIds": [
+        "reviewed:signet-fee-websocket"
+      ],
+      "coverageIds": [
+        "APP-FEE-ESTIMATE",
+        "APP-DASHBOARD-LIVE",
+        "APP-CORE-WS",
+        "PROOF-F-FE-001"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
+      "functionalAcceptance": false
+    },
+    {
+      "candidateId": "current:signet-fees-box-view-20261009",
+      "reviewedOperationIds": [
+        "reviewed:signet-fees-box-view"
+      ],
+      "coverageIds": [
+        "APP-FEE-ESTIMATE",
+        "APP-DASHBOARD-LIVE",
+        "APP-CLOCK",
+        "PROOF-F-FE-001"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
+      "functionalAcceptance": false
+    },
+    {
+      "candidateId": "current:signet-fee-network-recovery-20261009",
+      "reviewedOperationIds": [
+        "reviewed:signet-fee-network-recovery"
+      ],
+      "coverageIds": [
+        "APP-FEE-ESTIMATE",
+        "APP-CLOCK",
+        "APP-CORE-WS",
+        "APP-SHARED-RECOVERY",
+        "PROOF-F-FE-001"
+      ],
+      "status": "SELECTED_DEFINITION_REVIEWED_REQUIRED_VARIANTS_BLOCKED",
+      "functionalAcceptance": false
     }
   ],
-  "reviewedSelectedOperationDefinitions": 3,
+  "reviewedSelectedOperationDefinitions": 9,
   "reviewVersion": "required-application-roster-2026-10-09-v1"
 }

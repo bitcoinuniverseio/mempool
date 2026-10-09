@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
+import { feeSemanticReview } from "./fee-semantic-review.mjs";
 import {
   reconcileOperations,
   rootedProofReader,
@@ -233,6 +234,16 @@ export function buildRequiredApplicationRoster(
       sources: websocketProof,
     },
   ];
+  const feeReview = feeSemanticReview(historical, common, readProof);
+  operations.push(...feeReview.definitions);
+  currentSourceBindings.push(
+    ...feeReview.bindings.filter(
+      (binding) =>
+        !currentSourceBindings.some(
+          (existing) => existing.path === binding.path,
+        ),
+    ),
+  );
   const currentSourceCandidates = [
     {
       id: "current:clock-network-routes-20261009",
@@ -247,6 +258,7 @@ export function buildRequiredApplicationRoster(
       sources: websocketProof,
     },
   ];
+  currentSourceCandidates.push(...feeReview.candidates);
   const mappings = historical.rows
     .filter(
       (row) =>
@@ -277,6 +289,7 @@ export function buildRequiredApplicationRoster(
       sources: websocketProof,
     },
   );
+  mappings.push(...feeReview.mappings);
   const roster = reconcileOperations(
     historical,
     {
@@ -334,6 +347,16 @@ export function buildRequiredApplicationRoster(
       operationIds = [operations[2].id];
       basis =
         "Current selected Signet base socket contract reviewed; full consumer/channel/lifecycle/context variants remain unresolved.";
+    }
+    if (feeReview.coverageLinks[row.coverageId]) {
+      operationIds = feeReview.coverageLinks[row.coverageId];
+      candidateIds = mappings
+        .filter((mapping) =>
+          mapping.operationIds.some((id) => operationIds.includes(id)),
+        )
+        .map((mapping) => mapping.candidateId);
+      basis =
+        "Exact selected Signet fee producer/REST/bootstrap/socket/shared-state/consumer flow reviewed; every original assertion, context, display and lifecycle variant remains required and unresolved.";
     }
     return {
       coverageId: row.coverageId,
@@ -663,7 +686,7 @@ if (
     JSON.stringify({
       requiredCoverage: 632,
       historicalCandidates: 1617,
-      currentCandidates: 2,
+      currentCandidates: roster.currentSourceCandidates.length,
       reviewedSelectedDefinitions: roster.operations.length,
       partiallyReviewedCoverage:
         roster.requiredApplicationCoverage.mappings.filter(
