@@ -185,3 +185,48 @@ it('names multiple qualified profiles even when their network labels coincide', 
   claim.contexts = structuredClone(binding.contexts.filter(context => claim.rows.some(row => row.contextId === context.id)));
   expect(protocolCoverageView(response.protocols[0], response, 'mainnet', Date.parse('2026-10-09T13:00:00Z')).functionalLabel).toBe('Functionality verified on Bitcoin Signet (2 test profiles) (2026-10-09)');
 });
+
+
+describe('v2 static application local/offline exception', () => {
+  const now = Date.parse('2026-10-09T13:00:00Z');
+  it('accepts the full 39/123 metadata and 632 commitment with a local app context beside Mainnet deployments', () => {
+    const response = qualifiedMixedCoverageFixture();
+    const binding = response.functionalAcceptanceBinding;
+    if (binding.schemaVersion !== 'universe-functional-acceptance-binding-v2') throw Error('Fixture version');
+    expect(response.protocols).toHaveLength(39);
+    expect(response.protocols.reduce((n, protocol) => n + protocol.readOperationDescriptors.length, 0)).toBe(123);
+    expect(binding.requiredCoverageCount).toBe(632);
+    expect(binding.contexts.find(context => context.id === 'local-offline').deploymentNetwork).toBe('offline');
+    expect(binding.applicationContexts.some(assignment => assignment.contextIds.includes('local-offline'))).toBe(true);
+    expect(binding.operationContexts.some(assignment => assignment.contextId === 'local-offline')).toBe(false);
+    for (const protocol of response.protocols) {
+      binding.chain = protocol.chain;
+      expect(protocolCoverageView(protocol, response, 'mainnet', now).functionalKnown).toBe(true);
+    }
+  });
+  it('rejects a local context substituted into both claim and top-level indexed operation mapping', () => {
+    const response = qualifiedMixedCoverageFixture();
+    const claim = response.protocols[0].functionalAcceptance, binding = response.functionalAcceptanceBinding;
+    if (claim.schemaVersion !== 'universe-protocol-functional-acceptance-v2' || binding.schemaVersion !== 'universe-functional-acceptance-binding-v2') throw Error('Fixture version');
+    const row = claim.rows.find(item => item.operation !== 'registry');
+    row.contextId = 'local-offline';
+    binding.operationContexts.find(item => item.protocol === claim.protocol && item.operation === row.operation && item.variant === row.variant).contextId = 'local-offline';
+    claim.contexts = structuredClone(binding.contexts.filter(context => claim.rows.some(item => item.contextId === context.id)));
+    expect(protocolCoverageView(response.protocols[0], response, 'mainnet', now).functionalKnown).toBe(false);
+  });
+  it('rejects a local profile labelled Mainnet or an indexed chain labelled offline even if claim and binding agree', () => {
+    for (const localOnMainnet of [true, false]) {
+      const response = qualifiedMixedCoverageFixture();
+      const binding = response.functionalAcceptanceBinding;
+      if (binding.schemaVersion !== 'universe-functional-acceptance-binding-v2') throw Error('Fixture version');
+      const context = binding.contexts.find(item => item.id === (localOnMainnet ? 'local-offline' : 'bitcoin-test'));
+      context.deploymentNetwork = localOnMainnet ? 'mainnet' : 'offline'; context.configurationProof.network = context.deploymentNetwork;
+      for (const protocol of response.protocols) {
+        const claim = protocol.functionalAcceptance;
+        if (claim.schemaVersion !== 'universe-protocol-functional-acceptance-v2') throw Error('Fixture version');
+        claim.contexts = structuredClone(binding.contexts.filter(item => claim.rows.some(row => row.contextId === item.id)));
+      }
+      expect(protocolCoverageView(response.protocols[0], response, 'mainnet', now).functionalKnown).toBe(false);
+    }
+  });
+});
