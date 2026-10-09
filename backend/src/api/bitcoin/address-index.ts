@@ -358,7 +358,7 @@ export async function $probeAddressIndex(chainTip: number | null, signal?: Abort
     }
 
     let checkpoint: AddressSourceCheckpoint | null = null;
-    try { active(); checkpoint = await verifyAddressSource(indexedTip, height => { active(); return client.$getIndexBlockHash!(height); }); } catch { /* Unverified source stays degraded. */ }
+    try { active(); checkpoint = await verifyAddressSource(indexedTip, height => { active(); return client.$getIndexBlockHash!(height); }, undefined, undefined, signal); } catch { /* Unverified source stays degraded. */ }
     const facts = factsFor(backendKind, maxBehindTip, chainTip, {
       checkpoint,
       configured: true,
@@ -431,7 +431,7 @@ export async function $probeAddressIndex(chainTip: number | null, signal?: Abort
   }
 
   let checkpoint: AddressSourceCheckpoint | null = null;
-  try { checkpoint = await verifyAddressSource(indexedTip, async (height, signal) => (await esploraRequest('/block-height/' + height, timeout, signal)).data); } catch { /* Unverified source stays degraded. */ }
+  try { checkpoint = await verifyAddressSource(indexedTip, async (height, signal) => (await esploraRequest('/block-height/' + height, timeout, signal)).data, undefined, undefined, signal); } catch { /* Unverified source stays degraded. */ }
   const facts = factsFor(backendKind, maxBehindTip, chainTip, {
     checkpoint,
     configured: true,
