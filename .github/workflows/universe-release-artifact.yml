@@ -165,6 +165,8 @@ jobs:
             docs/acceptance/qualified-application-evidence.json \
             docs/acceptance/qualified-release-evidence.json \
             "$GITHUB_WORKSPACE" "$(git rev-parse HEAD)" "$stage"
+          node scripts/universe/protocol-functional-projection.mjs stage-required \
+            "$GITHUB_WORKSPACE" "$stage" "$(git rev-parse HEAD)"
           # The unit files travel with the release rather than being fetched
           # from a checkout that happens to be on the right commit. Adopting
           # socket activation needed both of these on the host, and taking
@@ -179,7 +181,7 @@ jobs:
           # them from different releases a detectable fault rather than an open
           # question. release.sh refuses an install whose manifest names a
           # different commit, and the cutover holds the live origin to it.
-          node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json"
+          node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json" --functional-acceptance-root="$stage" --network=mainnet
           test -f "$stage/RELEASE-MANIFEST.json"
           test -f "$stage/backend/dist/index.js"
           test -f "$stage/backend/vendor/bitcoinuniverse-ecosystem-contracts-1.2.0.tgz"

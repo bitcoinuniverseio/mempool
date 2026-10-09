@@ -91,8 +91,8 @@ export async function qualifyArtifact(archive, { commit, network = 'mainnet' }) 
   if (!commit || !/^[0-9a-f]{40}$/i.test(commit)) {
     return ['A full 40 character release commit is required.'];
   }
-  const names = tar(['-tz'], archive).split('\n').filter(Boolean);
-  const verbose = tar(['-tvz'], archive).split('\n').filter(Boolean);
+  const names = tar(['-tz'], archive).split(/\r?\n/).filter(Boolean);
+  const verbose = tar(['-tvz'], archive).split(/\r?\n/).filter(Boolean);
   const listed = memberProblems(names, verbose);
   if (listed.length) return listed;
 
@@ -101,8 +101,10 @@ export async function qualifyArtifact(archive, { commit, network = 'mainnet' }) 
     tar(['-xz', '-C', extracted], archive);
     const problems = [];
     let manifestCommit;
+    let releaseManifest;
     try {
-      manifestCommit = JSON.parse(readFileSync(path.join(extracted, 'RELEASE-MANIFEST.json'), 'utf8')).commit;
+      releaseManifest = JSON.parse(readFileSync(path.join(extracted, 'RELEASE-MANIFEST.json'), 'utf8'));
+      manifestCommit = releaseManifest.commit;
     } catch (error) {
       return [`RELEASE-MANIFEST.json is not readable: ${error instanceof Error ? error.message : error}.`];
     }
@@ -130,6 +132,20 @@ export async function qualifyArtifact(archive, { commit, network = 'mainnet' }) 
       path.join(extracted, 'docs/acceptance/qualified-application-evidence.json'),
       path.join(extracted, 'docs/acceptance/qualified-release-evidence.json'), extracted, commit], { encoding: 'utf8' });
     if (applicationCheck.status !== 0) problems.push('The carried full application acceptance did not qualify.');
+    if (typeof contract.projectProtocolFunctionalAcceptance === 'function' && !releaseManifest.functionalAcceptanceProjection) {
+      problems.push('The current artifact carries no completely qualified functional acceptance projection.');
+    }
+    if (releaseManifest.functionalAcceptanceProjection) {
+      try {
+        const projector = await import(pathToFileURL(path.join(extracted, 'scripts/universe/protocol-functional-projection.mjs')).href);
+        const expectedProjection = projector.qualifiedFunctionalProjection(extracted, { artifactCommit: commit, network });
+        if (JSON.stringify(expectedProjection.member) !== JSON.stringify(releaseManifest.functionalAcceptanceProjection) || !readFileSync(path.join(extracted, projector.FUNCTIONAL_PROJECTION_PATH)).equals(expectedProjection.bytes)) {
+          problems.push('The carried functional projection differs from complete qualified release evidence.');
+        }
+      } catch {
+        problems.push('The carried functional projection could not be independently qualified.');
+      }
+    }
     return [...problems, ...report.problems];
   } finally {
     rmSync(extracted, { recursive: true, force: true });

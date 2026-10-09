@@ -190,7 +190,7 @@ function stagedRelease(candidate, { commit = ARTIFACT_COMMIT } = {}) {
   });
   assert.deepEqual(report.problems, []);
   mkdirSync(join(stage, 'scripts', 'universe'), { recursive: true });
-  for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs']) {
+  for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs', 'required-application-roster.mjs']) {
     copyFileSync(join(here, name), join(stage, 'scripts', 'universe', name));
   }
   const application = fixture(candidate.envelope);
@@ -218,6 +218,7 @@ const CARRIED = (candidate) => [
   'scripts/universe/protocol-contract.mjs',
   'scripts/universe/reconciled-release.mjs',
   'scripts/universe/reconciled-operations.mjs',
+  'scripts/universe/required-application-roster.mjs',
   'docs/acceptance/reconciled-operations.json',
   'docs/acceptance/qualified-application-evidence.json',
   'docs/acceptance/evidence/application/receipt.json',
@@ -231,13 +232,13 @@ function packed(name, entries) {
   return archive(join(mkdtempSync(join(workdir, 'out-')), name), entries);
 }
 
-test('a Signet-qualified Mainnet candidate qualifies from its extracted archive alone', async () => {
+test('a legacy tiny fixture cannot supply the current full functional projection', async () => {
   const candidate = signetQualifiedCandidate();
   const stage = stagedRelease(candidate);
   // The checkout is gone before the archive is judged.
   rmSync(candidate.root, { recursive: true, force: true });
   const file = packed('mempool-good.tar.gz', entriesOf(stage, CARRIED(candidate)));
-  assert.deepEqual(await qualifyArtifact(file, { commit: ARTIFACT_COMMIT, network: 'mainnet' }), []);
+  assert.match((await qualifyArtifact(file, { commit: ARTIFACT_COMMIT, network: 'mainnet' })).join('\n'), /no completely qualified functional acceptance projection/);
 });
 
 test('staging carries the complete evidence closure the envelope names, and nothing is left behind', () => {

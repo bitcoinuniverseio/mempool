@@ -25,6 +25,7 @@
  *   release-manifest.mjs verify --manifest=<path> --origin=<url>
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { emitQualifiedFunctionalProjection } from './protocol-functional-projection.mjs';
 
 export const RELEASE_MANIFEST_SCHEMA = 'universe-release-manifest-v1';
 
@@ -47,7 +48,7 @@ const COMMIT_SHA = /^[0-9a-f]{7,64}$/;
  * frontend and a backend reporting different builds a detectable fault rather
  * than an open question.
  */
-export function buildManifest({ commit, builtAt }) {
+export function buildManifest({ commit, builtAt, functionalAcceptanceProjection }) {
   if (!COMMIT_SHA.test(String(commit ?? ''))) {
     throw new Error(`release manifest needs a commit, got ${JSON.stringify(commit ?? null)}`);
   }
@@ -56,6 +57,7 @@ export function buildManifest({ commit, builtAt }) {
     commit,
     shortCommit: commit.slice(0, 9),
     builtAt,
+    ...(functionalAcceptanceProjection ? { functionalAcceptanceProjection } : {}),
     components: {
       frontend: { commit, publishedAt: '/resources/config.js' },
       explorerBackend: { commit, publishedAt: '/api/v1/backend-info' },
@@ -177,6 +179,11 @@ async function main() {
     const manifest = buildManifest({
       commit: argument('commit'),
       builtAt: argument('built-at') ?? new Date().toISOString(),
+      ...(argument('functional-acceptance-root') ? {
+        functionalAcceptanceProjection: emitQualifiedFunctionalProjection(argument('functional-acceptance-root'), {
+          artifactCommit: argument('commit'), network: argument('network') ?? 'mainnet',
+        }),
+      } : {}),
     });
     const out = argument('out');
     const rendered = `${JSON.stringify(manifest, null, 2)}\n`;

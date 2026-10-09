@@ -45,6 +45,8 @@ import {
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { qualifyApplication } from './reconciled-release.mjs';
+import { validateRequiredApplicationCoverage } from './required-application-roster.mjs';
 
 export const MANIFEST_SCHEMA_VERSION = 'universe-explorer-protocol-manifest-v1';
 export const PROTOCOL_SCHEMA_VERSION = 'universe-explorer-protocol-v1';
@@ -1378,6 +1380,97 @@ export function releaseGate(manifest, expected = {}, report = new Report()) {
     );
   }
   return report;
+}
+
+/** Project only the successful existing release qualification, never labels. */
+export function projectProtocolFunctionalAcceptance(manifest, expected = {}) {
+  const report = releaseGate(manifest, expected);
+  if (report.problems.length) return null;
+  const evidence = expected.acceptanceEvidence ?? manifest.acceptanceEvidence;
+  const candidate = evidence.candidate;
+  // Full application receipts are a separate prerequisite. A complete
+  // protocol ledger or a small component fixture cannot replace that roster.
+  const application = expected.application;
+  if (!application?.rosterBytes || !application?.acceptanceBytes || typeof application.readProof !== 'function') return null;
+  let applicationQualification;
+  try {
+    const closure = new Map();
+    const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+    const readProof = relative => {
+      const bytes = application.readProof(relative);
+      const sha256 = hash(bytes);
+      if (closure.has(relative) && closure.get(relative) !== sha256) throw Error('Evidence changed during qualification');
+      closure.set(relative, sha256);
+      return bytes;
+    };
+    const protocolBytes = application.protocolBytes ?? Buffer.from(JSON.stringify(evidence));
+    if (JSON.stringify(JSON.parse(protocolBytes.toString('utf8'))) !== JSON.stringify(evidence)) return null;
+    const qualified = qualifyApplication(application.rosterBytes,
+      JSON.parse(application.acceptanceBytes.toString('utf8')), protocolBytes,
+      candidate.artifactCommit, readProof);
+    const roster = JSON.parse(application.rosterBytes.toString('utf8'));
+    const required = validateRequiredApplicationCoverage(roster, readProof);
+    if (required.mappingReviewComplete !== true) return null;
+    for (const item of [...roster.operations, ...roster.mappings, ...(roster.currentSourceCandidates ?? [])]) {
+      for (const source of item.sources ?? []) if (hash(readProof(source.path)) !== source.sha256) throw Error('Reviewed source proof drift');
+    }
+    applicationQualification = {
+      operationDenominator: qualified.operationCount,
+      operationIdsSha256: hash(Buffer.from(JSON.stringify(roster.operations.map(row => row.id).sort()))),
+      rosterSha256: hash(application.rosterBytes),
+      acceptanceSha256: hash(application.acceptanceBytes),
+      evidenceClosureSha256: hash(Buffer.from(JSON.stringify([...closure].map(([path, sha256]) => ({ path, sha256 })).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0)))),
+      requiredCoverageCount: required.coverageCount,
+      requiredCoverageIdsSha256: required.coverageIdsSha256,
+      requiredCoverageSnapshotSha256: required.snapshotSha256,
+    };
+  } catch { return null; }
+  // Qualification on another network is already governed by releaseGate's
+  // independent configuration-proof policy. Keep both networks explicit:
+  // consumers must name where the functionality was actually exercised.
+  return {
+    schemaVersion: 'universe-protocol-functional-acceptance-set-v1',
+    registryVersion: manifest.registryVersion,
+    sourceSha: manifest.sourceSha,
+    artifactCommit: candidate.artifactCommit,
+    acceptanceNetwork: candidate.acceptanceNetwork,
+    deploymentNetwork: candidate.deploymentNetwork,
+    dependencyRevision: candidate.dependencyRevision,
+    configurationDigest: candidate.configurationDigest,
+    specificationRevisions: [...candidate.specificationRevisions],
+    configurationProof: candidate.configurationProof ?? null,
+    applicationQualification,
+    protocols: manifest.protocols.map(protocol => {
+      const rows = evidence.rows.filter(row => row.protocol === protocol.id && row.chain === protocol.chain && row.network === candidate.acceptanceNetwork);
+      const notApplicable = rows.filter(row => row.result === 'NOT APPLICABLE').length;
+      return {
+        schemaVersion: 'universe-protocol-functional-acceptance-v1',
+        protocol: protocol.id, chain: protocol.chain,
+        acceptanceNetwork: candidate.acceptanceNetwork,
+        deploymentNetwork: candidate.deploymentNetwork,
+        registryVersion: manifest.registryVersion, sourceSha: manifest.sourceSha,
+        artifactCommit: candidate.artifactCommit,
+        dependencyRevision: candidate.dependencyRevision,
+        configurationDigest: candidate.configurationDigest,
+        specificationRevisions: [...candidate.specificationRevisions],
+        configurationProof: candidate.configurationProof ?? null,
+        declared: rows.length, applicable: rows.length - notApplicable,
+        passed: rows.filter(row => row.result === 'PASS').length,
+        failed: rows.filter(row => row.result === 'FAIL').length,
+        blocked: rows.filter(row => row.result === 'BLOCKED').length,
+        notTested: rows.filter(row => row.result === 'NOT TESTED').length,
+        notApplicable,
+        rows: rows.map(row => ({
+          operation: row.operation, variant: row.variant, role: row.role,
+          result: row.result, ranAt: row.ranAt,
+          ...(row.evidencePolicyVersion !== undefined ? { evidencePolicyVersion: row.evidencePolicyVersion } : {}),
+          specificationRevision: row.specificationRevision,
+          checkpoint: row.checkpoint,
+          evidence: row.evidence.map(file => ({ path: file.path, sha256: file.sha256 })),
+        })),
+      };
+    }),
+  };
 }
 
 // ---------------------------------------------------------------------------
