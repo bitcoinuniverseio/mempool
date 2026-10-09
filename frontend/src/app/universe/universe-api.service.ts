@@ -134,8 +134,7 @@ export const CHAIN_MEMPOOL_LIMIT: Record<Exclude<ExplorerChain, 'bitcoin'>, numb
 export class UniverseApiService {
   private apiBaseUrl: string; // base URL is protocol, hostname, and port
 
-  private protocolsCache$: Observable<ProtocolsResponse> | null = null;
-  private protocolsCacheNetwork?: ExplorerNetwork;
+  private protocolsCache = new Map<string, Observable<ProtocolsResponse>>();
 
   constructor(
     private httpClient: HttpClient,
@@ -319,22 +318,34 @@ export class UniverseApiService {
     }
   }
 
-  getProtocols$(): Observable<ProtocolsResponse> {
-    return this.selectedNetwork$().pipe(switchMap((network) => {
-      if (!this.protocolsCache$ || this.protocolsCacheNetwork !== network) {
-        this.protocolsCacheNetwork = network;
-        this.protocolsCache$ = this.requestForNetwork<ProtocolsResponse>(
-          this.apiBaseUrl + '/api/v1/universe/protocols', network,
-        ).pipe(
-          catchError((error) => {
-            // Only clear the failed partition; a late failure cannot evict a newer network.
-            if (this.protocolsCacheNetwork === network) {this.protocolsCache$ = null;}
-            return throwError(() => error);
-          }),
-          shareReplay({ bufferSize: 1, refCount: true }),
-        );
+  getProtocols$(context?: { chain: string; network?: ExplorerNetwork }): Observable<ProtocolsResponse> {
+    const chain = context?.chain ?? 'bitcoin';
+    return this.chainNetwork$(chain).pipe(switchMap((network) => {
+      if (context?.network !== undefined && context.network !== network) {
+        return throwError(() => new Error('protocol-registry-context-unavailable'));
       }
-      return this.protocolsCache$;
+      const key = JSON.stringify([chain, network]);
+      const cached = this.protocolsCache.get(key);
+      if (cached) {return cached;}
+      const request = this.requestForNetwork<ProtocolsResponse>(
+        this.apiBaseUrl + '/api/v1/universe/protocols', network, undefined, chain,
+      ).pipe(
+        map(response => {
+          const binding = response.functionalAcceptanceBinding;
+          if (binding && (binding.chain !== chain || binding.deploymentNetwork !== network)) {
+            throw new Error('protocol-registry-context-mismatch');
+          }
+          return response;
+        }),
+        catchError(error => {
+          // A cancelled/late scope cannot evict another chain's successful cache.
+          if (this.protocolsCache.get(key) === request) {this.protocolsCache.delete(key);}
+          return throwError(() => error);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+      this.protocolsCache.set(key, request);
+      return request;
     }));
   }
 
