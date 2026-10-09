@@ -51,8 +51,11 @@ export function stageQualifiedApplicationClosure(sourceRoot, stageRoot, artifact
   });
   // All targets have passed before any missing file is created. Reuse only
   // identical bytes, and never overwrite a target appearing after preflight.
-  for (const { target, bytes } of targets) {
-    if (existsSync(target)) continue;
+  for (const { path, target, bytes } of targets) {
+    if (existsSync(target)) {
+      if (hash(stagedReader(path)) !== hash(bytes)) throw Error('Staged proof changed after preflight; preserved existing bytes');
+      continue;
+    }
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, bytes, { flag: 'wx' });
   }
