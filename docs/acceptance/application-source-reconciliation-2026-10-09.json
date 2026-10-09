@@ -24819,7 +24819,7 @@
     }
   ],
   "currentMatrixArtifact": "docs/acceptance/operation-matrix-source-successor-2026-10-09.json",
-  "currentMatrixSha256": "4c1b7853517640f3cd0ab754495de33a56671e56e5e8af373d26766c930c1525",
+  "currentMatrixSha256": "eae6adc4ff66bd3a2744475e431e42f8e6ecd490295feb24039770f5f4b5071f",
   "currentMatrixHashEncoding": "UTF-8 LF-normalized source-ledger text only; raw execution evidence is never normalized",
   "originalHistoricalGitProof": {
     "path": "docs/acceptance/source-proof/source-ledger-original-1592-a391.json.gz",
