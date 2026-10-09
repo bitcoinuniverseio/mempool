@@ -7,10 +7,10 @@ import { StateService } from '@app/services/state.service';
 import { atomicToDisplay } from '../portfolio/shared/exact';
 import { HistoryParquetService } from './history-parquet.service';
 
-function canonicalHistoryState(value: unknown): unknown {
-  if (Array.isArray(value)) { return value.map(canonicalHistoryState); }
+function orderedHistoryState(value: unknown): unknown {
+  if (Array.isArray(value)) { return value.map(orderedHistoryState); }
   if (value !== null && typeof value === 'object') {
-    return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonicalHistoryState((value as Record<string, unknown>)[key])]));
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, orderedHistoryState((value as Record<string, unknown>)[key])]));
   }
   return value;
 }
@@ -323,7 +323,7 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
     if (format === 'parquet' && !this.parquet) { this.exportError = 'The isolated Parquet reader is unavailable.'; this.cdr.markForCheck(); return; }
     const hash = this.currentState.state_hash, revision = this.revision, network = this.network;
     // The producer may cache another replay summary under the same membership hash.
-    const capturedSummary = JSON.stringify(canonicalHistoryState(this.currentState));
+    const capturedSummary = JSON.stringify(orderedHistoryState(this.currentState));
     const checkpointHash = this.currentState.checkpoint_block_hash, transactionCount = this.currentState.total_transactions;
     this.exporting = true; this.exportError = null;
     const request = format === 'json' ? this.api.exportHistory$(hash) : this.api.exportHistoryParquet$(hash).pipe(
@@ -331,7 +331,7 @@ export class TimeMachineComponent implements OnInit, OnDestroy {
     );
     this.exportRead = request.subscribe({next: async result => {
       if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }
-      if (result?.format !== format || result?.state?.state_hash !== hash || JSON.stringify(canonicalHistoryState(result.state)) !== capturedSummary || !Array.isArray(result.txids) || result.txids.length !== transactionCount || new Set(result.txids).size !== transactionCount || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id)) || format === 'parquet' && !(result.parquetBytes instanceof ArrayBuffer)) { this.exporting = false; this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
+      if (result?.format !== format || result?.state?.state_hash !== hash || JSON.stringify(orderedHistoryState(result.state)) !== capturedSummary || !Array.isArray(result.txids) || result.txids.length !== transactionCount || new Set(result.txids).size !== transactionCount || result.txids.some((id: unknown) => typeof id !== 'string' || !/^[0-9a-f]{64}$/.test(id)) || format === 'parquet' && !(result.parquetBytes instanceof ArrayBuffer)) { this.exporting = false; this.exportError = 'Export does not match the selected retained state.'; this.cdr.markForCheck(); return; }
       try {
         const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(checkpointHash + ':' + [...result.txids].sort().join(','))));
         if (this.destroyed || revision !== this.revision || network !== this.network || this.currentState?.state_hash !== hash) { return; }

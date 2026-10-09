@@ -91,6 +91,9 @@ jobs:
       - name: The portfolio contract gate fires on the states it exists for
         run: node --test scripts/universe/portfolio-contract.test.mjs
 
+      - name: The Liquid v1 transport identity matches its native producer
+        run: node --test scripts/universe/liquid-wire-contract.test.mjs
+
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
 

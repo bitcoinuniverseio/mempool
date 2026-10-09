@@ -42,13 +42,13 @@ describe('Incident Center actual template with controlled observations',()=>{
   });
   it('preserves the historical replacement title while disclosing an ancestor-only tip rollback',()=>{
     const observations=response();const incident=observations.incidents[0];
-    incident.incident_type='reorg';incident.title='Observed canonical chain replacement';incident.source_ids=['controlled-core'];
+    incident.incident_type='reorg';incident.title='Observed chain replacement';incident.source_ids=['controlled-core'];
     incident.block_height=1;incident.block_hash='4'.repeat(64);incident.reorg_depth=1;
     const ancestor={height:1,hash:'4'.repeat(64),parent:'3'.repeat(64),timestamp:1};
     incident.evidence={before:[ancestor,incident.evidence.before[0]],after:[ancestor],common_ancestor:ancestor};
     const {fixture}=render(false,observations);const text=fixture.nativeElement.textContent;
-    expect(text).toContain('Observed canonical chain replacement');
+    expect(text).toContain('Observed chain replacement');
     expect(text).toContain('Retained headers show a tip rollback to the ancestor; no competing replacement branch is shown.');
-    expect(fixture.componentInstance.incidents[0].title).toBe('Observed canonical chain replacement');
+    expect(fixture.componentInstance.incidents[0].title).toBe('Observed chain replacement');
   });
 });
