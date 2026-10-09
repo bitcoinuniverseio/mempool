@@ -69,6 +69,25 @@ test('both incremental and block socket paths emit null fees and an explicit env
   expect(messages.at(-1)).toMatchObject({ fees: null, feeEstimate: { status: 'syncing', values: null } });
 });
 
+test('bootstrap and shared publications refresh existing node metadata without renewing its observation', () => {
+  const { state, websocket, messages } = fixture();
+  websocket.handleMempoolObservation(true);
+  const initial = JSON.parse(websocket.getSerializedInitData()).backendInfo.chainSync;
+  state.nodeHeight = state.tip.height = 124;
+  state.nodeObserved += 30_000;
+  jest.spyOn(Date, 'now').mockReturnValue(state.nodeObserved);
+  websocket.handleMempoolObservation(true);
+  expect(messages.at(-1).backendInfo.chainSync).toMatchObject({ blocks: 124, checkedAt: new Date(state.nodeObserved).toISOString() });
+  const current = JSON.parse(websocket.getSerializedInitData()).backendInfo.chainSync;
+  expect(current.checkedAt).not.toBe(initial.checkedAt);
+  expect(current.blocks).toBe(124);
+  jest.spyOn(Date, 'now').mockReturnValue(state.nodeObserved + 120_001);
+  const expired = JSON.parse(websocket.getSerializedInitData());
+  expect(expired.backendInfo.chainSync).toEqual(current);
+  expect(expired.liveObservation.status).toBe('stale');
+  expect(expired.feeEstimate.values).toBeNull();
+});
+
 test('readers cannot renew observation age, stale bootstrap clears fees, and a stale block cannot renew stalled mempool', () => {
   const { state, fees, websocket } = fixture();
   websocket.handleMempoolObservation(true);
