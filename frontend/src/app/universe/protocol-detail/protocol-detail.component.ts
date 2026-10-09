@@ -9,6 +9,7 @@ import { ProtocolCopy, protocolCopy } from '@app/universe/universe-protocol-copy
 import {
   ExplorerProtocolActivityPage,
   ExplorerProtocolDefinition,
+  ProtocolsResponse,
   ExplorerProtocolObjectsPage,
   SourceEntry,
 } from '@app/universe/universe.types';
@@ -51,6 +52,8 @@ interface ProtocolObjectsState {
 interface ProtocolDetailViewModel {
   readonly kind: 'loading' | 'ready' | 'missing' | 'error';
   readonly protocol?: ExplorerProtocolDefinition;
+  readonly registry?: ProtocolsResponse;
+  readonly network?: string;
   readonly copy?: ProtocolCopy;
   readonly source?: SourceEntry | null;
   /** null when the authority snapshot could not be read at all. */
@@ -75,7 +78,7 @@ export type ProtocolResolution =
   | { readonly kind: 'loading' }
   | { readonly kind: 'registry-error' }
   | { readonly kind: 'missing' }
-  | { readonly kind: 'found'; readonly protocol: ExplorerProtocolDefinition };
+  | { readonly kind: 'found'; readonly protocol: ExplorerProtocolDefinition; readonly registry?: ProtocolsResponse; readonly network?: string };
 
 /**
  * One protocol, explained and evidenced.
@@ -132,7 +135,7 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
         return this.api.getProtocols$().pipe(
           map((registry): ProtocolResolution => {
             const protocol = findProtocol(registry.protocols || [], id);
-            return protocol ? { kind: 'found', protocol } : { kind: 'missing' };
+            return protocol ? { kind: 'found', protocol, registry, network: this.api.network } : { kind: 'missing' };
           }),
           catchError(() => of<ProtocolResolution>({ kind: 'registry-error' })),
           startWith<ProtocolResolution>({ kind: 'loading' }),
@@ -194,6 +197,8 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
             return {
               kind: 'ready',
               protocol,
+              registry: resolution.registry,
+              network: resolution.network,
               copy: protocolCopy(protocol.id, protocol.family),
               source: sourceForProtocol(protocol, sourcesByAuthority),
               sourcesByAuthority,
@@ -449,8 +454,8 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  coverageLabel(protocol: ExplorerProtocolDefinition): string {
-    return protocolCoverageView(protocol).functionalLabel;
+  coverageLabel(protocol: ExplorerProtocolDefinition, registry?: ProtocolsResponse, network?: string): string {
+    return protocolCoverageView(protocol, registry, network).functionalLabel;
   }
 
   registryCoverageLabel(protocol: ExplorerProtocolDefinition): string | null {
