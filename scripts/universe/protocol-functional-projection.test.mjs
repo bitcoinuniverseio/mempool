@@ -1,3 +1,4 @@
+import { validatorModuleClosure } from './release-fixture-modules.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync, symlinkSync, existsSync } from 'node:fs';
@@ -47,7 +48,7 @@ test('the complete carried632 closure seals and requalifies independently, and p
     assert.ok(files.some(file => file.path === COVERAGE_PATH));
     assert.ok(files.some(file => file.path === f.roster.historicalRawProvenance.path));
     assert.ok(files.some(file => file.path === 'docs/source.ts'));
-    for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs', 'required-application-roster.mjs', 'acceptance-contexts.mjs', 'protocol-functional-projection.mjs']) {
+    for (const name of validatorModuleClosure()) {
       mkdirSync(join(stage, 'scripts/universe'), { recursive: true }); copyFileSync(join(f.root, 'scripts/universe', name), join(stage, 'scripts/universe', name));
     }
     const member = emitQualifiedFunctionalProjection(stage, { artifactCommit: f.expected.artifactCommit, network: 'mainnet' });

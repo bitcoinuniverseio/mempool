@@ -1,3 +1,4 @@
+import { validatorModuleClosure } from './release-fixture-modules.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync, symlinkSync, existsSync } from 'node:fs';
@@ -52,6 +53,6 @@ export function controlled() {
   put('docs/acceptance/qualified-release-evidence.json', protocolBytes);
   put('docs/acceptance/reconciled-operations.json', rosterBytes);
   put('docs/acceptance/qualified-application-evidence.json', encode(acceptance));
-  for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs', 'required-application-roster.mjs', 'acceptance-contexts.mjs', 'protocol-functional-projection.mjs']) put('scripts/universe/' + name, readFileSync(new URL('./' + name, import.meta.url)));
+  for (const name of validatorModuleClosure()) put('scripts/universe/' + name, readFileSync(new URL('./' + name, import.meta.url)));
   return { root, manifest, envelope, roster, expected };
 }
