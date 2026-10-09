@@ -41,8 +41,14 @@ import { checkedReconstructionV2, UtxoReconstructionV2View } from './utxo-recons
         <div *ngIf="v4View as v4" class="small text-break">
           <p>Global mempool proof: {{ v4.globalMempoolProof.mode }}. {{ v4.globalMempoolProof.fallbackReason }}
             Verified unrelated transitions: {{ v4.globalMempoolProof.transitionCount }} / {{ v4.globalMempoolProof.maximumTransitions }}.
-            Bounded proof cache: {{ v4.globalMempoolProof.transactionCount === null ? 'not acquired' : v4.globalMempoolProof.transactionCount }} transactions / {{ v4.globalMempoolProof.maximumTransactions }};
-            {{ v4.globalMempoolProof.retainedBytes }} / {{ v4.globalMempoolProof.maximumRetainedBytes }} bytes.</p>
+            Observed global mempool: {{ v4.globalMempoolProof.transactionCount === null ? 'not acquired' : v4.globalMempoolProof.transactionCount }} transactions.
+            Transaction proof capacity: {{ v4.globalMempoolProof.maximumTransactions }} transactions.</p>
+          <p *ngIf="v4.globalMempoolProof.mode === 'strict-global-fallback'">Retained transaction proofs: none.
+            Retained fallback metadata: {{ v4.globalMempoolProof.retainedBytes }} bytes.</p>
+          <p *ngIf="v4.globalMempoolProof.mode === 'irrelevant-delta-proof'">Retained transaction proofs: {{ v4.globalMempoolProof.transactionCount }}.
+            Retained proof state includes transaction proofs and metadata.</p>
+          <p *ngIf="v4.globalMempoolProof.mode === 'uninitialized'">Transaction proofs have not been acquired.</p>
+          <p>Global state accounting: {{ v4.globalMempoolProof.retainedBytes }} / {{ v4.globalMempoolProof.maximumRetainedBytes }} bytes.</p>
           <p>Only independently proved unrelated global changes can retain output verification. Relevant, unknown or over-bound changes reset final progress; strict fallback may remain partial under churn.</p>
           <p *ngIf="v4.globalMempoolProof.verifiedOutputContext as proof">Current verified output context: {{ proof.identity }};
             {{ proof.outputCount }} checked outputs; ordered output digest {{ proof.outpointsSha256 }}.</p>
