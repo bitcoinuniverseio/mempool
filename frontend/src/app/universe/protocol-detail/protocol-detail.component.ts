@@ -386,6 +386,16 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     return state.kind === 'loaded' ? state.summary : null;
   }
 
+  objectKindLabel(row: ProtocolObjectRow, protocolId: string): string | null {
+    return protocolId === 'names' && (row.record?.kind === 'name' || row.record?.kind === 'namespace')
+      ? row.record.kind : row.kind;
+  }
+
+  namesObjectReference(row: ProtocolObjectRow, protocolId: string): string | null {
+    return protocolId === 'names' && (row.record?.kind === 'name' || row.record?.kind === 'namespace') &&
+      /^[0-9a-f]{64}i(0|[1-9][0-9]{0,9})$/.test(row.id ?? '') ? row.id : null;
+  }
+
   trackByObject(index: number, row: ProtocolObjectRow): string {
     return row.id ?? `${index}`;
   }

@@ -133,8 +133,10 @@
 
               <ul class="authority-event-list" *ngIf="objects.rows.length; else objectsEmpty">
                 <li *ngFor="let row of objects.rows; trackBy: trackByObject">
-                  <span class="identifier">{{ row.id ? shorten(row.id, 18) : '' }}</span>
-                  <span class="kind" *ngIf="row.kind">{{ row.kind }}</span>
+                  <a class="identifier" *ngIf="namesObjectReference(row, vm.protocol.id) as reference; else plainObjectIdentity"
+                     [routerLink]="['/inscription' | relativeUrl, reference]" [queryParams]="{protocol:'names'}">{{ shorten(reference, 18) }}</a>
+                  <ng-template #plainObjectIdentity><span class="identifier">{{ row.id ? shorten(row.id, 18) : '' }}</span></ng-template>
+                  <span class="kind" *ngIf="objectKindLabel(row, vm.protocol.id) as kind">{{ kind }}</span>
                 </li>
               </ul>
               <ng-template #objectsEmpty></ng-template>
