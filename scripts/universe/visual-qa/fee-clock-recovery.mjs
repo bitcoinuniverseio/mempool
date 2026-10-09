@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  lstatSync,
+  realpathSync,
+} from "node:fs";
+import { resolve, relative, isAbsolute, dirname } from "node:path";
+import { execFileSync } from "node:child_process";
+import { isUtf8 } from "node:buffer";
 import { pathToFileURL } from "node:url";
 import { fixtures } from "./fixtures.mjs";
 export const CANDIDATE = "ac8ec2a645520ac58e007f5a974561e12e65928d";
@@ -15,6 +23,221 @@ export function coreFixtureNetwork(path) {
 const hash = (b) => createHash("sha256").update(b).digest("hex");
 export function assertAsset(bytes, expected, path) {
   assert.equal(hash(bytes), expected, "Candidate asset drift: " + path);
+}
+// An explicit manifest changes the tested candidate, never historical receipts.
+export const AUDIT_ROOT =
+  "C:/universe/mempool/audits/implementation-20261009-api";
+const plainPath = (path) =>
+  typeof path === "string" &&
+  path.length > 0 &&
+  path.length <= 512 &&
+  !/[\\\r\n?#%:]/.test(path) &&
+  !path.startsWith("/") &&
+  path.split("/").every((p) => p && p !== "." && p !== "..");
+export function rootedLocalFile(root, path, directory = false) {
+  assert(
+    typeof path === "string" && !/^[a-z]+:\/\//i.test(path),
+    "Receipt must be local",
+  );
+  const base = realpathSync(root),
+    absolute = resolve(root, path),
+    rel = relative(base, absolute);
+  assert(
+    rel && !rel.startsWith("..") && !isAbsolute(rel),
+    "Receipt/artifact outside audit root",
+  );
+  let current = absolute;
+  while (current !== base) {
+    assert(
+      !lstatSync(current).isSymbolicLink(),
+      "Linked receipt/artifact path",
+    );
+    current = dirname(current);
+  }
+  assert(
+    directory
+      ? lstatSync(absolute).isDirectory()
+      : lstatSync(absolute).isFile(),
+    "Wrong receipt/artifact type",
+  );
+  return absolute;
+}
+export function validateBuildReceipt(pins) {
+  assert(
+    pins?.schemaVersion === "universe-private-preview-build-v1",
+    "Unsupported build receipt",
+  );
+  assert(
+    /^[0-9a-f]{40}$/.test(pins.sourceCommit),
+    "Exact source revision required",
+  );
+  assert.deepEqual(pins.sourceDrift, [], "Source drift in build receipt");
+  for (const field of ["artifactFiles", "sourceFiles"]) {
+    assert(
+      pins[field] &&
+        typeof pins[field] === "object" &&
+        !Array.isArray(pins[field]),
+      "Missing build file manifest",
+    );
+    const rows = Object.entries(pins[field]);
+    assert(
+      rows.length > 0 && rows.length <= 10000,
+      "Unbounded/empty build manifest",
+    );
+    for (const [path, value] of rows)
+      assert(
+        plainPath(path) && /^[0-9a-f]{64}$/.test(value),
+        "Unsafe build file/hash",
+      );
+  }
+  assert(
+    Object.keys(pins.sourceFiles).every(
+      (p) => p.startsWith("frontend/") || p.startsWith("scripts/universe/"),
+    ),
+    "Non-source input path",
+  );
+  for (const path of [
+    "frontend/src/app/components/clock/clock.component.ts",
+    "frontend/src/app/components/clock/clock.component.html",
+    "frontend/src/app/services/fee-estimate.ts",
+    "frontend/src/app/services/websocket.service.ts",
+    "frontend/src/app/services/state.service.ts",
+  ])
+    assert(pins.sourceFiles[path], "Missing consumer source pin");
+  const mains = Object.keys(pins.artifactFiles).filter((p) =>
+    /^main\.[a-f0-9]+\.js$/.test(p),
+  );
+  assert.equal(mains.length, 1, "Exactly one pinned main required");
+  assert(
+    pins.configSha256 &&
+      pins.configSha256 === pins.artifactFiles["resources/config.js"],
+    "Config manifest mismatch",
+  );
+  assert.equal(
+    pins.configScriptPath,
+    "/resources/config.js?v=" + pins.configSha256,
+    "Config bootstrap pin mismatch",
+  );
+  return mains[0];
+}
+export function verifyGitSourceInputs(pins, repo) {
+  assert(
+    /^[0-9a-f]{40}$/.test(pins.sourceCommit),
+    "Exact source commit required",
+  );
+  assert.equal(
+    execFileSync("git", ["-C", repo, "cat-file", "-t", pins.sourceCommit], {
+      encoding: "utf8",
+    }).trim(),
+    "commit",
+    "Source revision must be a commit",
+  );
+  const paths = Object.keys(pins.sourceFiles).sort();
+  const bytes = execFileSync("git", ["-C", repo, "cat-file", "--batch"], {
+    input: paths.map((p) => pins.sourceCommit + ":" + p).join("\n") + "\n",
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  let cursor = 0;
+  const encodings = {};
+  for (const path of paths) {
+    const end = bytes.indexOf(10, cursor);
+    assert(end >= cursor);
+    const header = bytes.subarray(cursor, end).toString("ascii");
+    const parts = header.split(" ");
+    assert(
+      parts[1] === "blob" && /^\d+$/.test(parts[2]),
+      "Source file absent from exact candidate: " + path,
+    );
+    const size = Number(parts[2]),
+      body = bytes.subarray(end + 1, end + 1 + size);
+    assert.equal(body.length, size);
+    cursor = end + 2 + size;
+    if (hash(body) === pins.sourceFiles[path])
+      encodings[path] = "exact Git blob bytes";
+    else {
+      // Explicit source-checkout line endings only; no evidence bytes are written or normalized.
+      assert(isUtf8(body), "Binary source drift: " + path);
+      const lf = body.toString("utf8").replaceAll("\r\n", "\n");
+      const variants = [
+        ["source checkout LF", Buffer.from(lf)],
+        ["source checkout CRLF", Buffer.from(lf.replaceAll("\n", "\r\n"))],
+      ];
+      const match = variants.find(
+        ([, value]) => hash(value) === pins.sourceFiles[path],
+      );
+      if (match) encodings[path] = match[0];
+      else {
+        // A mixed-line-ending checkout cannot be inferred from a hash alone.
+        // Require its actual recorded raw bytes and exact candidate text together.
+        const local = readFileSync(rootedLocalFile(repo, path));
+        assert.equal(
+          hash(local),
+          pins.sourceFiles[path],
+          "Recorded source bytes unavailable/drifted: " + path,
+        );
+        assert(isUtf8(local), "Binary source mismatch: " + path);
+        assert.equal(
+          local.toString("utf8").replaceAll("\r\n", "\n"),
+          lf,
+          "Exact candidate source content drift: " + path,
+        );
+        encodings[path] =
+          "recorded raw mixed source checkout; normalized content matches exact Git blob";
+      }
+    }
+  }
+  return {
+    sourceCommit: pins.sourceCommit,
+    sourceFilesVerified: paths.length,
+    sourceManifestSha256: hash(Buffer.from(JSON.stringify(pins.sourceFiles))),
+    encodings,
+  };
+}
+export function loadExpectedBuildReceipt(audit, receiptPath, repo) {
+  const path = rootedLocalFile(audit, receiptPath),
+    raw = readFileSync(path),
+    pins = JSON.parse(raw);
+  const mainAsset = validateBuildReceipt(pins),
+    artifact = rootedLocalFile(audit, pins.artifactPath, true);
+  for (const [name, expected] of Object.entries(pins.artifactFiles))
+    assertAsset(readFileSync(rootedLocalFile(artifact, name)), expected, name);
+  const config = readFileSync(
+    rootedLocalFile(artifact, "resources/config.js"),
+    "utf8",
+  );
+  const commit = /GIT_COMMIT_HASH\s*=\s*["']([0-9a-f]{7,40})["']/.exec(
+    config,
+  )?.[1];
+  assert(
+    commit && pins.sourceCommit.startsWith(commit),
+    "Configuration source stamp mismatch",
+  );
+  return {
+    ...pins,
+    mainAsset,
+    expectedReceipt: { path, sha256: hash(raw) },
+    sourceVerification: verifyGitSourceInputs(pins, repo),
+  };
+}
+export function expectedLoadedAsset(pins, pathname, type, status) {
+  if (status >= 400 || pathname.includes("/api/")) return null;
+  const name =
+    type === "document" ? "index.html" : decodeURIComponent(pathname.slice(1));
+  const expected = pins.artifactFiles[name];
+  if (
+    !expected &&
+    [
+      "document",
+      "script",
+      "stylesheet",
+      "font",
+      "image",
+      "media",
+      "manifest",
+    ].includes(type)
+  )
+    assert.fail("Unpinned loaded asset: " + name);
+  return expected ? { name, sha256: expected } : null;
 }
 export function fixtureFrame(network, observedAt, fee = 71, height = 325071) {
   assert(["signet", "testnet"].includes(network));
@@ -39,6 +262,10 @@ export function fixtureFrame(network, observedAt, fee = 71, height = 325071) {
     blocks: fixtures["/api/v1/blocks"]
       .map((b, i) => ({
         ...b,
+        extras: {
+          ...b.extras,
+          pool: { id: 0, name: "Controlled fixture", slug: "default" },
+        },
         height: height - i,
         id: i ? "d".repeat(64) : tip.hash,
       }))
@@ -76,7 +303,11 @@ export function fixtureFrame(network, observedAt, fee = 71, height = 325071) {
   };
 }
 export async function checkFeeClockRecovery(context, page, pins) {
-  assert.equal(pins.sourceCommit, CANDIDATE);
+  assert(
+    pins.mainAsset &&
+      pins.sourceVerification?.sourceCommit === pins.sourceCommit,
+    "Expected build receipt not verified",
+  );
   assert.equal(
     typeof context.routeWebSocket,
     "function",
@@ -90,7 +321,7 @@ export async function checkFeeClockRecovery(context, page, pins) {
   const report = {
     schemaVersion: "universe-controlled-fee-clock-browser-v1",
     classification: "Controlled local fixture integration",
-    frontendSource: CANDIDATE,
+    frontendSource: pins.sourceCommit,
     origin: ORIGIN,
     realSignetWholePasses: 0,
     nativeRequestsForwarded: 0,
@@ -105,18 +336,28 @@ export async function checkFeeClockRecovery(context, page, pins) {
   const loaded = new Map(),
     assetTasks = [];
   page.on("response", (response) => {
-    const url = new URL(response.url()),
-      name = url.pathname.slice(1),
-      expected = pins.artifactFiles[name];
-    if (url.origin === ORIGIN && expected)
-      assetTasks.push(
-        response.body().then((bytes) => {
-          assertAsset(bytes, expected, name);
-          loaded.set(name, expected);
-        }),
+    const url = new URL(response.url());
+    if (url.origin !== ORIGIN) return;
+    try {
+      const asset = expectedLoadedAsset(
+        pins,
+        url.pathname,
+        response.request().resourceType(),
+        response.status(),
       );
-    else if (url.origin === ORIGIN && /^main\.[a-f0-9]+\.js$/.test(name))
-      report.errors.push("Unexpected main bundle: " + name);
+      if (asset)
+        assetTasks.push(
+          response
+            .body()
+            .then((bytes) => {
+              assertAsset(bytes, asset.sha256, asset.name);
+              loaded.set(asset.name, asset.sha256);
+            })
+            .catch((error) => report.errors.push(error.message)),
+        );
+    } catch (error) {
+      report.errors.push(error.message);
+    }
   });
   report.runtimeProbe = {
     publicRouteWebSocket: true,
@@ -376,7 +617,7 @@ export async function checkFeeClockRecovery(context, page, pins) {
   });
   await Promise.all(assetTasks);
   assert(
-    loaded.has("main.6ef32583fd5bf71e.js") && loaded.has("resources/config.js"),
+    loaded.has(pins.mainAsset) && loaded.has("resources/config.js"),
     "Actual page did not load pinned main/config",
   );
   report.loadedAssetHashes = Object.fromEntries(loaded);
@@ -389,14 +630,21 @@ export async function checkFeeClockRecovery(context, page, pins) {
 }
 async function main() {
   const audit = resolve(process.argv[2]);
-  assert(existsSync(audit));
-  const pins = JSON.parse(
-    readFileSync(
-      resolve(audit, "clock-history-preview-build-receipt-ac8ec2a64.json"),
-    ),
+  assert.equal(
+    realpathSync(audit),
+    realpathSync(AUDIT_ROOT),
+    "Only the existing audit root is allowed",
   );
-  assert.equal(pins.sourceCommit, CANDIDATE);
-  for (const name of ["main.6ef32583fd5bf71e.js", "resources/config.js"]) {
+  const repo = resolve(import.meta.dirname, "../../..");
+  const explicit = process.argv[3];
+  const pins = loadExpectedBuildReceipt(
+    audit,
+    explicit ?? "clock-history-preview-build-receipt-ac8ec2a64.json",
+    repo,
+  );
+  if (!explicit)
+    assert.equal(pins.sourceCommit, CANDIDATE, "Default ac8 history changed");
+  for (const name of [pins.mainAsset, "resources/config.js"]) {
     const response = await fetch(ORIGIN + "/" + name);
     assert.equal(response.status, 200);
     assertAsset(
@@ -409,7 +657,11 @@ async function main() {
   const { chromium } = require("playwright");
   const output = resolve(
     audit,
-    "fee-clock-controlled-browser-ac8-" + Date.now() + "-receipt.json",
+    "fee-clock-controlled-browser-" +
+      pins.sourceCommit.slice(0, 12) +
+      "-" +
+      Date.now() +
+      "-receipt.json",
   );
   assert(!existsSync(output));
   const browser = await chromium.launch({ headless: true });
@@ -421,6 +673,8 @@ async function main() {
     });
     page = await context.newPage();
     report = await checkFeeClockRecovery(context, page, pins);
+    report.expectedBuildReceipt = pins.expectedReceipt;
+    report.sourceVerification = pins.sourceVerification;
     report.playwrightPackageVersion =
       require("playwright/package.json").version;
     report.harnessSha256 = hash(readFileSync(new URL(import.meta.url)));
@@ -428,7 +682,7 @@ async function main() {
       readFileSync(new URL("./fixtures.mjs", import.meta.url)),
     );
     report.assetPins = {
-      main: pins.artifactFiles["main.6ef32583fd5bf71e.js"],
+      main: pins.artifactFiles[pins.mainAsset],
       config: pins.artifactFiles["resources/config.js"],
     };
     writeFileSync(output, JSON.stringify(report, null, 2) + "\n", {
