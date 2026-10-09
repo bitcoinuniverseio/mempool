@@ -1,11 +1,11 @@
 // Test-only synthetic metadata. This is not deployable acceptance evidence.
 import { readFileSync } from 'node:fs';
-import { ExplorerProtocolDefinition, FunctionalAcceptanceBinding, ProtocolsResponse } from './universe.types';
+import { ExplorerProtocolDefinition, FunctionalAcceptanceBindingV1, FunctionalAcceptanceBindingV2, FunctionalAcceptanceContext, ProtocolFunctionalAcceptanceV2, ProtocolsResponse } from './universe.types';
 
 export function qualifiedCoverageFixture(): ProtocolsResponse {
   const pinned = JSON.parse(readFileSync(new URL('../../../../docs/protocols/PROTOCOL-COVERAGE.json', import.meta.url), 'utf8')) as ProtocolsResponse;
   const h = 'b'.repeat(64);
-  const binding: FunctionalAcceptanceBinding = {
+  const binding: FunctionalAcceptanceBindingV1 = {
     schemaVersion: 'universe-functional-acceptance-binding-v1', state: 'qualified', chain: 'bitcoin', acceptanceNetwork: 'signet', deploymentNetwork: 'mainnet',
     sourceSha: 'a'.repeat(40), artifactCommit: 'c'.repeat(40), registryVersion: pinned.registryVersion,
     dependencyRevision: 'dependency-test-tag', configurationDigest: h, specificationRevisions: ['spec-test-v1'],
@@ -34,4 +34,36 @@ export function qualifiedCoverageFixture(): ProtocolsResponse {
     } } satisfies ExplorerProtocolDefinition;
   });
   return { ...pinned, sourceSha: binding.sourceSha, functionalAcceptanceBinding: binding, protocols };
+}
+
+
+export function qualifiedMixedCoverageFixture(): ProtocolsResponse {
+  const response = qualifiedCoverageFixture();
+  const old = response.functionalAcceptanceBinding as FunctionalAcceptanceBindingV1;
+  const proof = { path: 'evidence/context-map-test.json', sha256: 'b'.repeat(64) };
+  const contexts: FunctionalAcceptanceContext[] = ['bitcoin', 'fractal', 'dogecoin', 'zcash'].map((chain, index) => {
+    const h = String(index + 1).repeat(64);
+    return { id: chain + '-test', chain, acceptanceNetwork: chain === 'bitcoin' ? 'signet' : 'testnet', deploymentNetwork: 'mainnet', acceptanceProfileDigest: h, deploymentConfigurationDigest: h,
+      ...(chain !== 'bitcoin' ? { justification: 'Synthetic governing test-network context' } : {}),
+      profileProof: { path: 'evidence/' + chain + '-profile.json', sha256: h }, configurationProof: { chain, network: 'mainnet', configurationDigest: h, sourceRevision: old.sourceSha, acceptanceProfileDigest: h, assertions: ['Synthetic bound configuration'], evidence: [proof] } };
+  });
+  const btc = contexts[0];
+  contexts.push({ ...structuredClone(btc), id: 'bitcoin-testnet', acceptanceNetwork: 'testnet', justification: 'Synthetic tested Mainnet/Testnet-only protocol context' });
+  const operationContexts = response.protocols.flatMap(protocol => protocol.functionalAcceptance.rows.map((row, index) => ({ protocol: protocol.id, operation: row.operation, variant: row.variant,
+    contextId: protocol.chain === 'bitcoin' && (['dust20', 'block20'].includes(protocol.id) || protocol.id === response.protocols[0].id && index === 1) ? 'bitcoin-testnet' : protocol.chain + '-test' })));
+  const { acceptanceNetwork: _network, ...base } = old;
+  const binding: FunctionalAcceptanceBindingV2 = { ...base, schemaVersion: 'universe-functional-acceptance-binding-v2', contexts, operationContexts,
+    applicationContexts: Array.from({ length: old.applicationOperationDenominator }, (_, index) => ({ operationId: 'synthetic:semantic-operation:' + index, contextIds: [contexts[index % contexts.length].id] })),
+    acceptanceContextsSha256: 'b'.repeat(64), contextBindingProof: proof };
+  response.functionalAcceptanceBinding = binding;
+  response.protocols = response.protocols.map(protocol => {
+    const prior = protocol.functionalAcceptance;
+    if (prior.schemaVersion !== 'universe-protocol-functional-acceptance-v1') throw Error('Fixture version drift');
+    const { acceptanceNetwork: _acceptance, configurationProof: _proof, ...claim } = prior;
+    const rows = prior.rows.map(row => ({ ...row, contextId: operationContexts.find(assignment => assignment.protocol === protocol.id && assignment.operation === row.operation && assignment.variant === row.variant).contextId }));
+    const referenced = new Set(rows.map(row => row.contextId));
+    const functionalAcceptance: ProtocolFunctionalAcceptanceV2 = { ...claim, schemaVersion: 'universe-protocol-functional-acceptance-v2', declaredOperations: protocol.readOperationDescriptors.length, declaredOperationVariants: rows.length, evidenceCells: rows.length, rows, contexts: structuredClone(contexts.filter(context => referenced.has(context.id))), acceptanceContextsSha256: binding.acceptanceContextsSha256 };
+    return { ...protocol, functionalAcceptance };
+  });
+  return response;
 }

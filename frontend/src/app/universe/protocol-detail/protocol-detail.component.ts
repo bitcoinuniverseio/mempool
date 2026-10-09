@@ -133,9 +133,19 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
       switchMap(([params]) => {
         const id = (params.get('id') || '').toLowerCase();
         return this.api.getProtocols$().pipe(
-          map((registry): ProtocolResolution => {
+          switchMap((registry): Observable<ProtocolResolution> => {
             const protocol = findProtocol(registry.protocols || [], id);
-            return protocol ? { kind: 'found', protocol, registry, network: this.api.network } : { kind: 'missing' };
+            if (!protocol) {return of({ kind: 'missing' });}
+            if (protocol.chain === 'bitcoin') {
+              return of({ kind: 'found', protocol, registry, network: this.api.network });
+            }
+            // Resolve the roster first, then qualify only this chain's configured scope.
+            return this.api.getProtocols$({ chain: protocol.chain }).pipe(map(scoped => {
+              const selected = findProtocol(scoped.protocols || [], id);
+              return selected && selected.chain === protocol.chain
+                ? { kind: 'found', protocol: selected, registry: scoped, network: this.api.chainNetwork(protocol.chain) } as ProtocolResolution
+                : { kind: 'missing' } as ProtocolResolution;
+            }));
           }),
           catchError(() => of<ProtocolResolution>({ kind: 'registry-error' })),
           startWith<ProtocolResolution>({ kind: 'loading' }),

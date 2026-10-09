@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { protocolCoverageView } from './protocol-coverage';
-import { qualifiedCoverageFixture } from './protocol-coverage.fixture';
+import { qualifiedCoverageFixture, qualifiedMixedCoverageFixture } from './protocol-coverage.fixture';
 import { ExplorerProtocolDefinition } from './universe.types';
 
 const protocol = {
@@ -113,4 +113,75 @@ it('accepts qualified ISO offsets and structured configuration assertions withou
   row.functionalAcceptance.rows[0].ranAt = '2026-10-09T12:00:00.000000+00:00';
   row.functionalAcceptance.configurationProof.assertions = [{ assertion: 'Synthetic configuration binding', passed: true }];
   expect(protocolCoverageView(row, response, 'mainnet', Date.parse('2026-10-09T13:00:00Z')).functionalKnown).toBe(true);
+});
+
+
+describe('mixed-chain and multi-profile v2 acceptance', () => {
+  const now = Date.parse('2026-10-09T13:00:00Z');
+  it('keeps every 39/123 identity and names exact per-chain tested contexts', () => {
+    const response = qualifiedMixedCoverageFixture();
+    expect(response.protocols).toHaveLength(39);
+    expect(response.protocols.reduce((n, row) => n + row.readOperationDescriptors.length, 0)).toBe(123);
+    for (const row of response.protocols) {
+      response.functionalAcceptanceBinding.chain = row.chain;
+      const view = protocolCoverageView(row, response, 'mainnet', now);
+      expect(view.functionalKnown).toBe(true);
+      expect(view.functionalLabel).toContain(row.chain === 'bitcoin' ? 'Bitcoin' : row.chain === 'fractal' ? 'Fractal Bitcoin Testnet' : row.chain === 'dogecoin' ? 'Dogecoin Testnet' : 'Zcash Testnet');
+      expect(view.functionalLabel).toContain('2026-10-09');
+    }
+    expect(protocolCoverageView(response.protocols[0], { ...response, functionalAcceptanceBinding: { ...response.functionalAcceptanceBinding, chain: 'bitcoin' } }, 'mainnet', now).functionalLabel).toContain('Bitcoin Signet and Bitcoin Testnet');
+  });
+  it.each([
+    ['ambiguous scalar network', r => { r.protocols[0].functionalAcceptance.acceptanceNetwork = 'signet'; }],
+    ['claim context digest', r => { r.protocols[0].functionalAcceptance.acceptanceContextsSha256 = 'a'.repeat(64); }],
+    ['malformed claim context', r => { r.protocols[0].functionalAcceptance.contexts = [null]; }],
+    ['missing claim context', r => { r.protocols[0].functionalAcceptance.contexts.pop(); }],
+    ['extra claim context', r => { r.protocols[0].functionalAcceptance.contexts.push(r.functionalAcceptanceBinding.contexts.find(c => c.chain === 'zcash')); }],
+    ['claim profile', r => { r.protocols[0].functionalAcceptance.contexts[0].acceptanceProfileDigest = 'a'.repeat(64); }],
+    ['wrong row context', r => { r.protocols[0].functionalAcceptance.rows[0].contextId = 'dogecoin-test'; }],
+    ['duplicate context', r => { r.functionalAcceptanceBinding.contexts.push(r.functionalAcceptanceBinding.contexts[0]); }],
+    ['Doge Signet', r => { r.functionalAcceptanceBinding.contexts.find(c => c.chain === 'dogecoin').acceptanceNetwork = 'signet'; }],
+    ['profile proof hash', r => { r.functionalAcceptanceBinding.contexts[0].profileProof.sha256 = 'a'.repeat(64); }],
+    ['context source revision', r => { r.functionalAcceptanceBinding.contexts[0].configurationProof.sourceRevision = 'd'.repeat(40); }],
+    ['context deployment network', r => { r.functionalAcceptanceBinding.contexts[0].deploymentNetwork = 'testnet'; }],
+    ['context config proof', r => { r.functionalAcceptanceBinding.contexts[0].configurationProof.chain = 'dogecoin'; }],
+    ['missing mapping', r => { r.functionalAcceptanceBinding.operationContexts.pop(); }],
+    ['duplicate mapping', r => { r.functionalAcceptanceBinding.operationContexts.push(r.functionalAcceptanceBinding.operationContexts[0]); }],
+    ['indexed offline assignment', r => { r.functionalAcceptanceBinding.contexts[0].chain = 'local'; r.functionalAcceptanceBinding.contexts[0].acceptanceNetwork = 'offline'; }],
+    ['application context missing', r => { r.functionalAcceptanceBinding.applicationContexts.pop(); }],
+    ['application context duplicate', r => { r.functionalAcceptanceBinding.applicationContexts[0].contextIds.push(r.functionalAcceptanceBinding.applicationContexts[0].contextIds[0]); }],
+    ['application unknown context', r => { r.functionalAcceptanceBinding.applicationContexts[0].contextIds = ['unqualified']; }],
+    ['descriptor vs variant count', r => { r.protocols[0].functionalAcceptance.declaredOperations++; }],
+    ['variant vs evidence count', r => { r.protocols[0].functionalAcceptance.declaredOperationVariants++; }],
+    ['wrong evidence cells', r => { r.protocols[0].functionalAcceptance.evidenceCells--; }],
+    ['v1/v2 schema coercion', r => { r.functionalAcceptanceBinding.schemaVersion = 'universe-functional-acceptance-binding-v1'; }],
+  ] as [string, (r: any) => void][])('rejects %s', (_name, mutate) => {
+    const response = qualifiedMixedCoverageFixture(); mutate(response);
+    expect(protocolCoverageView(response.protocols[0], response, 'mainnet', now).functionalKnown).toBe(false);
+  });
+  it('preserves two evidence cells for two required variants of one descriptor', () => {
+    const response = qualifiedMixedCoverageFixture(); const row = response.protocols[0];
+    const claim = row.functionalAcceptance;
+    if (claim.schemaVersion !== 'universe-protocol-functional-acceptance-v2' || response.functionalAcceptanceBinding.schemaVersion !== 'universe-functional-acceptance-binding-v2') throw Error('Wrong fixture');
+    const op = row.readOperationDescriptors[0]; op.requiredVariants = ['default', 'recovery'];
+    claim.rows.push({ ...structuredClone(claim.rows[0]), variant: 'recovery' });
+    response.functionalAcceptanceBinding.operationContexts.push({ protocol: row.id, operation: op.id, variant: 'recovery', contextId: claim.rows[0].contextId });
+    claim.declaredOperationVariants++; claim.evidenceCells++; claim.declared++; claim.applicable++; claim.passed++;
+    expect(claim.declaredOperations).toBe(row.readOperationDescriptors.length);
+    expect(protocolCoverageView(row, response, 'mainnet', now).functionalKnown).toBe(true);
+    claim.rows.pop();
+    expect(protocolCoverageView(row, response, 'mainnet', now).functionalKnown).toBe(false);
+  });
+});
+
+
+it('names multiple qualified profiles even when their network labels coincide', () => {
+  const response = qualifiedMixedCoverageFixture();
+  if (response.functionalAcceptanceBinding.schemaVersion !== 'universe-functional-acceptance-binding-v2' || response.protocols[0].functionalAcceptance.schemaVersion !== 'universe-protocol-functional-acceptance-v2') throw Error('Fixture schema mismatch');
+  const binding = response.functionalAcceptanceBinding;
+  const extra = binding.contexts.find(context => context.id === 'bitcoin-testnet');
+  extra.acceptanceNetwork = 'signet'; extra.acceptanceProfileDigest = 'f'.repeat(64); extra.profileProof.sha256 = extra.acceptanceProfileDigest; extra.configurationProof.acceptanceProfileDigest = extra.acceptanceProfileDigest;
+  const claim = response.protocols[0].functionalAcceptance;
+  claim.contexts = structuredClone(binding.contexts.filter(context => claim.rows.some(row => row.contextId === context.id)));
+  expect(protocolCoverageView(response.protocols[0], response, 'mainnet', Date.parse('2026-10-09T13:00:00Z')).functionalLabel).toBe('Functionality verified on Bitcoin Signet (2 test profiles) (2026-10-09)');
 });

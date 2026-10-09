@@ -71,7 +71,7 @@ export interface ExplorerAcceptanceSummary {
 }
 
 /** Immutable artifact qualification bindings, independent of row claims. */
-export interface FunctionalAcceptanceBinding {
+export interface FunctionalAcceptanceBindingV1 {
   schemaVersion: 'universe-functional-acceptance-binding-v1';
   state: 'qualified';
   chain: string;
@@ -97,7 +97,7 @@ export interface FunctionalAcceptanceBinding {
   evidenceEnvelopeSha256: string;
 }
 
-export interface ProtocolFunctionalAcceptance {
+export interface ProtocolFunctionalAcceptanceV1 {
   schemaVersion: 'universe-protocol-functional-acceptance-v1';
   protocol: string;
   chain: string;
@@ -121,6 +121,47 @@ export interface ProtocolFunctionalAcceptance {
   evidenceEnvelopeSha256: string;
   applicationQualification: { operationDenominator: number; operationIdsSha256: string; rosterSha256: string; acceptanceSha256: string; evidenceClosureSha256: string; requiredCoverageCount: number; requiredCoverageIdsSha256: string; requiredCoverageSnapshotSha256: string };
 }
+
+export interface FunctionalAcceptanceContext {
+  id: string;
+  chain: string;
+  acceptanceNetwork: string;
+  deploymentNetwork: string;
+  acceptanceProfileDigest: string;
+  deploymentConfigurationDigest: string;
+  justification?: string;
+  profileProof: { path: string; sha256: string };
+  configurationProof: { chain: string; network: string; configurationDigest: string; sourceRevision: string; acceptanceProfileDigest: string; assertions: unknown[]; evidence: { path: string; sha256: string }[] };
+}
+
+export interface FunctionalOperationContext {
+  protocol: string;
+  operation: string;
+  variant: string;
+  contextId: string;
+}
+
+export interface FunctionalAcceptanceBindingV2 extends Omit<FunctionalAcceptanceBindingV1, 'schemaVersion' | 'acceptanceNetwork'> {
+  schemaVersion: 'universe-functional-acceptance-binding-v2';
+  contexts: FunctionalAcceptanceContext[];
+  operationContexts: FunctionalOperationContext[];
+  applicationContexts: { operationId: string; contextIds: string[] }[];
+  acceptanceContextsSha256: string;
+  contextBindingProof: { path: string; sha256: string };
+}
+
+export interface ProtocolFunctionalAcceptanceV2 extends Omit<ProtocolFunctionalAcceptanceV1, 'schemaVersion' | 'acceptanceNetwork' | 'configurationProof' | 'rows'> {
+  schemaVersion: 'universe-protocol-functional-acceptance-v2';
+  declaredOperations: number;
+  declaredOperationVariants: number;
+  evidenceCells: number;
+  contexts: FunctionalAcceptanceContext[];
+  acceptanceContextsSha256: string;
+  rows: (ProtocolFunctionalAcceptanceV1['rows'][number] & { contextId: string })[];
+}
+
+export type FunctionalAcceptanceBinding = FunctionalAcceptanceBindingV1 | FunctionalAcceptanceBindingV2;
+export type ProtocolFunctionalAcceptance = ProtocolFunctionalAcceptanceV1 | ProtocolFunctionalAcceptanceV2;
 
 export interface ProtocolsResponse {
   sourceSha?: string;

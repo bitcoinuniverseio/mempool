@@ -1,4 +1,4 @@
-import { qualifiedCoverageFixture } from '../protocol-coverage.fixture';
+import { qualifiedCoverageFixture, qualifiedMixedCoverageFixture } from '../protocol-coverage.fixture';
 // New WP01/WP07 consumer regressions. Fixture responses are not real authority acceptance.
 import { describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
@@ -178,12 +178,14 @@ const idlePulse: PulseState = {
 
 /** A routed detail page over controllable registry and snapshot reads. */
 function routed(options: {
-  registry: () => Observable<ProtocolsResponse>;
+  registry: (context?: { chain: string }) => Observable<ProtocolsResponse>;
   sources?: () => Observable<SourcesResponse>;
 }): { component: ProtocolDetailComponent; params: BehaviorSubject<{ get(key: string): string | null }>; states: string[] } {
   const params = new BehaviorSubject<{ get(key: string): string | null }>({ get: () => 'ordinals' });
   const api = {
     getProtocols$: options.registry,
+    network: 'mainnet',
+    chainNetwork: (_chain: string): string => 'mainnet',
     getSources$: options.sources ?? ((): Observable<SourcesResponse> => of({ generatedAt: 'now', sources: [sourceEntry()] })),
     getProtocolActivity$: (protocolId: string) => of(activity(protocolId)),
     getProtocolObjects$: (protocolId: string) => of(objects(protocolId)),
@@ -354,5 +356,21 @@ describe('Protocol detail qualified acceptance rendering', () => {
     expect(page.coverageLabel(row, response, 'signet')).toBe('Functional coverage: Unverified');
     expect(page.registryCoverageLabel(row)).toBeTruthy();
     page.ngOnDestroy();
+  });
+});
+
+
+describe('protocol detail independent chain binding', () => {
+  it('requests the actual other-chain scope and renders its Testnet acceptance on Mainnet', () => {
+    const response = qualifiedMixedCoverageFixture();
+    const registry = vi.fn(context => of(context ? { ...response, functionalAcceptanceBinding: { ...response.functionalAcceptanceBinding, chain: context.chain } } : response));
+    const page = routed({ registry });
+    const row = response.protocols.find(protocol => protocol.chain === 'dogecoin');
+    let ready: any; page.component.vm$.subscribe(value => { if (value.kind === 'ready') ready = value; });
+    page.params.next({ get: () => row.id });
+    expect(registry.mock.calls.some(call => call[0]?.chain === 'dogecoin')).toBe(true);
+    expect(page.component.coverageLabel(ready.protocol, ready.registry, ready.network)).toBe('Functionality verified on Dogecoin Testnet (2026-10-09)');
+    expect(ready.live).toBe(false);
+    page.component.ngOnDestroy();
   });
 });
