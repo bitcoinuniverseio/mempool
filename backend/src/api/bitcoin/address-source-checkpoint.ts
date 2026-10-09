@@ -45,10 +45,14 @@ export async function verifyAddressSource(
   readHash: (height: number, signal?: AbortSignal) => Promise<unknown>,
   core = addressBitcoinClient,
   budgetMs = 15000,
+  signal?: AbortSignal,
 ): Promise<AddressSourceCheckpoint> {
   if (!Number.isSafeInteger(indexedTip) || indexedTip! < 0) throw new Error('Invalid indexed height');
   const networks = {mainnet:'main',testnet:'test',testnet4:'testnet4',signet:'signet',regtest:'regtest',liquid:'liquidv1',liquidtestnet:'liquidtestnet'};
   const controller = new AbortController();
+  const cancel = (): void => controller.abort();
+  if (signal?.aborted) cancel();
+  else signal?.addEventListener('abort', cancel, {once: true});
   let timer: ReturnType<typeof setTimeout>;
   const ensureActive = (): void => {
     if (controller.signal.aborted) throw new Error('Address source verification exceeded its deadline');
@@ -71,8 +75,10 @@ export async function verifyAddressSource(
     // These four independent reads share the existing deadline; the subsequent
     // Core observation still fences every response against active-tip movement.
     const [genesis, expected, sourceGenesis, observed] = await Promise.all([
-      readCore('getblockhash', [0]), readCore('getblockhash', [height]),
-      readIndex(0), readIndex(height),
+      Promise.resolve().then(() => readCore('getblockhash', [0])),
+      Promise.resolve().then(() => readCore('getblockhash', [height])),
+      Promise.resolve().then(() => readIndex(0)),
+      Promise.resolve().then(() => readIndex(height)),
     ]);
     const after = await readCore('getblockchaininfo', []);
     if (after.chain !== before.chain || after.signet_challenge !== before.signet_challenge || after.bestblockhash !== before.bestblockhash || after.blocks !== before.blocks) continue;
@@ -85,5 +91,9 @@ export async function verifyAddressSource(
     return await Promise.race([verify(), new Promise<AddressSourceCheckpoint>((_, reject) => {
       timer = setTimeout(() => { controller.abort(); reject(new Error('Address source verification exceeded its deadline')); }, budgetMs);
     })]);
-  } finally { clearTimeout(timer!); controller.abort(); }
+  } finally {
+    clearTimeout(timer!);
+    signal?.removeEventListener('abort', cancel);
+    controller.abort();
+  }
 }
