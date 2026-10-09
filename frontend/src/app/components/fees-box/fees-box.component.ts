@@ -1,10 +1,11 @@
 import { Component, OnInit, ChangeDetectionStrategy, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { StateService } from '@app/services/state.service';
-import { Observable, combineLatest, Subscription } from 'rxjs';
-import { Recommendedfees } from '@interfaces/websocket.interface';
+import { Observable, Subscription } from 'rxjs';
+import { Recommendedfees, FeeEstimateSnapshot } from '@interfaces/websocket.interface';
 import { feeLevels } from '@app/app.constants';
-import { map, startWith, tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ThemeService } from '@app/services/theme.service';
+import { WebsocketService } from '@app/services/websocket.service';
 import { LoadState } from '@app/shared/load-state';
 
 @Component({
@@ -22,7 +23,7 @@ export class FeesBoxComponent implements OnInit, OnDestroy {
    * would go on claiming an answer was coming for as long as the tab was open.
    */
   liveFeed$: Observable<LoadState<boolean>>;
-  recommendedFees$: Observable<Recommendedfees>;
+  feeEstimate$: Observable<FeeEstimateSnapshot>;
   themeStateSubscription: Subscription;
   gradient = 'linear-gradient(to right, var(--skeleton-bg), var(--skeleton-bg))';
   noPriority = 'var(--skeleton-bg)';
@@ -32,6 +33,7 @@ export class FeesBoxComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private themeService: ThemeService,
     private cd: ChangeDetectorRef,
+    private websocketService: WebsocketService,
   ) { }
 
   /**
@@ -60,25 +62,25 @@ export class FeesBoxComponent implements OnInit, OnDestroy {
    */
   ngOnInit(): void {
     this.liveFeed$ = this.stateService.liveFeed$;
-    this.isLoading$ = combineLatest(
-      this.stateService.isLoadingWebSocket$.pipe(startWith(false)),
-      this.stateService.loadingIndicators$.pipe(startWith({ mempool: 0 })),
-    ).pipe(map(([socket, indicators]) => {
-      return socket || (indicators.mempool != null && indicators.mempool !== 100);
+    this.isLoading$ = this.stateService.feeEstimate$.pipe(map(snapshot => snapshot.status === 'syncing'));
+    this.feeEstimate$ = this.stateService.feeEstimate$.pipe(tap(snapshot => {
+      this.fees = snapshot.values;
+      if (!this.fees) {
+        this.gradient = 'linear-gradient(to right, var(--skeleton-bg), var(--skeleton-bg))';
+        this.noPriority = 'var(--skeleton-bg)';
+      }
+      this.setFeeGradient();
     }));
-    this.recommendedFees$ = this.stateService.recommendedFees$
-      .pipe(
-        tap((fees) => {
-          this.fees = fees;
-          this.setFeeGradient();
-        }
-      )
-    );
     this.themeStateSubscription = this.themeService.themeState$.subscribe((state) => {
       if (!state.loading) {
         this.setFeeGradient();
       }
     });
+  }
+
+  retry(): void {
+    if (this.stateService.feeEstimate$.value.status === 'syncing') {return;}
+    this.websocketService.reconnectWebsocket();
   }
 
   setFeeGradient() {

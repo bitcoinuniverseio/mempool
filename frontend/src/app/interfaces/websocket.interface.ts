@@ -56,6 +56,8 @@ export interface WebsocketResponse {
    * Preparation only: no executable behavior changed here.
    */
   fees?: Recommendedfees;
+  feeEstimate?: FeeEstimateSnapshot;
+  liveObservation?: Omit<FeeEstimateSnapshot, 'schemaVersion' | 'values'> & { schemaVersion: 'universe-live-observation-v1' };
   'track-tx'?: string;
   'track-address'?: string;
   'track-addresses'?: string[];
@@ -171,6 +173,17 @@ export interface Recommendedfees {
   hourFee: number;
   minimumFee: number;
   economyFee: number;
+}
+
+export interface FeeEstimateSnapshot {
+  schemaVersion: 'universe-fee-estimate-v1';
+  chain: 'bitcoin';
+  network: string;
+  status: 'ready' | 'syncing' | 'stale' | 'unavailable';
+  observedAt: string | null;
+  tip: { height: number; hash: string } | null;
+  values: Recommendedfees | null;
+  reason: string | null;
 }
 
 export interface HealthCheckHost {

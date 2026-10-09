@@ -57,9 +57,19 @@
         Source proof: this naked replay shares the FeesBox failure; UI-specific
         acceptance remains NOT TESTED. Roll back both fee consumers together.
       -->
-      <p *ngIf="recommendedFees$ | async as recommendedFees;">
-        <app-fee-rate [fee]="recommendedFees.fastestFee" unitClass="" rounding="1.0-2"></app-fee-rate>
-      </p>
+      <ng-container *ngIf="feeEstimate$ | async as estimate">
+        <p *ngIf="estimate.values as fees"><app-fee-rate [fee]="fees.fastestFee" unitClass="" rounding="1.0-2"></app-fee-rate></p>
+        <p class="label" role="status" *ngIf="estimate.status !== 'ready'">
+          @if (estimate.status === 'stale') {
+            <span i18n="clock.fees-stale">Stale</span> <time>{{ estimate.observedAt | date:'short' }}</time>
+          } @else if (estimate.status === 'syncing') {
+            <span i18n="clock.fees-syncing">Syncing</span>
+          } @else {
+            <span i18n="clock.fees-unavailable">Unavailable</span>
+          }
+          <button type="button" class="btn btn-sm btn-outline-light" (click)="retryFees()" [disabled]="estimate.status === 'syncing'" i18n="clock.fees-retry">Retry</button>
+        </p>
+      </ng-container>
     </div>
     <div *ngIf="mode !== 'mempool' && blocks?.length" class="stats bottom left">
       <p [innerHTML]="blocks[blockIndex].size | bytes: 2"></p>

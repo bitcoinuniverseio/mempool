@@ -48,6 +48,8 @@
     "USERNAME": "mempool",
     "PASSWORD": "mempool",
     "TIMEOUT": 60000,
+    "MAX_SOCKETS": 8,
+    "ADDRESS_MAX_SOCKETS": 4,
     "COOKIE": false,
     "COOKIE_PATH": "/path/to/bitcoin/.cookie",
     "DEBUG_LOG_PATH": "/path/to/bitcoin/debug.log"

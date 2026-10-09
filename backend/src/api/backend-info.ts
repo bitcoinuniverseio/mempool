@@ -87,6 +87,8 @@ export class BackendInfo {
         verificationProgress: info.verificationprogress,
         checkedAt: new Date().toISOString(),
         chain: typeof (info as { chain?: unknown }).chain === 'string' ? String(info.chain) : null,
+        blockHash: typeof info.bestblockhash === 'string' ? info.bestblockhash : null,
+        signetChallenge: typeof info.signet_challenge === 'string' ? info.signet_challenge : null,
       };
     } catch (e) {
       logger.debug(`Could not read chain sync state. Reason: ${(e instanceof Error ? e.message : e)}`);

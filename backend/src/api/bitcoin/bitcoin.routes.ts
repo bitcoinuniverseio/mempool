@@ -155,7 +155,8 @@ class BitcoinRoutes {
       res.send('Service Unavailable');
       return;
     }
-    const result = feeApi.getRecommendedFee();
+    const result = feeApi.getObservedRecommendedFee(false);
+    if (!result) { res.status(503).send('Service Unavailable'); return; }
     res.json(result);
   }
 
@@ -165,7 +166,8 @@ class BitcoinRoutes {
       res.send('Service Unavailable');
       return;
     }
-    const result = feeApi.getPreciseRecommendedFee();
+    const result = feeApi.getObservedRecommendedFee(true);
+    if (!result) { res.status(503).send('Service Unavailable'); return; }
     res.json(result);
   }
 
