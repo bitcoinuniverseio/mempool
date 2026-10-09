@@ -755,6 +755,10 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node mobile-probe-regression.mjs
 
+      - name: The address portfolio link retains its touch target
+        working-directory: scripts/universe/visual-qa
+        run: UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT node --test address-portfolio-target.ci.test.mjs
+
       - name: Every window a phone can be, measured with a thumb
         working-directory: scripts/universe/visual-qa
         run: |
@@ -902,6 +906,10 @@ jobs:
       # The full window set and the full route list, on the engine Safari is
       # built on. This is the closest an automated run gets to an iPhone, so it
       # is the one place worth paying for the whole matrix twice.
+      - name: The address portfolio target holds on Firefox
+        working-directory: scripts/universe/visual-qa
+        run: UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT UNIVERSE_BROWSER_ENGINE=firefox node --test address-portfolio-target.ci.test.mjs
+
       - name: Every window a phone can be, on WebKit
         working-directory: scripts/universe/visual-qa
         run: |
