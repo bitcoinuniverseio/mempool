@@ -1,11 +1,13 @@
 import { Inject, Injectable, PLATFORM_ID, LOCALE_ID } from '@angular/core';
-import { ReplaySubject, BehaviorSubject, Subject, fromEvent, merge, Observable, timer } from 'rxjs';
+import { ReplaySubject, BehaviorSubject, Subject, fromEvent, Observable } from 'rxjs';
 import { Transaction } from '@interfaces/electrs.interface';
 import { AccelerationDelta, HealthCheckHost, IBackendInfo, MempoolBlock, MempoolBlockUpdate, MempoolInfo, Recommendedfees, ReplacedTransaction, ReplacementInfo, StratumJob, isMempoolState } from '@interfaces/websocket.interface';
 import { Acceleration, AccelerationPosition, BlockExtended, CpfpInfo, DifficultyAdjustment, MempoolPosition, OptimizedMempoolStats, RbfTree, TransactionStripped } from '@interfaces/node-api.interface';
 import { Router, NavigationStart } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { filter, map, scan, share, shareReplay, startWith, switchMap, take, takeUntil } from 'rxjs/operators';
+import { filter, map, scan, share, shareReplay } from 'rxjs/operators';
+import { FeeEstimateState } from './fee-estimate';
+import { LiveFeedFreshness } from './live-feed-freshness';
 import { LoadState } from '@app/shared/load-state';
 import { StorageService } from '@app/services/storage.service';
 import { hasTouchScreen } from '@app/shared/pipes/bytes-pipe/utils';
@@ -54,7 +56,7 @@ export type SignaturesMode = 'all' | 'interesting' | 'none' | null;
  * at ten seconds, whether the gate saw the panel depended on how slowly the
  * probes ran, which made the check a machine-speed race.
  */
-const LIVE_FEED_DEADLINE_MS = 5_000;
+
 
 export interface Env {
   MAINNET_ENABLED: boolean;
@@ -237,7 +239,7 @@ export class StateService {
    * timer each.
    */
   liveFeed$: Observable<LoadState<boolean>>;
-  private liveFeedRetry$ = new Subject<void>();
+  private readonly liveFreshness = new LiveFeedFreshness();
   isLoadingMempool$ = new BehaviorSubject<boolean>(true);
   vbytesPerSecond$ = new ReplaySubject<number>(1);
   previousRetarget$ = new ReplaySubject<number>(1);
@@ -266,7 +268,9 @@ export class StateService {
    * Rollback keeps producer/consumer versions aligned; cached data is not proof.
    * ANNOTATED does not resolve the failure.
    */
-  recommendedFees$ = new ReplaySubject<Recommendedfees>(1);
+  private readonly feeState = new FeeEstimateState();
+  readonly feeEstimate$ = this.feeState.snapshot$;
+  recommendedFees$ = new BehaviorSubject<Recommendedfees | null>(null);
   chainTip$ = new ReplaySubject<number>(-1);
   serverHealth$ = new Subject<HealthCheckHost[]>();
 
@@ -414,6 +418,8 @@ export class StateService {
     });
 
     this.networkChanged$.subscribe((network) => {
+      this.feeState.reset(network);
+      this.liveFreshness.reset();
       this.transactions$ = new BehaviorSubject<TransactionStripped[]>(null);
       this.stratumJobs$ = new BehaviorSubject<Record<string, StratumJob>>({});
       this.stratumJobUpdate$.next({ state: {} });
@@ -457,20 +463,14 @@ export class StateService {
      * Dependencies API-01..API-04. Rollback never reinstates cached replay as
      *    freshness evidence. ANNOTATED is not repaired or accepted functionality.
      */
-    this.liveFeed$ = this.liveFeedRetry$.pipe(
-      startWith(undefined),
-      switchMap(() => {
-        const firstChainData$ = merge(this.blocks$, this.mempoolInfo$).pipe(take(1));
-        return merge(
-          firstChainData$.pipe(map((): LoadState<boolean> => ({ status: 'data', value: true, at: Date.now() }))),
-          timer(LIVE_FEED_DEADLINE_MS).pipe(
-            takeUntil(firstChainData$),
-            map((): LoadState<boolean> => ({ status: 'error', reason: 'timeout', at: Date.now() })),
-          ),
-        ).pipe(startWith<LoadState<boolean>>({ status: 'loading' }));
-      }),
-      shareReplay({ bufferSize: 1, refCount: true }),
-    );
+    this.liveFeed$ = this.liveFreshness.state$;
+    this.feeEstimate$.subscribe(snapshot => this.recommendedFees$.next(snapshot.status === 'ready' ? snapshot.values : null));
+    this.connectionState$.subscribe(state => {
+      if (state !== 2) {
+        this.feeState.offline();
+        this.liveFreshness.offline();
+      }
+    });
 
     const savedTimePreference = this.storageService.getValue('time-preference-ltr');
     const rtlLanguage = (this.locale.startsWith('ar') || this.locale.startsWith('fa') || this.locale.startsWith('he'));
@@ -614,7 +614,19 @@ export class StateService {
    * caller's job: this service does not own the connection.
    */
   retryLiveFeed(): void {
-    this.liveFeedRetry$.next();
+    this.liveFreshness.retry();
+    this.feeState.retry();
+  }
+
+  acceptFeeEstimate(input: unknown): void { this.feeState.accept(input); }
+
+  acceptLiveObservation(observedAt: string): void { this.liveFreshness.accept(observedAt); }
+
+  invalidateLiveObservation(): void { this.liveFreshness.offline(); }
+
+  ngOnDestroy(): void {
+    this.feeState.destroy();
+    this.liveFreshness.destroy();
   }
 
   isLiquid() {

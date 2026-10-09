@@ -3,7 +3,7 @@ import { Observable, Subscription, of, switchMap, tap } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { BlockExtended } from '@interfaces/node-api.interface';
 import { WebsocketService } from '@app/services/websocket.service';
-import { MempoolInfo, Recommendedfees } from '@interfaces/websocket.interface';
+import { MempoolInfo, FeeEstimateSnapshot } from '@interfaces/websocket.interface';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -20,7 +20,7 @@ export class ClockComponent implements OnInit {
   blockIndex: number;
   pageSubscription: Subscription;
   blocksSubscription: Subscription;
-  recommendedFees$: Observable<Recommendedfees>;
+  feeEstimate$: Observable<FeeEstimateSnapshot>;
   mempoolInfo$: Observable<MempoolInfo>;
   blocks: BlockExtended[] = [];
   clockSize: number = 300;
@@ -87,7 +87,7 @@ export class ClockComponent implements OnInit {
      * Evidence: frontend-source-reproductions.json and FeesBox source path.
      * Rollback producer and every fee consumer together; no stale bare replay.
      */
-    this.recommendedFees$ = this.stateService.recommendedFees$;
+    this.feeEstimate$ = this.stateService.feeEstimate$;
     this.mempoolInfo$ = this.stateService.mempoolInfo$;
 
     this.pageSubscription = this.route.paramMap.pipe(
@@ -112,6 +112,11 @@ export class ClockComponent implements OnInit {
         }
       })
     ).subscribe();
+  }
+
+  retryFees(): void {
+    if (this.stateService.feeEstimate$.value.status === 'syncing') {return;}
+    this.websocketService.reconnectWebsocket();
   }
 
   getStyleForBlock(block: BlockExtended) {

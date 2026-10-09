@@ -15,7 +15,8 @@ import config from '../config';
 import transactionUtils from './transaction-utils';
 import rbfCache, { ReplacementInfo } from './rbf-cache';
 import difficultyAdjustment from './difficulty-adjustment';
-import feeApi from './fee-api';
+import feeApi, { FEE_ESTIMATE_MAX_AGE_MS, FeeEstimate } from './fee-api';
+import { bitcoinObservationMatches } from './bitcoin/bitcoin-source-observation';
 import BlocksAuditsRepository from '../repositories/BlocksAuditsRepository';
 import BlocksSummariesRepository from '../repositories/BlocksSummariesRepository';
 import Audit from './audit';
@@ -78,12 +79,66 @@ class WebsocketHandler {
 
   private socketData: { [key: string]: string } = {};
   private serializedInitData: string = '{}';
+  private feeFreshnessTimer?: NodeJS.Timeout;
+  private publishedFeeState?: string;
+  private liveObservation: Omit<FeeEstimate, 'schemaVersion' | 'values'> & { schemaVersion: 'universe-live-observation-v1' } = {
+    schemaVersion: 'universe-live-observation-v1', chain: 'bitcoin', network: config.MEMPOOL.NETWORK,
+    status: 'unavailable', observedAt: null, tip: null, reason: 'observation-unavailable',
+  };
+
+  private getLiveObservation() {
+    if (this.liveObservation.network !== config.MEMPOOL.NETWORK) {
+      this.liveObservation = { ...this.liveObservation, network: config.MEMPOOL.NETWORK, observedAt: null, tip: null,
+        status: 'unavailable', reason: 'observation-unavailable' };
+    }
+    if (!memPool.isInSync()) this.liveObservation = { ...this.liveObservation, status: 'syncing', reason: 'mempool-syncing' };
+    else if (this.liveObservation.status === 'ready' && (Date.now() - Date.parse(this.liveObservation.observedAt!) >= FEE_ESTIMATE_MAX_AGE_MS || Date.parse(this.liveObservation.observedAt!) > Date.now())) {
+      this.liveObservation = { ...this.liveObservation, status: 'stale', reason: 'observation-expired' };
+    }
+    else if (this.liveObservation.status === 'ready' && !bitcoinObservationMatches(
+      backendInfo.getBackendInfo().chainSync, config.MEMPOOL.NETWORK, this.liveObservation.tip, FEE_ESTIMATE_MAX_AGE_MS)) {
+      this.liveObservation = { ...this.liveObservation, status: 'syncing', reason: 'node-checkpoint-unverified' };
+    }
+    return this.liveObservation;
+  }
   private lastRbfSummary: ReplacementInfo[] | null = null;
   private mempoolSequence: number = 0;
 
   private accelerations: Record<string, Acceleration> = {};
 
   constructor() { }
+
+  private refreshFeeState(): ReturnType<typeof feeApi.getFeeEstimate> {
+    const feeEstimate = feeApi.getFeeEstimate();
+    this.updateSocketDataFields({ feeEstimate, fees: feeEstimate.values, liveObservation: this.getLiveObservation() });
+    return feeEstimate;
+  }
+
+  /** Uses the existing shared poll, including successful unchanged polls. */
+  public handleMempoolObservation(complete: boolean): void {
+    const tip = blocks.getBlocks().slice(-1)[0];
+    if (complete && memPool.isInSync() && tip && bitcoinObservationMatches(
+      backendInfo.getBackendInfo().chainSync, config.MEMPOOL.NETWORK, { height: tip.height, hash: tip.id }, FEE_ESTIMATE_MAX_AGE_MS)) {
+      this.liveObservation = { schemaVersion: 'universe-live-observation-v1', chain: 'bitcoin', network: config.MEMPOOL.NETWORK,
+        status: 'ready', observedAt: new Date(Date.now()).toISOString(), tip: { height: tip.height, hash: tip.id }, reason: null };
+    } else this.liveObservation = { ...this.liveObservation, status: complete ? 'unavailable' : 'syncing', reason: complete ? 'checkpoint-unavailable' : 'mempool-syncing' };
+    feeApi.observe(complete);
+    this.publishFeeState();
+  }
+
+  private publishFeeState(onlyChanged: boolean = false): void {
+    const feeEstimate = this.refreshFeeState();
+    const signature = this.socketData['feeEstimate'] + this.socketData['liveObservation'];
+    if (onlyChanged && this.publishedFeeState === signature) return;
+    this.publishedFeeState = signature;
+    const response = JSON.stringify({ feeEstimate, fees: feeEstimate.values, liveObservation: this.getLiveObservation(),
+      mempoolInfo: memPool.getMempoolInfo() });
+    for (const server of this.webSocketServers) {
+      server.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN && (client['want-stats'] || client['want-blocks'])) client.send(response);
+      });
+    }
+  }
 
   addWebsocketServer(wss: WebSocket.Server) {
     this.webSocketServers.push(wss);
@@ -150,17 +205,25 @@ class WebsocketHandler {
       'backendInfo': backendInfo.getBackendInfo(),
       'loadingIndicators': loadingIndicators.getLoadingIndicators(),
       'da': da?.previousTime ? da : undefined,
-      'fees': feeApi.getPreciseRecommendedFee(),
+      'feeEstimate': feeApi.getFeeEstimate(),
+      'liveObservation': this.getLiveObservation(),
+      'fees': feeApi.getFeeEstimate().values,
     });
   }
 
   public getSerializedInitData(): string {
+    this.refreshFeeState();
     return this.serializedInitData;
   }
 
   setupConnectionHandling() {
     if (!this.webSocketServers.length) {
       throw new Error('No WebSocket.Server have been set');
+    }
+
+    if (!this.feeFreshnessTimer) {
+      this.feeFreshnessTimer = setInterval(() => this.publishFeeState(true), 1000);
+      this.feeFreshnessTimer.unref();
     }
 
     // TODO - Fix indentation after PR is merged
@@ -178,6 +241,7 @@ class WebsocketHandler {
       client.on('message', async (message: string) => {
         try {
           const parsedMessage: WebsocketResponse = JSON.parse(message);
+          this.refreshFeeState();
           const response = {};
 
           const wantNow = {};
@@ -206,6 +270,8 @@ class WebsocketHandler {
             response['mempoolInfo'] = this.socketData['mempoolInfo'];
             response['vBytesPerSecond'] = this.socketData['vBytesPerSecond'];
             response['fees'] = this.socketData['fees'];
+            response['feeEstimate'] = this.socketData['feeEstimate'];
+            response['liveObservation'] = this.socketData['liveObservation'];
             response['da'] = this.socketData['da'];
           }
 
@@ -411,7 +477,7 @@ class WebsocketHandler {
             if (!this.socketData['blocks']?.length) {
               return;
             }
-            client.send(this.serializedInitData);
+            client.send(this.getSerializedInitData());
           }
 
           if (parsedMessage.action === 'ping') {
@@ -480,8 +546,8 @@ class WebsocketHandler {
     }
 
     this.updateSocketDataFields({ 'loadingIndicators': indicators });
-
-    const response = JSON.stringify({ loadingIndicators: indicators });
+    const feeEstimate = this.refreshFeeState();
+    const response = JSON.stringify({ loadingIndicators: indicators, feeEstimate, fees: feeEstimate.values, liveObservation: this.getLiveObservation() });
     // TODO - Fix indentation after PR is merged
     for (const server of this.webSocketServers) {
     server.clients.forEach((client) => {
@@ -754,7 +820,8 @@ class WebsocketHandler {
     }
     memPool.removeFromSpendMap(deletedTransactions);
     memPool.addToSpendMap(newTransactions);
-    const recommendedFees = feeApi.getPreciseRecommendedFee();
+    const feeEstimate = feeApi.getFeeEstimate();
+    const recommendedFees = feeEstimate.values;
 
     const latestTransactions = memPool.getLatestTransactions();
 
@@ -794,6 +861,8 @@ class WebsocketHandler {
       'loadingIndicators': loadingIndicators.getLoadingIndicators(),
       'da': da?.previousTime ? da : undefined,
       'fees': recommendedFees,
+      'feeEstimate': feeEstimate,
+      'liveObservation': this.getLiveObservation(),
     };
     if (rbfSummary) {
       socketDataFields['rbfSummary'] = rbfSummary;
@@ -870,6 +939,8 @@ class WebsocketHandler {
           response['da'] = getCachedResponse('da', da);
         }
         response['fees'] = getCachedResponse('fees', recommendedFees);
+        response['feeEstimate'] = getCachedResponse('feeEstimate', feeEstimate);
+        response['liveObservation'] = getCachedResponse('liveObservation', this.getLiveObservation());
       }
 
       if (client['want-mempool-blocks']) {
@@ -1243,7 +1314,8 @@ class WebsocketHandler {
     const mBlockDeltas = mempoolBlocks.getMempoolBlockDeltas();
 
     const da = difficultyAdjustment.getDifficultyAdjustment();
-    const fees = feeApi.getPreciseRecommendedFee();
+    const feeEstimate = feeApi.observeBlock(block);
+    const fees = feeEstimate.values;
     const mempoolInfo = memPool.getMempoolInfo();
 
     // pre-compute address transactions
@@ -1257,6 +1329,8 @@ class WebsocketHandler {
       'loadingIndicators': loadingIndicators.getLoadingIndicators(),
       'da': da?.previousTime ? da : undefined,
       'fees': fees,
+      'feeEstimate': feeEstimate,
+      'liveObservation': this.getLiveObservation(),
     });
 
     const mBlocksWithTransactions = mempoolBlocks.getMempoolBlocksWithTransactions();
@@ -1308,12 +1382,15 @@ class WebsocketHandler {
 
       if (client['want-blocks']) {
         response['block'] = getCachedResponse('block', block);
+        response['liveObservation'] = getCachedResponse('liveObservation', this.getLiveObservation());
       }
 
       if (client['want-stats']) {
         response['mempoolInfo'] = getCachedResponse('mempoolInfo', mempoolInfo);
         response['vBytesPerSecond'] = getCachedResponse('vBytesPerSecond', memPool.getVBytesPerSecond());
         response['fees'] = getCachedResponse('fees', fees);
+        response['feeEstimate'] = getCachedResponse('feeEstimate', feeEstimate);
+        response['liveObservation'] = getCachedResponse('liveObservation', this.getLiveObservation());
 
         if (da?.previousTime) {
           response['da'] = getCachedResponse('da', da);

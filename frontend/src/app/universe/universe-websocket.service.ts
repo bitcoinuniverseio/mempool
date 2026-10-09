@@ -2,7 +2,13 @@ import { Injectable } from '@angular/core';
 import { StateService } from '@app/services/state.service';
 import { ExplorerChain, ExplorerNetwork } from '@app/universe/universe.types';
 import { resolveChainNetwork } from '@app/universe/chain-network';
-import { EMPTY, Observable } from 'rxjs';
+import { EMPTY, Observable, BehaviorSubject, of, startWith, distinctUntilChanged, switchMap, share } from 'rxjs';
+
+export interface UniverseStreamState {
+  chain: ExplorerChain; network: string; status: 'connecting' | 'live' | 'reconnecting' | 'unavailable' | 'resync-required'; reason: string | null;
+  channel?: string;
+  channels?: Readonly<Record<string, { status: UniverseStreamState['status']; reason: string | null; observedAt?: string; completeness?: string }>>;
+}
 
 export interface UniverseLiveEnvelope {
   readonly schemaVersion: 'universe-websocket-v1';
@@ -54,7 +60,7 @@ export function parseUniverseLiveEnvelope(
     !DECIMAL.test(
       typeof value.sequenceAtomic === 'string' ? value.sequenceAtomic : ''
     ) ||
-    typeof value.observedAt !== 'string' ||
+    typeof value.observedAt !== 'string' || !Number.isFinite(Date.parse(value.observedAt)) ||
     !['complete', 'partial', 'unavailable'].includes(String(value.completeness))
   ) {
     return null;
@@ -64,7 +70,13 @@ export function parseUniverseLiveEnvelope(
 
 @Injectable({ providedIn: 'root' })
 export class UniverseWebsocketService {
+  readonly status$ = new BehaviorSubject<Readonly<Record<string, UniverseStreamState>>>({});
+  private readonly streams = new Map<ExplorerChain, Observable<UniverseLiveEnvelope>>();
   constructor(private readonly stateService: StateService) {}
+
+  private report(chain: ExplorerChain, network: string, status: UniverseStreamState['status'], reason: string = null, channel?: string): void {
+    this.status$.next({ ...this.status$.value, [chain]: { chain, network, status, reason, channel } });
+  }
 
   /**
    * IMPLEMENTATION-HANDOFF [API-05] API-05-WS | F-FE-002 | FAIL.
@@ -99,35 +111,69 @@ export class UniverseWebsocketService {
     if (!this.stateService.isBrowser || typeof WebSocket === 'undefined') {
       return EMPTY;
     }
-    // Bitcoin live frames stay on mainnet as before; every other chain
-    // subscribes to and accepts only its configured network.
-    const resolved = resolveChainNetwork(chain, 'mainnet', this.stateService.env);
+    if (!this.streams.has(chain)) {
+      const contexts = this.stateService.networkChanged$ || of(this.stateService.network);
+      this.streams.set(chain, contexts.pipe(startWith(this.stateService.network), distinctUntilChanged(),
+        switchMap(selected => this.scopedStream$(chain, (selected || 'mainnet') as ExplorerNetwork)), share()));
+    }
+    return this.streams.get(chain);
+  }
+
+  private scopedStream$(chain: ExplorerChain, selected: ExplorerNetwork): Observable<UniverseLiveEnvelope> {
+    const resolved = resolveChainNetwork(chain, selected, this.stateService.env);
     // No socket is opened for a chain whose configured network is invalid:
     // subscribing under a substitute network would stream another network.
     // The stream stays silent rather than failing, so a page polling beside it
     // keeps running and shows the configuration error its own reads raise.
     if (!resolved.available) {
+      this.report(chain, '', 'unavailable', resolved.reason);
       return EMPTY;
     }
     const network = resolved.network;
     return new Observable<UniverseLiveEnvelope>((observer) => {
+      this.report(chain, network, 'connecting');
       const cursors = new Map<string, ResumeCursor>();
       let socket: WebSocket | null = null;
       let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
       let stopped = false;
       let attempts = 0;
+      let initialTimer: ReturnType<typeof setTimeout> | null = null;
+      let generation = 0;
+      const expiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+      const channelStates: Record<string, { status: UniverseStreamState['status']; reason: string | null; observedAt?: string; completeness?: string }> = {};
+      const clearTimers = (): void => {
+        if (initialTimer) {clearTimeout(initialTimer); initialTimer = null;}
+        for (const timer of expiryTimers.values()) {clearTimeout(timer);}
+        expiryTimers.clear();
+      };
+      const reportChannels = (): void => {
+        const entries = Object.entries(channelStates);
+        const blocked = entries.find(([, state]) => state.status === 'resync-required') || entries.find(([, state]) => state.status === 'unavailable');
+        const state = blocked?.[1];
+        this.status$.next({ ...this.status$.value, [chain]: { chain, network, status: state?.status || 'live', reason: state?.reason || null, channel: blocked?.[0], channels: { ...channelStates } } });
+      };
 
       const connect = (): void => {
         if (stopped) {
           return;
         }
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        socket = new WebSocket(
+        const connectionGeneration = ++generation;
+        const connection = new WebSocket(
           `${protocol}//${location.host}/api/v1/universe/ws`
         );
-        socket.addEventListener('open', () => {
-          attempts = 0;
-          socket?.send(
+        socket = connection;
+        const current = (): boolean => !stopped && socket === connection && generation === connectionGeneration;
+        initialTimer = setTimeout(() => {
+          if (!current()) {return;}
+          for (const channel of CHANNELS) {
+            if (!channelStates[channel]) {channelStates[channel] = { status: 'unavailable', reason: 'observation-timeout' };}
+          }
+          reportChannels();
+        }, 5000);
+        connection.addEventListener('open', () => {
+          if (!current()) {return;}
+          connection.send(
             JSON.stringify({
               type: 'subscribe',
               subscriptions: CHANNELS.map((channel) => ({
@@ -139,7 +185,8 @@ export class UniverseWebsocketService {
             })
           );
         });
-        socket.addEventListener('message', (message) => {
+        connection.addEventListener('message', (message) => {
+          if (!current()) {return;}
           if (
             typeof message.data !== 'string' ||
             message.data.length > 1024 * 1024
@@ -152,9 +199,17 @@ export class UniverseWebsocketService {
           } catch {
             return;
           }
-          if (isRecord(parsed) && parsed.type === 'resync-required') {
-            if (typeof parsed.channel === 'string') {
-              cursors.delete(parsed.channel);
+          if (isRecord(parsed) && parsed.type === 'scope-unavailable' && parsed.chain === chain && parsed.network === network) {
+            this.report(chain, network, 'unavailable', String(parsed.reason || 'scope-unavailable'));
+            return;
+          }
+          if (isRecord(parsed) && parsed.type === 'resync-required' && parsed.chain === chain && parsed.network === network) {
+            if (CHANNELS.includes(parsed.channel as (typeof CHANNELS)[number])) {
+              channelStates[String(parsed.channel)] = { status: 'resync-required', reason: 'snapshot-replaced' };
+              reportChannels();
+              cursors.delete(String(parsed.channel));
+              const timer = expiryTimers.get(String(parsed.channel));
+              if (timer) {clearTimeout(timer); expiryTimers.delete(String(parsed.channel));}
             }
             return;
           }
@@ -162,21 +217,62 @@ export class UniverseWebsocketService {
           if (!envelope) {
             return;
           }
+          const previous = cursors.get(envelope.channel);
+          if (previous && previous.snapshotId === envelope.snapshotId && BigInt(envelope.sequenceAtomic) <= BigInt(previous.afterSequenceAtomic)) {return;}
+          if (previous && (previous.snapshotId !== envelope.snapshotId || BigInt(envelope.sequenceAtomic) > BigInt(previous.afterSequenceAtomic) + 1n)) {
+            channelStates[envelope.channel] = { status: 'resync-required', reason: 'sequence-gap' };
+            const timer = expiryTimers.get(envelope.channel);
+            if (timer) {clearTimeout(timer); expiryTimers.delete(envelope.channel);}
+            reportChannels();
+            cursors.delete(envelope.channel);
+            connection.send(JSON.stringify({ type: 'subscribe', subscriptions: CHANNELS.map(channel => ({ chain, network, channel, ...cursors.get(channel) })) }));
+            return;
+          }
+          attempts = 0;
+          const previousTimer = expiryTimers.get(envelope.channel);
+          if (previousTimer) {clearTimeout(previousTimer); expiryTimers.delete(envelope.channel);}
+          // Publication time proves transport activity, not the age of a retained source snapshot.
+          const payload = isRecord(envelope.data) ? envelope.data : null;
+          const snapshot = payload && isRecord(payload.snapshot) ? payload.snapshot : payload;
+          const health = payload && isRecord(payload.health) ? payload.health : null;
+          const node = health && isRecord(health.node) ? health.node : null;
+          const sourceTime = snapshot && typeof snapshot.observedAt === 'string' ? snapshot.observedAt : node && typeof node.observedAt === 'string' ? node.observedAt : envelope.observedAt;
+          const age = Date.now() - Date.parse(sourceTime);
+          const expired = !Number.isFinite(age) || age >= 120000 || age < -5000;
+          channelStates[envelope.channel] = { status: envelope.completeness === 'unavailable' || expired ? 'unavailable' : 'live', reason: expired ? 'expired-observation' : envelope.completeness === 'unavailable' ? 'source-unavailable' : null, observedAt: sourceTime, completeness: envelope.completeness };
+          reportChannels();
+          if (!expired && envelope.completeness !== 'unavailable') {
+            expiryTimers.set(envelope.channel, setTimeout(() => {
+              if (!current()) {return;}
+              channelStates[envelope.channel] = { ...channelStates[envelope.channel], status: 'unavailable', reason: 'expired-observation' };
+              expiryTimers.delete(envelope.channel);
+              reportChannels();
+            }, Math.max(0, 120000 - age)));
+          }
           cursors.set(envelope.channel, {
             snapshotId: envelope.snapshotId,
             afterSequenceAtomic: envelope.sequenceAtomic,
           });
           observer.next(envelope);
         });
-        socket.addEventListener('close', (event) => {
+        connection.addEventListener('error', () => {
+          if (!current()) {return;}
+          this.report(chain, network, 'unavailable', 'transport-error');
+        });
+        connection.addEventListener('close', (event) => {
+          if (!current()) {return;}
           socket = null;
+          clearTimers();
           if (stopped) {
             return;
           }
           if (event.code === 1008 || event.code === 1003) {
+            if (this.status$.value[chain]?.status !== 'unavailable') {this.report(chain, network, 'unavailable', 'invalid-subscription');}
             observer.complete();
             return;
           }
+          this.report(chain, network, 'reconnecting', 'disconnected');
+          for (const channel of CHANNELS) {delete channelStates[channel];}
           const delay = Math.min(15_000, 500 * 2 ** Math.min(attempts, 5));
           attempts += 1;
           reconnectTimer = setTimeout(connect, delay);
@@ -186,10 +282,14 @@ export class UniverseWebsocketService {
       connect();
       return () => {
         stopped = true;
+        generation += 1;
+        clearTimers();
         if (reconnectTimer) {
           clearTimeout(reconnectTimer);
         }
-        socket?.close(1000, 'view-closed');
+        const closing = socket;
+        socket = null;
+        closing?.close(1000, 'view-closed');
       };
     });
   }

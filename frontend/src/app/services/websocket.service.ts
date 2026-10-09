@@ -9,6 +9,7 @@ import { take } from 'rxjs/operators';
 import { TransferState, makeStateKey } from '@angular/core';
 import { CacheService } from '@app/services/cache.service';
 import { uncompressDeltaChange, uncompressTx } from '@app/shared/common.utils';
+import { decodeFeeEstimate } from './fee-estimate';
 
 const OFFLINE_RETRY_AFTER_MS = 2000;
 const OFFLINE_PING_CHECK_AFTER_MS = 30000;
@@ -43,6 +44,7 @@ export class WebsocketService {
   private latestGitCommit = '';
   private onlineCheckTimeout: number;
   private onlineCheckTimeoutTwo: number;
+  private retryTimeout: number;
   private subscription: Subscription;
   private network = '';
 
@@ -83,6 +85,7 @@ export class WebsocketService {
         this.network = network === this.stateService.env.ROOT_NETWORK ? '' : network;
         clearTimeout(this.onlineCheckTimeout);
         clearTimeout(this.onlineCheckTimeoutTwo);
+        clearTimeout(this.retryTimeout);
 
         this.stateService.resetChainTip();
 
@@ -93,8 +96,10 @@ export class WebsocketService {
 
   reconnectWebsocket(retrying = false, hasInitData = false) {
     console.log('reconnecting websocket');
-    this.websocketSubject.complete();
+    clearTimeout(this.retryTimeout);
+    this.stateService.retryLiveFeed();
     this.subscription.unsubscribe();
+    this.websocketSubject.complete();
     this.websocketSubject = webSocket<WebsocketResponse>(
       this.webSocketUrl.replace('{network}', this.network ? '/' + this.network : '')
     );
@@ -110,8 +115,10 @@ export class WebsocketService {
     if (retrying) {
       this.stateService.connectionState$.next(1);
     }
+    const subscriptionNetwork = this.network;
     this.subscription = this.websocketSubject
       .subscribe((response: WebsocketResponse) => {
+        if (subscriptionNetwork !== this.network) return;
         this.stateService.isLoadingWebSocket$.next(false);
         this.handleResponse(response);
 
@@ -160,7 +167,7 @@ export class WebsocketService {
         console.log(err);
         console.log(`WebSocket error`);
         this.goOffline();
-      });
+      }, () => this.goOffline());
   }
 
   startTrackTransaction(txId: string) {
@@ -321,11 +328,14 @@ export class WebsocketService {
   }
 
   goOffline() {
+    clearTimeout(this.onlineCheckTimeout);
+    clearTimeout(this.onlineCheckTimeoutTwo);
+    clearTimeout(this.retryTimeout);
     const retryDelay = OFFLINE_RETRY_AFTER_MS + (Math.random() * OFFLINE_RETRY_AFTER_MS);
     console.log(`trying to reconnect websocket in ${retryDelay} seconds`);
     this.goneOffline = true;
     this.stateService.connectionState$.next(0);
-    window.setTimeout(() => {
+    this.retryTimeout = window.setTimeout(() => {
       this.reconnectWebsocket(true);
     }, retryDelay);
   }
@@ -339,8 +349,8 @@ export class WebsocketService {
       this.onlineCheckTimeoutTwo = window.setTimeout(() => {
         if (!this.goneOffline) {
           console.log('WebSocket response timeout, force closing');
-          this.websocketSubject.complete();
           this.subscription.unsubscribe();
+          this.websocketSubject.complete();
           this.goOffline();
         }
       }, EXPECT_PING_RESPONSE_AFTER_MS);
@@ -451,10 +461,16 @@ export class WebsocketService {
      *    readiness and original observation; controlled outage is not current.
      * Rollback both contract ends together; no fallback to raw stale fees.
      */
-    if (response.fees) {
-      this.stateService.recommendedFees$.next({
-        ...response.fees,
-      });
+    if ('feeEstimate' in response || response.fees || response.loadingIndicators) {
+      this.stateService.acceptFeeEstimate(response.feeEstimate);
+    }
+    const live = response.liveObservation;
+    if (live?.schemaVersion === 'universe-live-observation-v1') {
+      const proof = decodeFeeEstimate({ ...live, schemaVersion: 'universe-fee-estimate-v1',
+        values: live.status === 'ready' ? { fastestFee: 0, halfHourFee: 0, hourFee: 0, economyFee: 0, minimumFee: 0 } : null }, this.stateService.network);
+      if (proof?.status === 'ready' && (response.blocks?.length || response.block || response.mempoolInfo?.loaded)) {
+        this.stateService.acceptLiveObservation(proof.observedAt);
+      } else if (proof && proof.status !== 'ready') this.stateService.invalidateLiveObservation();
     }
 
     if (response.backendInfo) {

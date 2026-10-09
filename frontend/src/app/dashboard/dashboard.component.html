@@ -6,7 +6,7 @@
     @if (liveFeed.status === 'loading') {
       <p class="sr-only" role="status" i18n="dashboard.loading-announcement">Loading live chain data</p>
     }
-    @if (liveFeed.status === 'error') {
+    @if (liveFeed.status === 'error' || liveFeed.status === 'stale') {
       <app-load-status [state]="liveFeed" label="live chain data" i18n-label="load.label.live-chain-data"
         (retry)="retryLiveFeed()"></app-load-status>
     }
