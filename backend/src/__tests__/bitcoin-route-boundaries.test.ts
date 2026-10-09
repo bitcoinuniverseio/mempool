@@ -66,16 +66,18 @@ test('summary routes mount in supported Esplora mode and deliver both validated 
  (api.$getScriptHashTransactionSummary as jest.Mock).mockResolvedValue(summary);
  try {
   for(const kind of ['address','scripthash']) {
-   for(const cursor of ['?after_txid='+id,'/'+id]) {
+   for(const cursor of ['', '?after_txid='+id,'/'+id]) {
     const response=await fetch(base+kind+'/'+id+'/txs/summary'+cursor);
     expect(response.status).toBe(200);expect(await response.json()).toEqual(summary);
    }
    expect((await fetch(base+kind+'/'+id+'/txs/summary?after_txid=bad')).status).toBe(400);
    expect((await fetch(base+kind+'/'+id+'/txs/summary/'+id+'?after_txid='+ 'cd'.repeat(32))).status).toBe(400);
   }
-  expect(api.$getAddressTransactionSummary).toHaveBeenCalledTimes(2);
+  expect(api.$getAddressTransactionSummary).toHaveBeenCalledTimes(3);
+  expect(api.$getAddressTransactionSummary).toHaveBeenCalledWith(id,undefined);
   expect(api.$getAddressTransactionSummary).toHaveBeenCalledWith(id,id);
-  expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledTimes(2);
+  expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledTimes(3);
+  expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledWith(id,undefined);
   expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledWith(id,id);
  } finally {config.MEMPOOL.BACKEND=previous;await new Promise<void>(resolve=>supported.close(()=>resolve()));}
 });
