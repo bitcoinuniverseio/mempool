@@ -2,19 +2,20 @@
 import 'zone.js';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, ɵresolveComponentResources } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { BehaviorSubject, of } from 'rxjs';
 import { readFileSync } from 'node:fs';
 import { beforeAll, afterEach, describe, it, expect, vi } from 'vitest';
 import { convertToParamMap } from '@angular/router';
+import { NamesExplorerAssetView, NamesExplorerAssetResponse } from '../names-explorer-asset';
 import { InscriptionComponent } from './inscription.component';
-const native=JSON.parse(readFileSync('src/app/universe/inscription/names-explorer-asset.paired-fixture.json','utf8'));
-const names=new BehaviorSubject<any>({schemaVersion:'universe-names-explorer-asset-v1',chain:'bitcoin',network:'mainnet',authorityId:'index-names',status:'unconfigured',value:null});
+const native:NamesExplorerAssetView=JSON.parse(readFileSync('src/app/universe/inscription/names-explorer-asset.paired-fixture.json','utf8'));
+const names=new BehaviorSubject<NamesExplorerAssetResponse>({schemaVersion:'universe-names-explorer-asset-v1',chain:'bitcoin',network:'mainnet',authorityId:'index-names',status:'unconfigured',value:null});
 @Component({standalone:true,imports:[CommonModule,RouterModule],schemas:[CUSTOM_ELEMENTS_SCHEMA],template:readFileSync('src/app/universe/inscription/inscription.component.html','utf8')})
 class ActualInscriptionTemplate extends InscriptionComponent {
- constructor(){super({paramMap:of(convertToParamMap({reference:native.assetId})),queryParamMap:of(convertToParamMap({protocol:'names'}))} as any,{network:'mainnet',selectedNetwork$:()=>of('mainnet'),getInscription$:()=>of({status:'unconfigured',value:null}),getNamesObject$:()=>names} as any,{recordVisit:()=>undefined} as any,{setTitle:()=>undefined} as any);}
+ constructor(){super({paramMap:of(convertToParamMap({reference:native.assetId})),queryParamMap:of(convertToParamMap({protocol:'names'}))} as never,{network:'mainnet',selectedNetwork$:()=>of('mainnet'),getInscription$:()=>of({status:'unconfigured',value:null}),getNamesObject$:()=>names} as never,{recordVisit:()=>undefined} as never,{setTitle:()=>undefined} as never);}
 }
 describe('actual existing inscription template Names section',()=>{
  beforeAll(async()=>{TestBed.initTestEnvironment(BrowserDynamicTestingModule,platformBrowserDynamicTesting());await ɵresolveComponentResources(url=>Promise.resolve(url.endsWith('.html')?readFileSync('src/app/universe/inscription/inscription.component.html','utf8'):''));});
