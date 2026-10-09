@@ -1920,9 +1920,9 @@
     },
     {
       "path": "backend/src/api/bitcoin/bitcoin.routes.ts",
-      "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+      "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
       "sha256Encoding": "utf8-lf",
-      "bytes": 48756
+      "bytes": 49045
     },
     {
       "path": "backend/src/api/capabilities.routes.ts",
@@ -95955,7 +95955,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96017,7 +96017,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96079,7 +96079,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96141,7 +96141,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96203,7 +96203,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96265,7 +96265,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96327,7 +96327,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96389,7 +96389,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96451,7 +96451,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96513,7 +96513,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96575,7 +96575,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96637,7 +96637,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96699,7 +96699,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96761,7 +96761,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96823,7 +96823,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96885,7 +96885,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96947,7 +96947,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97009,7 +97009,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97071,7 +97071,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97133,7 +97133,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97195,7 +97195,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97257,7 +97257,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97319,7 +97319,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97381,7 +97381,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97443,7 +97443,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97505,7 +97505,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97567,7 +97567,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97629,7 +97629,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97691,7 +97691,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97753,7 +97753,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97815,7 +97815,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97877,7 +97877,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97939,7 +97939,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98001,7 +98001,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98068,7 +98068,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98135,7 +98135,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98197,7 +98197,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98264,7 +98264,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98331,7 +98331,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98398,7 +98398,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98460,7 +98460,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98527,7 +98527,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98594,7 +98594,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98661,7 +98661,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98728,7 +98728,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98795,7 +98795,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98862,7 +98862,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98929,7 +98929,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98996,7 +98996,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99063,7 +99063,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99130,7 +99130,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99197,7 +99197,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99264,7 +99264,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99331,7 +99331,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99398,7 +99398,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99465,7 +99465,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99541,7 +99541,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -99628,7 +99628,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99695,7 +99695,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99762,7 +99762,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "52f2e57f69aef9b596283695642d2b88886c9cfbb8ff2c8c5c94e1142c1127f0",
+          "sha256": "d305944d5dd0dcc4ba3fbd912268fe32a918b8a4c09f26f3f108fd83943e5c26",
           "sha256Encoding": "utf8-lf"
         }
       ],

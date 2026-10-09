@@ -14,7 +14,7 @@ export async function readElectrumUtxoMetadata(rows: IndexedUtxo[], core: CoreRe
   const headers = new Map<number, Promise<{ hash: string; time: number }>>();
   let next = 0, timer: ReturnType<typeof setTimeout>;
   const metadata = (height: number) => {
-    if (!headers.has(height)) headers.set(height, (async () => {
+    if (!headers.has(height)) headers.set(height, (/** @asyncUnsafe readElectrumUtxoMetadata owns rejection through Promise.race. */ async () => {
       active(); const hash = await core('getblockhash', [height], signal);
       active(); if (typeof hash !== 'string' || !/^[0-9a-f]{64}$/.test(hash)) throw new Error('Invalid canonical UTXO block hash');
       const header = await core('getblockheader', [hash, true], signal); active();
@@ -23,7 +23,7 @@ export async function readElectrumUtxoMetadata(rows: IndexedUtxo[], core: CoreRe
     })());
     return headers.get(height)!;
   };
-  const worker = async () => {
+  const worker = /** @asyncUnsafe readElectrumUtxoMetadata owns rejection through Promise.race. */ async () => {
     while (next < rows.length) {
       active(); const index = next++, row = rows[index];
       const block = row.height > 0 ? await metadata(row.height) : null; active();
