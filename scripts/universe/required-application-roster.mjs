@@ -429,6 +429,28 @@ export function validateRequiredApplicationRoster(
 export function validateRequiredApplicationCoverage(roster, readProof) {
   const required = roster.requiredApplicationCoverage;
   assert(required, "Required application coverage snapshot is absent");
+  const provenance = roster.historicalRawProvenance;
+  assert.equal(
+    provenance?.path,
+    historicalRawPath,
+    "Archived historical lineage is absent",
+  );
+  assert.equal(provenance.sha256, historicalCompressedSha256);
+  assert.equal(provenance.decompressedSha256, historicalRawSha256);
+  const archive = readProof(provenance.path);
+  assert.equal(
+    digest(archive),
+    historicalCompressedSha256,
+    "Archived historical proof drift",
+  );
+  const originalBytes = gunzipSync(archive);
+  assert.equal(digest(originalBytes), historicalRawSha256);
+  assert.deepEqual(
+    roster.historical,
+    JSON.parse(originalBytes),
+    "Original historical source records lost or changed",
+  );
+  assert.equal(roster.historical.rows.length, 1617);
   assert.equal(
     required.schemaVersion,
     "universe-required-application-coverage-v1",

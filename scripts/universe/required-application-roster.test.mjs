@@ -97,6 +97,7 @@ test("IDs, complete requirements, source lineage and fake acceptance cannot be d
   for (const mutate of [
     (r) => r.requiredApplicationCoverage.mappings.pop(),
     (r) => r.sourceCandidateCoverageLinks.pop(),
+    (r) => r.historical.rows.pop(),
     (r) =>
       (r.requiredApplicationCoverage.mappings[0].fullRequirementSha256 =
         "0".repeat(64)),
