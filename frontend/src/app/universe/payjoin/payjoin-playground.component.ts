@@ -34,7 +34,7 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
       </header>
 
       <p class="alert alert-secondary" id="payjoin-wallet-prerequisites">Actual Sign &amp; Broadcast is unavailable here. It requires a connected signing wallet, owned spendable UTXOs, a supported BIP77 or BIP78 sender/receiver workflow, and an operated broadcast endpoint. This API supplies only a narrated simulation.</p>
-      <button class="btn btn-outline-secondary mb-3" disabled aria-describedby="payjoin-wallet-prerequisites">Sign &amp; Broadcast Payjoin — unavailable</button>
+      <button class="btn btn-outline-secondary mb-3" disabled aria-describedby="payjoin-wallet-prerequisites">Sign &amp; Broadcast Payjoin: unavailable</button>
       <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }} Retry the current step or reset the simulation.</div>
       <!-- Start Session Card -->
       <div *ngIf="!session" class="card p-4 mb-4 bg-body-tertiary border">

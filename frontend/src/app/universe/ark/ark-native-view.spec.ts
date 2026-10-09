@@ -34,13 +34,13 @@ describe('Native Ark bounded observation and public proof binding', () => {
       expect(readArkVerdict(verdict,nativeInput,nativeSource).valid).toBe(valid);
     }
   });
-  it.each(['hash-array','network','missing-tree','duplicate','noncanonical-base64','secret-field','wrong-leaf'])('rejects %s proof input before source IO', field => {
+  it.each(['hash-array','network','missing-tree','duplicate','invalid-base64-padding','secret-field','wrong-leaf'])('rejects %s proof input before source IO', field => {
     const input=structuredClone(nativeInput) as any;
     if(field==='hash-array') {expect(() => readArkProof(JSON.stringify(['a'.repeat(64)]),'signet')).toThrow();return;}
     if(field==='network') input.network='mainnet';
     if(field==='missing-tree') input.arkade.nodes=[];
     if(field==='duplicate') input.arkade.nodes.push(input.arkade.nodes[0]);
-    if(field==='noncanonical-base64') input.arkade.nodes[0].tx+='\n';
+    if(field==='invalid-base64-padding') input.arkade.nodes[0].tx+='\n';
     if(field==='secret-field') input.privateKey='rejected-test-marker';
     if(field==='wrong-leaf') input.arkade.leaf_outpoint='f'.repeat(64)+':0';
     expect(() => readArkProof(JSON.stringify(input),'signet')).toThrow();
