@@ -22,10 +22,14 @@ reconstruction and cancellation passed for all four versions. Browser V1, V2
 and V3 completed with exact zero outputs and balance. V4 exposed a frontend
 strict-fallback metadata validation mismatch. Candidate
 `279a6c0c953e11df64acd2f0db3b846786d49b39` validates the exact 512-byte
-metadata reservation with native response replay and negative controls; browser
-requalification remains required.
+metadata reservation with native response replay and negative controls. Browser
+V4 subsequently completed with zero outputs and balance under native strict
+fallback and cancelled successfully. Its display now distinguishes the observed
+global mempool count from retained transaction proofs and metadata.
 Large-address bounded history and cancellation were exercised; full reconstruction
-and independent output comparison remain unqualified.
+and independent output comparison remain unqualified. A bounded large V4 run
+processed 2,800 of 13,545 transactions before the existing confirmed-history
+deadline returned 504; it cancelled successfully without changing source limits.
 
 Public confirmed transaction decoding and the nonbroadcast rejection of an
 already-known transaction were exercised through the Signet UI. They do not
