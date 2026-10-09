@@ -80,6 +80,7 @@ interface IConfig {
     SOCKET: string;
   };
   ELECTRUM: {
+    ADDRESS_HTTP_URL?: string;
     HOST: string;
     PORT: number;
     TLS_ENABLED: boolean;

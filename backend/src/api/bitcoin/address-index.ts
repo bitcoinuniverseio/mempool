@@ -315,7 +315,7 @@ export async function $probeAddressIndex(chainTip: number | null, signal?: Abort
     let client: {
       $getIndexBlockHash?: (height: number) => Promise<string>;
       $getIndexedTip?: () => Promise<number | null>;
-      $getAddress?: (address: string) => Promise<unknown>;
+      $getAddress?: (address: string, signal?: AbortSignal) => Promise<unknown>;
       $getAddressUtxos?: (address: string) => Promise<unknown>;
     };
     try {
@@ -343,7 +343,7 @@ export async function $probeAddressIndex(chainTip: number | null, signal?: Abort
     if (reachable) {
       try {
         active();
-        const summary = await client.$getAddress?.(probeAddress);
+        const summary = await client.$getAddress?.(probeAddress, signal);
         summaryAnswered = addressSummaryProblems(summary, probeAddress).length === 0;
       } catch (e) {
         logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));

@@ -94,6 +94,7 @@ export function classifyAddressError(e: unknown): AddressErrorCode {
   const code = (e as { code?: string } | null)?.code;
   const response = (e as { response?: { status?: number; data?: unknown } } | null)?.response;
   if (code === 'EADDRESSBUSY') return 'address-backend-busy';
+  if (code === 'EADDRESSSOURCE') return 'address-source-disagreement';
   if (response?.status === 400 && typeof response.data === 'string' && /^Too many unspent transaction outputs \(>\d+\)\./.test(response.data)) {
     return 'address-history-too-large';
   }

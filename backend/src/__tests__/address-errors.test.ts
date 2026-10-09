@@ -18,6 +18,10 @@ import {
  */
 
 describe('address error classification', () => {
+  it('reports guarded native address source disagreement precisely', () => {
+    expect(classifyAddressError({ code: 'EADDRESSSOURCE' })).toBe('address-source-disagreement');
+    expect(addressErrorStatus('address-source-disagreement')).toBe(409);
+  });
   it.each(['history transactions', 'unspent transaction outputs'])('classifies the proved Electrs %s capacity response in Error/string/object form', family => {
     const message = `Too many ${family} (>500). Contact support to raise limits.`;
     for (const error of [new Error(message), message, { code: -32603, message }]) {
