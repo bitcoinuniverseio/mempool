@@ -238,10 +238,6 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Install the pinned native Arkade codec
-        working-directory: rust/arkade-codec
-        run: npm ci --ignore-scripts --no-audit --no-fund
-
       - name: Build
         working-directory: backend
         run: npm run build
