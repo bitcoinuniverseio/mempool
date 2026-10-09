@@ -1,3 +1,19 @@
+<!--
+  IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-TEMPLATE | F-FE-001 | FAIL.
+  The primary branch below bypasses liveFeed error once cached rates exist.
+  1. Bind the repaired feeEstimate state from FeesBoxComponent; render current
+     numbers only for ready metadata, with explicit stale/syncing/unavailable
+     feedback and original observation where last-good values are retained.
+  2. Move failure/recovery feedback into the state selector so it cannot be
+     hidden inside loadingFees when rates were received earlier. Preserve the
+     scale, priority order, tokens, sat/vB units and accessible labels.
+  3. Use the shared retry action; verify stale init, REST 503, reconnect, network
+     switch and fresh recovery in the proposed fees-box.component.spec.ts and
+     desktop/mobile Signet screenshots. No new per-widget polling.
+  Dependencies API-01..API-04 plus API-05-FEES-CONTRACT/STATE/VIEW.
+  Evidence frontend-source-reproductions.json; rollback producer and view
+  together. These source comments do not change functional FAIL.
+-->
 <div class="fee-estimation-wrapper" *ngIf="(isLoading$ | async) === false && (recommendedFees$ | async) as recommendedFees; else loadingFees">
   <div class="fee-scale">
     <div class="fee-scale-track" aria-hidden="true">

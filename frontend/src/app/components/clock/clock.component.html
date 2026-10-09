@@ -45,6 +45,18 @@
     </div>
     <div class="stats top right">
       <p class="label" i18n="fees-box.high-priority">High Priority</p>
+      <!--
+        IMPLEMENTATION-HANDOFF [API-05] API-05-CLOCK-TEMPLATE | F-FE-001 | FAIL.
+        1. Read ClockComponent's repaired feeEstimate view state here; retain
+           the clock geometry/units and show source age plus stale/unavailable
+           state instead of presenting an old fastestFee as current.
+        2. Add the clock cases from API-05-FEES-CLOCK, including wrong-network
+           cache, disconnect and fresh recovery; run the proposed component
+           tests and actual Signet rendering at phone and desktop sizes.
+        Dependencies API-01..API-04 and API-05 producer/state/view contract.
+        Source proof: this naked replay shares the FeesBox failure; UI-specific
+        acceptance remains NOT TESTED. Roll back both fee consumers together.
+      -->
       <p *ngIf="recommendedFees$ | async as recommendedFees;">
         <app-fee-rate [fee]="recommendedFees.fastestFee" unitClass="" rounding="1.0-2"></app-fee-rate>
       </p>

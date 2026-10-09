@@ -86,6 +86,27 @@ export class ProtocolDirectoryComponent implements OnInit {
   }
 
   /** One read of the registry and the authority snapshot for one network. */
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-DIRECTORY | C-FE-PROTOCOLS | NOT TESTED.
+   * Current directory already has a 20 s first-response deadline, inner retry
+   * recovery and separate registry/source failure handling. Preserve them.
+   * 1. After API-03 corrects authority bindings, exercise all 39 registry rows:
+   *    31 Bitcoin and 8 other-chain rows must remain visible in their surfaces.
+   *    Verify operation-specific readiness using sources and checkpoints,
+   *    rather than promoting historical release declarations to live coverage.
+   * 2. Confirm failed/stale source snapshots leave the roster visible with an
+   *    honest unavailable/dated state; a served empty page differs from error.
+   * 3. Keep a single cancelable refresh attempt on retry/network switch. If the
+   *    registry's effective capabilities change, invalidate only that network's
+   *    cache and obtain a new snapshot without losing unaffected page state.
+   * 4. Extend protocol-directory.component.spec.ts and protocol-detail specs for
+   *    deadline, 429/503, unavailable authority, stale checkpoint, retry success
+   *    and cross-network late responses. Run targeted npm test then lint/build;
+   *    capture actual Signet screenshots/readback for every supported protocol.
+   * Dependencies API-02..API-04. Evidence inventory:
+   *    frontend-protocol-operation-coverage.csv; all 123 rows remain NOT TESTED.
+   * Rollback keeps full registry and typed failure feedback, never hides rows.
+   */
   private attempt(network: ExplorerNetwork): Observable<DirectoryViewModel> {
     return combineLatest([
       // A request that hangs is the failure this page had left: the registry

@@ -133,6 +133,29 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.websocketService.startTrackRbfSummary();
     this.network$ = merge(of(''), this.stateService.networkChanged$);
 
+    /**
+     * IMPLEMENTATION-HANDOFF [API-05] API-05-DASHBOARD | F-FE-003 | FAIL.
+     * liveFeed$ currently trusts the first cached block/mempoolInfo forever;
+     * the loading map below treats absent mempool progress as 100. Parent
+     * runtime evidence shows an init snapshot despite REST readiness refusal.
+     * 1. Consume the repaired shared freshness state from StateService and
+     *    preserve distinct source readiness for fees, projections and arrivals.
+     *    A connected socket or missing progress indicator cannot prove current
+     *    data; a valid empty mempool may still be a successful empty result.
+     * 2. Keep source-dated last-good panels visibly stale through temporary
+     *    outages. End loading on a bounded failure and keep retryLiveFeed
+     *    cancelable/shared, requiring a fresh source snapshot before ready.
+     * 3. Prevent a late prior-network snapshot from repopulating this page;
+     *    exercise reload, back/forward, direct links and network switches.
+     * 4. Add PROPOSED NEW src/app/services/dashboard-live-state.spec.ts for
+     *    stale init, empty ready response, no response, recovery and shared
+     *    retry. Run targeted
+     *    npm test, frontend lint/build, then desktop/mobile Signet UI and
+     *    controlled outage evidence across fee box, arrivals and projections.
+     * Dependencies API-01..API-04 and API-05-RECOVERY; evidence
+     *    frontend-source-reproductions.json F-FE-003, public-http.json and
+     *    parent browser captures. Rollback preserves truthful stale feedback.
+     */
     this.liveFeed$ = this.stateService.liveFeed$;
     this.mempoolLoadingStatus$ = this.stateService.loadingIndicators$
       .pipe(

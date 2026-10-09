@@ -244,6 +244,28 @@ export class StateService {
   backendInfo$ = new ReplaySubject<IBackendInfo>(1);
   servicesBackendInfo$ = new ReplaySubject<IBackendInfo>(1);
   loadingIndicators$ = new ReplaySubject<ILoadingIndicators>(1);
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-STATE | F-FE-001 | FAIL.
+   * This bare replay retains fee numbers without source age/readiness and the
+   * networkChanged handler below does not clear it. Evidence and the exact
+   * versioned feeEstimate contract are beside WebsocketResponse.fees.
+   * 1. Introduce feeEstimate$ (PROPOSED NEW), shared by fees-box and clock, using
+   *    the validated producer envelope and selected network, not receipt time.
+   * 2. On network change discard the previous network's snapshot synchronously;
+   *    on timeout/disconnect mark same-network last-good values stale with their
+   *    original observedAt, or unavailable if absent. Never invent zeros.
+   * 3. Keep one bounded source-expiry/recovery stream and cancel timers on
+   *    teardown; do not add a timer or HTTP poll per widget. Migrate both current
+   *    recommendedFees$ consumers so an old replay cannot bypass this state.
+   * 4. Coordinate WebsocketService.handleResponse and API-05 producer comments.
+   *    Extend PROPOSED NEW services/fee-estimate.spec.ts with network switch,
+   *    disconnect, old replay on retry, malformed context and fresh recovery.
+   *    Run targeted npm test, frontend lint/build and the actual Signet UI.
+   * Dependencies: API-01, API-02, API-03, API-04. Source contract:
+   *    interfaces/websocket.interface.ts#API-05-FEES-CONTRACT.
+   * Rollback keeps producer/consumer versions aligned; cached data is not proof.
+   * ANNOTATED does not resolve the failure.
+   */
   recommendedFees$ = new ReplaySubject<Recommendedfees>(1);
   chainTip$ = new ReplaySubject<number>(-1);
   serverHealth$ = new Subject<HealthCheckHost[]>();
@@ -408,6 +430,33 @@ export class StateService {
     // feed is merely slow. Shared and reference counted: one timer runs however
     // many panels are watching, and it starts again when a dashboard is next
     // opened rather than holding a verdict from an earlier visit.
+    /**
+     * IMPLEMENTATION-HANDOFF [API-05] API-05-RECOVERY | F-FE-003 | FAIL.
+     * The firstChainData$ take(1) accepts cached replay, cancels the only
+     * deadline, and never ages to error. Retry consumes the same replay and
+     * immediately claims data again with zero fresh arrivals. Reproduced with
+     * the exact source expression and real RxJS TestScheduler in
+     * frontend-source-reproductions.json; no live fault injection was used.
+     * 1. Separate initial-data-arrived state from continuing source freshness.
+     *    Derive live readiness from validated source observation metadata,
+     *    selected network, connection state and a bounded freshness deadline.
+     *    A block/mempoolInfo replay or socket ping alone is not current proof.
+     * 2. Invalidate on disconnect/context switch; retain same-network last-good
+     *    data only with stale status and its original source observation.
+     *    Re-arm a single shared deadline on actual valid producer observations,
+     *    and require fresh proof after retry instead of reusing old replay.
+     * 3. Coordinate producer observation/readiness via API-03, API-04 and the
+     *    API-05 feeEstimate contract. Dashboard, fees and clock must each read
+     *    the appropriate source state; fee readiness must not prove unrelated
+     *    panels. Preserve explicit empty-success versus no authoritative data.
+     * 4. Add PROPOSED NEW services/live-feed-freshness.spec.ts and
+     *    src/app/services/dashboard-live-state.spec.ts for stale replay,
+     *    silence after first data, network switching, cancellation and
+     *    bounded retry recovery.
+     *    Run targeted npm test then lint/build and actual Signet dashboard.
+     * Dependencies API-01..API-04. Rollback never reinstates cached replay as
+     *    freshness evidence. ANNOTATED is not repaired or accepted functionality.
+     */
     this.liveFeed$ = this.liveFeedRetry$.pipe(
       startWith(undefined),
       switchMap(() => {

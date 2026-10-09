@@ -297,6 +297,28 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
    * Reads the protocol's authority objects, first page, on the same terms
    * as the activity feed above.
    */
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-PROTOCOL-PAGES | C-FE-PROTOCOL-READS |
+   * NOT TESTED. API-03 may change the owning feed/object adapter, so each
+   * independently declared operation must be retested through this consumer.
+   * 1. Reconcile loadActivity/loadMoreActivity and loadObjects/loadMoreObjects
+   *    against the corrected method/path/schema for that protocol. Keep chain,
+   *    network, schema version, snapshot/checkpoint and cursor together.
+   * 2. On authority outage, timeout, invalid/stale context or cursor rejection,
+   *    end loading and offer a bounded retry. Preserve valid prior pages as
+   *    explicitly dated; never append a different snapshot or network.
+   * 3. On route/network change cancel both subscriptions and reset paging. Test
+   *    first page, continuation, empty success, duplicate/invalidation records,
+   *    unavailable/degraded replies and retry after failure for each required
+   *    feed/object row in frontend-protocol-operation-coverage.csv.
+   * 4. Extend protocol-detail.component.spec.ts and protocol-activity-view.spec.ts;
+   *    run npm test -- those paths, lint/build, then actual supported Signet or
+   *    justified Testnet authority-to-UI reads. Mock pages prove only isolated
+   *    recovery, not a protocol's live functionality.
+   * Dependencies API-02, API-03, API-04; contract source
+   *    docs/protocols/PROTOCOL-COVERAGE.json and API-03 authority register.
+   * Rollback adapter+decoder together; keep failure/empty distinctions and rows.
+   */
   loadObjects(protocolId: string): void {
     this.objectSubscription?.unsubscribe();
     this.objectPages = [];

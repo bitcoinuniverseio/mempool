@@ -69,6 +69,25 @@ export class LiveUniverseComponent {
       this.reducedMotion.set(query.matches);
       query.addEventListener?.('change', (event) => this.reducedMotion.set(event.matches));
 
+      /**
+       * IMPLEMENTATION-HANDOFF [API-05] API-05-LIVE-VIEW | F-FE-002 | FAIL.
+       * stream$ currently supplies Mainnet Bitcoin even in selected Signet and
+       * completes silently for a producer-rejected Dogecoin/Zcash test network.
+       * 1. Consume API-04/API-05's explicit per-chain stream status beside data;
+       *    show the actual network and unavailable/reconnecting reason without
+       *    treating silence as an empty successful feed.
+       * 2. Clear the prior context's visible buffer and resume state on network
+       *    switch. Partition entries by chain+network+channel+snapshot and mark
+       *    gaps/resync until an authoritative replacement snapshot arrives.
+       * 3. Retain REST consumers and existing buffer/pause/filter controls while
+       *    a stream is unavailable. Do not manufacture live events.
+       * 4. Extend live-buffer.spec.ts and PROPOSED NEW live-universe.component.spec.ts
+       *    for unsupported networks, offline/reconnect, resync and context switch;
+       *    run targeted npm test, lint/build and actual Signet/justified Testnet UI.
+       * Evidence frontend-source-reproductions.json; producer contract pinned in
+       *    UniverseWebsocketService#API-05-WS. Dependencies API-02..API-04.
+       * Rollback coordinated stream contract while preserving explicit status.
+       */
       merge(...CHAINS.map((chain) => this.websocket.stream$(chain)))
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((envelope) => {

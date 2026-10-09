@@ -126,6 +126,36 @@ export const TRANSPORT_PATHS = [
  * Rollback: remove only test-owned runners/data. Do not alter access controls,
  * production network defaults, wallet files or shared service state for access.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [API-06] [API-06-GATE]
+ * DEF-DOCS; C-RELEASE-ALL. 2026-10-09 SERVER and all three strict SSH paths
+ * were reached, superseding WP-OPS-000's 2026-10-03 offline prerequisite.
+ * C:/AGENTS.md is absent; C:/universe/AGENTS.md was read. Public tip200 is
+ * operational evidence only: fees503, wrong chain-name parser and unavailable
+ * authorities still prevent functional/public-release GO.
+ * 1. Execute API-01..05 from exact handoff commits and reconcile every marker
+ *    against operation-level coverage, preserving pre-existing work87859cf9f.
+ * 2. Extend the existing acceptance/report harness with native->overlay->
+ *    browser context/readiness assertions, versioned fee freshness and crash
+ *    recovery. Never promote apiAssertionsPassed to whole-product acceptance.
+ * 3. Use real application paths on Signet, justified protocol Testnet only
+ *    where Signet unsupported; actual transactions only for offered broadcast/
+ *    transaction workflows. Explorer read journeys need authoritative readback,
+ *    UI, refresh, retry and network isolation, not artificial mint/trade flows.
+ * 4. Retest affected consumers and every still-offered protocol operation.
+ *    Preserve FAIL/BLOCKED/NOT TESTED; a 39-protocol registry or ready200 never
+ *    changes those rows toPASS. Do not require mainnet test transactions.
+ * 5. After every applicable rowPASS integrate legitimate PRs via develop/main,
+ *    publish coherent source/artifact manifests and owned production services,
+ *    verify public exposure/revisions, and update INDEXERS plus public/private
+ *    docs. Preserve active producers, shared RPC quotas and rollback bindings.
+ * Run gateway.test.mjs, acceptance-preflight.test.mjs, synthetic-context tests,
+ * protocol-contract --check, relevant backend/frontend suites; exact accepted
+ * runtime/deploy commands and unresolved prerequisites are in the handoff.
+ * Rollback: paired gateway/backend/overlay/frontend release pointers; preserve
+ * database and indexer state, signed identities and secrets. GO requires both
+ * complete functional acceptance and completed public Mainnet release.
+ */
 export async function preflight({ origin, network }, read = readBounded) {
   const prefix = network === "mainnet" ? "" : `/${network}`;
   const records = [];

@@ -125,6 +125,20 @@ class BitcoinRoutes {
   }
 
 
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] [API-05-REST]
+   * DEF-FEES; C-HTTP-FEES. getInitData currently serves cached serialized fees
+   * even when both recommended-fee routes below correctly return503.
+   * 1. Keep getRecommendedFees/getPreciseRecommendedFees fail-closed. Consume
+   *    the producer's versioned feeEstimate contract from API-05-PRODUCER;
+   *    refresh/invalidate bootstrap readiness without relabeling cached values.
+   * 2. Make REST/bootstrap/socket disagreeing readiness a regression failure.
+   *    Retain useful block data when fees are unavailable; do not fail the
+   *    whole init response or make every page poll the fee route separately.
+   * Verify fee-readiness.test.ts (PROPOSED NEW) and existing fee/socket tests,
+   * then paired dashboard and clock Signet checks. Dependency API-01, API-05
+   * producer/consumer contract. Rollback both sides as one coherent artifact.
+   */
   private getInitData(req: Request, res: Response) {
     try {
       const result = websocketHandler.getSerializedInitData();

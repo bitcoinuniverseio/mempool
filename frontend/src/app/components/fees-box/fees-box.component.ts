@@ -34,6 +34,30 @@ export class FeesBoxComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
   ) { }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-VIEW | F-FE-001 | FAIL.
+   * Reproduction: socket=false, loadingIndicators={}, cached recommendedFees,
+   * liveFeed.status=error => isLoading=false and the template displays rates.
+   * The error message exists only in the template's loadingFees branch.
+   * 1. Replace this display gate with StateService.feeEstimate$ from the
+   *    versioned WebsocketResponse contract. Preserve numeric sat/vB format,
+   *    priority order, color tokens and the established fee scale.
+   * 2. Render ready data only with matching network/producer freshness proof;
+   *    show dated last-good values explicitly stale, syncing or unavailable
+   *    feedback otherwise. A missing indicator must not assert readiness.
+   * 3. Use the existing shared reconnect/retry lifecycle, not per-widget HTTP
+   *    polling. Preserve cancellation and prevent repeated clicks spawning work.
+   * 4. Add PROPOSED NEW fees-box.component.spec.ts: actual RxJS/template tests
+   *    for cached init+REST 503, empty indicators, ready->offline, network switch,
+   *    malformed metadata and fresh recovery. Run npm test -- that path,
+   *    npm run lint and npm run build:universe from frontend.
+   * Acceptance: desktop/mobile and all supported themes show truthful fee
+   *    state on Signet; controlled failures terminate loading and remain
+   *    recoverable. Evidence: frontend-source-reproductions.json F-FE-001 and
+   *    root browser evidence. Existing reproduction is not a functional PASS.
+   * Dependencies API-01..API-04, producer and client feeEstimate work in API-05.
+   * Rollback keeps source-state handling; never restore unqualified old rates.
+   */
   ngOnInit(): void {
     this.liveFeed$ = this.stateService.liveFeed$;
     this.isLoading$ = combineLatest(

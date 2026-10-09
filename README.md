@@ -319,8 +319,11 @@ bearer tokens are named, never embedded:
    "network": "bitcoin:mainnet" }]
 ```
 
-Parsing is strict and all or nothing: one invalid descriptor disables the whole
-registry rather than serving partially trusted data.
+Parsing is strict. In the paired backend-apis revision `a3361bdb`, invalid
+individual descriptors are quarantined while valid descriptors remain available.
+Malformed JSON, a non-array document or a document size-limit failure disables
+the source set. Each accepted descriptor must still pass network, role and
+authorization checks; configuration acceptance is not service readiness.
 
 ## Deployment
 
@@ -376,3 +379,6 @@ cannot fix yourself: describe what you saw and where, and leave the diff empty
 if you have nothing to change yet. [CONTRIBUTING.md](CONTRIBUTING.md) has the
 rest, and [SUPPORT.md](SUPPORT.md) says where a given question belongs and what
 the explorer already answers for itself.
+
+
+Current endpoint/contract audit: [API repair preparation, 9 October 2026](docs/operations/API-REPAIR-HANDOFF-20261009.md). Its dated observations supersede historical deployment assumptions; it is not a deployed repair.
