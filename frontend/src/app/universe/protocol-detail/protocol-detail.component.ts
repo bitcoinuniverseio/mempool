@@ -10,10 +10,10 @@ import {
   ExplorerProtocolActivityPage,
   ExplorerProtocolDefinition,
   ExplorerProtocolObjectsPage,
-  ProtocolCoverage,
   SourceEntry,
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { protocolCoverageView } from '../protocol-coverage';
 import {
   ProtocolAvailability,
   availabilityLabel,
@@ -449,11 +449,12 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  coverageLabel(protocol: ExplorerProtocolDefinition): string | null {
-    const coverage = protocol.coverage;
-    if (!coverage) {return null;}
-    if (typeof coverage === 'string') {return coverage;}
-    return (coverage as ProtocolCoverage).state ?? null;
+  coverageLabel(protocol: ExplorerProtocolDefinition): string {
+    return protocolCoverageView(protocol).functionalLabel;
+  }
+
+  registryCoverageLabel(protocol: ExplorerProtocolDefinition): string | null {
+    return protocolCoverageView(protocol).historicalLabel;
   }
 
   liveCount(vm: ProtocolDetailViewModel): number {

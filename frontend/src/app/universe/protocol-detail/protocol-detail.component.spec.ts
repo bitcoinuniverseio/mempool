@@ -138,6 +138,26 @@ function registryOf(...protocols: ExplorerProtocolDefinition[]): ProtocolsRespon
   return { registryVersion: '1.0.0', primaryStrip: [], protocols };
 }
 
+describe('Protocol detail functional coverage', () => {
+  it.each([null, 'complete', { state: 'complete' }])('does not qualify historical declaration %s', coverage => {
+    const row = definition({ coverage });
+    const page = routed({ registry: () => of(registryOf(row)) }).component;
+    expect(page.coverageLabel(row)).toBe('Functional coverage: Unverified');
+    expect(page.registryCoverageLabel(row)).toBe(coverage ? 'Historical registry declaration: Complete' : null);
+    page.ngOnDestroy();
+  });
+
+  it('keeps ready authority and source-contract/global PASS distinct from accepted coverage', () => {
+    const row = definition({ coverage: 'complete', readOperationDescriptors: [
+      { id: 'registry', method: 'GET', route: '/api/v1/universe/protocols', authorityPath: null, evidence: 'source-contract', acceptance: 'PASS' },
+    ] });
+    const response = { ...registryOf(row), acceptance: { declared: 1, passed: 1, failed: 0, blocked: 0, notApplicable: 0, notTested: 0, rejected: 0 } };
+    const page = routed({ registry: () => of(response) }).component;
+    expect(page.coverageLabel(row)).toBe('Functional coverage: Unverified');
+    page.ngOnDestroy();
+  });
+});
+
 function sourceEntry(overrides: Partial<SourceEntry> = {}): SourceEntry {
   return {
     authorityId: 'index-ordinals',

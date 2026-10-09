@@ -77,6 +77,10 @@
               <dt i18n="universe.detail.field-coverage">Coverage</dt>
               <dd>{{ coverage }}</dd>
             </ng-container>
+            <ng-container *ngIf="registryCoverageLabel(vm.protocol) as declaration">
+              <dt i18n="universe.detail.field-registry-metadata">Registry metadata</dt>
+              <dd>{{ declaration }}</dd>
+            </ng-container>
           </dl>
         </section>
 
