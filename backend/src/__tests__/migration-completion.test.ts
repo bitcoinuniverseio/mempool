@@ -45,25 +45,26 @@ describe('ordered migration completion',()=>{
   it('inspects and repairs a falsely advanced version before newer markers',async()=>{
     const test=setup(112,true);await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow();expect(test.markers).toEqual([]);
   });
-  function interrupted29(malformed: 'none'|'column'|'key' = 'none') {
+  function interrupted29(malformed: 'none'|'column'|'key' = 'none', engine='8.4', nullDefault: unknown=null) {
     const test=setup(28);test.subject.constructor.currentVersion=29;
     const query=test.db.query;
     const geo=[
       {COLUMN_NAME:'id',COLUMN_TYPE:'int unsigned',IS_NULLABLE:'NO',CHARACTER_SET_NAME:null},
       {COLUMN_NAME:'type',COLUMN_TYPE:"enum('city','country','division','continent')",IS_NULLABLE:'NO',CHARACTER_SET_NAME:'utf8mb3'},
       {COLUMN_NAME:'names',COLUMN_TYPE:malformed==='column'?'varchar(255)':'text',IS_NULLABLE:'YES',CHARACTER_SET_NAME:'utf8mb3'},
-    ].map(column=>({...column,COLUMN_DEFAULT:null,EXTRA:''}));
+    ].map(column=>({...column,COLUMN_DEFAULT:column.IS_NULLABLE==='YES'?nullDefault:null,EXTRA:''}));
     const keys=[{INDEX_NAME:'id',COLUMN_NAME:'id',SEQ_IN_INDEX:1,NON_UNIQUE:0,SUB_PART:null},
       {INDEX_NAME:'id',COLUMN_NAME:'type',SEQ_IN_INDEX:2,NON_UNIQUE:malformed==='key'?1:0,SUB_PART:null},
       {INDEX_NAME:'id_2',COLUMN_NAME:'id',SEQ_IN_INDEX:1,NON_UNIQUE:1,SUB_PART:null}];
-    const nodes=new Map(['as_number','city_id'].map(name=>[name,{COLUMN_NAME:name,COLUMN_TYPE:'int unsigned',IS_NULLABLE:'YES',COLUMN_DEFAULT:null,EXTRA:''}]));
+    const nodes=new Map(['as_number','city_id'].map(name=>[name,{COLUMN_NAME:name,COLUMN_TYPE:'int unsigned',IS_NULLABLE:'YES',COLUMN_DEFAULT:nullDefault,EXTRA:''}]));
     test.db.query=async(input:any)=>{
       const sql=typeof input==='string'?input:input.sql;
+      if(sql.includes('SELECT VERSION'))return [[{version:engine}]];
       if(sql.includes("TABLE_NAME='geo_names'")&&sql.includes('information_schema.columns'))return [geo];
       if(sql.includes("TABLE_NAME='geo_names'")&&sql.includes('information_schema.statistics'))return [keys];
       if(sql.includes("TABLE_NAME='nodes'")&&sql.includes('information_schema.columns'))return [[...nodes.values()]];
       const add=sql.match(/^ALTER TABLE nodes ADD (\w+) (.+) NULL DEFAULT NULL$/);
-      if(add) nodes.set(add[1],{COLUMN_NAME:add[1],COLUMN_TYPE:add[2].replace('(11)',''),IS_NULLABLE:'YES',COLUMN_DEFAULT:null,EXTRA:''});
+      if(add) nodes.set(add[1],{COLUMN_NAME:add[1],COLUMN_TYPE:add[2].replace('(11)',''),IS_NULLABLE:'YES',COLUMN_DEFAULT:nullDefault,EXTRA:''});
       return query(input);
     };
     return test;
@@ -73,6 +74,19 @@ describe('ordered migration completion',()=>{
     expect(test.getVersion()).toBe(29);expect(test.markers).toEqual([29]);
     expect(test.statements.some(sql=>sql.startsWith('CREATE TABLE geo_names'))).toBe(false);
     expect(test.statements.filter(sql=>sql.startsWith('ALTER TABLE nodes ADD')).length).toBe(5);
+  });
+  it('accepts actual MariaDB11.4 SQLNULL metadata while retaining schema postconditions',async()=>{
+    const test=interrupted29('none','11.4.13-MariaDB-ubu2404','NULL');
+    await test.subject.$initializeOrMigrateDatabase();
+    expect(test.getVersion()).toBe(29);expect(test.markers).toEqual([29]);
+  });
+  it.each([
+    ['8.4.0','NULL'],['11.4.13-MariaDB-ubu2404',"'NULL'"],['10.2.6-MariaDB','NULL'],['unverified','NULL'],
+  ])('rejects literal/ambiguous NULL metadata for engine %s without completing29',async(engine,defaultValue)=>{
+    const test=interrupted29('none',engine,defaultValue);
+    await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');
+    expect(test.getVersion()).toBe(28);expect(test.markers).toEqual([]);
+    expect(test.statements.some(sql=>sql.startsWith('ALTER TABLE nodes ADD'))).toBe(false);
   });
   it.each(['column','key'] as const)('rejects an incompatible existing geo_names %s without advancing29',async(kind)=>{
     const test=interrupted29(kind);await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');
