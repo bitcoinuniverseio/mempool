@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gunzipSync } from "node:zlib";
 import {
   reconcileOperations,
   rootedProofReader,
@@ -21,6 +22,16 @@ export const sortedIdsDigest = (ids) =>
 const registrySource = "docs/acceptance/source-proof/backend-apis-e53604da/";
 const metadataSource =
   "docs/acceptance/source-proof/registry-metadata-2026-10-09/";
+const frontendSource =
+  "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/";
+const historicalRawPath =
+  "docs/acceptance/source-proof/historical-source-candidates-reviewed-2026-10-09.json.gz";
+const historicalCompressedSha256 =
+  "6c40b8996e28c90e4e074b22ac8fa2ae9175e6546ee97cc6415b813ff6bc1969";
+const historicalRawSha256 =
+  "602c73f86f2ef58b14a9ddf178814264989c281f9048aa29ab0bc03f23d3a9a1";
+const lfBytes = (bytes) =>
+  Buffer.from(bytes.toString("utf8").replaceAll("\r\n", "\n"));
 
 /** This successor carries the complete required coverage, but cannot grant
  * semantic reconciliation or functional acceptance from source declarations.
@@ -38,6 +49,23 @@ export function buildRequiredApplicationRoster(
   );
   const coverage = JSON.parse(coverageBytes.toString("utf8"));
   const historical = JSON.parse(historicalBytes.toString("utf8"));
+  const archivedHistorical = readProof(historicalRawPath);
+  assert.equal(
+    digest(archivedHistorical),
+    historicalCompressedSha256,
+    "Archived raw historical proof drift",
+  );
+  const rawHistorical = gunzipSync(archivedHistorical);
+  assert.equal(
+    digest(rawHistorical),
+    historicalRawSha256,
+    "Raw historical proof bytes drift",
+  );
+  assert.deepEqual(
+    JSON.parse(rawHistorical),
+    historical,
+    "Current historical source lineage changed from reviewed raw proof",
+  );
   assert.equal(coverage.rows.length, 632);
   assert.equal(new Set(coverage.rows.map((row) => row.coverageId)).size, 632);
   assert.equal(historical.rows.length, 1617);
@@ -70,13 +98,33 @@ export function buildRequiredApplicationRoster(
     registrySource + "universe-explorer.controller.ts",
     metadataSource + "mounted-signet-registry-protocols.json",
   ]);
-  const clockProof = proof([
+  const currentSourceBindings = [];
+  const frontendProof = (paths) =>
+    proof(
+      paths.map((path) => {
+        const snapshotPath = frontendSource + path;
+        const currentHash = digest(lfBytes(readProof(path)));
+        assert.equal(
+          digest(readProof(snapshotPath)),
+          currentHash,
+          `Current source proof drift: ${path}`,
+        );
+        currentSourceBindings.push({
+          path,
+          snapshotPath,
+          sha256: currentHash,
+          encoding: "UTF-8 LF-normalized source, frozen snapshot bytes",
+        });
+        return snapshotPath;
+      }),
+    );
+  const clockProof = frontendProof([
     "frontend/src/app/bitcoin-clock-routes.ts",
     "frontend/src/app/app-routing.module.ts",
     "frontend/src/app/components/clock/clock.component.ts",
     "frontend/src/app/services/state.service.ts",
   ]);
-  const websocketProof = proof([
+  const websocketProof = frontendProof([
     "frontend/src/app/services/websocket.service.ts",
     "frontend/src/app/services/websocket-response-scope.ts",
   ]);
@@ -239,8 +287,20 @@ export function buildRequiredApplicationRoster(
     },
     readProof,
   );
-  roster.historicalArtifactSha256 = digest(historicalBytes);
+  roster.historicalArtifactSha256 = digest(lfBytes(historicalBytes));
+  roster.historicalArtifactHashEncoding =
+    "UTF-8 LF-normalized historical artifact text; complete parsed historical records retained unchanged";
   roster.historicalArtifact = HISTORICAL_PATH;
+  roster.historicalRawProvenance = {
+    path: historicalRawPath,
+    sha256: historicalCompressedSha256,
+    encoding: "gzip of original raw historical source-candidate artifact bytes",
+    decompressedSha256: historicalRawSha256,
+    bytes: rawHistorical.length,
+    scope:
+      "Current 1617-row source-candidate document at review time; not the unrecovered original243-row acceptance bundle",
+  };
+  roster.currentSourceBindings = currentSourceBindings;
   const candidateMap = new Map(
     mappings.map((mapping) => [mapping.candidateId, mapping.operationIds]),
   );
