@@ -556,6 +556,7 @@ class Server {
     // Record the current poll delta exactly once, including unchanged complete
     // polls. Recently-deleted history belongs to other consumers, not replay.
     memPool.setObservedPollCallback((newTransactions, deletedTransactions, complete) => {
+      websocketHandler.handleMempoolObservation(complete);
       timeMachineService.observePoll(newTransactions, deletedTransactions, complete);
       relayCollectorService.observeMempoolPoll(newTransactions, deletedTransactions, complete);
     });

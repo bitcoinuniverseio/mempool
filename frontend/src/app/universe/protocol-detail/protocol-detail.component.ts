@@ -9,11 +9,12 @@ import { ProtocolCopy, protocolCopy } from '@app/universe/universe-protocol-copy
 import {
   ExplorerProtocolActivityPage,
   ExplorerProtocolDefinition,
+  ProtocolsResponse,
   ExplorerProtocolObjectsPage,
-  ProtocolCoverage,
   SourceEntry,
 } from '@app/universe/universe.types';
 import { shortenIdentifier } from '@app/universe/universe-evidence';
+import { protocolCoverageView } from '../protocol-coverage';
 import {
   ProtocolAvailability,
   availabilityLabel,
@@ -51,6 +52,8 @@ interface ProtocolObjectsState {
 interface ProtocolDetailViewModel {
   readonly kind: 'loading' | 'ready' | 'missing' | 'error';
   readonly protocol?: ExplorerProtocolDefinition;
+  readonly registry?: ProtocolsResponse;
+  readonly network?: string;
   readonly copy?: ProtocolCopy;
   readonly source?: SourceEntry | null;
   /** null when the authority snapshot could not be read at all. */
@@ -75,7 +78,7 @@ export type ProtocolResolution =
   | { readonly kind: 'loading' }
   | { readonly kind: 'registry-error' }
   | { readonly kind: 'missing' }
-  | { readonly kind: 'found'; readonly protocol: ExplorerProtocolDefinition };
+  | { readonly kind: 'found'; readonly protocol: ExplorerProtocolDefinition; readonly registry?: ProtocolsResponse; readonly network?: string };
 
 /**
  * One protocol, explained and evidenced.
@@ -130,9 +133,19 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
       switchMap(([params]) => {
         const id = (params.get('id') || '').toLowerCase();
         return this.api.getProtocols$().pipe(
-          map((registry): ProtocolResolution => {
+          switchMap((registry): Observable<ProtocolResolution> => {
             const protocol = findProtocol(registry.protocols || [], id);
-            return protocol ? { kind: 'found', protocol } : { kind: 'missing' };
+            if (!protocol) {return of({ kind: 'missing' });}
+            if (protocol.chain === 'bitcoin') {
+              return of({ kind: 'found', protocol, registry, network: this.api.network });
+            }
+            // Resolve the roster first, then qualify only this chain's configured scope.
+            return this.api.getProtocols$({ chain: protocol.chain }).pipe(map(scoped => {
+              const selected = findProtocol(scoped.protocols || [], id);
+              return selected && selected.chain === protocol.chain
+                ? { kind: 'found', protocol: selected, registry: scoped, network: this.api.chainNetwork(protocol.chain) } as ProtocolResolution
+                : { kind: 'missing' } as ProtocolResolution;
+            }));
           }),
           catchError(() => of<ProtocolResolution>({ kind: 'registry-error' })),
           startWith<ProtocolResolution>({ kind: 'loading' }),
@@ -194,6 +207,8 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
             return {
               kind: 'ready',
               protocol,
+              registry: resolution.registry,
+              network: resolution.network,
               copy: protocolCopy(protocol.id, protocol.family),
               source: sourceForProtocol(protocol, sourcesByAuthority),
               sourcesByAuthority,
@@ -297,6 +312,28 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
    * Reads the protocol's authority objects, first page, on the same terms
    * as the activity feed above.
    */
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-PROTOCOL-PAGES | C-FE-PROTOCOL-READS |
+   * NOT TESTED. API-03 may change the owning feed/object adapter, so each
+   * independently declared operation must be retested through this consumer.
+   * 1. Reconcile loadActivity/loadMoreActivity and loadObjects/loadMoreObjects
+   *    against the corrected method/path/schema for that protocol. Keep chain,
+   *    network, schema version, snapshot/checkpoint and cursor together.
+   * 2. On authority outage, timeout, invalid/stale context or cursor rejection,
+   *    end loading and offer a bounded retry. Preserve valid prior pages as
+   *    explicitly dated; never append a different snapshot or network.
+   * 3. On route/network change cancel both subscriptions and reset paging. Test
+   *    first page, continuation, empty success, duplicate/invalidation records,
+   *    unavailable/degraded replies and retry after failure for each required
+   *    feed/object row in frontend-protocol-operation-coverage.csv.
+   * 4. Extend protocol-detail.component.spec.ts and protocol-activity-view.spec.ts;
+   *    run npm test -- those paths, lint/build, then actual supported Signet or
+   *    justified Testnet authority-to-UI reads. Mock pages prove only isolated
+   *    recovery, not a protocol's live functionality.
+   * Dependencies API-02, API-03, API-04; contract source
+   *    docs/protocols/PROTOCOL-COVERAGE.json and API-03 authority register.
+   * Rollback adapter+decoder together; keep failure/empty distinctions and rows.
+   */
   loadObjects(protocolId: string): void {
     this.objectSubscription?.unsubscribe();
     this.objectPages = [];
@@ -347,6 +384,16 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
 
   objectsSummaryLabel(state: ProtocolObjectsState): string | null {
     return state.kind === 'loaded' ? state.summary : null;
+  }
+
+  objectKindLabel(row: ProtocolObjectRow, protocolId: string): string | null {
+    return protocolId === 'names' && (row.record?.kind === 'name' || row.record?.kind === 'namespace')
+      ? row.record.kind : row.kind;
+  }
+
+  namesObjectReference(row: ProtocolObjectRow, protocolId: string): string | null {
+    return protocolId === 'names' && (row.record?.kind === 'name' || row.record?.kind === 'namespace') &&
+      /^[0-9a-f]{64}i(0|[1-9][0-9]{0,9})$/.test(row.id ?? '') ? row.id : null;
   }
 
   trackByObject(index: number, row: ProtocolObjectRow): string {
@@ -427,11 +474,12 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  coverageLabel(protocol: ExplorerProtocolDefinition): string | null {
-    const coverage = protocol.coverage;
-    if (!coverage) {return null;}
-    if (typeof coverage === 'string') {return coverage;}
-    return (coverage as ProtocolCoverage).state ?? null;
+  coverageLabel(protocol: ExplorerProtocolDefinition, registry?: ProtocolsResponse, network?: string): string {
+    return protocolCoverageView(protocol, registry, network).functionalLabel;
+  }
+
+  registryCoverageLabel(protocol: ExplorerProtocolDefinition): string | null {
+    return protocolCoverageView(protocol).historicalLabel;
   }
 
   liveCount(vm: ProtocolDetailViewModel): number {

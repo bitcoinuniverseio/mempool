@@ -17,7 +17,8 @@ export function initChainSourceIdentityRoutes(app: Application): void {
       };
       if (config.MEMPOOL.BACKEND === 'esplora' && api.$getIdentityReader) return api.$getIdentityReader();
       if (config.MEMPOOL.BACKEND === 'electrum' && api.$getIndexedTip && api.$getIndexBlockHash) return {
-        selector: { backend: 'electrum', host: config.ELECTRUM.HOST, port: config.ELECTRUM.PORT, tls: config.ELECTRUM.TLS_ENABLED },
+        selector: { backend: 'electrum', host: config.ELECTRUM.HOST, port: config.ELECTRUM.PORT, tls: config.ELECTRUM.TLS_ENABLED,
+          ...(config.ELECTRUM.ADDRESS_HTTP_URL ? { addressHttpOrigin: config.ELECTRUM.ADDRESS_HTTP_URL } : {}) },
         tip: () => api.$getIndexedTip!(), hash: height => api.$getIndexBlockHash!(height),
       };
       throw new Error('Configured address index unavailable');

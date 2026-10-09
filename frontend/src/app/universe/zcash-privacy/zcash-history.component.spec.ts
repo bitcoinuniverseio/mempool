@@ -18,7 +18,7 @@ function fixture(read: any) {
   const component = new ZcashHistoryComponent({getZcashPrivacyHistory$: read, chainNetwork: () => 'testnet'} as any, {networkChanged$} as any);
   component.ngOnInit(); return {component, networkChanged$};
 }
-describe('Manual Zcash chain history consumer', () => {
+describe('Manual selected Zcash net history consumer', () => {
   it('rejects a short complete window while preserving a warm partial window and complete cached window', () => {
     const short=receipt(1,1);short.tipHeight=1000;short.source.tipHash='a'.repeat(64);
     short.blocks[0]={...short.blocks[0],height:1000,hash:'a'.repeat(64),parent:'b'.repeat(64)};

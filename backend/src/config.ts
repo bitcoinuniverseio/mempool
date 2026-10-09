@@ -1,3 +1,5 @@
+import { rpcPoolLimits } from './rpc-api/pool-limits';
+
 const configFromFile = require(
     process.env.MEMPOOL_CONFIG_FILE ? process.env.MEMPOOL_CONFIG_FILE : '../mempool-config.json'
 );
@@ -78,6 +80,7 @@ interface IConfig {
     SOCKET: string;
   };
   ELECTRUM: {
+    ADDRESS_HTTP_URL?: string;
     HOST: string;
     PORT: number;
     TLS_ENABLED: boolean;
@@ -91,6 +94,9 @@ interface IConfig {
     COOKIE: boolean;
     COOKIE_PATH: string;
     DEBUG_LOG_PATH: string;
+    /** Undefined preserves the existing bulk (8) and interactive (4) pool limits. */
+    MAX_SOCKETS?: number;
+    ADDRESS_MAX_SOCKETS?: number;
   };
   SECOND_CORE_RPC: {
     HOST: string;
@@ -386,6 +392,7 @@ class Config implements IConfig {
     this.ESPLORA = configs.ESPLORA;
     this.ELECTRUM = configs.ELECTRUM;
     this.CORE_RPC = configs.CORE_RPC;
+    rpcPoolLimits(this.CORE_RPC);
     this.SECOND_CORE_RPC = configs.SECOND_CORE_RPC;
     this.DATABASE = configs.DATABASE;
     this.SYSLOG = configs.SYSLOG;

@@ -43,6 +43,20 @@
 		text-align: center;
 	}
 }
+
+@media (pointer: coarse), (max-width: 991.98px) {
+  .arrow-td {
+    width: calc(max(44px, var(--u-touch-target, 44px)) + 0.6rem);
+  }
+
+  .arrow-td > a.red {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: max(44px, var(--u-touch-target, 44px));
+    min-height: max(44px, var(--u-touch-target, 44px));
+  }
+}
 .green {
   color: var(--green);
 }

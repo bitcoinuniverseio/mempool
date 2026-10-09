@@ -4,12 +4,12 @@ import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   ExplorerNetwork,
   ExplorerProtocolDefinition,
-  ProtocolCoverage,
   ProtocolsResponse,
   SourceEntry,
   SourcesResponse,
 } from '@app/universe/universe.types';
 import { SeoService } from '@app/services/seo.service';
+import { protocolCoverageView } from '../protocol-coverage';
 import {
   ProtocolAvailability,
   availabilityLabel,
@@ -33,6 +33,7 @@ export interface DirectoryViewModel {
   /** The network the registry request was addressed to; what the copy names. */
   network: ExplorerNetwork;
   registryVersion?: string;
+  registry?: ProtocolsResponse;
   groups?: FamilyGroup[];
   otherChainCount?: number;
   liveCount?: number;
@@ -86,6 +87,27 @@ export class ProtocolDirectoryComponent implements OnInit {
   }
 
   /** One read of the registry and the authority snapshot for one network. */
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-DIRECTORY | C-FE-PROTOCOLS | NOT TESTED.
+   * Current directory already has a 20 s first-response deadline, inner retry
+   * recovery and separate registry/source failure handling. Preserve them.
+   * 1. After API-03 corrects authority bindings, exercise all 39 registry rows:
+   *    31 Bitcoin and 8 other-chain rows must remain visible in their surfaces.
+   *    Verify operation-specific readiness using sources and checkpoints,
+   *    rather than promoting historical release declarations to live coverage.
+   * 2. Confirm failed/stale source snapshots leave the roster visible with an
+   *    honest unavailable/dated state; a served empty page differs from error.
+   * 3. Keep a single cancelable refresh attempt on retry/network switch. If the
+   *    registry's effective capabilities change, invalidate only that network's
+   *    cache and obtain a new snapshot without losing unaffected page state.
+   * 4. Extend protocol-directory.component.spec.ts and protocol-detail specs for
+   *    deadline, 429/503, unavailable authority, stale checkpoint, retry success
+   *    and cross-network late responses. Run targeted npm test then lint/build;
+   *    capture actual Signet screenshots/readback for every supported protocol.
+   * Dependencies API-02..API-04. Evidence inventory:
+   *    frontend-protocol-operation-coverage.csv; all 123 rows remain NOT TESTED.
+   * Rollback keeps full registry and typed failure feedback, never hides rows.
+   */
   private attempt(network: ExplorerNetwork): Observable<DirectoryViewModel> {
     return combineLatest([
       // A request that hangs is the failure this page had left: the registry
@@ -107,6 +129,7 @@ export class ProtocolDirectoryComponent implements OnInit {
           error: false,
           network,
           registryVersion: response.registryVersion,
+          registry: response,
           groups: this.groupByFamily(bitcoinProtocols),
           otherChainCount,
           liveCount: bitcoinProtocols.filter(p => this.isLive(p, sourcesByAuthority)).length,
@@ -253,8 +276,9 @@ export class ProtocolDirectoryComponent implements OnInit {
 
   /**
    * IMPLEMENTATION-HANDOFF [FE-COVERAGE-01] | all protocol/operation coverage rows.
-   * Verified: this label trusts coverage from the registry, although the pinned
-   * manifest has 123 NOT TESTED descriptors and seven historical complete rows.
+   * Verified: shared labels now keep historical registry declarations separate
+   * from functional coverage, which stays unverified in the current contract.
+   * The pinned manifest has 123 descriptors and seven historical complete rows.
    * Prerequisite: backend acceptance schema and evidence gate (BE work packages).
    * 1. Add a typed, network/revision-bound acceptance summary to universe.types.ts
    *    after its backend contract is agreed; keep runtime readiness independent.
@@ -271,27 +295,16 @@ export class ProtocolDirectoryComponent implements OnInit {
    * from these unit checks. No production config/migration is changed here.
    * Roll back frontend and backend contract versions together if incompatible.
    */
-  coverageLabel(protocol: ExplorerProtocolDefinition): string {
-    const coverage = protocol.coverage;
-    if (coverage === null || coverage === undefined || coverage === '') {
-      return $localize`:@@universe.protocols.coverage-unknown:Coverage unknown`;
-    }
-    if (typeof coverage === 'string') {
-      return $localize`:@@universe.protocols.coverage:Coverage: ${this.humanize(coverage)}:coverage:`;
-    }
-    const state = (coverage as ProtocolCoverage).state;
-    if (state) {
-      return $localize`:@@universe.protocols.coverage:Coverage: ${this.humanize(state)}:coverage:`;
-    }
-    return $localize`:@@universe.protocols.coverage-unknown:Coverage unknown`;
+  coverageLabel(protocol: ExplorerProtocolDefinition, registry?: ProtocolsResponse, network?: string): string {
+    return protocolCoverageView(protocol, registry, network).functionalLabel;
   }
 
-  coverageKnown(protocol: ExplorerProtocolDefinition): boolean {
-    const coverage = protocol.coverage;
-    if (coverage === null || coverage === undefined || coverage === '') {
-      return false;
-    }
-    return typeof coverage === 'string' || !!(coverage as ProtocolCoverage).state;
+  coverageKnown(protocol: ExplorerProtocolDefinition, registry?: ProtocolsResponse, network?: string): boolean {
+    return protocolCoverageView(protocol, registry, network).functionalKnown;
+  }
+
+  registryCoverageLabel(protocol: ExplorerProtocolDefinition): string | null {
+    return protocolCoverageView(protocol).historicalLabel;
   }
 
   sourceFor(

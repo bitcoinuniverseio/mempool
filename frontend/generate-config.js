@@ -1,5 +1,6 @@
 var fs = require('fs');
 const { spawnSync } = require('child_process');
+const { bindRuntimeConfigScript } = require('./runtime-config-script.cjs');
 
 const CONFIG_FILE_NAME = 'mempool-frontend-config.json';
 const GENERATED_CONFIG_FILE_NAME = 'src/resources/config.js';
@@ -171,3 +172,12 @@ if (currentConfig && currentConfig === newConfig) {
   writeConfig(GENERATED_CONFIG_FILE_NAME, newConfig);
   console.log(`${GENERATED_CONFIG_FILE_NAME} file updated`);
 }
+
+// The stable runtime mount filename remains unchanged; only its bootstrap
+// cache key follows the exact generated config bytes for this artifact.
+const boundConfig = bindRuntimeConfigScript(
+  fs.readFileSync('src/index.html', 'utf8'),
+  fs.readFileSync(GENERATED_CONFIG_FILE_NAME),
+);
+fs.writeFileSync('src/index.html', boundConfig.html, 'utf8');
+console.log(`Runtime config bootstrap cache epoch ${boundConfig.sha256}`);

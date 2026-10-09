@@ -21,6 +21,7 @@ import { gzipSync } from 'node:zlib';
 import test from 'node:test';
 import { stageAcceptance, acceptanceEvidenceClosure } from './protocol-contract.mjs';
 import { fixture } from './reconciled-release-fixture.mjs';
+import { validatorModuleClosure } from './release-fixture-modules.mjs';
 import { spawnSync } from 'node:child_process';
 import { qualifyArtifact, memberProblems, REQUIRED_MEMBERS } from './qualify-artifact.mjs';
 
@@ -32,6 +33,10 @@ test.after(() => rmSync(workdir, { recursive: true, force: true }));
 const ARTIFACT_COMMIT = 'd'.repeat(40);
 const SOURCE_SHA = 'a'.repeat(40);
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+// Production carries the whole tree; fixtures carry its complete static validator closure.
+const scriptFiles = () => validatorModuleClosure();
+const CARRIED_SCRIPTS = scriptFiles().map(name => 'scripts/universe/' + name);
 
 // ---------------------------------------------------------------------------
 // A minimal ustar writer, so an archive can hold members the host filesystem
@@ -190,7 +195,8 @@ function stagedRelease(candidate, { commit = ARTIFACT_COMMIT } = {}) {
   });
   assert.deepEqual(report.problems, []);
   mkdirSync(join(stage, 'scripts', 'universe'), { recursive: true });
-  for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs']) {
+  for (const name of scriptFiles()) {
+    mkdirSync(dirname(join(stage, 'scripts', 'universe', name)), { recursive: true });
     copyFileSync(join(here, name), join(stage, 'scripts', 'universe', name));
   }
   const application = fixture(candidate.envelope);
@@ -215,9 +221,7 @@ function entriesOf(stage, relatives) {
 
 const CARRIED = (candidate) => [
   'RELEASE-MANIFEST.json',
-  'scripts/universe/protocol-contract.mjs',
-  'scripts/universe/reconciled-release.mjs',
-  'scripts/universe/reconciled-operations.mjs',
+  ...CARRIED_SCRIPTS,
   'docs/acceptance/reconciled-operations.json',
   'docs/acceptance/qualified-application-evidence.json',
   'docs/acceptance/evidence/application/receipt.json',
@@ -227,17 +231,26 @@ const CARRIED = (candidate) => [
   candidate.configurationPath,
 ];
 
+test('fixture carries the production validator closure and transitive helpers', () => {
+  const workflow = readFileSync(join(repositoryRoot, '.github/workflows/universe-release-artifact.yml'), 'utf8');
+  assert.match(workflow, /cp -a scripts\/universe "\$stage\/scripts\/universe"/);
+  assert(CARRIED_SCRIPTS.includes('scripts/universe/fee-semantic-review.mjs'));
+  const candidate = signetQualifiedCandidate();
+  const stage = stagedRelease(candidate);
+  for (const relative of CARRIED_SCRIPTS) assert.equal(sha256(readFileSync(join(stage, relative))), sha256(readFileSync(join(repositoryRoot, relative))), relative);
+});
+
 function packed(name, entries) {
   return archive(join(mkdtempSync(join(workdir, 'out-')), name), entries);
 }
 
-test('a Signet-qualified Mainnet candidate qualifies from its extracted archive alone', async () => {
+test('a legacy tiny fixture cannot supply the current full functional projection', async () => {
   const candidate = signetQualifiedCandidate();
   const stage = stagedRelease(candidate);
   // The checkout is gone before the archive is judged.
   rmSync(candidate.root, { recursive: true, force: true });
   const file = packed('mempool-good.tar.gz', entriesOf(stage, CARRIED(candidate)));
-  assert.deepEqual(await qualifyArtifact(file, { commit: ARTIFACT_COMMIT, network: 'mainnet' }), []);
+  assert.match((await qualifyArtifact(file, { commit: ARTIFACT_COMMIT, network: 'mainnet' })).join('\n'), /no completely qualified functional acceptance projection/);
 });
 
 test('staging carries the complete evidence closure the envelope names, and nothing is left behind', () => {

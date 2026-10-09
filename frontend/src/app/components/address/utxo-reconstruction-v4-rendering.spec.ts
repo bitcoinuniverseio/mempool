@@ -9,6 +9,8 @@ import { provideRouter } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { UtxoReconstructionComponent } from './utxo-reconstruction.component';
+import { readFileSync } from 'node:fs';
+import type { UtxoReconstructionV4View } from './utxo-reconstruction-v4-view';
 
 describe('actual reconstruction template version and source disclosure', () => {
   beforeAll(() => {
@@ -20,19 +22,29 @@ describe('actual reconstruction template version and source disclosure', () => {
     TestBed.configureTestingModule({providers:[provideRouter([]),{provide:HttpClient,useValue:{delete:vi.fn().mockReturnValue(of({}))}},
       {provide:StateService,useValue:{network:'signet',networkChanged$:new BehaviorSubject('signet'),env:{ROOT_NETWORK:'mainnet'}}}]});
     const fixture=TestBed.createComponent(UtxoReconstructionComponent);fixture.detectChanges();
-    const c=fixture.componentInstance, cp={blockHeight:10,blockHash:'2'.repeat(64),network:'signet',genesisHash:'1'.repeat(64),signetChallenge:'51',verifiedAt:'2026-10-03T00:00:00Z'};
-    c.version='v4';c.view={schema:'universe-address-utxo-reconstruction-v4',status:'PARTIAL',address:'tb1qpublic',network:'signet',
-      confirmedAnchor:{...cp,sourceId:'3'.repeat(64),scriptPubKey:'51',chainStats:{tx_count:1,funded_txo_count:1,spent_txo_count:0,funded_txo_sum:1,spent_txo_sum:0}},
-      latestObservedTip:cp,confirmedTailAnchor:null,mempoolAnchor:null,progress:{phase:'confirmed',confirmedEpoch:0,mempoolEpoch:0,pageLimit:100,
-        confirmedTransactionsProcessed:0,confirmedTransactionsExpected:1,confirmedTailTransactionsProcessed:0,confirmedTailTransactionsExpected:null,
-        mempoolTransactionsProcessed:0,mempoolTransactionsExpected:null,candidateOutputs:0,verifiedOutputs:0,retainedBytes:0},
-      globalMempoolProof:{mode:'strict-global-fallback',fallbackReason:'GLOBAL_TRANSACTION_CAPACITY',transactionCount:101,maximumTransactions:100,
-        maximumRetainedBytes:524288,retainedBytes:0,transitionCount:0,maximumTransitions:128,maximumRetainedTransitions:8,initialIdentity:'4'.repeat(64),
-        sequenceAtomic:'1',transitions:[],verifiedOutputContext:null},cursor:0,sessionId:'12345678-1234-1234-1234-123456789abc',observedAt:cp.verifiedAt,expiresAt:'2026-10-03T01:00:00Z'};
+    const native=JSON.parse(readFileSync('src/app/components/address/utxo-reconstruction-v4-native-fallback.fixture.json','utf8')) as {views:UtxoReconstructionV4View[]};
+    const c=fixture.componentInstance;c.version='v4';c.view=native.views.find(view=>view.globalMempoolProof.mode==='strict-global-fallback');
     c['cd'].markForCheck();fixture.detectChanges();const text=fixture.nativeElement.textContent;
-    expect(text).toContain('V4 page limit');expect(text).toContain('strict-global-fallback');expect(text).toContain('GLOBAL_TRANSACTION_CAPACITY');
-    expect(text).toContain('Latest observed shared tip: 10 /');expect(text).not.toContain('\uFFFD');
+    expect(text).toContain('V4 page limit');expect(text).toContain('strict-global-fallback');expect(text).toContain('GLOBAL_POOL_EXCEEDS_PROOF_CAPACITY');
+    expect(text).toContain('Observed global mempool: 2429 transactions');expect(text).toContain('Transaction proof capacity: 100 transactions');
+    expect(text).toContain('Retained transaction proofs: none');expect(text).toContain('Retained fallback metadata: 512 bytes');
+    expect(text).toContain('Global state accounting: 512 / 524288 bytes');expect(text).not.toContain('Bounded proof cache');
+    expect(text).toContain('Latest observed shared tip: 325621 /');expect(text).not.toContain('\uFFFD');
     expect(text).toContain('No eligible output list or complete balance');expect(fixture.nativeElement.querySelector('table')).toBeNull();
     expect(fixture.nativeElement.querySelector('option[value=v4]')).not.toBeNull();
   });
+  it('distinguishes actual irrelevant-proof retention from global observation and byte accounting',()=>{
+    TestBed.configureTestingModule({providers:[provideRouter([]),{provide:HttpClient,useValue:{delete:vi.fn().mockReturnValue(of({}))}},
+      {provide:StateService,useValue:{network:'signet',networkChanged$:new BehaviorSubject('signet'),env:{ROOT_NETWORK:'mainnet'}}}]});
+    const fixture=TestBed.createComponent(UtxoReconstructionComponent);fixture.detectChanges();
+    const native=JSON.parse(readFileSync('src/app/components/address/utxo-reconstruction-v4-native-measurement.fixture.json','utf8')) as {value:UtxoReconstructionV4View};
+    const c=fixture.componentInstance;c.version='v4';c.view=native.value;c['cd'].markForCheck();fixture.detectChanges();
+    const text=fixture.nativeElement.textContent;
+    expect(text).toContain('irrelevant-delta-proof');expect(text).toContain('Observed global mempool: '+native.value.globalMempoolProof.transactionCount+' transactions');
+    expect(text).toContain('Retained transaction proofs: '+native.value.globalMempoolProof.transactionCount+'.');
+    expect(text).toContain('Retained proof state includes transaction proofs and metadata');
+    expect(text).toContain('Global state accounting: '+native.value.globalMempoolProof.retainedBytes+' / 524288 bytes');
+    expect(text).not.toContain('Retained fallback metadata');expect(text).not.toContain('Bounded proof cache');
+  });
+
 });

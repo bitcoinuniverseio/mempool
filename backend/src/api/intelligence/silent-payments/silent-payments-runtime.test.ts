@@ -3,8 +3,10 @@ jest.mock('../../../database', () => ({ __esModule: true, default: { query: jest
 jest.mock('../../blocks', () => ({ __esModule: true, default: { setNewBlockCallback: jest.fn() } }));
 jest.mock('../../bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: { $getBlockHash: jest.fn(), $getBlockHeightTip: jest.fn(), $getBlock: jest.fn(), $getTxsForBlock: jest.fn() } }));
 jest.mock('../../bitcoin/bitcoin-client', () => {
-  const client = { getBlockchainInfo: jest.fn(), getBlockHash: jest.fn() };
-  return { __esModule: true, default: client, addressBitcoinClient: client };
+  const core = { getBlockchainInfo: jest.fn(), getBlockHash: jest.fn() };
+  // Both owned pools observe the same controlled chain. Keep the address
+  // verifier on its real named-export boundary rather than bypassing it.
+  return { __esModule: true, default: core, addressBitcoinClient: core };
 });
 
 import DB from '../../../database';

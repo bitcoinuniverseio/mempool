@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "index-names-explorer-asset-v1",
+  "protocolId": "names",
+  "network": "bitcoin:mainnet",
+  "chainIdentity": "d308a553fedcc01109c4e023cbae5c41b4b309b9946a6a912be7d8c818abe4c0",
+  "ready": true,
+  "assetId": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddi0",
+  "kind": "namespace",
+  "name": null,
+  "namespace": "sats",
+  "firstClaim": {
+    "inscriptionNumberAtomic": "1",
+    "revealHeightAtomic": "100",
+    "revealBlockHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "contentSha256": "9e5d1ddb8fd4e97931a2844dd5182e4ce2ba6524638d54f02aaa16c44fe08d6e",
+    "resolverRevision": "57da9737d04c7917e092f47e96551404729b91fff99e6cab51a1ed66b792a121"
+  },
+  "checkpoint": {
+    "network": "bitcoin:mainnet",
+    "heightAtomic": "100",
+    "blockHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "observedAt": "2026-08-04T00:00:00.000Z",
+    "authoritative": true,
+    "reorgDetected": false,
+    "source": "bitcoin-core+ord+index-names-checkpoint-v1"
+  },
+  "authorityStateVersion": "7124a6aa28b766aceb53d9ebe43d5b3792454d297409bde580c6136f2d9a37d3",
+  "stateVersion": "71c1a883f11738e01de27af2d15e90e8c210f1d3261267a624cf979bb5b7b451",
+  "reorgEpochAtomic": "0",
+  "observedAt": "2026-08-04T00:00:00.000Z",
+  "ownership": {
+    "status": "verified-unspent",
+    "outpoint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc:0",
+    "owner": "bc1pkc2cdnm6xermt2vzxg9wwcur5prgpl6pms3xf9ydtyax5pnqsgwqvuu5cq",
+    "scriptPubKey": "5120b61586cf7a3647b5a982320ae76383a04680ff41dc2264948d593a6a0660821c",
+    "valueAtomic": "10000",
+    "offsetAtomic": "0",
+    "blockHeightAtomic": "100",
+    "blockHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "confirmationsAtomic": "1",
+    "checkpoint": {
+      "network": "bitcoin:mainnet",
+      "heightAtomic": "100",
+      "blockHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observedAt": "2026-08-04T00:00:00.000Z",
+      "authoritative": true,
+      "reorgDetected": false,
+      "source": "bitcoin-core+ord+index-names-checkpoint-v1"
+    },
+    "observedAt": "2026-08-04T00:00:00.000Z",
+    "source": "index-names-explorer-ownership-v1"
+  },
+  "inscriptionViews": [
+    {
+      "protocolId": "names",
+      "assetId": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddi0",
+      "quantityAtomic": "1"
+    }
+  ],
+  "namespaceRegistrationPrivileges": false,
+  "fullSpecMembershipQualified": false,
+  "eligibility": "indexed-nonnegative-first-claims",
+  "source": "index-names-explorer-asset-v1"
+}

@@ -13,6 +13,12 @@
        chosen verbosity, and silent while the view is paused. -->
   <p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
 
+  <div role="status" aria-live="polite" *ngIf="streamStatus$ | async as statuses">
+    <p class="lede" *ngFor="let chain of chains">
+      {{ chain }} {{ statuses[chain]?.network }}: {{ streamLabel(statuses[chain]) }}
+    </p>
+  </div>
+
   <div class="controls">
     <button
       type="button"

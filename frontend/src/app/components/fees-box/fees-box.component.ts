@@ -1,10 +1,11 @@
 import { Component, OnInit, ChangeDetectionStrategy, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { StateService } from '@app/services/state.service';
-import { Observable, combineLatest, Subscription } from 'rxjs';
-import { Recommendedfees } from '@interfaces/websocket.interface';
+import { Observable, Subscription } from 'rxjs';
+import { Recommendedfees, FeeEstimateSnapshot } from '@interfaces/websocket.interface';
 import { feeLevels } from '@app/app.constants';
-import { map, startWith, tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ThemeService } from '@app/services/theme.service';
+import { WebsocketService } from '@app/services/websocket.service';
 import { LoadState } from '@app/shared/load-state';
 
 @Component({
@@ -22,7 +23,7 @@ export class FeesBoxComponent implements OnInit, OnDestroy {
    * would go on claiming an answer was coming for as long as the tab was open.
    */
   liveFeed$: Observable<LoadState<boolean>>;
-  recommendedFees$: Observable<Recommendedfees>;
+  feeEstimate$: Observable<FeeEstimateSnapshot>;
   themeStateSubscription: Subscription;
   gradient = 'linear-gradient(to right, var(--skeleton-bg), var(--skeleton-bg))';
   noPriority = 'var(--skeleton-bg)';
@@ -32,29 +33,54 @@ export class FeesBoxComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private themeService: ThemeService,
     private cd: ChangeDetectorRef,
+    private websocketService: WebsocketService,
   ) { }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-VIEW | F-FE-001 | FAIL.
+   * Reproduction: socket=false, loadingIndicators={}, cached recommendedFees,
+   * liveFeed.status=error => isLoading=false and the template displays rates.
+   * The error message exists only in the template's loadingFees branch.
+   * 1. Replace this display gate with StateService.feeEstimate$ from the
+   *    versioned WebsocketResponse contract. Preserve numeric sat/vB format,
+   *    priority order, color tokens and the established fee scale.
+   * 2. Render ready data only with matching network/producer freshness proof;
+   *    show dated last-good values explicitly stale, syncing or unavailable
+   *    feedback otherwise. A missing indicator must not assert readiness.
+   * 3. Use the existing shared reconnect/retry lifecycle, not per-widget HTTP
+   *    polling. Preserve cancellation and prevent repeated clicks spawning work.
+   * 4. Add PROPOSED NEW fees-box.component.spec.ts: actual RxJS/template tests
+   *    for cached init+REST 503, empty indicators, ready->offline, network switch,
+   *    malformed metadata and fresh recovery. Run npm test -- that path,
+   *    npm run lint and npm run build:universe from frontend.
+   * Acceptance: desktop/mobile and all supported themes show truthful fee
+   *    state on Signet; controlled failures terminate loading and remain
+   *    recoverable. Evidence: frontend-source-reproductions.json F-FE-001 and
+   *    root browser evidence. Existing reproduction is not a functional PASS.
+   * Dependencies API-01..API-04, producer and client feeEstimate work in API-05.
+   * Rollback keeps source-state handling; never restore unqualified old rates.
+   */
   ngOnInit(): void {
     this.liveFeed$ = this.stateService.liveFeed$;
-    this.isLoading$ = combineLatest(
-      this.stateService.isLoadingWebSocket$.pipe(startWith(false)),
-      this.stateService.loadingIndicators$.pipe(startWith({ mempool: 0 })),
-    ).pipe(map(([socket, indicators]) => {
-      return socket || (indicators.mempool != null && indicators.mempool !== 100);
+    this.isLoading$ = this.stateService.feeEstimate$.pipe(map(snapshot => snapshot.status === 'syncing'));
+    this.feeEstimate$ = this.stateService.feeEstimate$.pipe(tap(snapshot => {
+      this.fees = snapshot.values;
+      if (!this.fees) {
+        this.gradient = 'linear-gradient(to right, var(--skeleton-bg), var(--skeleton-bg))';
+        this.noPriority = 'var(--skeleton-bg)';
+      }
+      this.setFeeGradient();
     }));
-    this.recommendedFees$ = this.stateService.recommendedFees$
-      .pipe(
-        tap((fees) => {
-          this.fees = fees;
-          this.setFeeGradient();
-        }
-      )
-    );
     this.themeStateSubscription = this.themeService.themeState$.subscribe((state) => {
       if (!state.loading) {
         this.setFeeGradient();
       }
     });
+  }
+
+  retry(): void {
+    if (this.stateService.feeEstimate$.value.status === 'syncing') {return;}
+    this.websocketService.reconnectWebsocket();
   }
 
   setFeeGradient() {

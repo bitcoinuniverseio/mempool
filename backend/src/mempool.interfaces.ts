@@ -545,6 +545,8 @@ export interface IChainSyncState {
    * reading can be matched to the network it is compared against.
    */
   chain?: string | null;
+  blockHash?: string | null;
+  signetChallenge?: string | null;
 }
 
 export interface INetworkInfo {

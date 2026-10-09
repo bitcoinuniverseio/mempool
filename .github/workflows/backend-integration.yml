@@ -16,7 +16,7 @@ jobs:
       matrix:
         node: ["24.19.0"]
       fail-fast: false
-    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, universe-runners-1]
     env:
       COMPOSE_PROJECT_NAME: mempool-integration-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
       MEMPOOL_TEST_BASE_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.node }}/integration/backend/mempool-config.test.json

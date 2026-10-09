@@ -1597,6 +1597,8 @@ class DatabaseMigration {
   private async $ensureStep29Schema(): Promise<void> {
     // CREATE/ALTER implicitly commit. A crash before marker 29 must resume
     // from verified schema, not from table existence or a swallowed DDL error.
+    // MariaDB exposes nullable SQL DEFAULT NULL as unquoted "NULL", whereas
+    // MySQL returns null. A quoted 'NULL' remains a different literal default.
     if (!await this.$checkIfTableExists('geo_names')) {
       await this.$executeQuery(this.getCreateGeoNamesTableQuery());
     }
@@ -1610,7 +1612,7 @@ class DatabaseMigration {
     if (geoColumns.length !== 3 || !geoColumns.every(column => {
       const expected = expectedGeo[column.COLUMN_NAME];
       return expected && expected.type.test(column.COLUMN_TYPE) && column.IS_NULLABLE === expected.nullable &&
-        this.isSqlNullDefault(column.COLUMN_DEFAULT) && column.EXTRA === '' && column.CHARACTER_SET_NAME === expected.charset;
+        (column.COLUMN_DEFAULT === null || column.IS_NULLABLE === 'YES' && this.isSqlNullDefault(column.COLUMN_DEFAULT)) && column.EXTRA === '' && (column.CHARACTER_SET_NAME === expected.charset || expected.charset === 'utf8mb3' && column.CHARACTER_SET_NAME === 'utf8');
     })) throw new Error('Interrupted migration 29 geo_names columns do not match the required schema');
     const [geoIndexes]: any[] = await this.$executeQuery(`SELECT INDEX_NAME, COLUMN_NAME, SEQ_IN_INDEX, NON_UNIQUE, SUB_PART
       FROM information_schema.statistics WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='geo_names'`, true);

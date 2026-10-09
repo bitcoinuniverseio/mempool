@@ -44,11 +44,11 @@ permissions:
 jobs:
   artifact:
     name: Build and pack
-    runs-on: ${{ contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && fromJSON('["self-hosted","universe-runners-1"]') || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, universe-runners-1]
     timeout-minutes: 90
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@c9bb29ab2b39ea95dcc430fda80416deb2c4eb85
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -165,6 +165,8 @@ jobs:
             docs/acceptance/qualified-application-evidence.json \
             docs/acceptance/qualified-release-evidence.json \
             "$GITHUB_WORKSPACE" "$(git rev-parse HEAD)" "$stage"
+          node scripts/universe/protocol-functional-projection.mjs stage-required \
+            "$GITHUB_WORKSPACE" "$stage" "$(git rev-parse HEAD)"
           # The unit files travel with the release rather than being fetched
           # from a checkout that happens to be on the right commit. Adopting
           # socket activation needed both of these on the host, and taking
@@ -179,7 +181,7 @@ jobs:
           # them from different releases a detectable fault rather than an open
           # question. release.sh refuses an install whose manifest names a
           # different commit, and the cutover holds the live origin to it.
-          node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json"
+          node scripts/universe/release-manifest.mjs emit --commit='${{ steps.sha.outputs.sha }}' --out="$stage/RELEASE-MANIFEST.json" --functional-acceptance-root="$stage" --network=mainnet
           test -f "$stage/RELEASE-MANIFEST.json"
           test -f "$stage/backend/dist/index.js"
           test -f "$stage/backend/vendor/bitcoinuniverse-ecosystem-contracts-1.2.0.tgz"

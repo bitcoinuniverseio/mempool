@@ -35,6 +35,16 @@ const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
 const ADDRESS_REGEX = /^[a-z0-9]{2,120}$/i;
 const SCRIPT_HASH_REGEX = /^[a-f0-9]{64}$/i;
 
+/** Cancel optional native address reads on disconnect; completed responses are harmless. */
+function addressRequestSignal(req: Request, res: Response): { signal: AbortSignal; release: () => void } {
+  const controller = new AbortController();
+  const abort = (): void => controller.abort();
+  const close = (): void => { if (!res.writableEnded) { abort(); } };
+  req.once('aborted', abort); res.once('close', close);
+  if (req.aborted || res.destroyed) { abort(); }
+  return { signal: controller.signal, release: (): void => { req.removeListener('aborted', abort); res.removeListener('close', close); } };
+}
+
 /** Optional Core amounts are exact, finite, nonnegative and bounded; zero stays explicit. */
 function optionalRpcAmount(value: unknown, maximum: number): number | undefined {
   if (value === undefined) return undefined;
@@ -125,6 +135,20 @@ class BitcoinRoutes {
   }
 
 
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] [API-05-REST]
+   * DEF-FEES; C-HTTP-FEES. getInitData currently serves cached serialized fees
+   * even when both recommended-fee routes below correctly return503.
+   * 1. Keep getRecommendedFees/getPreciseRecommendedFees fail-closed. Consume
+   *    the producer's versioned feeEstimate contract from API-05-PRODUCER;
+   *    refresh/invalidate bootstrap readiness without relabeling cached values.
+   * 2. Make REST/bootstrap/socket disagreeing readiness a regression failure.
+   *    Retain useful block data when fees are unavailable; do not fail the
+   *    whole init response or make every page poll the fee route separately.
+   * Verify fee-readiness.test.ts (PROPOSED NEW) and existing fee/socket tests,
+   * then paired dashboard and clock Signet checks. Dependency API-01, API-05
+   * producer/consumer contract. Rollback both sides as one coherent artifact.
+   */
   private getInitData(req: Request, res: Response) {
     try {
       const result = websocketHandler.getSerializedInitData();
@@ -141,7 +165,8 @@ class BitcoinRoutes {
       res.send('Service Unavailable');
       return;
     }
-    const result = feeApi.getRecommendedFee();
+    const result = feeApi.getObservedRecommendedFee(false);
+    if (!result) { res.status(503).send('Service Unavailable'); return; }
     res.json(result);
   }
 
@@ -151,7 +176,8 @@ class BitcoinRoutes {
       res.send('Service Unavailable');
       return;
     }
-    const result = feeApi.getPreciseRecommendedFee();
+    const result = feeApi.getObservedRecommendedFee(true);
+    if (!result) { res.status(503).send('Service Unavailable'); return; }
     res.json(result);
   }
 
@@ -696,11 +722,14 @@ class BitcoinRoutes {
       return;
     }
 
+    const request = addressRequestSignal(req, res);
     try {
-      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getAddress(req.params.address));
+      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getAddress(req.params.address, request.signal));
       res.json(addressData);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
+    } finally {
+      request.release();
     }
   }
 
@@ -714,15 +743,18 @@ class BitcoinRoutes {
       return;
     }
 
+    const request = addressRequestSignal(req, res);
     try {
       let lastTxId: string = '';
       if (req.query.after_txid && typeof req.query.after_txid === 'string') {
         lastTxId = req.query.after_txid;
       }
-      const transactions = await addressReadAdmission.run(() => bitcoinApi.$getAddressTransactions(req.params.address, lastTxId));
+      const transactions = await addressReadAdmission.run(() => bitcoinApi.$getAddressTransactions(req.params.address, lastTxId, request.signal));
       res.json(transactions);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
+    } finally {
+      request.release();
     }
   }
 

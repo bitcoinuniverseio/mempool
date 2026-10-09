@@ -45,6 +45,10 @@ import {
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { qualifyApplication } from './reconciled-release.mjs';
+import { validateRequiredApplicationCoverage } from './required-application-roster.mjs';
+import { validateAcceptanceContexts, operationContextKey } from './acceptance-contexts.mjs';
+import { rootedProofReader } from './reconciled-operations.mjs';
 
 export const MANIFEST_SCHEMA_VERSION = 'universe-explorer-protocol-manifest-v1';
 export const PROTOCOL_SCHEMA_VERSION = 'universe-explorer-protocol-v1';
@@ -831,6 +835,10 @@ export const STAGED_ACCEPTANCE_PATH = 'docs/acceptance/qualified-release-evidenc
  */
 export function acceptanceEvidenceClosure(evidence) {
   const lists = [evidence?.candidate?.configurationProof?.evidence];
+  if (evidence?.schemaVersion === 'universe-explorer-acceptance-v2') {
+    lists.push([evidence.candidate?.contextBindingProof]);
+    for (const context of evidence.candidate?.contexts ?? []) lists.push([context.profileProof], context.configurationProof?.evidence);
+  }
   for (const row of Array.isArray(evidence?.rows) ? evidence.rows : []) {
     lists.push(row?.evidence);
   }
@@ -934,7 +942,8 @@ function validateQualifiedAcceptanceEvidence(
     );
     return;
   }
-  if (evidence.schemaVersion !== ACCEPTANCE_EVIDENCE_SCHEMA_VERSION) {
+  const mixed = evidence.schemaVersion === 'universe-explorer-acceptance-v2';
+  if (evidence.schemaVersion !== ACCEPTANCE_EVIDENCE_SCHEMA_VERSION && !mixed) {
     report.fail(
       `The acceptance evidence schema is ${JSON.stringify(evidence.schemaVersion)}; this gate reads ${ACCEPTANCE_EVIDENCE_SCHEMA_VERSION}.`,
     );
@@ -995,7 +1004,7 @@ function validateQualifiedAcceptanceEvidence(
     );
   }
 
-  for (const field of ['dependencyRevision', 'acceptanceNetwork', 'deploymentNetwork']) {
+  for (const field of mixed ? ['dependencyRevision'] : ['dependencyRevision', 'acceptanceNetwork', 'deploymentNetwork']) {
     if (typeof candidate[field] !== 'string' || !candidate[field].trim()) {
       report.fail(`The acceptance candidate carries no ${field}.`);
     }
@@ -1016,7 +1025,7 @@ function validateQualifiedAcceptanceEvidence(
     report.fail('The acceptance candidate carries no specification revisions.');
   }
   if (
-    expected.network &&
+    !mixed && expected.network &&
     candidate.deploymentNetwork !== expected.network
   ) {
     report.fail(
@@ -1025,7 +1034,12 @@ function validateQualifiedAcceptanceEvidence(
   }
 
   const context = evidenceRoot(expected.acceptanceRoot, report);
-  if (candidate.acceptanceNetwork !== candidate.deploymentNetwork) {
+  let qualifiedContexts;
+  if (mixed) {
+    try { qualifiedContexts = validateAcceptanceContexts(candidate, rootedProofReader(expected.acceptanceRoot), expected.network); }
+    catch (error) { report.fail(`Mixed-chain context qualification failed: ${error.message}`); return; }
+  }
+  if (!mixed && candidate.acceptanceNetwork !== candidate.deploymentNetwork) {
     const proof = candidate.configurationProof;
     if (typeof proof !== 'object' || proof === null) {
       report.fail(
@@ -1056,16 +1070,19 @@ function validateQualifiedAcceptanceEvidence(
     const protocol = protocolsById.get(descriptor.protocol);
     if (!protocol) continue;
     for (const variant of requiredVariants(descriptor)) {
+      const assignment = mixed ? qualifiedContexts.assignments.get(operationContextKey({ protocol: descriptor.protocol, operation: descriptor.id, variant })) : null;
+      if (mixed && (!assignment || assignment.chain !== protocol.chain)) { report.fail('Missing or wrong-chain operation context assignment.'); continue; }
       const key = qualifiedAcceptanceKey({
         protocol: descriptor.protocol,
         operation: descriptor.id,
         variant,
         chain: protocol.chain,
-        network: candidate.acceptanceNetwork,
+        network: mixed ? assignment.acceptanceNetwork : candidate.acceptanceNetwork,
       });
-      required.set(key, { descriptor, protocol, variant });
+      required.set(key, { descriptor, protocol, variant, assignment });
     }
   }
+  if (mixed && qualifiedContexts.assignments.size !== required.size) report.fail('Extra protocol context assignment.');
 
   if (!Array.isArray(evidence.rows)) {
     report.fail('The acceptance evidence carries no rows.');
@@ -1107,11 +1124,12 @@ function validateQualifiedAcceptanceEvidence(
       continue;
     }
 
-    const { descriptor, protocol } = expectedRow;
+    const { descriptor, protocol, assignment } = expectedRow;
     if (row.chain !== protocol.chain) {
       report.fail(`${key} names chain ${row.chain}, but the manifest names ${protocol.chain}.`);
     }
-    if (row.network !== candidate.acceptanceNetwork) {
+    if (mixed && (row.contextId !== assignment.id || row.acceptanceProfileDigest !== assignment.acceptanceProfileDigest)) report.fail(`${key} context/profile drift.`);
+    if (row.network !== (mixed ? assignment.acceptanceNetwork : candidate.acceptanceNetwork)) {
       report.fail(`${key} is not qualified for the candidate acceptance network.`);
     }
     if (!ACCEPTANCE_RESULTS.has(row.result)) {
@@ -1212,7 +1230,9 @@ function validateQualifiedAcceptanceEvidence(
     }
   }
 
-  if (summary && typeof summary === 'object') {
+  const cellSummary = mixed ? evidence.evidenceCellSummary : summary;
+  if (mixed && (!cellSummary || typeof cellSummary !== 'object')) report.fail('V2 has no separate evidence-cell summary.');
+  if (cellSummary && typeof cellSummary === 'object') {
     const expectedCounts = {
       declared: required.size,
       passed: counts.PASS,
@@ -1222,9 +1242,9 @@ function validateQualifiedAcceptanceEvidence(
       notTested: counts['NOT TESTED'],
     };
     for (const [field, value] of Object.entries(expectedCounts)) {
-      if (summary[field] !== value) {
+      if (cellSummary[field] !== value) {
         report.fail(
-          `The acceptance summary ${field} is ${summary[field]}, but qualified rows derive ${value}.`,
+          `The acceptance summary ${field} is ${cellSummary[field]}, but qualified rows derive ${value}.`,
         );
       }
     }
@@ -1378,6 +1398,100 @@ export function releaseGate(manifest, expected = {}, report = new Report()) {
     );
   }
   return report;
+}
+
+/** Project only the successful existing release qualification, never labels. */
+export function projectProtocolFunctionalAcceptance(manifest, expected = {}) {
+  const report = releaseGate(manifest, expected);
+  if (report.problems.length) return null;
+  const evidence = expected.acceptanceEvidence ?? manifest.acceptanceEvidence;
+  const candidate = evidence.candidate;
+  // Full application receipts are a separate prerequisite. A complete
+  // protocol ledger or a small component fixture cannot replace that roster.
+  const application = expected.application;
+  if (!application?.rosterBytes || !application?.acceptanceBytes || typeof application.readProof !== 'function') return null;
+  let applicationQualification;
+  try {
+    const closure = new Map();
+    const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+    const readProof = relative => {
+      const bytes = application.readProof(relative);
+      const sha256 = hash(bytes);
+      if (closure.has(relative) && closure.get(relative) !== sha256) throw Error('Evidence changed during qualification');
+      closure.set(relative, sha256);
+      return bytes;
+    };
+    const protocolBytes = application.protocolBytes ?? Buffer.from(JSON.stringify(evidence));
+    if (JSON.stringify(JSON.parse(protocolBytes.toString('utf8'))) !== JSON.stringify(evidence)) return null;
+    const qualified = qualifyApplication(application.rosterBytes,
+      JSON.parse(application.acceptanceBytes.toString('utf8')), protocolBytes,
+      candidate.artifactCommit, readProof);
+    const roster = JSON.parse(application.rosterBytes.toString('utf8'));
+    const required = validateRequiredApplicationCoverage(roster, readProof);
+    if (required.mappingReviewComplete !== true) return null;
+    for (const item of [...roster.operations, ...roster.mappings, ...(roster.currentSourceCandidates ?? [])]) {
+      for (const source of item.sources ?? []) if (hash(readProof(source.path)) !== source.sha256) throw Error('Reviewed source proof drift');
+    }
+    applicationQualification = {
+      operationDenominator: qualified.operationCount,
+      operationIdsSha256: hash(Buffer.from(JSON.stringify(roster.operations.map(row => row.id).sort()))),
+      rosterSha256: hash(application.rosterBytes),
+      acceptanceSha256: hash(application.acceptanceBytes),
+      evidenceClosureSha256: hash(Buffer.from(JSON.stringify([...closure].map(([path, sha256]) => ({ path, sha256 })).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0)))),
+      requiredCoverageCount: required.coverageCount,
+      requiredCoverageIdsSha256: required.coverageIdsSha256,
+      requiredCoverageSnapshotSha256: required.snapshotSha256,
+    };
+  } catch { return null; }
+  const mixed = evidence.schemaVersion === 'universe-explorer-acceptance-v2';
+  // Qualification on another network is already governed by releaseGate's
+  // independent configuration-proof policy. Keep both networks explicit:
+  // consumers must name where the functionality was actually exercised.
+  return {
+    schemaVersion: mixed ? 'universe-protocol-functional-acceptance-set-v2' : 'universe-protocol-functional-acceptance-set-v1',
+    ...(mixed ? { declaredOperations: manifest.protocols.reduce((n, p) => n + p.readOperationDescriptors.length, 0), declaredOperationVariants: candidate.operationContexts.length, evidenceCells: evidence.rows.length } : {}),
+    registryVersion: manifest.registryVersion,
+    sourceSha: manifest.sourceSha,
+    artifactCommit: candidate.artifactCommit,
+    ...(mixed ? { contexts: candidate.contexts, operationContexts: candidate.operationContexts, applicationContexts: candidate.applicationContexts, acceptanceContextsSha256: candidate.acceptanceContextsSha256, contextBindingProof: candidate.contextBindingProof } : { acceptanceNetwork: candidate.acceptanceNetwork, deploymentNetwork: candidate.deploymentNetwork }),
+    dependencyRevision: candidate.dependencyRevision,
+    configurationDigest: candidate.configurationDigest,
+    specificationRevisions: [...candidate.specificationRevisions],
+    ...(!mixed ? { configurationProof: candidate.configurationProof ?? null } : {}),
+    applicationQualification,
+    protocols: manifest.protocols.map(protocol => {
+      const rows = evidence.rows.filter(row => row.protocol === protocol.id && row.chain === protocol.chain && (mixed || row.network === candidate.acceptanceNetwork));
+      const selectedContexts = mixed ? candidate.contexts.filter(context => rows.some(row => row.contextId === context.id)) : [];
+      const notApplicable = rows.filter(row => row.result === 'NOT APPLICABLE').length;
+      return {
+        schemaVersion: mixed ? 'universe-protocol-functional-acceptance-v2' : 'universe-protocol-functional-acceptance-v1',
+        protocol: protocol.id, chain: protocol.chain,
+        ...(mixed ? { declaredOperations: protocol.readOperationDescriptors.length, declaredOperationVariants: candidate.operationContexts.filter(row => row.protocol === protocol.id).length, evidenceCells: rows.length } : {}),
+        ...(mixed ? { contexts: selectedContexts, acceptanceContextsSha256: candidate.acceptanceContextsSha256, deploymentNetwork: selectedContexts[0].deploymentNetwork } : { acceptanceNetwork: candidate.acceptanceNetwork, deploymentNetwork: candidate.deploymentNetwork }),
+        registryVersion: manifest.registryVersion, sourceSha: manifest.sourceSha,
+        artifactCommit: candidate.artifactCommit,
+        dependencyRevision: candidate.dependencyRevision,
+        configurationDigest: candidate.configurationDigest,
+        specificationRevisions: [...candidate.specificationRevisions],
+        ...(!mixed ? { configurationProof: candidate.configurationProof ?? null } : {}),
+        declared: rows.length, applicable: rows.length - notApplicable,
+        passed: rows.filter(row => row.result === 'PASS').length,
+        failed: rows.filter(row => row.result === 'FAIL').length,
+        blocked: rows.filter(row => row.result === 'BLOCKED').length,
+        notTested: rows.filter(row => row.result === 'NOT TESTED').length,
+        notApplicable,
+        rows: rows.map(row => ({
+          operation: row.operation, variant: row.variant, role: row.role,
+          ...(mixed ? { contextId: row.contextId } : {}),
+          result: row.result, ranAt: row.ranAt,
+          ...(row.evidencePolicyVersion !== undefined ? { evidencePolicyVersion: row.evidencePolicyVersion } : {}),
+          specificationRevision: row.specificationRevision,
+          checkpoint: row.checkpoint,
+          evidence: row.evidence.map(file => ({ path: file.path, sha256: file.sha256 })),
+        })),
+      };
+    }),
+  };
 }
 
 // ---------------------------------------------------------------------------

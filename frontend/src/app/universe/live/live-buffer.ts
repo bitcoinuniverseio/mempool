@@ -37,7 +37,7 @@ export interface BufferReport {
 }
 
 export function channelKey(envelope: UniverseLiveEnvelope): string {
-  return `${envelope.chain}/${envelope.channel}`;
+  return `${envelope.chain}/${envelope.network}/${envelope.channel}/${envelope.snapshotId}`;
 }
 
 function sequenceOf(envelope: UniverseLiveEnvelope): bigint {

@@ -1,15 +1,18 @@
 import { EsploraReconstructionSource } from '../api/bitcoin/utxo-reconstruction.source';
+import config from '../config';
 
 const get = jest.fn(), post = jest.fn(), rpc = jest.fn();
 jest.mock('axios', () => ({ __esModule: true, default: { isAxiosError: error => error?.isAxiosError === true, create: () => ({ get: (...args) => get(...args), post: (...args) => post(...args) }) } }));
 jest.mock('../config', () => ({ __esModule: true, default: {
   MEMPOOL: { NETWORK: 'signet', BACKEND: 'esplora' }, ESPLORA: { REST_API_URL: 'http://127.0.0.1:38300', UNIX_SOCKET_PATH: '' },
+  ELECTRUM: {},
 } }));
 jest.mock('../api/bitcoin/bitcoin-client', () => ({ __esModule: true, default: { rpc: { call: (...args) => rpc(...args) } } }));
 const id = (n: number) => n.toString(16).padStart(64, '0'), script = '0014' + 'a'.repeat(40);
 const originalChallenge = process.env.UNIVERSE_SIGNET_CHALLENGE;
 const info = { chain: 'signet', blocks: 20, bestblockhash: id(20), signet_challenge: '51', initialblockdownload: false };
 beforeEach(() => {
+  config.MEMPOOL.BACKEND = 'esplora'; delete config.ELECTRUM.ADDRESS_HTTP_URL;
   process.env.UNIVERSE_SIGNET_CHALLENGE = '51'; get.mockReset(); post.mockReset(); rpc.mockReset();
   get.mockImplementation(async (url: string) => ({ data: url.endsWith('/blocks/tip/height') ? '20'
     : url.endsWith('/blocks/tip/hash') ? id(20) : url.endsWith('/block-height/0') ? id(0)
@@ -43,6 +46,19 @@ it('pins the configured origin and compares exact Core/index mempool identities'
   expect(snapshot.checkpoint.blockHash).toBe(id(20)); expect(snapshot.scriptPubKey).toBe(script);
   expect(snapshot.mempoolIdentity).toMatch(/^[0-9a-f]{64}$/);
   expect(get.mock.calls.every(([url]) => url.startsWith('http://127.0.0.1:38300/'))).toBe(true);
+});
+it('uses only the explicitly qualified native HTTP reader in Electrum mode while preserving independent fences', async () => {
+  config.MEMPOOL.BACKEND = 'electrum'; config.ELECTRUM.ADDRESS_HTTP_URL = 'http://127.0.0.1:3022';
+  const snapshot = await new EsploraReconstructionSource().snapshot('address', new AbortController().signal);
+  expect(snapshot.checkpoint.blockHash).toBe(id(20));
+  expect(get.mock.calls.every(([url]) => url.startsWith('http://127.0.0.1:3022/'))).toBe(true);
+  expect(get.mock.calls.some(([url]) => url.startsWith('http://127.0.0.1:38300/'))).toBe(false);
+  expect(rpc.mock.calls.some(([method]) => method === 'getrawmempool')).toBe(true);
+});
+it.each([undefined, 'https://127.0.0.1:3022', 'http://example.invalid:3022', 'http://127.0.0.1:3022/api', 'http://127.0.0.1:3022?source=other'])('rejects absent or unqualified native reconstruction origin %s before any reads', origin => {
+  config.MEMPOOL.BACKEND = 'electrum'; config.ELECTRUM.ADDRESS_HTTP_URL = origin;
+  expect(() => new EsploraReconstructionSource()).toThrow();
+  expect(get).not.toHaveBeenCalled(); expect(rpc).not.toHaveBeenCalled();
 });
 it('acquires a chain-only anchor without asserting global mempool stability', async () => {
   const snapshot = await new EsploraReconstructionSource().confirmedSnapshot('address', new AbortController().signal);
