@@ -2,7 +2,10 @@ jest.mock('../../../config', () => ({ __esModule: true, default: { MEMPOOL: { NE
 jest.mock('../../../database', () => ({ __esModule: true, default: { query: jest.fn(), $atomicQuery: jest.fn() } }));
 jest.mock('../../blocks', () => ({ __esModule: true, default: { setNewBlockCallback: jest.fn() } }));
 jest.mock('../../bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: { $getBlockHash: jest.fn(), $getBlockHeightTip: jest.fn(), $getBlock: jest.fn(), $getTxsForBlock: jest.fn() } }));
-jest.mock('../../bitcoin/bitcoin-client', () => ({ __esModule: true, default: { getBlockchainInfo: jest.fn(), getBlockHash: jest.fn() } }));
+jest.mock('../../bitcoin/bitcoin-client', () => {
+  const client = { getBlockchainInfo: jest.fn(), getBlockHash: jest.fn() };
+  return { __esModule: true, default: client, addressBitcoinClient: client };
+});
 
 import DB from '../../../database';
 import blocks from '../../blocks';
