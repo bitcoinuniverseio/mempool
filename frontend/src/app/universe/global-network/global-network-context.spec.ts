@@ -78,7 +78,7 @@ describe('Global Network captured endpoint lifecycle', () => {
     first.next(peer('first.example')); expect(component.node).toBeNull();
   });
 
-  it('replaces pending detail on selected-network change and ignores repeated validated context signals', () => {
+  it('replaces pending detail on selected-network change and ignores repeated selected context signals', () => {
     const params = new BehaviorSubject(convertToParamMap({ endpointId: 'same.example' }));
     const changes = new BehaviorSubject(''), first = new Subject(), second = new Subject();
     const state = { network: '', env: { ROOT_NETWORK: 'signet' }, networkChanged$: changes };

@@ -21,10 +21,10 @@
   min-width: var(--u-touch-target, 44px);
 }
 
-.universe-portfolio-link a {
+.universe-portfolio-link > a {
   display: inline-flex;
   align-items: center;
-  min-height: var(--u-touch-target, 44px);
+  min-height: max(44px, var(--u-touch-target, 44px));
 }
 
 .qrSpan {

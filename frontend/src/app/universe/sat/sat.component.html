@@ -37,6 +37,7 @@
     <div *ngSwitchCase="'unavailable'" class="panel state-panel unavailable">
       <h2 i18n="universe.sat.unavailable-title">The asset authority did not answer</h2>
       <p>{{ statusMessage(state.result?.status) }}</p>
+      <button type="button" class="btn btn-outline-secondary" (click)="retry()" i18n="universe.asset.retry">Retry</button>
     </div>
 
     <ng-container *ngSwitchCase="'ready'">

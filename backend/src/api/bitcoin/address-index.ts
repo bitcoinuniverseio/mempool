@@ -249,6 +249,21 @@ function factsFor(
 }
 
 /**
+ * IMPLEMENTATION-HANDOFF [API-01] [API-01-CALLERS]
+ * DEF-CANCEL; C-HTTP-ADDRESS. Both Electrum and Esplora verification callers
+ * currently drop this function's AbortSignal. Together with a synchronous
+ * Electrum read callback this can escape the optional probe and kill the app.
+ * 1. Integrate candidate 87859cf9f69e4166bdd783a4472c6674a2ef24c3 with the
+ *    paired address-source-checkpoint.ts change, passing signal as argument5
+ *    from BOTH verifyAddressSource invocations. Keep failed proof degraded.
+ * 2. Preserve address-read isolation/backpressure and existing owned-node
+ *    checks; a healthy TCP listener is not summary/UTXO/checkpoint acceptance.
+ * 3. Run the candidate's exact address-source checkpoint/capability/RPC tests,
+ *    including caller cancellation and fresh retry; verify no fatal rejection
+ *    and no cross-network cached result. API-02 routing qualification follows.
+ * Evidence/rollback: API-01-CANCEL and VERIFICATION.md in the SERVER handoff.
+ */
+/**
  * Asks the configured address index what it can actually do right now.
  *
  * @asyncSafe
@@ -300,7 +315,7 @@ export async function $probeAddressIndex(chainTip: number | null, signal?: Abort
     let client: {
       $getIndexBlockHash?: (height: number) => Promise<string>;
       $getIndexedTip?: () => Promise<number | null>;
-      $getAddress?: (address: string) => Promise<unknown>;
+      $getAddress?: (address: string, signal?: AbortSignal) => Promise<unknown>;
       $getAddressUtxos?: (address: string) => Promise<unknown>;
     };
     try {
@@ -332,7 +347,7 @@ export async function $probeAddressIndex(chainTip: number | null, signal?: Abort
         (async (): Promise<void> => {
           try {
             active();
-            const summary = await client.$getAddress?.(probeAddress);
+            const summary = await client.$getAddress?.(probeAddress, signal);
             active();
             summaryAnswered = addressSummaryProblems(summary, probeAddress).length === 0;
           } catch (e) {

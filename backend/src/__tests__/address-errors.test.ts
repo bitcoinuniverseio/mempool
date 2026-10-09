@@ -18,6 +18,24 @@ import {
  */
 
 describe('address error classification', () => {
+  it('reports guarded native address source disagreement precisely', () => {
+    expect(classifyAddressError({ code: 'EADDRESSSOURCE' })).toBe('address-source-disagreement');
+    expect(addressErrorStatus('address-source-disagreement')).toBe(409);
+  });
+  it.each(['history transactions', 'unspent transaction outputs'])('classifies the proved Electrs %s capacity response in Error/string/object form', family => {
+    const message = `Too many ${family} (>500). Contact support to raise limits.`;
+    for (const error of [new Error(message), message, { code: -32603, message }]) {
+      expect(classifyAddressError(error)).toBe('address-history-too-large');
+      expect(addressErrorStatus(classifyAddressError(error))).toBe(413);
+    }
+  });
+  it('does not turn generic internal RPC errors, malformed limit text or unrelated messages into capacity claims', () => {
+    for (const error of [{ code: -32603, message: 'Internal error' }, { code: -32603 },
+      { message: 'Too many history transactions (>0). Contact support to raise limits.' },
+      { message: 'Unrelated failure: Too many history transactions (>500).' }]) {
+      expect(classifyAddressError(error)).toBe('upstream-unavailable');
+    }
+  });
   it('classifies the observed Esplora UTXO cap without labeling the node offline', () => {
     const error = {response:{status:400,data:'Too many unspent transaction outputs (>500). Contact support to raise limits.'}};
     expect(classifyAddressError(error)).toBe('address-history-too-large');

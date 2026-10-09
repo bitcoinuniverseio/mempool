@@ -88,16 +88,24 @@ export function addressErrorMessage(code: AddressErrorCode): string {
  * how the timeout case ended up wearing the oversized-history answer.
  */
 export function classifyAddressError(e: unknown): AddressErrorCode {
-  const message = e instanceof Error ? e.message : typeof e === 'string' ? e : '';
+  const structuredMessage = (e as { message?: unknown } | null)?.message;
+  const message = e instanceof Error ? e.message : typeof e === 'string' ? e
+    : typeof structuredMessage === 'string' ? structuredMessage : '';
   const code = (e as { code?: string } | null)?.code;
   const response = (e as { response?: { status?: number; data?: unknown } } | null)?.response;
   if (code === 'EADDRESSBUSY') return 'address-backend-busy';
+  if (code === 'EADDRESSSOURCE') return 'address-source-disagreement';
   if (response?.status === 400 && typeof response.data === 'string' && /^Too many unspent transaction outputs \(>\d+\)\./.test(response.data)) {
     return 'address-history-too-large';
   }
 
   if (message === 'Invalid Bitcoin address') {
     return 'invalid-address';
+  }
+  // The owned Electrs reader's exact capacity refusals are distinct from an
+  // offline index. A generic JSON-RPC internal error remains unclassified.
+  if (/^Too many (?:history transactions|unspent transaction outputs) \(>[1-9][0-9]*\)\.(?: Contact support to raise limits\.)?$/.test(message)) {
+    return 'address-history-too-large';
   }
   // Electrum servers answer an address whose history exceeds their limit with
   // "history too long"; the confirmed-status variant is the same refusal

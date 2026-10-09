@@ -1,3 +1,4 @@
+import { validatorModuleClosure } from './release-fixture-modules.mjs';
 /**
  * Proof that the release script's cutover gates measure what they claim to.
  *
@@ -505,7 +506,7 @@ function qualifiedCutoverFixture(mode) {
     writeFileSync(join(candidate, 'scripts/universe/protocol-contract.mjs'), 'process.exitCode = 0;');
     writeFileSync(join(candidate, 'docs/acceptance/qualified-release-evidence.json'), '{}');
     if (mode === 'forged-application') {
-      for (const name of ['reconciled-release.mjs', 'reconciled-operations.mjs']) {
+      for (const name of validatorModuleClosure(['reconciled-release.mjs'])) {
         copyFileSync(join(here, name), join(candidate, 'scripts/universe', name));
       }
       writeFileSync(join(candidate, 'docs/acceptance/reconciled-operations.json'), '{}');

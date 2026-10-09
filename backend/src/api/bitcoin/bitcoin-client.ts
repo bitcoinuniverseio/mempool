@@ -1,6 +1,9 @@
 import config from '../../config';
 const bitcoin = require('../../rpc-api/index');
 import { BitcoinRpcCredentials } from './bitcoin-api-abstract-factory';
+import { rpcPoolLimits } from '../../rpc-api/pool-limits';
+
+const limits = rpcPoolLimits(config.CORE_RPC);
 
 const nodeRpcCredentials: BitcoinRpcCredentials = {
   host: config.CORE_RPC.HOST,
@@ -13,5 +16,5 @@ const nodeRpcCredentials: BitcoinRpcCredentials = {
 
 // Interactive address reads must not wait behind bulk indexing batches.
 // Both pools use the same owned endpoint and existing reader credentials.
-export const addressBitcoinClient = new bitcoin.Client({ ...nodeRpcCredentials, maxSockets: 4 });
-export default new bitcoin.Client(nodeRpcCredentials);
+export const addressBitcoinClient = new bitcoin.Client({ ...nodeRpcCredentials, maxSockets: limits.address });
+export default new bitcoin.Client({ ...nodeRpcCredentials, maxSockets: limits.bulk });

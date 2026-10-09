@@ -18,7 +18,7 @@ function setup() {
   page.ngOnInit();return {page, state, api, replay};
 }
 describe('Time Machine selected context and target lifecycle', () => {
-  it('does not replace retained coverage for the replayed or unchanged chain context', () => {
+  it('does not replace retained coverage for the replayed or unchanged selected context', () => {
     const changed = new ReplaySubject<string>(1); changed.next('');
     const state: any = { network: '', env: { ROOT_NETWORK: 'signet' }, networkChanged$: changed };
     const api = { getTimeMachineCoverage$: vi.fn(() => of(coverage())) };

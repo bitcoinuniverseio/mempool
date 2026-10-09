@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { of, throwError } from 'rxjs';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { EMPTY, NEVER, Subject, of, throwError } from 'rxjs';
 import {
+  ASSET_LOOKUP_EXTENDED_RESPONSE_MS,
   applyDivisibility,
   assetState$,
   assetStatusMessage,
@@ -30,6 +31,51 @@ const OK: AssetLookupResult<{ id: string }> = {
 };
 
 describe('assetState$', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('makes an empty completion unavailable instead of leaving loading behind', async () => {
+    expect((await collect(assetState$('x', () => EMPTY))).map((state: never) => state.kind))
+      .toEqual(['loading', 'unavailable']);
+  });
+
+  it('bounds a never-answering request and releases its subscription', async () => {
+    vi.useFakeTimers();
+    const unsubscribed = vi.fn();
+    const source = new (await import('rxjs')).Observable<AssetLookupResult<{ id: string }>>(() => unsubscribed);
+    const result = collect(assetState$('x', () => source));
+    await vi.advanceTimersByTimeAsync(35_000);
+    expect((await result).map((state: never) => state.kind)).toEqual(['loading', 'unavailable']);
+    expect(unsubscribed).toHaveBeenCalledOnce();
+  });
+
+  it('catches a synchronous factory failure without an outer stream error', async () => {
+    expect((await collect(assetState$('x', () => { throw Error('configuration'); })))
+      .map((state: never) => state.kind)).toEqual(['loading', 'unavailable']);
+  });
+
+  it.each([0, -1, 1.5, NaN, Infinity, ASSET_LOOKUP_EXTENDED_RESPONSE_MS + 1])('rejects invalid deadline %s before reading', async deadline => {
+    const request = vi.fn(() => NEVER);
+    expect((await collect(assetState$('x', request, { firstResponseTimeoutMs: deadline })))
+      .map((state: never) => state.kind)).toEqual(['loading', 'unavailable']);
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it('preserves a supported long first response and does not expire ready on idle', async () => {
+    vi.useFakeTimers();
+    const request = new Subject<AssetLookupResult<{ id: string }>>();
+    const states: string[] = [];
+    const subscription = assetState$('x', () => request, { firstResponseTimeoutMs: ASSET_LOOKUP_EXTENDED_RESPONSE_MS })
+      .subscribe(state => states.push(state.kind));
+    await vi.advanceTimersByTimeAsync(360_000);
+    expect(states).toEqual(['loading']);
+    request.next(OK);
+    await vi.advanceTimersByTimeAsync(730_000);
+    expect(states).toEqual(['loading', 'ready']);
+    expect(request.observed).toBe(true);
+    subscription.unsubscribe();
+    expect(request.observed).toBe(false);
+  });
+
   it('emits loading before the answer', async () => {
     const states = await collect(assetState$('x', of(OK)));
     expect(states.map((state: never) => state.kind)).toEqual(['loading', 'ready']);

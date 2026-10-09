@@ -26,6 +26,7 @@ export interface ExplorerProtocolDefinition {
   releaseStatus: string;
   indexerAuthority?: string;
   coverage: ProtocolCoverage | string | null;
+  functionalAcceptance?: ProtocolFunctionalAcceptance;
 }
 
 /**
@@ -48,6 +49,9 @@ export interface ExplorerReadOperation {
   authorityPath: string | null;
   evidence: 'source-contract';
   acceptance: ExplorerAcceptance;
+  requiredVariants?: string[];
+  variants?: string[];
+  evidencePolicy?: { version: 2; checkpoint: 'required' | 'not-required' };
 }
 
 /**
@@ -66,7 +70,102 @@ export interface ExplorerAcceptanceSummary {
   rejected: number;
 }
 
+/** Immutable artifact qualification bindings, independent of row claims. */
+export interface FunctionalAcceptanceBindingV1 {
+  schemaVersion: 'universe-functional-acceptance-binding-v1';
+  state: 'qualified';
+  chain: string;
+  deploymentNetwork: string;
+  acceptanceNetwork: string;
+  validatorSha256: string;
+  projectionSha256: string;
+  sealedManifestSha256: string;
+  applicationRosterSha256: string;
+  applicationAcceptanceSha256: string;
+  applicationEvidenceClosureSha256: string;
+  requiredCoverageCount: number;
+  requiredCoverageIdsSha256: string;
+  requiredCoverageSnapshotSha256: string;
+  sourceSha: string;
+  artifactCommit: string;
+  registryVersion: string;
+  dependencyRevision: string;
+  configurationDigest: string;
+  specificationRevisions: string[];
+  applicationOperationDenominator: number;
+  applicationOperationIdsSha256: string;
+  evidenceEnvelopeSha256: string;
+}
+
+export interface ProtocolFunctionalAcceptanceV1 {
+  schemaVersion: 'universe-protocol-functional-acceptance-v1';
+  protocol: string;
+  chain: string;
+  acceptanceNetwork: string;
+  deploymentNetwork: string;
+  registryVersion: string;
+  sourceSha: string;
+  artifactCommit: string;
+  dependencyRevision: string;
+  configurationDigest: string;
+  specificationRevisions: string[];
+  configurationProof: { network: string; configurationDigest: string; sourceRevision: string; assertions: unknown[]; evidence: { path: string; sha256: string }[] } | null;
+  declared: number;
+  applicable: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  notTested: number;
+  notApplicable: number;
+  rows: { operation: string; variant: string; role: string; result: ExplorerAcceptance; evidencePolicyVersion?: 1 | 2; ranAt: string; specificationRevision: string; checkpoint: { height?: number; heightAtomic?: string; blockHash: string } | null; evidence: { path: string; sha256: string }[] }[];
+  evidenceEnvelopeSha256: string;
+  applicationQualification: { operationDenominator: number; operationIdsSha256: string; rosterSha256: string; acceptanceSha256: string; evidenceClosureSha256: string; requiredCoverageCount: number; requiredCoverageIdsSha256: string; requiredCoverageSnapshotSha256: string };
+}
+
+export interface FunctionalAcceptanceContext {
+  id: string;
+  chain: string;
+  acceptanceNetwork: string;
+  deploymentNetwork: string;
+  acceptanceProfileDigest: string;
+  deploymentConfigurationDigest: string;
+  justification?: string;
+  profileProof: { path: string; sha256: string };
+  configurationProof: { chain: string; network: string; configurationDigest: string; sourceRevision: string; acceptanceProfileDigest: string; assertions: unknown[]; evidence: { path: string; sha256: string }[] };
+}
+
+export interface FunctionalOperationContext {
+  protocol: string;
+  operation: string;
+  variant: string;
+  contextId: string;
+}
+
+export interface FunctionalAcceptanceBindingV2 extends Omit<FunctionalAcceptanceBindingV1, 'schemaVersion' | 'acceptanceNetwork'> {
+  schemaVersion: 'universe-functional-acceptance-binding-v2';
+  contexts: FunctionalAcceptanceContext[];
+  operationContexts: FunctionalOperationContext[];
+  applicationContexts: { operationId: string; contextIds: string[] }[];
+  acceptanceContextsSha256: string;
+  contextBindingProof: { path: string; sha256: string };
+}
+
+export interface ProtocolFunctionalAcceptanceV2 extends Omit<ProtocolFunctionalAcceptanceV1, 'schemaVersion' | 'acceptanceNetwork' | 'configurationProof' | 'rows'> {
+  schemaVersion: 'universe-protocol-functional-acceptance-v2';
+  declaredOperations: number;
+  declaredOperationVariants: number;
+  evidenceCells: number;
+  contexts: FunctionalAcceptanceContext[];
+  acceptanceContextsSha256: string;
+  rows: (ProtocolFunctionalAcceptanceV1['rows'][number] & { contextId: string })[];
+}
+
+export type FunctionalAcceptanceBinding = FunctionalAcceptanceBindingV1 | FunctionalAcceptanceBindingV2;
+export type ProtocolFunctionalAcceptance = ProtocolFunctionalAcceptanceV1 | ProtocolFunctionalAcceptanceV2;
+
 export interface ProtocolsResponse {
+  sourceSha?: string;
+  functionalAcceptanceBinding?: FunctionalAcceptanceBinding;
   registryVersion: string;
   primaryStrip: string[];
   protocols: ExplorerProtocolDefinition[];

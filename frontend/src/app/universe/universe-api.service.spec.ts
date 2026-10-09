@@ -560,3 +560,45 @@ describe('UniverseApiService backend route network prefix', () => {
     expect(urls).toEqual(['/signet/api/v1/network/propagation']);
   });
 });
+
+
+describe('scoped protocol registry ownership', () => {
+  it('coalesces only identical chain/network reads and never borrows Bitcoin Signet for other chains', () => {
+    const get = vi.fn(() => of({ registryVersion: 'test', protocols: [] }));
+    const state = { isBrowser: true, network: 'signet', env: { ROOT_NETWORK: 'mainnet', UNIVERSE_CHAIN_NETWORKS: JSON.stringify({ dogecoin: 'testnet', zcash: 'testnet' }) } };
+    const service = new UniverseApiService({ get } as any, state as any, ownerKeyStub as never);
+    service.getProtocols$().subscribe(); service.getProtocols$().subscribe();
+    service.getProtocols$({ chain: 'dogecoin' }).subscribe(); service.getProtocols$({ chain: 'dogecoin', network: 'testnet' }).subscribe();
+    service.getProtocols$({ chain: 'zcash' }).subscribe();
+    expect(get.mock.calls.map(call => call[0])).toEqual([
+      '/api/v1/universe/protocols?chain=bitcoin&network=signet',
+      '/api/v1/universe/protocols?chain=dogecoin&network=testnet',
+      '/api/v1/universe/protocols?chain=zcash&network=testnet',
+    ]);
+    let error: unknown;
+    service.getProtocols$({ chain: 'dogecoin', network: 'signet' }).subscribe({ error: value => error = value });
+    expect(error).toBeInstanceOf(Error); expect(get).toHaveBeenCalledTimes(3);
+  });
+  it('rejects a borrowed binding before caching and retries only the failed context', () => {
+    const get = vi.fn(url => of({ registryVersion: 'test', protocols: [], ...(url.includes('dogecoin') && get.mock.calls.filter(call => call[0].includes('dogecoin')).length === 1 ? { functionalAcceptanceBinding: { chain: 'bitcoin', deploymentNetwork: 'signet' } } : {}) }));
+    const service = new UniverseApiService({ get } as any, { network: 'signet', env: { UNIVERSE_CHAIN_NETWORKS: JSON.stringify({ dogecoin: 'testnet' }) } } as any, ownerKeyStub as never);
+    service.getProtocols$().subscribe();
+    let error: unknown; service.getProtocols$({ chain: 'dogecoin' }).subscribe({ error: value => error = value });
+    expect(error).toBeInstanceOf(Error);
+    service.getProtocols$({ chain: 'dogecoin' }).subscribe(); service.getProtocols$().subscribe();
+    expect(get).toHaveBeenCalledTimes(3);
+  });
+  it('cancels the old network request and ignores its late publication', () => {
+    const changes = new Subject<string>(); const pending = new Map<string, Subject<any>>();
+    const get = vi.fn(url => { const subject = new Subject<any>(); pending.set(url, subject); return subject; });
+    const state = { network: 'signet', networkChanged$: changes, env: {} };
+    const service = new UniverseApiService({ get } as any, state as any, ownerKeyStub as never);
+    const received: unknown[] = []; const subscription = service.getProtocols$().subscribe(value => received.push(value));
+    const first = [...pending.values()][0];
+    state.network = 'testnet4'; changes.next('testnet4');
+    first.next({ registryVersion: 'old', protocols: [] }); first.error(new Error('late old failure'));
+    [...pending.values()][1].next({ registryVersion: 'new', protocols: [] });
+    expect(received).toEqual([{ registryVersion: 'new', protocols: [] }]);
+    subscription.unsubscribe();
+  });
+});
