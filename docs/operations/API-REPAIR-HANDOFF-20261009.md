@@ -31,6 +31,13 @@ and independent output comparison remain unqualified. A bounded large V4 run
 processed 2,800 of 13,545 transactions before the existing confirmed-history
 deadline returned 504; it cancelled successfully without changing source limits.
 
+Directory and detail labels now keep historical registry declarations separate
+from functional coverage. The current registry contract has no per-protocol
+accepted counts and evidence bound to network and revision, so functional
+coverage remains unverified even for a ready authority or source-contract PASS.
+The roster and operation declarations remain unchanged. A qualified acceptance
+summary contract is still required before these labels can report completion.
+
 Public confirmed transaction decoding and the nonbroadcast rejection of an
 already-known transaction were exercised through the Signet UI. They do not
 establish positive funded transaction acceptance. The documented audit wallet

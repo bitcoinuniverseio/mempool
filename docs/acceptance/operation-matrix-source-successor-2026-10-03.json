@@ -4008,15 +4008,15 @@
     },
     {
       "path": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-      "sha256": "697ae2017215f15ec5218702903255d97a094f872287e7f122ec3c9023b5a92f",
+      "sha256": "9f1a916f880d27ef914e8137d571baada4bc1391df91e6086ad0904439e901ba",
       "sha256Encoding": "utf8-lf",
-      "bytes": 21514
+      "bytes": 21562
     },
     {
       "path": "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
-      "sha256": "9c6829040a7fdaf208532466fcc83cdd37f7ab9ccdddfac310ba50ba9d4417ac",
+      "sha256": "46a575099fcb2562467e5f2cafc390241a901ffb4cdf9c6b12ede60a19aa38d3",
       "sha256Encoding": "utf8-lf",
-      "bytes": 15833
+      "bytes": 15382
     },
     {
       "path": "frontend/src/app/universe/provenance-graph/provenance-graph.component.ts",
@@ -20867,7 +20867,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
-          "sha256": "9c6829040a7fdaf208532466fcc83cdd37f7ab9ccdddfac310ba50ba9d4417ac",
+          "sha256": "46a575099fcb2562467e5f2cafc390241a901ffb4cdf9c6b12ede60a19aa38d3",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -21039,7 +21039,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "697ae2017215f15ec5218702903255d97a094f872287e7f122ec3c9023b5a92f",
+          "sha256": "9f1a916f880d27ef914e8137d571baada4bc1391df91e6086ad0904439e901ba",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -72322,7 +72322,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
-          "sha256": "9c6829040a7fdaf208532466fcc83cdd37f7ab9ccdddfac310ba50ba9d4417ac",
+          "sha256": "46a575099fcb2562467e5f2cafc390241a901ffb4cdf9c6b12ede60a19aa38d3",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -72407,7 +72407,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "697ae2017215f15ec5218702903255d97a094f872287e7f122ec3c9023b5a92f",
+          "sha256": "9f1a916f880d27ef914e8137d571baada4bc1391df91e6086ad0904439e901ba",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -72584,7 +72584,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "697ae2017215f15ec5218702903255d97a094f872287e7f122ec3c9023b5a92f",
+          "sha256": "9f1a916f880d27ef914e8137d571baada4bc1391df91e6086ad0904439e901ba",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -72761,7 +72761,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-detail/protocol-detail.component.ts",
-          "sha256": "697ae2017215f15ec5218702903255d97a094f872287e7f122ec3c9023b5a92f",
+          "sha256": "9f1a916f880d27ef914e8137d571baada4bc1391df91e6086ad0904439e901ba",
           "sha256Encoding": "utf8-lf"
         }
       ],
