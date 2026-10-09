@@ -35,9 +35,9 @@ test("actual carried roster preserves every632 requirement row and1617 historica
     roster.requiredApplicationCoverage.orderedCoverageIds,
     snapshot.rows.map((row) => row.coverageId),
   );
-  assert.equal(roster.sourceCandidateCoverageLinks.length, 1625);
-  assert.equal(roster.operations.length, 9);
-  assert.equal(roster.mappings.length, 89);
+  assert.equal(roster.sourceCandidateCoverageLinks.length, 1626);
+  assert.equal(roster.operations.length, 10);
+  assert.equal(roster.mappings.length, 90);
   assert.equal(
     roster.requiredApplicationCoverage.mappings.filter(
       (row) => row.operationIds.length,
@@ -233,4 +233,63 @@ test("checkout line endings cannot change reviewed source or historical lineage"
     ),
     expected,
   );
+});
+
+test("Clock successor preserves actual1501FAIL and distinct history/window semantics", () => {
+  const roster = build(),
+    operation = roster.operations.find(
+      (row) => row.id === "reviewed:signet-clock-history-window",
+    );
+  assert.match(operation.outputContract, /never invent block zero/);
+  assert.match(operation.lifecycle, /back\/back\/forward\/forward/);
+  assert.match(
+    operation.assertions.join(" "),
+    /configured positive safe integer capacity/,
+  );
+  assert.equal(
+    roster.currentClockReviewLineage.historicalActualFailure.result,
+    "FAIL",
+  );
+  assert.equal(
+    roster.currentClockReviewLineage.requiredClockFunctionalAcceptance,
+    "NOT TESTED",
+  );
+  assert.equal(
+    roster.currentClockReviewLineage.previousRoster.reviewedDefinitionCount,
+    9,
+  );
+  assert(
+    roster.requiredApplicationCoverage.mappings
+      .find((row) => row.coverageId === "APP-CLOCK")
+      .operationIds.includes(operation.id),
+  );
+  assert.equal(
+    roster.currentClockReviewLineage.boundedRepairValidation.result,
+    "PASS",
+  );
+  assert.equal(
+    roster.currentClockReviewLineage.boundedRepairValidation
+      .fullRequiredOperationAcceptance,
+    false,
+  );
+  assert.equal(roster.operationDenominatorReconciled, false);
+});
+
+test("Clock lineage rejects future failure promotion and unfrozen routing-test drift", () => {
+  const failure =
+    "docs/acceptance/source-proof/clock-history-ac8ec2a64-2026-10-09/clock-1501-actual-history-defect.json";
+  const routing =
+    "frontend/src/app/components/clock/clock-routing-history.spec.ts";
+  for (const changed of [failure, routing]) {
+    const altered = (path) =>
+      path === changed
+        ? Buffer.from(
+            read(path).toString().replace('"FAIL"', '"PASS"') +
+              "\n// changed proof",
+          )
+        : read(path);
+    assert.throws(() =>
+      buildRequiredApplicationRoster(historicalBytes, coverageBytes, altered),
+    );
+  }
 });
