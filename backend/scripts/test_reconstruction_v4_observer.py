@@ -1,4 +1,4 @@
-import importlib.util,pathlib,unittest,json,copy
+import importlib.util,pathlib,unittest,json,copy,tempfile,hashlib
 spec=importlib.util.spec_from_file_location('observer',pathlib.Path(__file__).parent/'reconstruction-v4-observer.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 def state():return {'schema':m.SCHEMA,'origin':m.ORIGIN,'address':m.ADDRESS,'network':'signet','releaseSha':'a'*40,'configurationSha256':'b'*64,'sessionId':'12345678-1234-1234-1234-123456789012','cursor':0,'pendingCursor':None,'expiresAt':'2026-10-09T13:00:00Z','originalAnchorSha256':'d'*64,'originalAnchor':{'sourceId':'c'*64,'genesisHash':m.GENESIS},'lastSuccessfulObservedAt':'2026-10-09T12:00:00Z'}
 def metadata(s,cursor=0):return {'schema':'universe-address-utxo-reconstruction-inspection-v1','address':m.ADDRESS,'network':'signet','sessionId':s['sessionId'],'expiresAt':s['expiresAt'],'binding':{**{k:s[k] for k in ['network','releaseSha','configurationSha256']},'sourceId':'c'*64,'confirmedAnchorSha256':'d'*64},'cursor':cursor,'busy':False,'replayCursor':None,'status':'PARTIAL','lastSuccessfulObservation':{'checkpoint':{'network':'signet','genesisHash':m.GENESIS}}}
@@ -26,4 +26,19 @@ class ObserverTests(unittest.TestCase):
   for steps in [0,651,True]:
    with self.assertRaises(ValueError):m.observe(state(),Transport([]),steps=steps)
   with self.assertRaises(ValueError):m.validate_inspection({},state())
+class CaptureTests(unittest.TestCase):
+ def test_exact_bytes_exclusive_artifact_and_hash_no_normalization(self):
+  from unittest.mock import patch
+  original=m.AUDIT
+  with tempfile.TemporaryDirectory() as folder:
+   m.AUDIT=pathlib.Path(folder);raw=b'{"outputs":["1"]}\r\n'
+   try:
+    with patch.object(m.time,'time_ns',return_value=1):
+     artifact=m.capture_response_bytes(raw);self.assertEqual(pathlib.Path(artifact['path']).read_bytes(),raw);self.assertEqual(artifact['sha256'],hashlib.sha256(raw).hexdigest());self.assertEqual(artifact['bytes'],len(raw))
+     with self.assertRaises(FileExistsError):m.capture_response_bytes(raw)
+   finally:m.AUDIT=original
+ def test_raw_capacity_wrong_type_and_external_path_are_rejected(self):
+  with self.assertRaises(ValueError):m.capture_response_bytes(b'x'*(m.MAX_BYTES+1))
+  with self.assertRaises(ValueError):m.capture_response_bytes('text')
+  with self.assertRaises(ValueError):m.rooted_file('../escape.raw')
 if __name__=='__main__':unittest.main()

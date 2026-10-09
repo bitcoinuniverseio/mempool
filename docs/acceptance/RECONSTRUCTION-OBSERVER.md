@@ -26,6 +26,11 @@ completion. Inspection does not provide current output eligibility or the full
 result. The existing explicitly invoked next/replay operation still performs
 all native source, original-anchor, mempool, output and deadline fences.
 
+Completed/terminal response payload bytes are captured in a new exclusive
+`.raw` audit artifact with SHA256 and byte length, preserving the existing
+4,000,000-byte response ceiling. Re-serialization is not the raw proof. Active
+session handles stay in local state/evidence and are not printed to stdout.
+
 The original 100-row page, 10-second history HTTP acquisition, 20-second route,
 32-MiB retained work, eight-session, read-only Core batch and output guards are
 unchanged. Inspection adds fixed-size metadata only. The ordinary UTXO path

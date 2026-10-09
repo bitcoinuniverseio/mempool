@@ -105,9 +105,15 @@ def observe(state,transport,steps=1,seconds=600,clock=time.monotonic,persist=lam
   except ValueError as error:return {'outcome':'OPERATION_RESPONSE_REJECTED_EXPLICIT_REVIEW_REQUIRED','reason':str(error),'rows':rows,'operations':operations}
   if value['cursor'] not in [cursor,cursor+1] or value['status']=='PARTIAL' and value['cursor']==cursor:return {'outcome':'OPERATION_CURSOR_REJECTED_EXPLICIT_REVIEW_REQUIRED','rows':rows,'operations':operations}
   state['cursor']=value['cursor'];state['pendingCursor']=None;state['lastSuccessfulObservedAt']=value['observedAt'];state['lastResponseSha256']=hashlib.sha256(raw).hexdigest();persist(state)
-  if value['status']!='PARTIAL':return {'outcome':value['status'],'rows':rows,'operations':operations,'lastResponse':value,'largeFullParityQualified':False}
+  if value['status']!='PARTIAL':return {'outcome':value['status'],'rows':rows,'operations':operations,'lastResponse':value,'lastResponseBytes':raw,'largeFullParityQualified':False}
   cursor=value['cursor']
  return {'outcome':'OBSERVER_STEP_BUDGET_REACHED_HANDLE_RETAINED','rows':rows,'operations':operations}
+
+def capture_response_bytes(raw):
+ if type(raw) is not bytes or len(raw)>MAX_BYTES:raise ValueError('Bounded raw response bytes required')
+ path=rooted_file('reconstruction-v4-response-'+str(time.time_ns())+'.raw')
+ with path.open('xb') as target:target.write(raw)
+ return {'path':str(path),'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'encoding':'exact HTTP response payload bytes; no normalization'}
 
 def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--action',required=True,choices=['start','resume','inspect','cancel']);parser.add_argument('--state',required=True);parser.add_argument('--release');parser.add_argument('--configuration');parser.add_argument('--steps',type=int,default=1);args=parser.parse_args();path=rooted_file(args.state);transport=Transport();report={'classification':'Bounded private Signet observer, not complete large-address/native parity acceptance','startedAt':stamp(),'action':args.action}
@@ -126,5 +132,7 @@ def main():
   status,value,raw=inspection(transport,state)
   if status!=200:raise ValueError('Cannot cancel unverified session binding')
   validate_inspection(value,state);status,value,raw=transport.request('/address/'+ADDRESS+'/utxo-reconstruction/v4/'+state['sessionId'],'DELETE');report.update({'outcome':'EXPLICIT_CANCEL','status':status,'value':value})
+ raw=report.pop('lastResponseBytes',None)
+ if raw is not None:report['capturedResponseBytes']=capture_response_bytes(raw)
  report['finishedAt']=stamp();report['statePath']=str(path);out=rooted_file('reconstruction-v4-observer-'+str(time.time_ns())+'-receipt.json');out.write_text(json.dumps(report,indent=2)+'\n',encoding='utf8');print(json.dumps({'outcome':report['outcome'],'receipt':str(out),'statePath':str(path)}))
 if __name__=='__main__':main()
