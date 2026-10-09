@@ -13,25 +13,25 @@ The private qualification components now differ deliberately: frontend
 `ac8ec2a645520ac58e007f5a974561e12e65928d`, Signet backend
 `1501dbc53067ca0e69b440bc15bcee6e18a86b49` and overlay
 `29728542e903629c78461a5b7e91e84c1dde73f7`. The existing localhost application
-port remains4200. These are bounded private qualification artifacts; they do
+port remains 4200. These are bounded private qualification artifacts; they do
 not establish production coherence or complete functional acceptance.
 
-Actual frontend1501 Clock navigation failed because alias normalization added
+Actual frontend 1501 Clock navigation failed because alias normalization added
 history entries and an unavailable mined index dereferenced a missing block.
-Frontendac8 replaces the alias entry, validates indices and displays the
+Frontend ac8 replaces the alias entry, validates indices and displays the
 unavailable window explicitly. Actual Signet back/forward, refresh and invalid
 alias checks passed for this repair. The earlier failure evidence is retained;
-complete APP-CLOCK acceptance remains unqualified. Semantic review2093 preserves
-all632 required rows,1617 historical source IDs and2168 recorded blockers.
+complete APP-CLOCK acceptance remains unqualified. Semantic review 2093 preserves
+all 632 required rows, 1617 historical source IDs and 2168 recorded blockers.
 
-CI run37961639755 passed documentation, frontend build, backend tests and two
-visual shards. Mobile checks failed the project's44-pixel repeated link target
+CI run 37961639755 passed documentation, frontend build, backend tests and two
+visual shards. Mobile checks failed the project's 44-pixel repeated link target
 rule; WebKit lost its browser context before an assertion. These failures remain
 open until repair or an evidence-backed successful rerun on the final candidate.
 
-The public documentation source is this repository's`docs` root and
-`docs.manifest.json`. The docs-platform repository ingests it from`develop` and
-publishes only an exact source commit pinned in`sources.lock.json` to
+The public documentation source is this repository's `docs` root and
+`docs.manifest.json`. The docs-platform repository ingests it from `develop` and
+publishes only an exact source commit pinned in `sources.lock.json` to
 `https://docs.bitcoinuniverse.io`. That pin must follow accepted integration;
 no portal update or public release has been performed. A separate private
 documentation destination remains unresolved.
