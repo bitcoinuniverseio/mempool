@@ -26,14 +26,18 @@ const variantsFor = (operation: { requiredVariants?: string[]; variants?: string
   return !Array.isArray(variants) || !variants.length ? ['default'] : [...new Set(variants.filter(variant => typeof variant === 'string' && variant))];
 };
 
-/** The raw context map is independently sealed by the server. A claim cannot
- * substitute a context, profile or operation assignment beside a copied hash.
+/** Trust boundary: the server qualifies and seals the raw binding maps.
+ * This client checks request scope, structure and claim/map agreement. It does
+ * not recompute acceptanceContextsSha256, authenticate the server or read proof
+ * bytes. Mutating a claim alone cannot substitute the server's mapped profile;
+ * cryptographic map integrity remains the sealed loader's responsibility.
  */
 function v2Assignments(protocol: ExplorerProtocolDefinition, registry: ProtocolsResponse, binding: Record<string, unknown>, claim: Record<string, unknown>, network: string): Map<string, string> | null {
   if ('acceptanceNetwork' in binding || 'acceptanceNetwork' in claim || 'configurationProof' in claim || !hash(binding.acceptanceContextsSha256) || claim.acceptanceContextsSha256 !== binding.acceptanceContextsSha256 || !files([binding.contextBindingProof]) || !Array.isArray(binding.contexts) || !binding.contexts.length || !Array.isArray(binding.operationContexts) || !Array.isArray(binding.applicationContexts) || !Array.isArray(claim.contexts)) {return null;}
   const contexts = new Map<string, Record<string, unknown>>();
   for (const context of binding.contexts) {
-    if (!object(context) || !text(context.id) || contexts.has(context.id) || !text(context.chain) || !testNetworks[context.chain]?.includes(String(context.acceptanceNetwork)) || context.deploymentNetwork !== binding.deploymentNetwork || !hash(context.acceptanceProfileDigest) || !hash(context.deploymentConfigurationDigest) || !files([context.profileProof]) || !object(context.profileProof) || context.profileProof.sha256 !== context.acceptanceProfileDigest) {return null;}
+    const localOffline = object(context) && context.chain === 'local' && context.acceptanceNetwork === 'offline' && context.deploymentNetwork === 'offline';
+    if (!object(context) || !text(context.id) || contexts.has(context.id) || !text(context.chain) || !testNetworks[context.chain]?.includes(String(context.acceptanceNetwork)) || (context.chain === 'local' ? !localOffline : context.deploymentNetwork !== binding.deploymentNetwork) || !hash(context.acceptanceProfileDigest) || !hash(context.deploymentConfigurationDigest) || !files([context.profileProof]) || !object(context.profileProof) || context.profileProof.sha256 !== context.acceptanceProfileDigest) {return null;}
     const proof = context.configurationProof;
     if (!object(proof) || proof.chain !== context.chain || proof.network !== context.deploymentNetwork || proof.configurationDigest !== context.deploymentConfigurationDigest || proof.acceptanceProfileDigest !== context.acceptanceProfileDigest || proof.sourceRevision !== binding.sourceSha || !Array.isArray(proof.assertions) || !proof.assertions.length || !files(proof.evidence) || context.acceptanceNetwork !== 'signet' && !text(context.justification)) {return null;}
     contexts.set(context.id, context);

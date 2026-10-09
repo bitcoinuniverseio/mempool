@@ -49,11 +49,13 @@ export function qualifiedMixedCoverageFixture(): ProtocolsResponse {
   });
   const btc = contexts[0];
   contexts.push({ ...structuredClone(btc), id: 'bitcoin-testnet', acceptanceNetwork: 'testnet', justification: 'Synthetic tested Mainnet/Testnet-only protocol context' });
+  contexts.push({ id: 'local-offline', chain: 'local', acceptanceNetwork: 'offline', deploymentNetwork: 'offline', acceptanceProfileDigest: 'e'.repeat(64), deploymentConfigurationDigest: 'e'.repeat(64), justification: 'Synthetic static application receipt only',
+    profileProof: { path: 'evidence/local-static-profile.json', sha256: 'e'.repeat(64) }, configurationProof: { chain: 'local', network: 'offline', configurationDigest: 'e'.repeat(64), sourceRevision: old.sourceSha, acceptanceProfileDigest: 'e'.repeat(64), assertions: ['Synthetic static application configuration'], evidence: [proof] } });
   const operationContexts = response.protocols.flatMap(protocol => protocol.functionalAcceptance.rows.map((row, index) => ({ protocol: protocol.id, operation: row.operation, variant: row.variant,
     contextId: protocol.chain === 'bitcoin' && (['dust20', 'block20'].includes(protocol.id) || protocol.id === response.protocols[0].id && index === 1) ? 'bitcoin-testnet' : protocol.chain + '-test' })));
   const { acceptanceNetwork: _network, ...base } = old;
   const binding: FunctionalAcceptanceBindingV2 = { ...base, schemaVersion: 'universe-functional-acceptance-binding-v2', contexts, operationContexts,
-    applicationContexts: Array.from({ length: old.applicationOperationDenominator }, (_, index) => ({ operationId: 'synthetic:semantic-operation:' + index, contextIds: [contexts[index % contexts.length].id] })),
+    applicationContexts: Array.from({ length: old.applicationOperationDenominator }, (_, index) => ({ operationId: index === old.applicationOperationDenominator - 1 ? 'synthetic:static-application:offline-render' : 'synthetic:semantic-operation:' + index, contextIds: [index === old.applicationOperationDenominator - 1 ? 'local-offline' : contexts[index % (contexts.length - 1)].id] })),
     acceptanceContextsSha256: 'b'.repeat(64), contextBindingProof: proof };
   response.functionalAcceptanceBinding = binding;
   response.protocols = response.protocols.map(protocol => {
