@@ -41,21 +41,50 @@ test('state.service.ts initializes backend$ to null to prevent premature esplora
   );
 });
 
+function addressSummaryBody(content) {
+  const method = content.match(
+    /private async getAddressTransactionSummary\(req: Request, res: Response\): Promise<void> \{([\s\S]*?)\n\s*private async getScriptHash/
+  );
+  assert.ok(method, 'getAddressTransactionSummary method must exist');
+  return method[1];
+}
+
+function assertAddressSummaryCursorContract(body) {
+  assert.match(body, /const afterTxid = req\.params\.afterTxid \?\? req\.query\.after_txid;/,
+    'selects the path cursor or query cursor, preserving absent cursors');
+  assert.match(body, /if \(req\.params\.afterTxid && req\.query\.after_txid !== undefined && req\.params\.afterTxid !== req\.query\.after_txid\) \{\s*sendAddressError\(req, res, 'invalid-address',[\s\S]*?return;/,
+    'rejects conflicting path and query cursors before a source read');
+  assert.match(body, /if \(afterTxid !== undefined && \(typeof afterTxid !== 'string' \|\| !TXID_REGEX\.test\(afterTxid\)\)\) \{\s*sendAddressError\(req, res, 'invalid-address',[\s\S]*?return;/,
+    'rejects malformed cursors while allowing the absent cursor');
+  assert.match(body, /const summary = await addressReadAdmission\.run\(\(\) => bitcoinApi\.\$getAddressTransactionSummary\(req\.params\.address, afterTxid as string \| undefined\)\);/,
+    'forwards exactly the selected validated cursor within existing address admission');
+}
+
 test('bitcoin.routes.ts implements getAddressTransactionSummary correctly', () => {
   const routesPath = path.join(repoRoot, 'backend/src/api/bitcoin/bitcoin.routes.ts');
   const content = fs.readFileSync(routesPath, 'utf8');
 
-  const summaryFnMatch = content.match(
-    /private async getAddressTransactionSummary\(req: Request, res: Response\): Promise<void> \{([\s\S]*?)\n\s*private async getScriptHash/
-  );
-  assert.ok(summaryFnMatch, 'getAddressTransactionSummary method must exist');
-
-  const fnBody = summaryFnMatch[1];
+  const fnBody = addressSummaryBody(content);
   assert.match(fnBody, /config\.MEMPOOL\.BACKEND !== 'esplora'/, 'checks for esplora backend');
   assert.match(fnBody, /sendAddressError\(req, res, 'address-backend-unavailable'/, 'sends address-backend-unavailable when not esplora');
   assert.match(fnBody, /ADDRESS_REGEX\.test\(req\.params\.address\)/, 'validates address parameter format');
-  assert.match(fnBody, /bitcoinApi\.\$getAddressTransactionSummary\(req\.params\.address\)/, 'calls bitcoinApi.$getAddressTransactionSummary');
+  assertAddressSummaryCursorContract(fnBody);
   assert.match(fnBody, /res\.json\(summary\)/, 'responds with json summary');
+});
+
+test('the address summary gate rejects missing cursor forwarding, bypassed admission and broken cursor guards', () => {
+  const content = fs.readFileSync(path.join(repoRoot, 'backend/src/api/bitcoin/bitcoin.routes.ts'), 'utf8');
+  const body = addressSummaryBody(content);
+  for (const [fault, mutation] of [
+    ['missing cursor forwarding', body.replace(', afterTxid as string | undefined', '')],
+    ['bypassed admission', body.replace('addressReadAdmission.run(() => bitcoinApi.', 'Promise.resolve(bitcoinApi.')],
+    ['malformed cursor accepted', body.replace('!TXID_REGEX.test(afterTxid)', 'false')],
+    ['conflicting cursor accepted', body.replace('req.params.afterTxid !== req.query.after_txid', 'false')],
+    ['absent cursor rejected', body.replace('afterTxid !== undefined &&', 'afterTxid === undefined ||')],
+  ]) {
+    assert.notEqual(mutation, body, `${fault}: the fault control must actually change the checked route`);
+    assert.throws(() => assertAddressSummaryCursorContract(mutation), assert.AssertionError, fault);
+  }
 });
 
 test('the smoke navigates on the load event, never on network idle', () => {
