@@ -1,5 +1,19 @@
 # Deployment
 
+## Current routing observation, 9 October 2026
+
+The dated [API repair handoff](API-REPAIR-HANDOFF-20261009.md) records the current
+three-host indexer placement and live effective configuration. The current
+Explorer backend runs in `electrum` mode on INDEXERS-1 port8996, using Fulcrum
+port50011 and a shared Bitcoin RPC route. Shared Electrs is owned by INDEXERS-3,
+and native Ord0.29 is owned by INDEXERS-2. Gateway8099 and overlay3400 remain
+on INDEXERS-1. Several protocol descriptor ports are dead or point to the wrong
+role. The older single-host Esplora3001/RPC8332 diagram and deployment examples
+below are historical material, not values to copy into the current deployment.
+Use the verified endpoint matrix and qualify every role before changing a route.
+No runtime change was made by this preparation.
+
+
 Universe Explorer runs as three processes on one host, reached through one
 public HTTPS origin.
 

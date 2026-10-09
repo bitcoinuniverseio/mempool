@@ -70,6 +70,23 @@ export class ClockComponent implements OnInit {
         }
       });
 
+    /**
+     * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-CLOCK | F-FE-001 | FAIL.
+     * This is the second consumer of the same unqualified fee replay used by
+     * FeesBoxComponent; clock.component.html renders fastestFee with no age.
+     * 1. Migrate the fee display to StateService.feeEstimate$ and the exact
+     *    API-05-FEES-CONTRACT; retain the clock layout and numeric units.
+     * 2. Render stale/unavailable/syncing state with original observation and
+     *    clear another network's snapshot immediately. Share recovery with the
+     *    main feed; do not open another socket or poll from the clock.
+     * 3. Add PROPOSED NEW clock.component.spec.ts for cached init, disconnect,
+     *    empty indicators, network switch and valid recovery; include responsive
+     *    clock rendering after the shared fee-estimate tests. Run targeted
+     *    npm test, frontend lint/build and actual Signet consumer readback.
+     * Prerequisites API-01..API-04 plus producer/state changes in API-05.
+     * Evidence: frontend-source-reproductions.json and FeesBox source path.
+     * Rollback producer and every fee consumer together; no stale bare replay.
+     */
     this.recommendedFees$ = this.stateService.recommendedFees$;
     this.mempoolInfo$ = this.stateService.mempoolInfo$;
 

@@ -66,6 +66,35 @@ export function parseUniverseLiveEnvelope(
 export class UniverseWebsocketService {
   constructor(private readonly stateService: StateService) {}
 
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-WS | F-FE-002 | FAIL.
+   * Current stream$ fixes Bitcoin to mainnet even when Signet is selected.
+   * Configured Dogecoin testnet is sent, but the current producer rejects any
+   * network other than mainnet; close 1008 completes this stream silently.
+   * Evidence: frontend-source-reproductions.json FE-WS-BTC/DOGE-SCOPE.
+   * Governing producer: backend-apis@a3361bdb0d9f06587dca7ae3b8065783f3b2d3f8,
+   * src/universe-explorer/websocket/universe-websocket.service.ts#subscription.
+   * 1. After API-04 reconciles supported subscriptions, resolve the selected
+   *    Bitcoin/configured chain network for each subscription. Keep the
+   *    same-origin /api/v1/universe/ws transport; never substitute Mainnet.
+   * 2. Until that exact network is offered, publish an explicit unavailable
+   *    stream state to the live page while keeping valid REST polling usable.
+   *    Merely changing the string to signet fails 1008 and is not a repair.
+   * 3. Coordinate producer stream keys, polling, envelopes, status and resume
+   *    cursors with API-04. Partition/reset by chain+network+channel+snapshot;
+   *    cancel old connections and reject late cross-context/duplicate frames.
+   * 4. Surface invalid-subscription and outage separately; bound reconnects.
+   *    On resync-required refresh an authoritative snapshot before resuming,
+   *    rather than silently clearing a cursor while leaving old rows current.
+   * 5. Extend universe-websocket.service.spec.ts, chain-network-consumers.spec.ts
+   *    and live/live-buffer.spec.ts for unsupported networks, reconnect/resume,
+   *    sequence gaps, invalidation, switch cancellation and fresh recovery.
+   *    Run npm test -- those paths, frontend lint/build, then real supported
+   *    Signet (or documented Testnet) REST+WS consumer acceptance.
+   * Dependencies: API-02, API-03, API-04. Rollback producer and consumers as one
+   *    compatible set; unsupported networks stay explicit, never Mainnet data.
+   * Preparation only; no executable behavior changed here.
+   */
   stream$(chain: ExplorerChain): Observable<UniverseLiveEnvelope> {
     if (!this.stateService.isBrowser || typeof WebSocket === 'undefined') {
       return EMPTY;

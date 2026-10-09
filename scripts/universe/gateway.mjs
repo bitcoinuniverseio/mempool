@@ -373,9 +373,35 @@ const OVERLAY_CHAIN_PREFIXES = [
  * does not mount the address, transaction, block or mempool routes at all.
  *
  * With no index configured the surface stays with the backend, rewritten onto
- * its own `/api/v1/` prefix. That is a deployment reading Bitcoin Core alone,
- * where the address family answers that it cannot be served rather than not
- * existing.
+ * its own `/api/v1/` prefix. In electrum mode this includes address reads;
+ * in none mode the address family reports unavailable. The effective backend
+ * mode must agree with the configured route, not an older topology example.
+ */
+/**
+ * IMPLEMENTATION-HANDOFF [API-02] [API-02-ROUTES]
+ * DEF-ROUTES; C-HTTP-ROUTING, C-INFRA-TOPOLOGY. Current public revision81ab0f1
+ * answers root tip/init/backend-info. Its actual backend is electrum8996 on
+ * INDEXERS-1; historical docs claiming local Esplora3001 are not runtime proof.
+ * Wrong native protocol roles are in overlay config, not this generic table.
+ * 1. After API-01, attest effective gateway service ExecStart, env and dynamic
+ *    overlay-route.json using allowlisted fields and file hashes. Keep root
+ *    /api/* rewritten to8996/api/v1 in electrum mode; configure ESPLORA only
+ *    if a separately accepted matching-network Esplora backend mode is chosen.
+ * 2. Reuse owned shared services through existing restricted forwards: Core
+ *    ownerINDEXERS-2; Electrs ownerINDEXERS-3; nativeOrd029 ownerINDEXERS-2.
+ *    Do not paste host IPs into browser config or expose native listeners.
+ * 3. Reconcile overlay authorities per API-03: I1:3012 is TAP, whereas
+ *    ChainBloom is I3:3012; ARC20 token reader is I3:3043, not I1:13015's
+ *    unified NFT/realms role. Readiness/coverage remains a separate gate.
+ * 4. Preserve /api/v1, chain-domain/portfolio-v2 prefixes, internal denial,
+ *    dynamic overlay swaps, query strings and WebSocket upgrades. Verify each
+ *    contract against the selected service, not merely HTTP200.
+ * Tests: node --test scripts/universe/gateway.test.mjs plus existing dynamic
+ * overlay tests. Record native->gateway->public identical body/context probes,
+ * frontend source requests, fee503/error preservation, backend mode pairing.
+ * No indexer restart/new writer required by URL correction. Rollback effective
+ * route/env artifact atomically through existing socket-preserving mechanism;
+ * update C:/INDEXERS.md whenever an actual indexer/route changes.
  */
 export function routeFor(pathname, originalUrl, acceptsHtml = false) {
   if (pathname === '/v2/universe' || pathname.startsWith('/v2/universe/')) {
@@ -494,6 +520,23 @@ const DOCUMENTATION_ALIAS = /^\/api(?:\/(?:faq|api(?:\/[^/]+)?))?\/?$/;
  * evidence; never delete shared data or change Mainnet defaults to obtain a pass.
  * ANNOTATED is not implemented, verified functionality or release. Preserve existing
  * executable behavior in this preparation.
+ */
+/**
+ * IMPLEMENTATION-HANDOFF [API-04] [API-04-GATEWAY]
+ * DEF-NETWORK; C-HTTP-SIGNET. Fresh public checks 2026-10-09 still return503
+ * network-unconfigured. Existing refusal is correct; missing accepted scoped
+ * upstreams block the functional Signet gate, not a reason to use mainnet.
+ * 1. After API-02/03 qualify existing Signet Core and the held/failed Signet
+ *    Electrs role; never start a duplicate producer or reuse mainnet state.
+ * 2. Configure only the matching UNIVERSE_GATEWAY_BACKEND_SIGNET and, if its
+ *    backend mode requires it, UNIVERSE_GATEWAY_ESPLORA_SIGNET via owned
+ *    loopback forwards. Attest genesis, non-genesis hash and Signet challenge.
+ * 3. Pair routeFor/upgradeRouteFor with API-04 overlay and API-05 frontend WS
+ *    scope. Preserve full query context and unsupported-network refusal.
+ * Tests: gateway.test.mjs, synthetic-context.test.mjs; real Signet REST/init/
+ * core-WS plus Universe REST/WS mismatch, reconnect and switching assertions.
+ * Mainnet defaults remain mainnet; rollback only the scoped routing artifact.
+ * This marker supersedes WP04's older access observation, not its unmet gates.
  */
 function networkRouteFor(network, pathname, originalUrl, acceptsHtml) {
   if (acceptsHtml && DOCUMENTATION_ALIAS.test(pathname)) {

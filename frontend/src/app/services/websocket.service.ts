@@ -427,6 +427,30 @@ export class WebsocketService {
       this.stateService.difficultyAdjustment$.next(response.da);
     }
 
+    /**
+     * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-INGRESS | F-FE-001 | FAIL.
+     * handleResponse trusts every response.fees, including init-data snapshots;
+     * the REST reader refuses these same estimates when mempool.isInSync=false.
+     * 1. Decode response.feeEstimate using the additive contract beside
+     *    WebsocketResponse.fees. Reject explicit wrong chain/network, invalid
+     *    observedAt/tip, nonfinite/negative rates and inconsistent status/values.
+     * 2. Emit validated status into StateService.feeEstimate$ (PROPOSED NEW).
+     *    Emit legacy recommendedFees$ only for ready snapshots; absence of proof
+     *    is unavailable, and receipt time or a socket ping is not observation.
+     * 3. Wire startSubscription, goOffline and networkChanged through the same
+     *    freshness lifecycle. Clear cross-network state before a replacement
+     *    connection can deliver; bound recovery and reject late old frames.
+     * 4. Add PROPOSED NEW services/websocket-fee-readiness.spec.ts and shared
+     *    fee-estimate tests. Cover cached init vs REST 503, stale after ready,
+     *    wrong-network frames, no data after reconnect and fresh recovery.
+     *    Run npm test -- <new paths>, npm run lint, npm run build:universe.
+     *    Proposed test commands need execution after implementation.
+     * Dependencies API-01..API-04 and coordinated backend websocket-handler.ts.
+     * Evidence: public-http.json; frontend-source-reproductions.json F-FE-001.
+     * Acceptance: dashboard and clock report the same actual Signet snapshot
+     *    readiness and original observation; controlled outage is not current.
+     * Rollback both contract ends together; no fallback to raw stale fees.
+     */
     if (response.fees) {
       this.stateService.recommendedFees$.next({
         ...response.fees,

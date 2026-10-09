@@ -107,6 +107,35 @@ class WebsocketHandler {
     + '}';
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] [API-05-PRODUCER]
+   * DEF-FEES; C-HTTP-FEES, C-FE-DASHBOARD, C-FE-CLOCK. Verified 2026-10-09:
+   * REST fees returns503 while init-data includes fees/loadingIndicators={};
+   * the dashboard renders those cached numbers as current. This serializer and
+   * the incremental fee send sites have no equivalent isInSync/freshness guard.
+   * 1. After API-01/02, add one producer-owned feeEstimate envelope shared by
+   *    init-data and every WebSocket fee update: schemaVersion
+   *    'universe-fee-estimate-v1', chain:'bitcoin', network, status
+   *    'ready'|'syncing'|'stale'|'unavailable', observedAt:ISO|null,
+   *    tip:{height,hash}|null, values:Recommendedfees|null, reason:string|null.
+   *    Record observation/checkpoint when calculation succeeds, not on read.
+   * 2. Populate values and legacy fees only from a synchronized, fresh, same-
+   *    network calculation. On lost readiness clear socketData.fees as well
+   *    as outgoing values, emit the unavailable envelope once, and invalidate
+   *    serializedInitData. Do not infer readiness from loadingIndicators={}.
+   * 3. Include the envelope on init and all incremental/block/status transitions;
+   *    share its builder with bitcoin.routes.ts. Keep REST503 guards intact.
+   * 4. Coordinate frontend StateService.feeEstimate$, WebsocketService,
+   *    FeesBox and Clock (API-05-FEES). Missing/malformed/old/wrong-network
+   *    envelopes are unavailable. No independent per-widget retry pollers.
+   * Verify PROPOSED NEW backend/src/__tests__/fee-readiness.test.ts with synced
+   * ->syncing->ready, stale clock, restart, empty indicators and reused init
+   * cache; cover both REST fee precision routes and both socket update paths.
+   * Run paired frontend tests and real Signet dashboard/clock refresh/reconnect.
+   * Preserve projected-block/transaction subscriptions and exact fee units.
+   * Roll back producer and consumer together; no schema migration or fees
+   * fabricated from old cache. See root public-http.json and browser evidence.
+   */
   private updateSocketData(): void {
     const _blocks = blocks.getBlocks().slice(-config.MEMPOOL.INITIAL_BLOCKS_AMOUNT);
     const da = difficultyAdjustment.getDifficultyAdjustment();

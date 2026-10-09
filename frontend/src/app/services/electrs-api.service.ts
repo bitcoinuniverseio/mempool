@@ -101,6 +101,30 @@ export class ElectrsApiService {
     return this.httpClient.get(this.apiBaseUrl + this.apiBasePath + '/api/block/' + hash + '/txid/' + index, { responseType: 'text' });
   }
 
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-READS | C-FE-BTC-READS | NOT TESTED.
+   * These browser URLs are the gateway's public Esplora-compatible family.
+   * The observed backend mode is electrum: /api/* rewrites to backend /api/v1/*.
+   * Directly swapping this client to an indexer port would bypass that contract.
+   * 1. After API-01 cancellation and API-02 transport reconciliation, preserve
+   *    the selected-network prefix and exercise address, scripthash, UTXO,
+   *    full/summary history, cursor, multi-address and transaction methods.
+   * 2. Keep RequestCache network ownership and evict transport failures so the
+   *    user's retry can perform a new read. Respect current 503/Retry-After
+   *    backpressure; no fallback that shows unavailable holdings as zero.
+   * 3. Match Electrum-backed and optional Esplora contracts deliberately:
+   *    summary continuation is a path segment; full history uses after_txid.
+   *    Route availability must follow actual backend capabilities.
+   * 4. Run services/electrs-network-ownership.spec.ts, request-cache.spec.ts,
+   *    cache-network-ownership.spec.ts and address-capability.service.spec.ts;
+   *    then real Signet address/tx/outpoint pages through refresh, network switch,
+   *    delayed source, cancellation and recovery. Preserve public Mainnet mode.
+   * Evidence: frontend-api-inventory.json, public-http.json; owning source
+   *    backend/src/api/bitcoin/{bitcoin.routes,address-index}.ts.
+   * Rollback matched gateway/backend/consumer configuration; keep cancellation
+   *    work from concurrent branch 87859cf9f69e4166bdd783a4472c6674a2ef24c3.
+   * Preparation only; these unexecuted acceptance rows remain NOT TESTED.
+   */
   getAddress$(address: string): Observable<Address> {
     return this.httpClient.get<Address>(this.apiBaseUrl + this.apiBasePath + '/api/address/' + address);
   }

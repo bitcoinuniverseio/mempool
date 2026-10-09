@@ -262,6 +262,34 @@ export class UniverseApiService {
   }
 
   /** Re-subscribes at a network switch, cancelling the previous HTTP request. */
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-SCOPE | C-FE-API-MAP | NOT TESTED.
+   * Source review confirms same-origin overlay /api/v1/universe and chain
+   * families use chain/network query context; backend-owned routes use the
+   * selected network path prefix. Current outage does not prove these public
+   * paths wrong. The owning authority origins belong behind the gateway.
+   * 1. Apply API-02/API-03 endpoint and adapter corrections server side, then
+   *    reconcile every method here and all 469 static transport occurrences
+   *    with frontend-api-inventory.json and frontend-http-transport-inventory.csv.
+   *    Preserve same-origin paths; do not put indexer IPs, credentials or
+   *    third-party fallbacks in browser code to mask an upstream failure.
+   * 2. Validate response context and each operation's owning decoder together:
+   *    source checkpoint, exact quantities, cursor and unavailable/error state.
+   *    Keep switchMap cancellation and network-partitioned cache ownership.
+   * 3. Execute all 39 protocol/123 operation declaration rows in
+   *    frontend-protocol-operation-coverage.csv against their corrected owned
+   *    authority, including detail, batch, holdings and pagination variants.
+   *    Registry declarations and HTTP200 do not establish full acceptance.
+   * 4. Run universe-api.service.spec.ts, protocol detail/directory specs and
+   *    services/{network-prefix.interceptor,cache-network-ownership}.spec.ts
+   *    with npm test -- <paths>, then lint/build and actual Signet journeys.
+   *    Capture requests, authoritative readback and reload/retry UI evidence.
+   * Governing sources: docs/protocols/PROTOCOL-COVERAGE.json (registry 1.1.0,
+   *    backend-apis 1a1a2548a74e419bf7341dd7af1cd57ff98e34c7) and API-03 contract
+   *    register; resolve newer-authority drift before changing a client path.
+   * Dependencies API-01..API-04. Rollback coordinated DTO/adapter versions and
+   *    retain explicit failure states. ANNOTATED is not a runtime PASS.
+   */
   private scopedRequest<T>(url: string, body?: unknown, chain = 'bitcoin',
     recover?: (error: unknown, network: ExplorerNetwork) => Observable<T>): Observable<T> {
     return this.chainNetwork$(chain).pipe(
