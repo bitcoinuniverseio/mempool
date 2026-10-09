@@ -20,4 +20,6 @@ test('rejects source conflicts, IBD, header lag, old/missing evidence and a diff
   expect(bitcoinObservationMatches(null, 'mainnet', tip, 120_000, now)).toBe(false);
   expect(bitcoinObservationMatches({ ...observation, chain: 'signet', signetChallenge: '52' }, 'signet', tip, 120_000, now, '51')).toBe(false);
   expect(bitcoinObservationMatches({ ...observation, chain: 'signet', signetChallenge: '51' }, 'signet', tip, 120_000, now, '')).toBe(false);
+  expect(bitcoinObservationMatches({ ...observation, chain: 'signet', blocks: 0, headers: 0, signetChallenge: '51' },
+    'signet', { height: 0, hash }, 120_000, now, '51')).toBe(false);
 });

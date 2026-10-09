@@ -13,7 +13,7 @@ export function bitcoinObservationMatches(
   if (!observation || !tip || !chains[network] || observation.chain !== chains[network]
     || observation.initialBlockDownload !== false || !Number.isSafeInteger(observation.blocks)
     || observation.blocks < 0 || observation.headers !== observation.blocks
-    || tip.height !== observation.blocks || !/^[a-f0-9]{64}$/i.test(tip.hash)
+    || tip.height !== observation.blocks || (network === 'signet' && tip.height < 1) || !/^[a-f0-9]{64}$/i.test(tip.hash)
     || tip.hash !== observation.blockHash) return false;
   const at = Date.parse(observation.checkedAt);
   return Number.isFinite(at) && at <= now && now - at < maxAgeMs
