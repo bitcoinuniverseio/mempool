@@ -39,6 +39,7 @@
                 [ngClass]="coverageKnown(protocol) ? 'chip-neutral' : 'chip-unknown'"
               >{{ coverageLabel(protocol) }}</span>
             </div>
+            <p class="protocol-evidence" *ngIf="registryCoverageLabel(protocol) as declaration">{{ declaration }}</p>
             <p class="protocol-evidence" *ngIf="sourceFor(protocol, vm.sourcesByAuthority) as source">
               <span *ngIf="sourceDetail(source) as detail">{{ detail }}</span>
               <span class="checked-at" *ngIf="checkedAtSeconds(source) as checked">

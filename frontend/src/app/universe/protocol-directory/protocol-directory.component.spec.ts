@@ -177,17 +177,32 @@ describe('ProtocolDirectoryComponent availability', () => {
 describe('ProtocolDirectoryComponent coverage', () => {
   const subject = component(registry([]));
 
-  it('reads coverage from a string or from a coverage object', () => {
-    expect(subject.coverageLabel(protocol({ coverage: 'complete' }))).toBe('Coverage: Complete');
-    expect(subject.coverageLabel(protocol({ coverage: { state: 'partial' } })))
-      .toBe('Coverage: Partial');
+  it('keeps historical strings and objects separate from functional evidence', () => {
+    for (const coverage of ['complete', { state: 'complete' }, { state: 'partial' }]) {
+      const row = protocol({ coverage });
+      expect(subject.coverageLabel(row)).toBe('Functional coverage: Unverified');
+      expect(subject.coverageKnown(row)).toBe(false);
+      expect(subject.registryCoverageLabel(row)).toContain('Historical registry declaration:');
+    }
   });
 
-  it('says coverage is unknown rather than inventing a value', () => {
-    expect(subject.coverageLabel(protocol({ coverage: null }))).toBe('Coverage unknown');
-    expect(subject.coverageLabel(protocol({ coverage: {} }))).toBe('Coverage unknown');
+  it('keeps missing evidence unverified without inventing registry metadata', () => {
+    expect(subject.coverageLabel(protocol({ coverage: null }))).toBe('Functional coverage: Unverified');
+    expect(subject.coverageLabel(protocol({ coverage: {} }))).toBe('Functional coverage: Unverified');
     expect(subject.coverageKnown(protocol({ coverage: null }))).toBe(false);
-    expect(subject.coverageKnown(protocol({ coverage: 'complete' }))).toBe(true);
+    expect(subject.registryCoverageLabel(protocol({ coverage: null }))).toBe(null);
+    expect(subject.registryCoverageLabel(protocol({ coverage: {} }))).toBe(null);
+  });
+
+  it('does not turn a ready source, descriptor PASS or global aggregate into coverage proof', async () => {
+    const row = protocol({ coverage: 'complete', releaseStatus: 'VERIFIED READ ONLY', implementedReadOperations: ['registry'],
+      readOperationDescriptors: [{ id: 'registry', method: 'GET', route: '/api/v1/universe/protocols', authorityPath: null, evidence: 'source-contract', acceptance: 'PASS' }] });
+    const response = { ...registry([row]), acceptance: { declared: 1, passed: 1, failed: 0, blocked: 0, notApplicable: 0, notTested: 0, rejected: 0 } };
+    const ready = component(response, { generatedAt: 'now', sources: [source()] });
+    const vm = await settled(ready);
+    expect(ready.availability(row, vm.sourcesByAuthority)).toBe('available');
+    expect(ready.coverageLabel(row)).toBe('Functional coverage: Unverified');
+    expect(ready.registryCoverageLabel(row)).toBe('Historical registry declaration: Complete');
   });
 });
 

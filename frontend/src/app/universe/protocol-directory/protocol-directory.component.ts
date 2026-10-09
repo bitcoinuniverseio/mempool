@@ -4,12 +4,12 @@ import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   ExplorerNetwork,
   ExplorerProtocolDefinition,
-  ProtocolCoverage,
   ProtocolsResponse,
   SourceEntry,
   SourcesResponse,
 } from '@app/universe/universe.types';
 import { SeoService } from '@app/services/seo.service';
+import { protocolCoverageView } from '../protocol-coverage';
 import {
   ProtocolAvailability,
   availabilityLabel,
@@ -274,8 +274,9 @@ export class ProtocolDirectoryComponent implements OnInit {
 
   /**
    * IMPLEMENTATION-HANDOFF [FE-COVERAGE-01] | all protocol/operation coverage rows.
-   * Verified: this label trusts coverage from the registry, although the pinned
-   * manifest has 123 NOT TESTED descriptors and seven historical complete rows.
+   * Verified: shared labels now keep historical registry declarations separate
+   * from functional coverage, which stays unverified in the current contract.
+   * The pinned manifest has 123 descriptors and seven historical complete rows.
    * Prerequisite: backend acceptance schema and evidence gate (BE work packages).
    * 1. Add a typed, network/revision-bound acceptance summary to universe.types.ts
    *    after its backend contract is agreed; keep runtime readiness independent.
@@ -293,26 +294,15 @@ export class ProtocolDirectoryComponent implements OnInit {
    * Roll back frontend and backend contract versions together if incompatible.
    */
   coverageLabel(protocol: ExplorerProtocolDefinition): string {
-    const coverage = protocol.coverage;
-    if (coverage === null || coverage === undefined || coverage === '') {
-      return $localize`:@@universe.protocols.coverage-unknown:Coverage unknown`;
-    }
-    if (typeof coverage === 'string') {
-      return $localize`:@@universe.protocols.coverage:Coverage: ${this.humanize(coverage)}:coverage:`;
-    }
-    const state = (coverage as ProtocolCoverage).state;
-    if (state) {
-      return $localize`:@@universe.protocols.coverage:Coverage: ${this.humanize(state)}:coverage:`;
-    }
-    return $localize`:@@universe.protocols.coverage-unknown:Coverage unknown`;
+    return protocolCoverageView(protocol).functionalLabel;
   }
 
   coverageKnown(protocol: ExplorerProtocolDefinition): boolean {
-    const coverage = protocol.coverage;
-    if (coverage === null || coverage === undefined || coverage === '') {
-      return false;
-    }
-    return typeof coverage === 'string' || !!(coverage as ProtocolCoverage).state;
+    return protocolCoverageView(protocol).functionalKnown;
+  }
+
+  registryCoverageLabel(protocol: ExplorerProtocolDefinition): string | null {
+    return protocolCoverageView(protocol).historicalLabel;
   }
 
   sourceFor(
