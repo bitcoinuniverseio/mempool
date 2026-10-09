@@ -3270,9 +3270,9 @@
     },
     {
       "path": "frontend/src/app/universe/inscription/inscription.component.ts",
-      "sha256": "f2d0b03d8166bccedcb6df84d8630332d4ec34ccc323e5d260266fb4c82b720a",
+      "sha256": "3c8a1f11fd0385065711c6f3d3b20bd448b5186c25e68889bf547d9cddc83a4b",
       "sha256Encoding": "utf8-lf",
-      "bytes": 6014
+      "bytes": 8961
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/developer-platform.component.ts",
@@ -4110,15 +4110,15 @@
     },
     {
       "path": "frontend/src/app/universe/rune/rune.component.ts",
-      "sha256": "956ed5f820e2be5f81f1cd591875705de3b9dfa459cc10ef57c3915e6b2a4ea4",
+      "sha256": "5c4ddb40f50913dc2ec19564b8a5d1b54d9d77d121f90deb476d10bc17b5b8c8",
       "sha256Encoding": "utf8-lf",
-      "bytes": 4953
+      "bytes": 5719
     },
     {
       "path": "frontend/src/app/universe/sat/sat.component.ts",
-      "sha256": "595e054cd8c6ec890fc1f094e040b37482c063ab4f273ac97667ae781f8ef783",
+      "sha256": "0ed50fff4ca5dcddcdfe97cdc225719222fb5b69a1238c0d825f7a8725d5aa37",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5274
+      "bytes": 6038
     },
     {
       "path": "frontend/src/app/universe/saved/saved.component.ts",
@@ -16239,7 +16239,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/inscription/inscription.component.ts",
-          "sha256": "f2d0b03d8166bccedcb6df84d8630332d4ec34ccc323e5d260266fb4c82b720a",
+          "sha256": "3c8a1f11fd0385065711c6f3d3b20bd448b5186c25e68889bf547d9cddc83a4b",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -16282,7 +16282,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/rune/rune.component.ts",
-          "sha256": "956ed5f820e2be5f81f1cd591875705de3b9dfa459cc10ef57c3915e6b2a4ea4",
+          "sha256": "5c4ddb40f50913dc2ec19564b8a5d1b54d9d77d121f90deb476d10bc17b5b8c8",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -16329,7 +16329,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/sat/sat.component.ts",
-          "sha256": "595e054cd8c6ec890fc1f094e040b37482c063ab4f273ac97667ae781f8ef783",
+          "sha256": "0ed50fff4ca5dcddcdfe97cdc225719222fb5b69a1238c0d825f7a8725d5aa37",
           "sha256Encoding": "utf8-lf"
         }
       },
