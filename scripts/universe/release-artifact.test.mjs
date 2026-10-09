@@ -190,7 +190,7 @@ function stagedRelease(candidate, { commit = ARTIFACT_COMMIT } = {}) {
   });
   assert.deepEqual(report.problems, []);
   mkdirSync(join(stage, 'scripts', 'universe'), { recursive: true });
-  for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs', 'required-application-roster.mjs']) {
+  for (const name of ['protocol-contract.mjs', 'reconciled-release.mjs', 'reconciled-operations.mjs', 'required-application-roster.mjs', 'acceptance-contexts.mjs']) {
     copyFileSync(join(here, name), join(stage, 'scripts', 'universe', name));
   }
   const application = fixture(candidate.envelope);
@@ -219,6 +219,7 @@ const CARRIED = (candidate) => [
   'scripts/universe/reconciled-release.mjs',
   'scripts/universe/reconciled-operations.mjs',
   'scripts/universe/required-application-roster.mjs',
+  'scripts/universe/acceptance-contexts.mjs',
   'docs/acceptance/reconciled-operations.json',
   'docs/acceptance/qualified-application-evidence.json',
   'docs/acceptance/evidence/application/receipt.json',
