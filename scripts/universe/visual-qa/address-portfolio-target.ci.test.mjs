@@ -33,11 +33,15 @@ test('shipped address portfolio link keeps a touch target at each failed CI view
         // Restore the exact old inline geometry in this disposable page. The
         // unchanged production gate must detect the original crowded target.
         await page.addStyleTag({content:'app-address .universe-portfolio-link a{display:inline!important;min-height:0!important}'});
-        assert.ok((await help.boundingBox()).height<24, `${width}: old inline geometry remains under the minimum`);
+        const failedPortraitWidths=engine==='firefox'?[320,360,390,430]:[360,390,430];
+        // Chromium's Linux font wraps this text at320, so the old bounding
+        // box is taller there. Assert the exact sizes that actually failed
+        // for this engine, while keeping all six positive target checks.
+        if(failedPortraitWidths.includes(width)) assert.ok((await help.boundingBox()).height<24, `${width}: old inline geometry remains under the minimum`);
         measured=await page.evaluate(mobileProbe,{touchFloor:TOUCH_FLOOR,fieldFloor:FIELD_FLOOR});
         if(measured.targetsBelowWcag.some(x=>x.startsWith('app-address a'))) reproducedCrowdedTargets.push(width);
       } finally { await context.close(); }
     }
-    for(const width of [320,360,390,430]) assert.ok(reproducedCrowdedTargets.includes(width), `${engine}: old crowded geometry must fail at ${width}`);
+    for(const width of engine==='firefox'?[320,360,390,430]:[360,390,430]) assert.ok(reproducedCrowdedTargets.includes(width), `${engine}: old crowded geometry must fail at ${width}`);
   } finally { await browser.close(); }
 });
