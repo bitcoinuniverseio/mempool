@@ -35,14 +35,14 @@ test("actual carried roster preserves every632 requirement row and1617 historica
     roster.requiredApplicationCoverage.orderedCoverageIds,
     snapshot.rows.map((row) => row.coverageId),
   );
-  assert.equal(roster.sourceCandidateCoverageLinks.length, 1619);
-  assert.equal(roster.operations.length, 3);
-  assert.equal(roster.mappings.length, 80);
+  assert.equal(roster.sourceCandidateCoverageLinks.length, 1625);
+  assert.equal(roster.operations.length, 9);
+  assert.equal(roster.mappings.length, 89);
   assert.equal(
     roster.requiredApplicationCoverage.mappings.filter(
       (row) => row.operationIds.length,
     ).length,
-    41,
+    47,
   );
   assert.equal(roster.operationDenominator, null);
   assert.equal(roster.operationDenominatorReconciled, false);
@@ -68,6 +68,47 @@ test("actual carried roster preserves every632 requirement row and1617 historica
     sortedIdsDigest(snapshot.rows.map((row) => row.coverageId)),
   );
   assert.equal(verified.mappingReviewComplete, false);
+});
+
+test("fee precision, bootstrap, socket, view and recovery retain separate exact semantics", () => {
+  const roster = build();
+  const byId = new Map(
+    roster.operations.map((operation) => [operation.id, operation]),
+  );
+  assert.equal(
+    byId.get("reviewed:signet-fees-rounded-rest").entryPoint,
+    "/signet/api/v1/fees/recommended",
+  );
+  assert.equal(
+    byId.get("reviewed:signet-fees-precise-rest").entryPoint,
+    "/signet/api/v1/fees/precise",
+  );
+  assert.match(
+    byId.get("reviewed:signet-fees-precise-rest").outputContract,
+    /0\.001sat\/vB/,
+  );
+  assert.match(
+    byId.get("reviewed:signet-fee-bootstrap").outputContract,
+    /nullable legacy fees/,
+  );
+  assert.match(
+    byId.get("reviewed:signet-fee-websocket").assertions.join(" "),
+    /renew fee source age/,
+  );
+  assert.match(
+    byId.get("reviewed:signet-fee-network-recovery").outputContract,
+    /5s recovery or120s/,
+  );
+  const required = roster.requiredApplicationCoverage.mappings.find(
+    (row) => row.coverageId === "APP-FEE-ESTIMATE",
+  );
+  assert.equal(required.operationIds.length, 6);
+  assert.equal(required.mappingStatus, "PARTIALLY_REVIEWED_BLOCKED");
+  assert(required.unresolved.length > 0);
+  for (const id of ["API-acb46fc98372", "API-69f42dde6f4c", "API-d9ecd7443173"])
+    assert(roster.mappings.some((mapping) => mapping.candidateId === id));
+  assert.equal(roster.blockers.length, 2168);
+  assert.equal(roster.functionalAcceptance, false);
 });
 
 test("one global registry read keeps all39 protocol-specific consumer requirements blocked", () => {
