@@ -3330,9 +3330,9 @@
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-      "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
+      "sha256": "b8c02063676f4ad3c4cfeb6bc123dead4f8808bf511fa3400c1c390fc691693c",
       "sha256Encoding": "utf8-lf",
-      "bytes": 21237
+      "bytes": 21222
     },
     {
       "path": "frontend/src/app/universe/intelligence-platform/transaction-graph.component.ts",
@@ -3798,9 +3798,9 @@
     },
     {
       "path": "frontend/src/app/universe/payjoin/payjoin-playground.component.ts",
-      "sha256": "91ba459e417958ee3ed0dead535e638b412d384648d3f98ffc0df94564930b85",
+      "sha256": "350de1abdc2eb1eba6eafe324381fc9057436e8495f0a365717617d95ccdb350",
       "sha256Encoding": "utf8-lf",
-      "bytes": 10631
+      "bytes": 10628
     },
     {
       "path": "frontend/src/app/universe/payment-connectivity/payment-connectivity-overview.component.ts",
@@ -8199,7 +8199,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
+          "sha256": "b8c02063676f4ad3c4cfeb6bc123dead4f8808bf511fa3400c1c390fc691693c",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -10437,7 +10437,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/payjoin/payjoin-playground.component.ts",
-          "sha256": "91ba459e417958ee3ed0dead535e638b412d384648d3f98ffc0df94564930b85",
+          "sha256": "350de1abdc2eb1eba6eafe324381fc9057436e8495f0a365717617d95ccdb350",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -55686,7 +55686,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
+          "sha256": "b8c02063676f4ad3c4cfeb6bc123dead4f8808bf511fa3400c1c390fc691693c",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -55799,7 +55799,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
+          "sha256": "b8c02063676f4ad3c4cfeb6bc123dead4f8808bf511fa3400c1c390fc691693c",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -55912,7 +55912,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
+          "sha256": "b8c02063676f4ad3c4cfeb6bc123dead4f8808bf511fa3400c1c390fc691693c",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -56025,7 +56025,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/intelligence-platform/time-machine.component.ts",
-          "sha256": "1ec2f2651639765f98d28116bde92e6b9e0334c65c963dbae1e40a2b701ebbe6",
+          "sha256": "b8c02063676f4ad3c4cfeb6bc123dead4f8808bf511fa3400c1c390fc691693c",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -58896,7 +58896,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/payjoin/payjoin-playground.component.ts",
-          "sha256": "91ba459e417958ee3ed0dead535e638b412d384648d3f98ffc0df94564930b85",
+          "sha256": "350de1abdc2eb1eba6eafe324381fc9057436e8495f0a365717617d95ccdb350",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -58997,7 +58997,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/payjoin/payjoin-playground.component.ts",
-          "sha256": "91ba459e417958ee3ed0dead535e638b412d384648d3f98ffc0df94564930b85",
+          "sha256": "350de1abdc2eb1eba6eafe324381fc9057436e8495f0a365717617d95ccdb350",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -59098,7 +59098,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/payjoin/payjoin-playground.component.ts",
-          "sha256": "91ba459e417958ee3ed0dead535e638b412d384648d3f98ffc0df94564930b85",
+          "sha256": "350de1abdc2eb1eba6eafe324381fc9057436e8495f0a365717617d95ccdb350",
           "sha256Encoding": "utf8-lf"
         }
       ],
