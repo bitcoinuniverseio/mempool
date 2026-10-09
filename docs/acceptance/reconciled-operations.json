@@ -150451,20 +150451,20 @@
       "reason": "Current scoped Clock helper introduced after historical source inventory",
       "sources": [
         {
-          "path": "frontend/src/app/bitcoin-clock-routes.ts",
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/bitcoin-clock-routes.ts",
           "sha256": "973d0ceb939491ca39d141ac37df0368325f60f168eeec3427896bb7b63e6fd9"
         },
         {
-          "path": "frontend/src/app/app-routing.module.ts",
-          "sha256": "ca8f60cce74ba5174209f093fc81d4759017de6099a224016467175326368746"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/app-routing.module.ts",
+          "sha256": "66eb7953b99ead9f77ee0e6e26199ce9c729ea7944b21e900d18a450fbfbab5b"
         },
         {
-          "path": "frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "69b9127620bd52b23f720825ae01613973e191a3235a35b626be982d123d8e22"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
         },
         {
-          "path": "frontend/src/app/services/state.service.ts",
-          "sha256": "552403071068f1bf7e6a621f85d507d9b3754b7cbef07983791109b1dc6f4fb9"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
         }
       ]
     },
@@ -150473,11 +150473,11 @@
       "reason": "Current whole-frame scope validation and owned lifecycle guards require distinct current source lineage",
       "sources": [
         {
-          "path": "frontend/src/app/services/websocket.service.ts",
-          "sha256": "eb40444e56b64ff45e4b604c03a7af8c0d7d1bbd47d8c43a9cf7448bf199c6a8"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
         },
         {
-          "path": "frontend/src/app/services/websocket-response-scope.ts",
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket-response-scope.ts",
           "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522"
         }
       ]
@@ -152445,20 +152445,20 @@
       "reason": "Current exact network-parent helper and Clock/StateService define this selected-context UI operation, with remaining required variants blocked.",
       "sources": [
         {
-          "path": "frontend/src/app/bitcoin-clock-routes.ts",
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/bitcoin-clock-routes.ts",
           "sha256": "973d0ceb939491ca39d141ac37df0368325f60f168eeec3427896bb7b63e6fd9"
         },
         {
-          "path": "frontend/src/app/app-routing.module.ts",
-          "sha256": "ca8f60cce74ba5174209f093fc81d4759017de6099a224016467175326368746"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/app-routing.module.ts",
+          "sha256": "66eb7953b99ead9f77ee0e6e26199ce9c729ea7944b21e900d18a450fbfbab5b"
         },
         {
-          "path": "frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "69b9127620bd52b23f720825ae01613973e191a3235a35b626be982d123d8e22"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
         },
         {
-          "path": "frontend/src/app/services/state.service.ts",
-          "sha256": "552403071068f1bf7e6a621f85d507d9b3754b7cbef07983791109b1dc6f4fb9"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
         }
       ]
     },
@@ -152470,11 +152470,11 @@
       "reason": "Current base socket ingress and lifecycle implementation define a separate WS operation; no source test becomes functional acceptance.",
       "sources": [
         {
-          "path": "frontend/src/app/services/websocket.service.ts",
-          "sha256": "eb40444e56b64ff45e4b604c03a7af8c0d7d1bbd47d8c43a9cf7448bf199c6a8"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
         },
         {
-          "path": "frontend/src/app/services/websocket-response-scope.ts",
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket-response-scope.ts",
           "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522"
         }
       ]
@@ -152573,20 +152573,20 @@
       ],
       "sources": [
         {
-          "path": "frontend/src/app/bitcoin-clock-routes.ts",
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/bitcoin-clock-routes.ts",
           "sha256": "973d0ceb939491ca39d141ac37df0368325f60f168eeec3427896bb7b63e6fd9"
         },
         {
-          "path": "frontend/src/app/app-routing.module.ts",
-          "sha256": "ca8f60cce74ba5174209f093fc81d4759017de6099a224016467175326368746"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/app-routing.module.ts",
+          "sha256": "66eb7953b99ead9f77ee0e6e26199ce9c729ea7944b21e900d18a450fbfbab5b"
         },
         {
-          "path": "frontend/src/app/components/clock/clock.component.ts",
-          "sha256": "69b9127620bd52b23f720825ae01613973e191a3235a35b626be982d123d8e22"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+          "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531"
         },
         {
-          "path": "frontend/src/app/services/state.service.ts",
-          "sha256": "552403071068f1bf7e6a621f85d507d9b3754b7cbef07983791109b1dc6f4fb9"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+          "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868"
         }
       ],
       "status": "NOT TESTED",
@@ -152632,11 +152632,11 @@
       ],
       "sources": [
         {
-          "path": "frontend/src/app/services/websocket.service.ts",
-          "sha256": "eb40444e56b64ff45e4b604c03a7af8c0d7d1bbd47d8c43a9cf7448bf199c6a8"
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+          "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed"
         },
         {
-          "path": "frontend/src/app/services/websocket-response-scope.ts",
+          "path": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket-response-scope.ts",
           "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522"
         }
       ],
@@ -165128,8 +165128,55 @@
   ],
   "original243RowEvidence": "Not recovered; historical source candidates retained without inventing the absent original bundle.",
   "functionalAcceptance": false,
-  "historicalArtifactSha256": "602c73f86f2ef58b14a9ddf178814264989c281f9048aa29ab0bc03f23d3a9a1",
+  "historicalArtifactSha256": "3a9d25f4193091f52bd348fefcc5944ba9fe8927676a3e071851a69740b01d8f",
+  "historicalArtifactHashEncoding": "UTF-8 LF-normalized historical artifact text; complete parsed historical records retained unchanged",
   "historicalArtifact": "docs/acceptance/operation-matrix-2026-09-06.json",
+  "historicalRawProvenance": {
+    "path": "docs/acceptance/source-proof/historical-source-candidates-reviewed-2026-10-09.json.gz",
+    "sha256": "6c40b8996e28c90e4e074b22ac8fa2ae9175e6546ee97cc6415b813ff6bc1969",
+    "encoding": "gzip of original raw historical source-candidate artifact bytes",
+    "decompressedSha256": "602c73f86f2ef58b14a9ddf178814264989c281f9048aa29ab0bc03f23d3a9a1",
+    "bytes": 6000749,
+    "scope": "Current 1617-row source-candidate document at review time; not the unrecovered original243-row acceptance bundle"
+  },
+  "currentSourceBindings": [
+    {
+      "path": "frontend/src/app/bitcoin-clock-routes.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/bitcoin-clock-routes.ts",
+      "sha256": "973d0ceb939491ca39d141ac37df0368325f60f168eeec3427896bb7b63e6fd9",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/app-routing.module.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/app-routing.module.ts",
+      "sha256": "66eb7953b99ead9f77ee0e6e26199ce9c729ea7944b21e900d18a450fbfbab5b",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/components/clock/clock.component.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/components/clock/clock.component.ts",
+      "sha256": "81199ba51808883376adbc98d9da7a4dc0c5bbb5ea1dab7a8a35d2db64757531",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/services/state.service.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/state.service.ts",
+      "sha256": "87504db9f9cbc8e5c48f6ca85bf8977a2f800e65a07a533fa7010ff362b53868",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/services/websocket.service.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket.service.ts",
+      "sha256": "3dca7697ec4ac3dc9873374dc54ea6207f9ea95abc8120431a8c33426498b2ed",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    },
+    {
+      "path": "frontend/src/app/services/websocket-response-scope.ts",
+      "snapshotPath": "docs/acceptance/source-proof/mempool-reviewed-2026-10-09/frontend/src/app/services/websocket-response-scope.ts",
+      "sha256": "9601f1607a4d669e3e781212d21bee09f0754a6e08daa4246a456a10bea4b522",
+      "encoding": "UTF-8 LF-normalized source, frozen snapshot bytes"
+    }
+  ],
   "requiredApplicationCoverage": {
     "schemaVersion": "universe-required-application-coverage-v1",
     "snapshot": {

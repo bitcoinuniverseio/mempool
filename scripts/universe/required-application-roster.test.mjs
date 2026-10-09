@@ -162,3 +162,33 @@ test("current source proof drift prevents semantic review regeneration", () => {
     /drift/,
   );
 });
+
+test("checkout line endings cannot change reviewed source or historical lineage", () => {
+  const expected = build();
+  const lfHistorical = Buffer.from(
+    historicalBytes.toString("utf8").replaceAll("\r\n", "\n"),
+  );
+  const crlfHistorical = Buffer.from(
+    lfHistorical.toString("utf8").replaceAll("\n", "\r\n"),
+  );
+  const alternateSourceReader = (path) =>
+    path.startsWith("frontend/")
+      ? Buffer.from(read(path).toString("utf8").replaceAll("\r\n", "\n"))
+      : read(path);
+  assert.deepEqual(
+    buildRequiredApplicationRoster(
+      lfHistorical,
+      coverageBytes,
+      alternateSourceReader,
+    ),
+    expected,
+  );
+  assert.deepEqual(
+    buildRequiredApplicationRoster(
+      crlfHistorical,
+      coverageBytes,
+      alternateSourceReader,
+    ),
+    expected,
+  );
+});
