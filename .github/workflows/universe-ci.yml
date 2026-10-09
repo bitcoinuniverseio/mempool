@@ -94,6 +94,9 @@ jobs:
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
 
+      - name: Wire enum exceptions retain the text gate's negative controls
+        run: node --test scripts/universe/check-text.test.mjs
+
       - name: No raw interface colour outside the allowlist
         run: node scripts/universe/check-colors.mjs
 
