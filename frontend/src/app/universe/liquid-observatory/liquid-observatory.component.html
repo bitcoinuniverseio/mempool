@@ -1,11 +1,11 @@
 <div class="container-xl product-page">
  <header class="page-head"><nav class="crumbs"><a [routerLink]="['/' | relativeUrl]">Home</a><span>/</span><span>Liquid observatory</span></nav>
- <h1>Liquid Confidential-Asset, Peg, and Federation Observatory</h1>
- <p>Selected public block observations and parent peg evidence for an explicitly configured Elements/Bitcoin pair. Reserve, circulating supply, signer liveness and payout approval remain unknown.</p></header>
+ <h1>Liquid observatory</h1>
+ <p>Explore public blocks, assets and transfers between Liquid and Bitcoin. Hidden balances, total reserves and payout approvals are not verified.</p></header>
  <nav class="nav-tabs"><a [routerLink]="['/liquid/observatory' | relativeUrl]" class="active">Observatory</a><a [routerLink]="['/liquid/unblind' | relativeUrl]">Unblinding Workspace</a></nav>
- <section class="panel"><h2>Selected native pair</h2><label for="elementsNetwork">Source network</label>
+ <section class="panel"><h2>Data source</h2><label for="elementsNetwork">Network</label>
  <select id="elementsNetwork" [(ngModel)]="network" (ngModelChange)="refreshNode()"><option value="liquidv1">Liquid mainnet</option><option value="liquidtestnet">Liquid testnet</option><option value="elementsregtest">Isolated Elements regtest</option></select>
- <button type="button" (click)="refreshNode()">Refresh observations</button><button type="button" (click)="cancel()">Cancel observatory requests</button>
+ <button type="button" (click)="refreshNode()">Refresh</button><button type="button" (click)="cancel()">Cancel requests</button>
  <ng-container *ngIf="node$ | async as state"><p *ngIf="state.loading" aria-busy="true">Reading the owned node checkpoint...</p><p *ngIf="state.error" role="alert">Node checkpoint unavailable: {{ state.error }}</p>
  <ng-container *ngIf="state.node as node"><p>Node-reported network {{ node.network }} / height {{ node.blockHeight }} / synchronization {{ node.initialBlockDownload ? 'in progress' : 'complete' }}</p><p class="mono">{{ node.blockHash }}</p><p>Block signing script: <span class="mono">{{ node.signblockScript }}</span></p><p>Checkpoint and policy only; this independent node read does not establish paired projection or inventory completeness.</p></ng-container></ng-container></section>
  <ng-container *ngIf="vm$ | async as vm">

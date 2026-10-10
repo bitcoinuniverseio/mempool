@@ -17,7 +17,7 @@ export interface LiquidViewModel {
  pegs?: LiquidPegRecord[]; pegOuts?: LiquidPegOutRecord[]; pegPage?: LiquidPegPage; pegOutPage?: LiquidPegPage;
  errors: Record<string,string>; pending: Record<string,boolean>; notice?: string;
 }
-@Component({selector:'app-liquid-observatory',templateUrl:'./liquid-observatory.component.html',styleUrls:['../product-page.scss'],standalone:true,imports:[RelativeUrlPipe,CommonModule,RouterModule,FormsModule],changeDetection:ChangeDetectionStrategy.OnPush})
+@Component({selector:'app-liquid-observatory',templateUrl:'./liquid-observatory.component.html',styleUrls:['../product-page.scss','./liquid-observatory.component.scss'],standalone:true,imports:[RelativeUrlPipe,CommonModule,RouterModule,FormsModule],changeDetection:ChangeDetectionStrategy.OnPush})
 export class LiquidObservatoryComponent implements OnInit,OnDestroy {
  network: LiquidNetwork='liquidv1';
  private readonly destroyed$=new Subject<void>();
