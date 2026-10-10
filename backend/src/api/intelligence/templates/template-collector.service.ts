@@ -6,6 +6,7 @@ import logger from '../../../logger';
 import bitcoinClient from '../../bitcoin/bitcoin-client';
 import mempoolBlocks from '../../mempool-blocks';
 import { BlockExtended, TransactionExtended } from '../../../mempool.interfaces';
+import { TaskDrain } from '../../task-drain';
 
 /**
  * Block templates from the sources this deployment actually has.
@@ -133,6 +134,9 @@ export class TemplateCollectorService {
   private currentParentHash: string | null = null;
   private tipRevision = 0;
   private pollTimer: NodeJS.Timeout | null = null;
+  private initialPollTimer: NodeJS.Timeout | null = null;
+  private stopping = false;
+  private readonly work = new TaskDrain();
   private polling = false;
   private currentContext: TemplateObservationContext | null = null;
   private lastCoreTemplateId: string | null = null;
@@ -347,7 +351,13 @@ export class TemplateCollectorService {
     return template;
   }
 
-  public async collect(now?: number): Promise<void> {
+  public collect(now?: number): Promise<void> {
+    if (this.stopping) return Promise.resolve();
+    return this.work.track(this.executeCollection(now));
+  }
+
+  /** @asyncUnsafe The polling and event owners handle collection failures. */
+  private async executeCollection(now?: number): Promise<void> {
     if (this.polling) { return; }
     this.polling = true;
     try {
@@ -359,16 +369,21 @@ export class TemplateCollectorService {
   }
 
   public startPolling(intervalMs: number = TEMPLATE_LIMITS.pollMs): void {
-    if (this.pollTimer) { return; }
+    if (this.pollTimer || this.stopping) { return; }
     this.pollTimer = setInterval(() => { this.collect().catch(() => undefined); }, intervalMs);
     this.pollTimer.unref?.();
     // The first poll waits for the main loop to have authenticated and filled the mempool.
-    setTimeout(() => { this.collect().catch(() => undefined); }, 30_000).unref?.();
+    this.initialPollTimer = setTimeout(() => { this.collect().catch(() => undefined); }, 30_000);
+    this.initialPollTimer.unref?.();
   }
 
   public stopPolling(): void {
+    this.stopping = true;
+    if (this.initialPollTimer) { clearTimeout(this.initialPollTimer); this.initialPollTimer = null; }
     if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
   }
+
+  public drain(): Promise<void> { return this.work.drain(); }
 
   /** Called from the block hub: compares the mined block with the latest template for its height. */
   public observeBlock(block: BlockExtended, transactions: TransactionExtended[], now = Date.now()): MinedBlockTemplateComparison | null {

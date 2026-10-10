@@ -78,9 +78,17 @@ class RbfCache {
 
   private evictionCount = 0;
   private staleCount = 0;
+  private cleanupTimer: NodeJS.Timeout | null;
 
   constructor() {
-    setInterval(this.cleanup.bind(this), 1000 * 60 * 10);
+    this.cleanupTimer = setInterval(this.cleanup.bind(this), 1000 * 60 * 10);
+  }
+
+  public destroy(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
   }
 
   /**
@@ -563,7 +571,17 @@ class RbfCache {
       return !this.expiring.has(txid) && !this.getRbfTree(txid)?.mined;
     });
 
-    const processTxs = (txs: IEsploraApi.Transaction[]): void => {
+    const processTxs = (txs: IEsploraApi.Transaction[], expected: string[]): void => {
+      if (!Array.isArray(txs) || txs.length !== expected.length) { throw new Error('Incomplete RBF transaction qualification'); }
+      const seen = new Set<string>();
+      for (const tx of txs) {
+        if (!tx || !expected.includes(tx.txid) || seen.has(tx.txid) || typeof tx.status?.confirmed !== 'boolean'
+          || tx.status.confirmed && (!Number.isSafeInteger(tx.status.block_height) || tx.status.block_height! < 0
+            || !/^[0-9a-f]{64}$/.test(tx.status.block_hash ?? '') || !Number.isSafeInteger(tx.status.block_time) || tx.status.block_time! < 0)) {
+          throw new Error('Invalid RBF transaction qualification');
+        }
+        seen.add(tx.txid);
+      }
       for (const tx of txs) {
         found[tx.txid] = true;
         if (tx.status?.confirmed) {
@@ -577,6 +595,7 @@ class RbfCache {
       }
     };
 
+    let failedReads = false;
     if (config.MEMPOOL.BACKEND === 'esplora') {
       let processedCount = 0;
       const sliceLength = Math.ceil(config.ESPLORA.BATCH_QUERY_BASE_SIZE / 40);
@@ -585,9 +604,10 @@ class RbfCache {
         processedCount += slice.length;
         try {
           const txs = await bitcoinApi.$getRawTransactions(slice);
-          processTxs(txs);
+          processTxs(txs, slice);
           logger.debug(`fetched and processed ${processedCount} of ${txids.length} cached rbf transactions (${(processedCount / txids.length * 100).toFixed(2)}%)`);
         } catch (err) {
+          failedReads = true;
           logger.err(`failed to fetch or process ${slice.length} cached rbf transactions`);
         }
       }
@@ -603,20 +623,22 @@ class RbfCache {
           const txid = txids[next++];
           try {
             // Process each bounded worker result immediately; do not retain all full responses.
-            processTxs([await bitcoinApi.$getRawTransaction(txid, true, false)]);
+            processTxs([await bitcoinApi.$getRawTransaction(txid, false, false)], [txid]);
           } catch (err) {
-            // some 404s are expected, so continue quietly
+            // This path is Core RPC, including Electrum's inherited transaction reader.
+            // HTTP404 is an endpoint failure; only Core's structured TX-notfound is absence.
+            const failure = err as { code?: unknown; rpcMethod?: unknown } | null;
+            if (failure?.code !== -5 || failure.rpcMethod !== 'getrawtransaction') { failedReads = true; }
           }
         }
       };
-      try {
-        await Promise.all(Array.from({ length: Math.min(RBF_CHECK_CONCURRENCY, txids.length) }, () => worker()));
-      } catch (err) {
-        logger.err('failed to check cached rbf transactions: ' + (err instanceof Error ? err.message : err));
-      }
+      const completed = await Promise.allSettled(Array.from({ length: Math.min(RBF_CHECK_CONCURRENCY, txids.length) }, () => worker()));
+      if (completed.some(result => result.status === 'rejected')) { failedReads = true; }
     }
 
-    // evict missing transactions
+    // Every worker has completed. Unknown source failures cannot schedule missing expiry.
+    if (failedReads) { throw new Error('RBF native transaction qualification was incomplete'); }
+    // evict transactions genuinely absent from the qualified Core response
     for (const txid of txids) {
       if (!found[txid]) {
         this.evict(txid, false);

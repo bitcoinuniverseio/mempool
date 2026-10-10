@@ -18,6 +18,12 @@ export function historyPathForRole(basePath: string, clustered: boolean, primary
   return basePath + '.worker-' + workerId;
 }
 /** Network-scoped, checksummed snapshots published by atomic file replacement. */
+export class HistoryWriteCleanupError extends Error {
+  constructor(readonly primary: unknown, readonly cleanup: unknown) {
+    super('History snapshot write and descriptor cleanup both failed.');
+    this.name = 'HistoryWriteCleanupError';
+  }
+}
 export class HistoryStore {
   readonly path: string;
   private ownsLock = false;
@@ -93,7 +99,13 @@ export class HistoryStore {
         await compressToFile(Readable.from(historyEnvelopeChunks(snapshot, this.network, MAX_BYTES)), createGzip(),
           createWriteStream(temporary, { fd: handle.fd, autoClose: false }));
         await handle.sync();
-      } finally { await handle.close(); }
+      } catch (primary) {
+        try { await handle.close(); } catch (cleanup) {
+          throw new HistoryWriteCleanupError(primary, cleanup);
+        }
+        throw primary;
+      }
+      await handle.close();
       await fs.rename(temporary, this.path);
       // Linux persists the directory entry as well as the file contents.
       if (process.platform !== 'win32') {

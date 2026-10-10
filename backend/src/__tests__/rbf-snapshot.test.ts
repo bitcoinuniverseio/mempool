@@ -58,12 +58,45 @@ describe('RBF snapshot allocation admission and graph closure', () => {
   it('rejects inode substitution between pathname metadata and open', () => {
     fs.writeFileSync(file, JSON.stringify(snapshot())); const original = fs.openSync;
     jest.spyOn(fs, 'openSync').mockImplementation(((path: any, flags: any, ...rest: any[]) => {
-      if (path === file && flags === (fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0))) {
+      if (path === file && flags === (fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0))) {
         fs.renameSync(file, file + '.old'); fs.writeFileSync(file, JSON.stringify(snapshot()));
       }
       return (original as any)(path, flags, ...rest);
     }) as any);
     expect(() => readRbfSnapshot(file, 'signet')).toThrow('snapshot-changed');
+  });
+  it('rejects a nonregular opened descriptor before any read', () => {
+    fs.writeFileSync(file, JSON.stringify(snapshot()));
+    const original = fs.fstatSync;
+    jest.spyOn(fs, 'fstatSync').mockImplementation(((...args: any[]) => {
+      const metadata = (original as any)(...args); metadata.isFile = () => false; return metadata;
+    }) as any);
+    const read = jest.spyOn(fs, 'readSync');
+    expect(() => readRbfSnapshot(file, 'signet')).toThrow('snapshot-changed');
+    expect(read).not.toHaveBeenCalled();
+  });
+  it('refuses final pathname replacement after successful fixed-descriptor reads', () => {
+    fs.writeFileSync(file, JSON.stringify(snapshot())); const original = fs.readSync;
+    let replaced = false;
+    jest.spyOn(fs, 'readSync').mockImplementation(((...args: any[]) => {
+      const result = (original as any)(...args);
+      if (args[3] === 1 && !replaced) {
+        replaced = true; fs.renameSync(file, file + '.old'); fs.writeFileSync(file, JSON.stringify(snapshot()));
+      }
+      return result;
+    }) as any);
+    expect(() => readRbfSnapshot(file, 'signet')).toThrow('snapshot-changed');
+    expect(replaced).toBe(true);
+  });
+  it('refuses pathname replacement during JSON parsing before accepting validated data', () => {
+    fs.writeFileSync(file, JSON.stringify(snapshot())); const original = JSON.parse;
+    let replaced = false;
+    jest.spyOn(JSON, 'parse').mockImplementation(((...args: any[]) => {
+      if (!replaced) { replaced = true; fs.renameSync(file, file + '.old'); fs.writeFileSync(file, JSON.stringify(snapshot())); }
+      return (original as any)(...args);
+    }) as any);
+    expect(() => readRbfSnapshot(file, 'signet')).toThrow('snapshot-changed');
+    expect(replaced).toBe(true);
   });
   it('rejects foreign network/schema and malformed graph without partial restore', () => {
     for (const alter of [

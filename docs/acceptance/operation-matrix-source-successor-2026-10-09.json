@@ -1925,6 +1925,12 @@
       "bytes": 51577
     },
     {
+      "path": "backend/src/api/bitcoin/electrum-api.ts",
+      "sha256": "c75c4682fda2d4af592f84bce51481181c7e37e5c91e5da3bb8c34fb2370519d",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 14670
+    },
+    {
       "path": "backend/src/api/capabilities.routes.ts",
       "sha256": "ce069d5d5a7dabe3322bc3b7e1c762751740ea8ddf7718e458f4dbda1a882054",
       "sha256Encoding": "utf8-lf",
@@ -2316,9 +2322,9 @@
     },
     {
       "path": "backend/src/index.ts",
-      "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+      "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
       "sha256Encoding": "utf8-lf",
-      "bytes": 36203
+      "bytes": 40816
     },
     {
       "path": "docs/acceptance/2026-09-05-controls.json",
@@ -4332,9 +4338,9 @@
     },
     {
       "path": "scripts/universe/acceptance-matrix.mjs",
-      "sha256": "ffc076e198ca045a1046f952e9e8f71a7797676a51863f68ae199081003d66e2",
+      "sha256": "22d6f264028d2fe0d088303f9aa81cac4218804c77b8c932e3fd79f71cfe0cd4",
       "sha256Encoding": "utf8-lf",
-      "bytes": 61391
+      "bytes": 61598
     }
   ],
   "sourceCandidates": {
@@ -117058,7 +117064,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117157,7 +117163,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117256,7 +117262,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117355,7 +117361,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117454,7 +117460,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117553,7 +117559,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117652,7 +117658,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117751,7 +117757,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -117850,7 +117856,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -118125,7 +118131,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },
@@ -118230,7 +118236,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118397,7 +118403,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118564,7 +118570,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118731,7 +118737,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -118898,7 +118904,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -119065,7 +119071,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -119236,7 +119242,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "multipartyRoutes.initRoutes"
         },
@@ -123323,7 +123329,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123443,7 +123449,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123563,7 +123569,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123683,7 +123689,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123803,7 +123809,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -123923,7 +123929,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124043,7 +124049,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124163,7 +124169,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124283,7 +124289,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124403,7 +124409,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124523,7 +124529,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124643,7 +124649,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "privateSubmissionRoutes.initRoutes"
         },
@@ -124769,7 +124775,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -124936,7 +124942,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125103,7 +125109,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125270,7 +125276,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125437,7 +125443,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125604,7 +125610,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125775,7 +125781,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -125972,7 +125978,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "openTimestampsRoutes.initRoutes"
         },
@@ -127801,7 +127807,7 @@
         },
         {
           "artifact": "backend/src/index.ts",
-          "sha256": "cc67c27a83bd6f17e9d35d614ec426ae5ff9f0219495a29c6c6e60705e9d6e45",
+          "sha256": "2a1e681176566cd6903d57ac794bb8b7b12c0aec33ba5e1358c47b447265a51d",
           "sha256Encoding": "utf8-lf",
           "symbol": "bootstrapRoutes.initRoutes"
         },

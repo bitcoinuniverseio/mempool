@@ -68,7 +68,8 @@ describe('owned Esplora transport boundaries', () => {
       if (oldProxy===undefined) delete process.env.HTTP_PROXY; else process.env.HTTP_PROXY=oldProxy;
       if (oldNoProxy===undefined) delete process.env.NO_PROXY; else process.env.NO_PROXY=oldNoProxy;
     }
-  });  it('validates each selected address host and rejects unsafe provider amounts', /** @asyncUnsafe */ async () => {
+  });
+  it('validates each selected address host and rejects unsafe provider amounts', /** @asyncUnsafe */ async () => {
     const originalNetwork=config.MEMPOOL.NETWORK; const previousChallenge=process.env.UNIVERSE_SIGNET_CHALLENGE;
     config.MEMPOOL.NETWORK='signet'; process.env.UNIVERSE_SIGNET_CHALLENGE='51';
     let wrongChain=false; let unsafeAmount=false; const seen: string[]=[];

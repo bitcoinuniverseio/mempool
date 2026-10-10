@@ -14,19 +14,31 @@ export async function readElectrumUtxoMetadata(rows: IndexedUtxo[], core: CoreRe
   const headers = new Map<number, Promise<{ hash: string; time: number }>>();
   let next = 0, timer: ReturnType<typeof setTimeout>;
   const metadata = (height: number) => {
-    if (!headers.has(height)) headers.set(height, (/** @asyncUnsafe readElectrumUtxoMetadata owns rejection through Promise.race. */ async () => {
-      active(); const hash = await core('getblockhash', [height], signal);
-      active(); if (typeof hash !== 'string' || !/^[0-9a-f]{64}$/.test(hash)) throw new Error('Invalid canonical UTXO block hash');
-      const header = await core('getblockheader', [hash, true], signal); active();
-      if (header?.hash !== hash || header.height !== height || !Number.isSafeInteger(header.time) || header.time < 0) throw new Error('Invalid canonical UTXO block header');
-      return { hash, time: header.time };
+    if (!headers.has(height)) headers.set(height, (/** @asyncUnsafe readElectrumUtxoMetadata owns rejection and aborts sibling reads. */ async () => {
+      try {
+        active(); const hash = await core('getblockhash', [height], signal);
+        active(); if (typeof hash !== 'string' || !/^[0-9a-f]{64}$/.test(hash)) throw new Error('Invalid canonical UTXO block hash');
+        const header = await core('getblockheader', [hash, true], signal); active();
+        if (header?.hash !== hash || header.height !== height || !Number.isSafeInteger(header.time) || header.time < 0) throw new Error('Invalid canonical UTXO block header');
+        return { hash, time: header.time };
+      } catch (error) {
+        controller.abort();
+        throw error;
+      }
     })());
     return headers.get(height)!;
   };
   const worker = /** @asyncUnsafe readElectrumUtxoMetadata owns rejection through Promise.race. */ async () => {
     while (next < rows.length) {
       active(); const index = next++, row = rows[index];
-      const block = row.height > 0 ? await metadata(row.height) : null; active();
+      let block: { hash: string; time: number } | null;
+      try {
+        block = row.height > 0 ? await metadata(row.height) : null;
+      } catch (error) {
+        controller.abort();
+        throw error;
+      }
+      active();
       result[index] = { txid: row.tx_hash, vout: row.tx_pos, value: row.value, status: block
         ? { confirmed: true, block_height: row.height, block_hash: block.hash, block_time: block.time }
         : { confirmed: false } };

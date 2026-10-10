@@ -91,6 +91,9 @@ jobs:
       - name: The portfolio contract gate fires on the states it exists for
         run: node --test scripts/universe/portfolio-contract.test.mjs
 
+      - name: The Liquid v1 transport identity matches its native producer
+        run: node --test scripts/universe/liquid-wire-contract.test.mjs
+
       - name: No em dash anywhere
         run: node scripts/universe/check-text.mjs
 
@@ -758,6 +761,10 @@ jobs:
         working-directory: scripts/universe/visual-qa
         run: node mobile-probe-regression.mjs
 
+      - name: The address portfolio link retains its touch target
+        working-directory: scripts/universe/visual-qa
+        run: UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT node --test address-portfolio-target.ci.test.mjs
+
       - name: Every window a phone can be, measured with a thumb
         working-directory: scripts/universe/visual-qa
         run: |
@@ -936,10 +943,13 @@ jobs:
           # which is what the container image gives it. Its own message names
           # this as the fix.
           HOME: /root
-        run: >-
-          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT
-          --browser=firefox --routes=home,tx,address,blocks,docs
-          --out=./artifacts-mobile-firefox
+        run: |
+          # The focused regression needs the same existing Firefox launch
+          # environment as the full third-engine gate below.
+          UNIVERSE_GATEWAY_BASE=http://127.0.0.1:$GATEWAY_PORT UNIVERSE_BROWSER_ENGINE=firefox node --test address-portfolio-target.ci.test.mjs
+          node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT \
+            --browser=firefox --routes=home,tx,address,blocks,docs \
+            --out=./artifacts-mobile-firefox
 
       - name: Keep the engine reports
         if: failure()

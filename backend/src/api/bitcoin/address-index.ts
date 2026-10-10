@@ -341,19 +341,33 @@ export async function $probeAddressIndex(chainTip: number | null, signal?: Abort
     }
 
     if (reachable) {
-      try {
-        active();
-        const summary = await client.$getAddress?.(probeAddress, signal);
-        summaryAnswered = addressSummaryProblems(summary, probeAddress).length === 0;
-      } catch (e) {
-        logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));
-      }
-      try {
-        active();
-        const utxos = await client.$getAddressUtxos?.(probeAddress);
-        utxoAnswered = utxoListProblems(utxos).length === 0;
-      } catch (e) {
-        logger.debug('Address index probe could not read a UTXO list: ' + (e instanceof Error ? e.message : e));
+      // Independent reads share the capability deadline. Serializing them can
+      // exhaust that budget even when both canonical address routes answer.
+      try { await Promise.all([
+        (async (): Promise<void> => {
+          try {
+            active();
+            const summary = await client.$getAddress?.(probeAddress, signal);
+            active();
+            summaryAnswered = addressSummaryProblems(summary, probeAddress).length === 0;
+          } catch (e) {
+            logger.debug('Address index probe could not read an address summary: ' + (e instanceof Error ? e.message : e));
+          }
+        })(),
+        (async (): Promise<void> => {
+          try {
+            active();
+            const utxos = await client.$getAddressUtxos?.(probeAddress);
+            active();
+            utxoAnswered = utxoListProblems(utxos).length === 0;
+          } catch (e) {
+            logger.debug('Address index probe could not read a UTXO list: ' + (e instanceof Error ? e.message : e));
+          }
+        })(),
+      ]); } catch (e) {
+        summaryAnswered = false;
+        utxoAnswered = false;
+        logger.debug('Address index probe could not complete both reads: ' + (e instanceof Error ? e.message : e));
       }
     }
 

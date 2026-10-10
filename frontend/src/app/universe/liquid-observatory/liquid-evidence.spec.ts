@@ -5,6 +5,13 @@ import { exactLiquidAmount,liquidProfile,validateLiquidCoverage,validateLiquidRe
 import { pair,coverage,summary,assets,pegs } from './liquid-fixtures';
 function client(reply:any,configured:any={elementsregtest:pair}){const get=vi.fn(()=>of(reply)),post=vi.fn(()=>of(reply));return {get,post,api:new UniverseApiService({get,post} as any,{isBrowser:true,network:'signet',env:{LIQUID_SOURCE_PROFILES:configured}} as any,{} as any)};}
 describe('Liquid independent pair and exact public evidence',()=>{
+ it('requires the exact v1 transport scope and rejects similar or missing scopes',()=>{
+  expect(validateLiquidCoverage(coverage(),pair)).toEqual(coverage());
+  for(const scope of [undefined,'public-blocks-and-parent-peg-evidence','observed-public-blocks-and-parent-peg-evidence']) {
+   const c=structuredClone(coverage());(c as any).scope=scope;
+   expect(()=>validateLiquidCoverage(c,pair)).toThrow();
+  }
+ });
  it('keeps u64 atomic values exact without Number rounding',()=>{expect(exactLiquidAmount('9007199254740993')).toBe('90071992.54740993');expect(exactLiquidAmount('18446744073709551615')).toBe('184467440737.09551615');expect(()=>exactLiquidAmount('18446744073709551616')).toThrow();});
  it('fails closed without profile and rejects a BitcoinSignet parent inference',()=>{expect(()=>liquidProfile({},'elementsregtest')).toThrow();expect(()=>liquidProfile({elementsregtest:{...pair,profile:{...pair.profile,parentNetwork:'test'}}},'elementsregtest')).toThrow();});
  it.each(['elementsGenesis','parentGenesis','elementsSourceRevision','parentSourceRevision','elementsVersion','parentVersion','policyAsset'])('rejects wrong independently bound %s',key=>{const c=structuredClone(coverage());(c.source.profile as any)[key]=typeof (pair.profile as any)[key]==='number'?1:'0'.repeat((pair.profile as any)[key].length);expect(()=>validateLiquidCoverage(c,pair)).toThrow();});

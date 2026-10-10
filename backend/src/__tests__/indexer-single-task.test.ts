@@ -35,6 +35,32 @@ jest.mock('../repositories/BlocksRepository', () => ({ __esModule: true, default
 
 import indexer from '../indexer';
 
+describe('indexer shutdown completion', () => {
+  it('refuses future tasks but waits for already running mining work beyond five seconds', /** @asyncUnsafe Jest owns the test. */ async () => {
+    jest.useFakeTimers();
+    let fresh: typeof indexer;
+    jest.isolateModules(() => { fresh = require('../indexer').default; });
+    let complete!: () => void;
+    let drained = false;
+    miningState.indexCoinStatsIndex.mockImplementationOnce(() => new Promise<undefined>(resolve => { complete = () => resolve(undefined); }));
+    const task = fresh!.runSingleTask('coinStatsIndex');
+    fresh!.scheduleSingleTask('blocksPrices', 1000);
+    fresh!.stop();
+    const drain = fresh!.drain().then(() => { drained = true; });
+    jest.advanceTimersByTime(6000);
+    await Promise.resolve();
+    expect(drained).toBe(false);
+    expect(jest.getTimerCount()).toBe(0);
+    expect(await fresh!.runSingleTask('coinStatsIndex')).toMatchObject({ status: 'disabled' });
+    expect(fresh!.reindex()).toBe(false);
+    complete();
+    expect(await task).toMatchObject({ status: 'completed' });
+    await drain;
+    expect(drained).toBe(true);
+    jest.useRealTimers();
+  });
+});
+
 /** Lets every promise chain queued so far settle while timers are faked. */
 async function flush(): Promise<void> {
   for (let i = 0; i < 10; i++) {
