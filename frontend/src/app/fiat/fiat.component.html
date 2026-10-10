@@ -12,4 +12,4 @@
   No price is not a price of zero. With no rate to convert with, the amount is
   left blank rather than rendered as a confident nothing.
 -->
-<ng-template #norate><span class="fiat-unavailable" title="No price is available in this deployment" i18n-title="fiat.unavailable">&nbsp;</span></ng-template>
+<ng-template #norate><span class="fiat-unavailable" title="No price is available in this deployment" i18n-title="fiat.unavailable"><ng-container *ngIf="unavailableLabel; else blankLabel">{{ unavailableLabel }}</ng-container><ng-template #blankLabel>&nbsp;</ng-template></span></ng-template>

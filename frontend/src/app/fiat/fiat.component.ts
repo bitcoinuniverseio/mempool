@@ -17,6 +17,7 @@ export class FiatComponent implements OnInit, OnDestroy {
 
   @Input() value: number;
   @Input() digitsInfo = '1.2-2';
+  @Input() unavailableLabel = '';
   @Input() blockConversion: Price;
   /**
    * Fiat amounts are converted figures, not judgements.
