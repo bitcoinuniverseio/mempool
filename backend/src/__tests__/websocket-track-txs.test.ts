@@ -83,6 +83,15 @@ function connect(): { send: (message: Record<string, unknown>) => Promise<Record
 }
 
 describe('websocket track-txs initial status', () => {
+  it('publishes an explicit available marker on bootstrap and both subscription families before any failed restore', async () => {
+    const expected = {schemaVersion:'universe-rbf-history-availability-v1',status:'available',reason:null};
+    expect(JSON.parse(websocketHandler.getSerializedInitData()).rbfHistoryAvailability).toEqual(expected);
+    const rbf = require('../api/rbf-cache').default; rbf.getRbfTrees = () => [];
+    const socket = connect();
+    expect((await socket.send({'track-rbf':'all','track-rbf-summary':true}))[0].rbfHistoryAvailability).toEqual(expected);
+    expect((await socket.send({'track-txs':[TXID_UNKNOWN]}))[0].rbfHistoryAvailability).toEqual(expected);
+  });
+
   beforeEach(() => {
     mempoolState.txs = { [TXID_MEMPOOL]: { txid: TXID_MEMPOOL, position: { block: 0, vsize: 100 } } };
     rbfState.replaced = { [TXID_REPLACED]: 'b'.repeat(64) };
@@ -167,5 +176,21 @@ describe('older Stratum job subscription lifecycle', () => {
     expect(socket.publishStratum(job)).toEqual([{ stratumJob: job }]);
     await socket.send({ 'track-stratum': false });
     expect(socket.publishStratum(job)).toEqual([]);
+  });
+});
+
+
+describe('retained RBF history failure is explicit without hiding fresh observations', () => {
+  it('serializes bootstrap availability without introducing a readiness timestamp', () => {
+    const state = require('../api/rbf-snapshot').rbfRestoreState; state.fail('snapshot-oversize');
+    expect(JSON.parse(websocketHandler.getSerializedInitData()).rbfHistoryAvailability).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'snapshot-oversize'});
+  });
+  it('marks both RBF and summary subscriptions unavailable while preserving supplied fresh RBF data', async () => {
+    const state = require('../api/rbf-snapshot').rbfRestoreState; state.fail('snapshot-oversize');
+    const fresh = [{ current: 'controlled-current-observation' }];
+    const rbf = require('../api/rbf-cache').default; rbf.getRbfTrees = () => fresh;
+    const subscription = connect(); const messages = await subscription.send({'track-rbf':'all','track-rbf-summary':true});
+    expect(messages[0].rbfLatest).toEqual(fresh);
+    expect(messages[0].rbfHistoryAvailability).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'snapshot-oversize'});
   });
 });
