@@ -25,8 +25,11 @@ const checkpointIdentity = (s: AddressSourceCheckpoint): string => JSON.stringif
 
 /** Exact cumulative counts and turnover, never a balance disguised as funding. */
 /** @asyncUnsafe */
-export async function collectElectrumAddressStats(selectedScriptHash: string | ((signal: AbortSignal) => Promise<string>), reader: ElectrumStatsReader): Promise<{ chain_stats: IEsploraApi.ChainStats; mempool_stats: IEsploraApi.ChainStats }> {
+export async function collectElectrumAddressStats(selectedScriptHash: string | ((signal: AbortSignal) => Promise<string>), reader: ElectrumStatsReader,
+  caller?: AbortSignal): Promise<{ chain_stats: IEsploraApi.ChainStats; mempool_stats: IEsploraApi.ChainStats }> {
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 15000), signal = controller.signal;
+  const cancel = (): void => controller.abort();
+  if (caller?.aborted) { cancel(); } else { caller?.addEventListener('abort', cancel, { once: true }); }
   const bounded = /** @asyncUnsafe */ async <T>(work: () => Promise<T>): Promise<T> => {
     active(signal);
     let remove = () => {};
@@ -35,13 +38,14 @@ export async function collectElectrumAddressStats(selectedScriptHash: string | (
       signal.addEventListener('abort', abort, { once: true });
       remove = () => signal.removeEventListener('abort', abort);
     });
-    try { const value = await Promise.race([work(), cancelled]); active(signal); return value; } finally { remove(); }
+    try { const value = await Promise.race([Promise.resolve().then(() => { active(signal); return work(); }), cancelled]); active(signal); return value; } finally { remove(); }
   };
   const core = (method: string, params: unknown[]) => bounded(() => reader.core(method, params, signal));
   const stats = { chain_stats: zero(), mempool_stats: zero() }, funding = new Map<string, number>(), spending = new Map<string, number>();
   const headers = new Map<number, Promise<string>>(), parents = new Map<string, Promise<any>>();
   let responseBytes = 0, auxiliaryReads = 0;
   try {
+    active(signal);
     const expectedScriptHash = typeof selectedScriptHash === 'string' ? selectedScriptHash : await bounded(() => selectedScriptHash(signal));
     if (!validHash(expectedScriptHash)) throw new Error('Invalid script hash');
     const checkpoint = await bounded(() => reader.checkpoint(signal));
@@ -105,5 +109,5 @@ export async function collectElectrumAddressStats(selectedScriptHash: string | (
     const afterHistory = await bounded(() => reader.history(signal)), afterBalance = await bounded(() => reader.balance(signal)), after = await bounded(() => reader.checkpoint(signal));
     if (exactHistory(afterHistory) !== historyIdentity || afterBalance.confirmed !== balance.confirmed || afterBalance.unconfirmed !== balance.unconfirmed || checkpointIdentity(after) !== checkpointIdentity(checkpoint)) throw new Error('Address source changed during statistics acquisition');
     return stats;
-  } finally { clearTimeout(timer); controller.abort(); }
+  } finally { clearTimeout(timer); caller?.removeEventListener('abort', cancel); controller.abort(); }
 }

@@ -1,6 +1,9 @@
 import http from 'http';
 import { AddressHttpReader, verifyAddressHttpSource } from '../api/bitcoin/address-http-reader';
 import { verifyAddressSource } from '../api/bitcoin/address-source-checkpoint';
+import { AddressReadPhase } from '../api/bitcoin/address-read-diagnostic';
+import { AddressReadAdmission } from '../api/bitcoin/address-read-admission';
+jest.mock('../logger', () => ({ __esModule: true, default: { warn: jest.fn() } }));
 jest.mock('../config', () => ({ __esModule: true, default: { MEMPOOL: { NETWORK: 'signet' } } }));
 jest.mock('../api/bitcoin/bitcoin-client', () => ({ addressBitcoinClient: {} }));
 const hash = (n: number) => n.toString(16).padStart(64, '0');
@@ -123,4 +126,87 @@ it('shares one connected HTTP socket across parallel address operations', async 
 });
 it.each(['https://127.0.0.1:3022', 'http://example.com', 'http://user:pass@127.0.0.1:3022', 'http://127.0.0.1:3022/path', 'http://127.0.0.1:3022?fallback=1', ''])('rejects unqualified origin %s', url => {
   expect(() => new AddressHttpReader(url, jest.fn())).toThrow();
+});
+
+it.each<AddressReadPhase>(['checkpoint-before', 'address-validation', 'balance-first', 'http-summary-first',
+  'http-summary-repeat', 'balance-repeat', 'checkpoint-after'])('reports actual failure phase %s without changing the error or read guards', async phase => {
+  const report = jest.fn(), failure = Object.assign(Error('private origin/address/body/auth must not be copied'), { code: 'EOOPS' });
+  let checkpoints = 0, balances = 0, httpSummaries = 0;
+  const r = new AddressHttpReader(origin, async (height, readHash, signal) => {
+    checkpoints++;
+    if (phase === 'checkpoint-before' && checkpoints === 1 || phase === 'checkpoint-after' && checkpoints === 2) { throw failure; }
+    return verifyAddressHttpSource(height, readHash, core, signal);
+  }, 15000, { report });
+  const connection = (r as unknown as { connection: { get: (url: string, options: unknown) => Promise<unknown> } }).connection;
+  const get = connection.get.bind(connection);
+  jest.spyOn(connection, 'get').mockImplementation((url, options) => {
+    if (url.includes('/address/')) {
+      httpSummaries++;
+      if (phase === 'http-summary-first' && httpSummaries === 1 || phase === 'http-summary-repeat' && httpSummaries === 2) { return Promise.reject(failure); }
+    }
+    return get(url, options);
+  });
+  await expect(r.summary(address, async () => {
+    balances++;
+    if (phase === 'balance-first' && balances === 1 || phase === 'balance-repeat' && balances === 2) { throw failure; }
+    return balance();
+  }, undefined, async () => { if (phase === 'address-validation') { throw failure; } })).rejects.toBe(failure);
+  expect(report).toHaveBeenCalledTimes(1);
+  expect(report.mock.calls[0][0]).toMatchObject({ phase, category: 'upstream-failure', consumerDeadlineMs: 15000 });
+  expect(JSON.stringify(report.mock.calls)).not.toContain('private origin/address/body/auth');
+  expect(report.mock.calls[0][0].elapsedMs).toBeGreaterThanOrEqual(report.mock.calls[0][0].phaseElapsedMs);
+});
+
+it('keeps exact validation/balance/body/proof order and emits no diagnostic on success', async () => {
+  const order: string[] = [], report = jest.fn();
+  const r = new AddressHttpReader(origin, async (height, readHash, signal) => {
+    order.push(order.length ? 'checkpoint-after' : 'checkpoint-before');
+    return verifyAddressHttpSource(height, readHash, core, signal);
+  }, 15000, { report });
+  const connection = (r as unknown as { connection: { get: (url: string, options: unknown) => Promise<unknown> } }).connection;
+  const get = connection.get.bind(connection);
+  jest.spyOn(connection, 'get').mockImplementation((url, options) => { if (url.includes('/address/')) { order.push('http-summary'); } return get(url, options); });
+  await r.summary(address, async () => { order.push('balance'); return balance(); }, undefined, async () => { order.push('validation'); });
+  expect(order).toEqual(['checkpoint-before', 'validation', 'balance', 'http-summary', 'http-summary', 'balance', 'checkpoint-after']);
+  expect(report).not.toHaveBeenCalled();
+});
+
+it.each(['changedSummary', 'wrongHash'])('diagnostic preserves %s source-disagreement rejection', async defect => {
+  mode = defect; const report = jest.fn();
+  const r = new AddressHttpReader(origin, (height, readHash, signal) => verifyAddressHttpSource(height, readHash, core, signal), 15000, { report });
+  if (defect === 'wrongHash') { await expect(r.summary(address, balance)).rejects.toThrow('Address source differs'); }
+  else { await expect(r.summary(address, balance)).rejects.toMatchObject({ code: 'EADDRESSSOURCE' }); }
+  expect(report).toHaveBeenCalledTimes(1);
+  expect(report.mock.calls[0][0].category).toBe(defect === 'changedSummary' ? 'source-disagreement' : 'upstream-failure');
+});
+
+it.each([5000, 15000])('caller cancellation %sms or existing operation deadline keeps raw ownership and discards late response', async budget => {
+  jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'performance'] });
+  try {
+    const controller = new AbortController(), admission = new AddressReadAdmission(1), report = jest.fn();
+    let entered: () => void = jest.fn(), finish: (value: { confirmed: number; unconfirmed: number }) => void = jest.fn();
+    const started = new Promise<void>(resolve => { entered = resolve; });
+    const raw = new Promise<{ confirmed: number; unconfirmed: number }>(resolve => { finish = resolve; });
+    const r = new AddressHttpReader(origin, (height, readHash, signal) => verifyAddressHttpSource(height, readHash, core, signal), 15000, { report, now: (): number => Date.now() });
+    const result = admission.run(() => r.summary(address, () => admission.track(() => { entered(); return raw; }), controller.signal));
+    const ended = result.catch(error => error); await started;
+    jest.advanceTimersByTime(budget); if (budget === 5000) { controller.abort(); }
+    expect(await ended).toMatchObject({ code: 'ETIMEDOUT' });
+    expect(report.mock.calls[0][0]).toMatchObject({ phase: 'balance-first', category: budget === 5000 ? 'caller-cancelled' : 'operation-deadline', elapsedMs: budget });
+    await expect(admission.run(async () => 'another address')).rejects.toMatchObject({ code: 'EADDRESSBUSY' });
+    const priorPaths = paths.length;
+    finish({ confirmed: 1210000000000, unconfirmed: 0 });
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    expect(paths).toHaveLength(priorPaths); expect(report).toHaveBeenCalledTimes(1);
+    await expect(admission.run(async () => 'fresh observation')).resolves.toBe('fresh observation');
+  } finally { jest.useRealTimers(); }
+});
+
+it.each(['throws', 'rejects'])('reporter %s does not replace source failure', async behavior => {
+  const failure = Object.assign(Error('original source failure'), { code: 'EOOPS' });
+  const r = new AddressHttpReader(origin, async () => { throw failure; }, 15000, {
+    report: (): Promise<void> => { if (behavior === 'throws') { throw Error('logger failure'); } return Promise.reject(Error('logger failure')); },
+  });
+  await expect(r.summary(address, balance)).rejects.toBe(failure);
+  await Promise.resolve();
 });

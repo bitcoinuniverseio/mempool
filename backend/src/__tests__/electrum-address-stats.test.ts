@@ -53,3 +53,31 @@ it('bounds address resolution and prevents new reads after its deadline even if 
   const assertion = expect(result).rejects.toThrow(/deadline/); await jest.advanceTimersByTimeAsync(15001); await assertion;
   release(); await Promise.resolve(); expect(reader.checkpoint).not.toHaveBeenCalled(); expect(reader.core).not.toHaveBeenCalled(); jest.useRealTimers();
 });
+
+it('links an already cancelled caller before address resolution or any source dispatch', async () => {
+  const { reader } = setup(), controller = new AbortController(), selectedRead = jest.fn(async () => selected);
+  controller.abort();
+  await expect(collectElectrumAddressStats(selectedRead, reader, controller.signal)).rejects.toThrow(/deadline/);
+  expect(selectedRead).not.toHaveBeenCalled(); expect(reader.checkpoint).not.toHaveBeenCalled(); expect(reader.core).not.toHaveBeenCalled();
+});
+
+it('caller cancellation at5s ends fallback statistics without late source work and removes listeners', async () => {
+  jest.useFakeTimers();
+  try {
+    const { reader } = setup(), controller = new AbortController(), remove = jest.spyOn(controller.signal, 'removeEventListener');
+    let finish: (value: string) => void = jest.fn();
+    const result = collectElectrumAddressStats(() => new Promise<string>(resolve => { finish = resolve; }), reader, controller.signal);
+    const rejected = expect(result).rejects.toThrow(/deadline/); await Promise.resolve();
+    jest.advanceTimersByTime(5000); controller.abort(); await rejected;
+    expect(remove).toHaveBeenCalledWith('abort', expect.any(Function));
+    finish(selected); await Promise.resolve(); await Promise.resolve();
+    expect(reader.checkpoint).not.toHaveBeenCalled(); expect(reader.core).not.toHaveBeenCalled();
+    await expect(collectElectrumAddressStats(selected, setup().reader)).resolves.toHaveProperty('chain_stats');
+  } finally { jest.useRealTimers(); }
+});
+
+it('a synchronous reader failure does not orphan its cancellation rejection', async () => {
+  const { reader } = setup(); reader.checkpoint = (): never => { throw Error('synchronous source failure'); };
+  await expect(collectElectrumAddressStats(selected, reader)).rejects.toThrow('synchronous source failure');
+  await Promise.resolve(); await Promise.resolve();
+});

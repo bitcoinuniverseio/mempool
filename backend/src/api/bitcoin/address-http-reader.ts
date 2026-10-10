@@ -3,6 +3,7 @@ import http from 'http';
 import { AddressSourceCheckpoint, verifyAddressSource } from './address-source-checkpoint';
 import { addressHistoryProblems, addressSummaryProblems } from './esplora-contract';
 import { IEsploraApi } from './esplora-api.interface';
+import { AddressReadDiagnosticOptions, AddressReadFailure, AddressReadPhase, AddressReadTrace, addressReadFailure } from './address-read-diagnostic';
 
 type CheckpointReader = (height: number, hash: (height: number, signal?: AbortSignal) => Promise<unknown>, signal: AbortSignal) => Promise<AddressSourceCheckpoint>;
 type BalanceReader = (signal: AbortSignal) => Promise<{ confirmed: number; unconfirmed: number }>;
@@ -31,7 +32,8 @@ export class AddressHttpReader {
     responseType: 'text', transformResponse: [], timeout: 15000,
     headers: { 'Cache-Control': 'no-store' },
   });
-  constructor(url: string, private readonly verify: CheckpointReader, private readonly budgetMs = 15000) {
+  constructor(url: string, private readonly verify: CheckpointReader, private readonly budgetMs = 15000,
+    private readonly diagnostic: AddressReadDiagnosticOptions = {}) {
     const parsed = new URL(url);
     if (parsed.protocol !== 'http:' || !['127.0.0.1', '[::1]', 'localhost'].includes(parsed.hostname)
       || parsed.username || parsed.password || parsed.search || parsed.hash || parsed.pathname !== '/') {
@@ -56,11 +58,13 @@ export class AddressHttpReader {
     return this.verify(raw as number, (height, selectedSignal) => this.read('/block-height/' + height, selectedSignal || signal), signal);
   }
 
-  private async run<T>(read: (signal: AbortSignal, checkpoint: AddressSourceCheckpoint) => Promise<T>, caller?: AbortSignal): Promise<T> {
+  private async run<T>(read: (signal: AbortSignal, checkpoint: AddressSourceCheckpoint, phase: (value: AddressReadPhase) => void) => Promise<T>, caller?: AbortSignal,
+    trace?: AddressReadTrace): Promise<T> {
     const controller = new AbortController();
-    const cancel = (): void => controller.abort();
+    let cancellation: AddressReadFailure | null = null;
+    const cancel = (): void => { cancellation ??= 'caller-cancelled'; controller.abort(); };
     if (caller?.aborted) {cancel();} else {caller?.addEventListener('abort', cancel, { once: true });}
-    const timer = setTimeout(cancel, this.budgetMs);
+    const timer = setTimeout(() => { cancellation ??= 'operation-deadline'; controller.abort(); }, this.budgetMs);
     const aborted = new Promise<never>((_, reject) => {
       const fail = (): void => reject(Object.assign(new Error('Address HTTP timeout or cancellation'), { code: 'ETIMEDOUT' }));
       if (controller.signal.aborted) {fail();} else {controller.signal.addEventListener('abort', fail, { once: true });}
@@ -68,21 +72,36 @@ export class AddressHttpReader {
     try {
       return await Promise.race([aborted, Promise.resolve().then(async () => {
         if (controller.signal.aborted) {throw new Error('Address HTTP timeout or cancellation');}
+        trace?.mark('checkpoint-before');
         const before = await this.checkpoint(controller.signal);
-        const value = await read(controller.signal, before);
+        const value = await read(controller.signal, before, phase => trace?.mark(phase));
+        trace?.mark('checkpoint-after');
         const after = await this.checkpoint(controller.signal);
         if (controller.signal.aborted || ['network', 'genesisHash', 'blockHeight', 'blockHash', 'signetChallenge'].some(key => before[key] !== after[key])) {throw mismatch();}
         return value;
       })]);
+    } catch (error) {
+      trace?.failure(cancellation ?? addressReadFailure(error));
+      throw error;
     } finally {
+      trace?.close();
       clearTimeout(timer); caller?.removeEventListener('abort', cancel); controller.abort();
     }
   }
 
-  summary(address: string, balance: BalanceReader, signal?: AbortSignal): Promise<IEsploraApi.Address> {
-    return this.run(/** @asyncUnsafe */ async active => {
+  summary(address: string, balance: BalanceReader, signal?: AbortSignal,
+    validate?: (signal: AbortSignal) => Promise<void>): Promise<IEsploraApi.Address> {
+    const trace = new AddressReadTrace(this.budgetMs, this.diagnostic.report ?? (/** @asyncUnsafe The trace handles reporter rejection. */ async (record): Promise<void> => {
+      // Reuse the existing private logger; no eager producer/provider import.
+      const { default: logger } = await import('../../logger');
+      logger.warn(JSON.stringify(record), 'address-read');
+    }), this.diagnostic.now);
+    return this.run(/** @asyncUnsafe */ async (active, _checkpoint, phase) => {
       const path = '/address/' + encodeURIComponent(address);
+      if (validate) { phase('address-validation'); await validate(active); }
+      phase('balance-first');
       let observed = await balance(active);
+      phase('http-summary-first');
       const first = await this.read(path, active);
       if (addressSummaryProblems(first, address).length) {throw mismatch();}
       const value = first as IEsploraApi.Address;
@@ -93,12 +112,14 @@ export class AddressHttpReader {
           || BigInt(value.chain_stats.funded_txo_sum) - BigInt(value.chain_stats.spent_txo_sum) !== BigInt(observed.confirmed)
           || BigInt(value.mempool_stats.funded_txo_sum) - BigInt(value.mempool_stats.spent_txo_sum) !== BigInt(observed.unconfirmed)) {throw mismatch();}
         if (round === 0) {
+          phase('http-summary-repeat');
           if (JSON.stringify(await this.read(path, active)) !== JSON.stringify(first)) {throw mismatch();}
+          phase('balance-repeat');
           observed = await balance(active);
         }
       }
       return { ...value, electrum: true };
-    }, signal);
+    }, signal, trace);
   }
 
   history(address: string, cursor: string, signal?: AbortSignal, validate?: (signal: AbortSignal) => Promise<void>): Promise<IEsploraApi.Transaction[]> {

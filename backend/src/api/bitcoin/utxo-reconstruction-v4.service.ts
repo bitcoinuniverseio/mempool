@@ -4,10 +4,10 @@ import { GlobalTransactionProof, ReconstructionV4Source } from './utxo-reconstru
 import { IrrelevantGlobalTransition } from './utxo-reconstruction-v4.types';
 import { IEsploraApi } from './esplora-api.interface';
 import { addressHistoryProblems, addressSummaryProblems, utxoListProblems } from './esplora-contract';
-import { UtxoReconstructionV4View } from './utxo-reconstruction-v4.types';
+import { UtxoReconstructionV4View, ReconstructionV4Binding, UtxoReconstructionV4Inspection } from './utxo-reconstruction-v4.types';
 
 import { ReconstructionError, ReconstructionOutput, ReconstructionSnapshot, ReconstructionSource } from './utxo-reconstruction.service';
-import { AnchoredReconstructionSnapshot, ConfirmedReconstructionSnapshot, GlobalReconstructionSnapshot } from './utxo-reconstruction.source';
+import { AnchoredReconstructionSnapshot, ConfirmedReconstructionSnapshot, GlobalReconstructionSnapshot, ReconstructionAcquisitionError } from './utxo-reconstruction.source';
 import { AddressSourceCheckpoint } from './address-source-checkpoint';
 class ConfirmedAnchorChanged extends ReconstructionError {
   constructor() { super(409, 'Immutable confirmed anchor or source identity changed'); }
@@ -48,6 +48,8 @@ interface Session {
   confirmed: Stats; mempool: Stats; mempoolTxids: Set<string>; mempoolSpent: Set<string>; mempoolOutputs: Set<string>; mempoolBytes: number; txids: Set<string>; spent: Set<string>;
   outputs: Map<string, ReconstructionOutput>; candidates: ReconstructionOutput[];
   verified: number; bytes: number; busy: boolean; controller?: AbortController;
+  binding?: ReconstructionV4Binding; lastSuccessfulObservation?: UtxoReconstructionV4Inspection['lastSuccessfulObservation'];
+  lastOperationError?: UtxoReconstructionV4Inspection['lastOperationError'];
   lastInput?: number; lastResponse?: UtxoReconstructionV4View;
   global: GlobalState; pendingGlobal?: { state: GlobalState; anchor: GlobalReconstructionSnapshot };
 }
@@ -70,7 +72,7 @@ const requireActive = (signal: AbortSignal): void => { if (signal.aborted) throw
 export class UtxoReconstructionV4Service {
   private sessions = new Map<string, Session>();
   private pendingCreates = 0;
-  constructor(private source: ReconstructionV4Source, private network: string, private now = () => Date.now()) {}
+  constructor(private source: ReconstructionV4Source, private network: string, private now: () => number = (): number => Date.now(), private binding?: () => ReconstructionV4Binding | undefined) {}
 
   private prune(): void {
     for (const session of this.sessions.values()) if (session.expires <= this.now()) {
@@ -96,6 +98,8 @@ export class UtxoReconstructionV4Service {
     requireActive(signal);
     this.pendingCreates++;
     try {
+      const binding = this.binding?.();
+      if (binding) {this.checkBinding(binding);}
       const snapshot = await this.source.confirmedSnapshot(address, signal);
       requireActive(signal); this.checkSnapshot(snapshot, address);
       const after = await this.source.confirmedSnapshot(address, signal, snapshot.checkpoint);
@@ -108,20 +112,101 @@ export class UtxoReconstructionV4Service {
       // Retain only the specified fixed-size summary, never arbitrary upstream fields.
       snapshot.summary = exactSummary(snapshot.summary);
       if (snapshot.summary.chain_stats.tx_count > MAX_TRANSACTIONS || snapshot.summary.chain_stats.funded_txo_count > MAX_OUTPUTS) throw new ReconstructionError(422, 'Address exceeds bounded reconstruction capacity');
-      const session: Session = { id: randomUUID(), address, snapshot, latestObservedTip: { ...snapshot.checkpoint }, expires: this.now() + TTL, cursor: 0,
+      const session: Session = { id: randomUUID(), address, snapshot, binding: binding ? { ...binding } : undefined, latestObservedTip: { ...snapshot.checkpoint }, expires: this.now() + TTL, cursor: 0,
         phase: 'confirmed', status: 'PARTIAL', confirmed: emptyStats(), mempool: emptyStats(), mempoolEpoch: 0,
         tail: emptyStats(), tailTxids: new Set(), tailSpent: new Set(), tailOutputs: new Set(), tailBytes: 0,
         tailClosed: false, confirmedEpoch: 0,
         prefixRowsObserved: 0,
         mempoolTxids: new Set(), mempoolSpent: new Set(), mempoolOutputs: new Set(), mempoolBytes: 0,
         txids: new Set(), spent: new Set(), outputs: new Map(), candidates: [], verified: 0, bytes: 0, busy: false, global: emptyGlobal() };
-      this.sessions.set(session.id, session); return this.view(session);
+      this.sessions.set(session.id, session); return this.recordResponse(session);
     } finally { this.pendingCreates--; }
   }
   private find(address: string, id: string): Session {
     this.prune(); const session = this.sessions.get(id);
     if (!session || session.address !== address || session.snapshot.checkpoint.network !== this.network) throw new ReconstructionError(404, 'Reconstruction session not found in this address context');
     return session;
+  }
+  private checkBinding(binding: ReconstructionV4Binding): void {
+    if (
+      Object.keys(binding).sort().join(',') !== 'configurationSha256,network,releaseSha' ||
+      binding.network !== this.network ||
+      !/^[0-9a-f]{40}$/.test(binding.releaseSha) ||
+      !/^[0-9a-f]{64}$/.test(binding.configurationSha256)
+    ) {
+      throw new ReconstructionError(503, 'Reconstruction artifact binding unavailable');
+    }
+  }
+  private recordResponse(session: Session): UtxoReconstructionV4View {
+    const response = this.view(session);
+    session.lastSuccessfulObservation = {
+      cursor: response.cursor,
+      observedAt: response.observedAt,
+      checkpoint: {
+        network: response.latestObservedTip.network,
+        genesisHash: response.latestObservedTip.genesisHash,
+        blockHeight: response.latestObservedTip.blockHeight,
+        blockHash: response.latestObservedTip.blockHash,
+        verifiedAt: response.latestObservedTip.verifiedAt,
+        signetChallenge: response.latestObservedTip.signetChallenge,
+      },
+      progress: { ...response.progress },
+    };
+    session.lastOperationError = null;
+    return response;
+  }
+  inspect(address: string, id: string, expected: ReconstructionV4Binding): UtxoReconstructionV4Inspection {
+    const session = this.find(address, id);
+    const current = this.binding?.(),
+      originalBinding = session.binding;
+    if (!current || !originalBinding || !session.lastSuccessfulObservation) {
+      throw new ReconstructionError(503, 'Reconstruction artifact binding unavailable');
+    }
+    this.checkBinding(current);
+    if (
+      typeof session.lastSuccessfulObservation.checkpoint.signetChallenge === 'string' &&
+      session.lastSuccessfulObservation.checkpoint.signetChallenge.length > 10000
+    ) {
+      throw new ReconstructionError(422, 'Reconstruction inspection checkpoint exceeds capacity');
+    }
+    if (
+      expected.network !== this.network ||
+      ['network', 'releaseSha', 'configurationSha256'].some(
+        (key) => expected[key] !== current[key] || originalBinding[key] !== current[key],
+      )
+    ) {
+      throw new ReconstructionError(409, 'Reconstruction session artifact or source profile changed');
+    }
+    // Fixed-size copies only: no view/result construction, source acquisition, TTL refresh or slot admission.
+    return {
+      schema: 'universe-address-utxo-reconstruction-inspection-v1',
+      sessionId: session.id,
+      address: session.address,
+      network: this.network,
+      status: session.status,
+      busy: session.busy,
+      cursor: session.cursor,
+      replayCursor: session.lastResponse ? (session.lastInput ?? null) : null,
+      expiresAt: new Date(session.expires).toISOString(),
+      binding: {
+        ...current,
+        sourceId: session.snapshot.sourceId,
+        confirmedAnchorSha256: digest({
+          ...session.snapshot.checkpoint,
+          sourceId: session.snapshot.sourceId,
+          scriptPubKey: session.snapshot.scriptPubKey,
+          chainStats: exactStats(session.snapshot.summary.chain_stats),
+        }),
+      },
+      retainedBytes: session.bytes,
+      resultAvailable: session.status === 'COMPLETE_AT_OBSERVED_TIP',
+      lastSuccessfulObservation: {
+        ...session.lastSuccessfulObservation,
+        checkpoint: { ...session.lastSuccessfulObservation.checkpoint },
+        progress: { ...session.lastSuccessfulObservation.progress },
+      },
+      lastOperationError: session.lastOperationError ? { ...session.lastOperationError } : null,
+    };
   }
   cancel(address: string, id: string): UtxoReconstructionV4View {
     const session = this.find(address, id); session.controller?.abort();
@@ -314,6 +399,12 @@ export class UtxoReconstructionV4Service {
   }
   async next(address: string, id: string, cursor: number, signal: AbortSignal): Promise<UtxoReconstructionV4View> {
     const session = this.find(address, id);
+    if (session.binding) {
+      const originalBinding = session.binding, current = this.binding?.();
+      if (!current) {throw new ReconstructionError(503, 'Reconstruction artifact binding unavailable');}
+      this.checkBinding(current);
+      if (['network','releaseSha','configurationSha256'].some(key => originalBinding[key] !== current[key])) {throw new ReconstructionError(409, 'Reconstruction session artifact or source profile changed');}
+    }
     requireActive(signal);
     if (session.busy) throw new ReconstructionError(409, 'A reconstruction page is already in progress');
     if (session.status === 'CANCELLED' || session.status === 'INVALIDATED') return this.view(session);
@@ -333,7 +424,7 @@ export class UtxoReconstructionV4Service {
         this.activeSession(session, controller.signal);
         this.commitGlobal(session);
         if (session.verified > 0) session.global.verifiedIdentity = session.mempoolAnchor!.mempoolIdentity;
-        session.lastResponse = this.view(session); return session.lastResponse;
+        session.lastResponse = this.recordResponse(session); return session.lastResponse;
       }
       if (session.phase === 'acquire-mempool') {
         const anchor = await this.source.snapshot(address, controller.signal, session.snapshot.checkpoint);
@@ -436,10 +527,14 @@ export class UtxoReconstructionV4Service {
         else if (tail && boundaryReached) { session.tailClosed = true; session.phase = 'acquire-mempool'; }
         else if (!tail && !rows.length) session.phase = 'reconcile-confirmed';
       }
-      session.cursor++; session.lastInput = cursor; session.lastResponse = this.view(session); return session.lastResponse;
+      session.cursor++; session.lastInput = cursor; session.lastResponse = this.recordResponse(session); return session.lastResponse;
     } catch (caught) {
       session.pendingGlobal = undefined;
       let error = caught;
+      const acquisition = error instanceof ReconstructionAcquisitionError ? error : undefined;
+      session.lastOperationError = {cursor, status: controller.signal.aborted ? 499 : error instanceof ReconstructionError ? error.status : 503,
+        code: controller.signal.aborted ? 'CANCELLED_OR_DEADLINE' : acquisition && ['DEADLINE','UPSTREAM_UNAVAILABLE'].includes(acquisition.causeCode) ? acquisition.causeCode : 'SOURCE_OR_CONTEXT_UNAVAILABLE',
+        ...(acquisition && ['confirmed-history','address-mempool','index-mempool-identity','address-statistics','index-chain-checkpoint','index-outspends','core-output-verification','core-getblockchaininfo','core-getblockhash','core-getrawmempool','core-getmempoolinfo','core-getrawtransaction','core-validateaddress'].includes(acquisition.phase) ? {phase:acquisition.phase} : {}),failedAt:new Date(this.now()).toISOString()};
       if (this.cancelled(session)) return this.view(session);
       // Transport cancellation/deadline leaves the original cursor retryable.
       if (controller.signal.aborted) throw error;
@@ -452,7 +547,7 @@ export class UtxoReconstructionV4Service {
           session.status = 'INVALIDATED'; session.reason = failure.message; this.release(session); return this.view(session);
         }
         this.resetTail(session); session.cursor++; session.lastInput = cursor;
-        session.lastResponse = this.view(session); return session.lastResponse;
+        session.lastResponse = this.recordResponse(session); return session.lastResponse;
       }
       if (error instanceof ReconstructionError && error.status === 409 && ['confirmed', 'reconcile-confirmed'].includes(session.phase) && [
         'Core and index must share the exact active tip for reconstruction',
@@ -468,7 +563,7 @@ export class UtxoReconstructionV4Service {
           catch (failure) {
             if (!(failure instanceof ConfirmedTailChanged)) throw failure;
             this.resetTail(session); session.cursor++; session.lastInput = cursor;
-            session.lastResponse = this.view(session); return session.lastResponse;
+            session.lastResponse = this.recordResponse(session); return session.lastResponse;
           }
           if (error instanceof MempoolAnchorChanged || !session.mempoolAnchor) {
             this.resetMempool(session, error instanceof MempoolAnchorChanged ? error.reason : 'MEMPOOL_CHANGED');
@@ -487,7 +582,7 @@ export class UtxoReconstructionV4Service {
             this.resetMempool(session, latest && (latest.checkpoint.blockHeight !== session.mempoolAnchor!.checkpoint.blockHeight ||
               latest.checkpoint.blockHash !== session.mempoolAnchor!.checkpoint.blockHash) ? 'FINAL_TIP_CHANGED' : 'MEMPOOL_CHANGED');
           }
-          session.cursor++; session.lastInput = cursor; session.lastResponse = this.view(session); return session.lastResponse;
+          session.cursor++; session.lastInput = cursor; session.lastResponse = this.recordResponse(session); return session.lastResponse;
         } catch (failure) {
           if (controller.signal.aborted) throw failure;
           if (!(failure instanceof ReconstructionError) || ![409, 422].includes(failure.status)) throw failure;

@@ -2447,6 +2447,12 @@
       "bytes": 772
     },
     {
+      "path": "docs/acceptance/RECONSTRUCTION-OBSERVER.md",
+      "sha256": "ccb0d95631f6b9fdbde3dcefd729c68e8e44a2f4fd40027ab61c2043a5f37109",
+      "sha256Encoding": "utf8-lf",
+      "bytes": 5238
+    },
+    {
       "path": "docs/acceptance/silent-payments-2026-09-05.md",
       "sha256": "c3a98ae654594ccc458a5172e96e68c55b9e1e6b8515f8f128b6989a9e3c00d1",
       "sha256Encoding": "utf8-lf",
