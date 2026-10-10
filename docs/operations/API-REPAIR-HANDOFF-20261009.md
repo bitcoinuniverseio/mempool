@@ -7,6 +7,35 @@ it does not describe the current candidate. No public Mainnet release or complet
 functional acceptance has been performed. The acceptance denominator remains
 632 rows, 39 protocols and 123 declared protocol operations.
 
+### UI and consolidation review, 10 October
+
+The affected UI now has theme-aware fee recovery controls, explicit dated stale
+values, usable replacement filters, links from the protocol directory to detail
+pages, and compact expandable historical evidence. Names has its own description
+instead of the generic Ordinals description. Address history failures retain a
+working retry subscription; unanswered client reads end after 60 seconds, cancel
+their HTTP work and report a timeout. Live events received during loading request
+one fresh read after the current read completes. This does not change native RPC
+limits or qualify missing address history.
+
+Payjoin remains a simulation: it creates, signs and sends no real payment. Its
+step cards stack on phones. Liquid controls use the established theme tokens and
+44-pixel touch targets. Missing reserves, circulating balances and payout approval
+remain unknown. The existing QR rendering and navigation were checked on the
+private Signet preview; visual evidence is separate from functional acceptance.
+
+CI browser jobs consume one revision-bound frontend artifact and verify every
+file hash and the complete roster. They no longer rebuild after cache misses.
+WebKit shards run one engine at a time, retain failures, and permit Firefox to
+run after a failed WebKit check. The previous context-closed failure is retained;
+this workflow change is not itself a cross-browser pass.
+
+Git consolidation proceeds one repository, worktree and branch at a time,
+preserving legitimate changes and unique remote or detached work. Production
+deployment follows completion of all affected repositories. Backend history
+restoration and native qualification remain in progress. No public release or
+complete acceptance is claimed by these UI changes.
+
 ### Observation at 18:40 UTC
 
 The private qualification components now differ deliberately: frontend

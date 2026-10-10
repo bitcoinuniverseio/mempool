@@ -9,20 +9,22 @@ import { TransactionExtended } from '../mempool.interfaces';
 import { Common } from './common';
 import rbfCache from './rbf-cache';
 import { TaskDrain } from './task-drain';
-import { readRbfSnapshot, RbfSnapshotError, rbfRestoreState } from './rbf-snapshot';
+import { RbfSnapshotError, rbfRestoreState } from './rbf-snapshot';
+import { RbfRawBackingCandidate } from './rbf-raw-backing';
+import { RbfGenerationPublisher } from './rbf-generation';
+import { readRbfHistoryManifest } from './rbf-history-manifest';
+import { join, relative } from 'path';
 
 class DiskCache {
   private readonly work = new TaskDrain();
 
   public drain(): Promise<void> { return this.work.drain(); }
   private cacheSchemaVersion = 3;
-  private rbfCacheSchemaVersion = 1;
 
   private static TMP_FILE_NAME = config.MEMPOOL.CACHE_DIR + '/tmp-cache.json';
   private static TMP_FILE_NAMES = config.MEMPOOL.CACHE_DIR + '/tmp-cache{number}.json';
   private static FILE_NAME = config.MEMPOOL.CACHE_DIR + '/cache.json';
   private static FILE_NAMES = config.MEMPOOL.CACHE_DIR + '/cache{number}.json';
-  private static TMP_RBF_FILE_NAME = config.MEMPOOL.CACHE_DIR + '/tmp-rbfcache.json';
   private static RBF_FILE_NAME = config.MEMPOOL.CACHE_DIR + '/rbfcache.json';
   private static CHUNK_FILES = 25;
   private isWritingCache = false;
@@ -126,22 +128,7 @@ class DiskCache {
     try {
       logger.debug('Writing rbf data to disk cache (async)...');
       this.isWritingCache = true;
-      const rbfData = rbfCache.dump();
-      if (sync) {
-        fs.writeFileSync(DiskCache.TMP_RBF_FILE_NAME, JSON.stringify({
-          network: config.MEMPOOL.NETWORK,
-          rbfCacheSchemaVersion: this.rbfCacheSchemaVersion,
-          rbf: rbfData,
-        }), { flag: 'w' });
-        fs.renameSync(DiskCache.TMP_RBF_FILE_NAME, DiskCache.RBF_FILE_NAME);
-      } else {
-        await fsPromises.writeFile(DiskCache.TMP_RBF_FILE_NAME, JSON.stringify({
-          network: config.MEMPOOL.NETWORK,
-          rbfCacheSchemaVersion: this.rbfCacheSchemaVersion,
-          rbf: rbfData,
-        }), { flag: 'w' });
-        await fsPromises.rename(DiskCache.TMP_RBF_FILE_NAME, DiskCache.RBF_FILE_NAME);
-      }
+      await rbfCache.saveHistory(config.MEMPOOL.CACHE_DIR, config.MEMPOOL.NETWORK);
       logger.debug('Rbf data saved to disk cache');
       this.isWritingCache = false;
     } catch (e) {
@@ -185,7 +172,10 @@ class DiskCache {
   }
 
   /** @asyncSafe */
-  async $loadMempoolCache(): Promise<void> {
+  $loadMempoolCache(): Promise<void> { return this.work.track(this.loadMempoolCache()); }
+
+  /** @asyncSafe */
+  private async loadMempoolCache(): Promise<void> {
     if (!config.MEMPOOL.CACHE_ENABLED) {
       return;
     }
@@ -250,19 +240,39 @@ class DiskCache {
     }
 
     try {
-      const retained = readRbfSnapshot(DiskCache.RBF_FILE_NAME, config.MEMPOOL.NETWORK);
-      if (retained) {
-        logger.info('Restoring rbf data from disk cache');
-        const restored = await rbfCache.load({
-          txs: retained.txs.map(([, entry]) => ({ value: entry })),
-          trees: retained.trees,
-          expiring: retained.expiring.map(([txid, value]) => ({ key: txid, value })),
-          mempool: memPool.getMempool(),
-          spendMap: memPool.getSpendMap(),
-        });
-        if (!restored) { throw new RbfSnapshotError('snapshot-restore-failed'); }
+      const manifest = readRbfHistoryManifest(config.MEMPOOL.CACHE_DIR, config.MEMPOOL.NETWORK);
+      let restored = false;
+      if (manifest) {
+        restored = await rbfCache.loadManifest(config.MEMPOOL.CACHE_DIR, manifest, memPool.getMempool(), memPool.getSpendMap());
+      } else {
+        let exists = true;
+        try { await fsPromises.lstat(DiskCache.RBF_FILE_NAME); }
+        catch (e: any) { if (e?.code === 'ENOENT') { exists = false; } else { throw e; } }
+        if (!exists) {
+          if (fs.existsSync(config.MEMPOOL.CACHE_DIR)) { await rbfCache.configureBodyPersistence(config.MEMPOOL.CACHE_DIR); }
+          rbfRestoreState.completeRestore('no-file'); return;
+        }
+        // Constant-memory full legacy migration. The old 32MiB decoder remains bounded;
+        // this separate streaming path validates the complete source before publication.
+        const original = await RbfRawBackingCandidate.open(DiskCache.RBF_FILE_NAME, config.MEMPOOL.NETWORK, 512 * 1024 * 1024);
+        let copied: RbfRawBackingCandidate | undefined;
+        try {
+          const output = await new RbfGenerationPublisher().publish(config.MEMPOOL.CACHE_DIR, original);
+          copied = await RbfRawBackingCandidate.open(join(output.path, 'snapshot.json'), config.MEMPOOL.NETWORK, original.sourceDescriptor().sourceBytes);
+          const closure = copied.takeClosure();
+          await rbfCache.configureBodyPersistence(config.MEMPOOL.CACHE_DIR);
+          restored = await rbfCache.load({
+            txs: closure.internalProjection.txs.map(([, value]) => ({ value })), trees: closure.internalProjection.trees,
+            expiring: closure.internalProjection.expiring.map(([key, value]) => ({ key, value })),
+            mempool: memPool.getMempool(), spendMap: memPool.getSpendMap(), backing: copied,
+            backingFile: relative(config.MEMPOOL.CACHE_DIR, join(output.path, 'snapshot.json')).replace(/\\/g, '/'),
+          });
+          if (restored) { copied = undefined; } // Transfer only after successful complete cache qualification.
+        } finally { await original.close(); if (copied) { await copied.close(); } }
       }
-      rbfRestoreState.completeRestore(retained ? 'restored' : 'no-file');
+      if (!restored) { throw new RbfSnapshotError('snapshot-restore-failed'); }
+      await rbfCache.saveHistory(config.MEMPOOL.CACHE_DIR, config.MEMPOOL.NETWORK);
+      rbfRestoreState.completeRestore('restored');
     } catch (e) {
       const reason = e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed';
       rbfRestoreState.fail(reason);

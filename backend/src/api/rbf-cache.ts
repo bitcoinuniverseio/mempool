@@ -3,7 +3,11 @@ import logger from '../logger';
 import { MempoolTransactionExtended, TransactionStripped } from '../mempool.interfaces';
 import bitcoinApi from './bitcoin/bitcoin-api-factory';
 import { IEsploraApi } from './bitcoin/esplora-api.interface';
-import { Common } from './common';
+import { RbfTxMetadata, RbfMetadataInput } from './rbf-metadata';
+import { RbfBodyStore } from './rbf-body-store';
+import { RbfRawBackingCandidate } from './rbf-raw-backing';
+import { RbfHistoryManifest, writeRbfHistoryManifest } from './rbf-history-manifest';
+import { validateRbfSnapshot, RbfSnapshotError } from './rbf-snapshot';
 import redisCache from './redis-cache';
 import { rbfRestoreState } from './rbf-snapshot';
 
@@ -64,7 +68,7 @@ interface CacheEvent {
  *  - Completeness: X in replacedBy => X in treeMap, Y in replaces => Y in treeMap
  */
 
-class RbfCache {
+export class RbfCache {
   private replacedBy: Map<string, string> = new Map();
   // Told about every replacement the cache records; used by the watchlist matcher.
   private replacementListeners: ((replacedTxid: string, replacementTxid: string) => void)[] = [];
@@ -72,7 +76,11 @@ class RbfCache {
   private rbfTrees: Map<string, RbfTree> = new Map(); // sequences of consecutive replacements
   private dirtyTrees: Set<string> = new Set();
   private treeMap: Map<string, string> = new Map(); // map of txids to sequence ids
-  private txs: Map<string, MempoolTransactionExtended> = new Map();
+  private txs: Map<string, RbfTxMetadata> = new Map();
+  private bodies = new RbfBodyStore();
+  private metadataBytes = 0;
+  private version = 0;
+  private savingHistory: Promise<void> | null = null;
   private expiring: Map<string, number> = new Map();
   private cacheQueue: CacheEvent[] = [];
 
@@ -100,33 +108,42 @@ class RbfCache {
     if (config.REDIS.ENABLED && rbfRestoreState.canQueuePersistence) { this.cacheQueue.push(event); }
   }
 
-  private addTx(txid: string, tx: MempoolTransactionExtended): void {
-    this.txs.set(txid, tx);
+  private addTx(txid: string, tx: MempoolTransactionExtended | RbfTxMetadata): void {
+    this.version++;
+    const metadata = tx instanceof RbfTxMetadata ? tx : new RbfTxMetadata(tx);
+    if (!this.txs.has(txid)) { this.metadataBytes += metadata.budgetBytes; }
+    this.txs.set(txid, metadata);
     this.queueCacheEvent({ op: CacheOp.Add, type: 'tx', txid });
   }
 
   private addTree(txid: string, tree: RbfTree): void {
+    this.version++;
     this.rbfTrees.set(txid, tree);
     if (!rbfRestoreState.unavailable) { this.dirtyTrees.add(txid); }
     this.queueCacheEvent({ op: CacheOp.Add, type: 'tree', txid });
   }
 
   private addExpiration(txid: string, expiry: number): void {
+    this.version++;
     this.expiring.set(txid, expiry);
     this.queueCacheEvent({ op: CacheOp.Add, type: 'exp', txid, value: expiry });
   }
 
   private removeTx(txid: string): void {
-    this.txs.delete(txid);
+    this.version++;
+    this.metadataBytes -= this.txs.get(txid)?.budgetBytes || 0;
+    this.txs.delete(txid); this.bodies.remove(txid);
     this.queueCacheEvent({ op: CacheOp.Remove, type: 'tx', txid });
   }
 
   private removeTree(txid: string): void {
+    this.version++;
     this.rbfTrees.delete(txid);
     this.queueCacheEvent({ op: CacheOp.Remove, type: 'tree', txid });
   }
 
   private removeExpiration(txid: string): void {
+    this.version++;
     this.expiring.delete(txid);
     this.queueCacheEvent({ op: CacheOp.Remove, type: 'exp', txid });
   }
@@ -137,7 +154,7 @@ class RbfCache {
    */
 
 
-  public add(replaced: MempoolTransactionExtended[], newTxExtended: MempoolTransactionExtended): void {
+  public add(replaced: Array<MempoolTransactionExtended | RbfTxMetadata>, newTxExtended: MempoolTransactionExtended): void {
     if ( !newTxExtended
       || !replaced?.length
       || this.txs.has(newTxExtended.txid)
@@ -147,8 +164,13 @@ class RbfCache {
     }
 
     newTxExtended.replacement = true;
-
-    const newTx = Common.stripTransaction(newTxExtended) as RbfTransaction;
+    try {
+      const incoming = [newTxExtended, ...replaced.filter(tx => !this.txs.has(tx.txid))];
+      const metadata = incoming.map(tx => tx instanceof RbfTxMetadata ? tx : new RbfTxMetadata(tx));
+      if (this.metadataBytes + metadata.reduce((bytes, tx) => bytes + tx.budgetBytes, 0) > 16 * 1024 * 1024) { throw new Error('RBF metadata budget exceeded'); }
+      this.bodies.captureBatch(incoming.filter((tx): tx is MempoolTransactionExtended => !(tx instanceof RbfTxMetadata)));
+    } catch { rbfRestoreState.fail('snapshot-oversize'); return; }
+    const newTx = { ...new RbfTxMetadata(newTxExtended).stripped } as RbfTransaction;
     const newTime = newTxExtended.firstSeen || (Date.now() / 1000);
     newTx.rbf = newTxExtended.vin.some((v) => v.sequence < 0xfffffffe);
     this.addTx(newTx.txid, newTxExtended);
@@ -158,8 +180,9 @@ class RbfCache {
     let treeFullRbf = false;
     const replacedTrees: RbfTree[] = [];
     for (const replacedTxExtended of replaced) {
-      const replacedTx = Common.stripTransaction(replacedTxExtended) as RbfTransaction;
-      replacedTx.rbf = replacedTxExtended.vin.some((v) => v.sequence < 0xfffffffe);
+      const metadata = replacedTxExtended instanceof RbfTxMetadata ? replacedTxExtended : new RbfTxMetadata(replacedTxExtended);
+      const replacedTx = { ...metadata.stripped } as RbfTransaction;
+      replacedTx.rbf = metadata.signalsRbf;
       if (!replacedTx.rbf) {
         txFullRbf = true;
       }
@@ -267,8 +290,70 @@ class RbfCache {
     return this.replaces.get(txId);
   }
 
-  public getTx(txId: string): MempoolTransactionExtended | undefined {
-    return this.txs.get(txId);
+  public hasBody(txId: string): boolean { return this.txs.has(txId) && this.bodies.has(txId); }
+
+  /** @asyncUnsafe Complete raw JSON only; caller owns cancellation/backpressure and partial-response failure. */
+  public async *body(txId: string, signal?: AbortSignal): AsyncIterable<Buffer> { yield* this.bodies.body(txId, signal); }
+
+  /** @asyncUnsafe Existing cache directory only; no new canonical producer or RPC. */
+  public configureBodyPersistence(root: string): Promise<void> { return this.bodies.configure(root); }
+
+  /** @asyncUnsafe Drain actual body reads/writes before resource release. */
+  public async closeBodies(): Promise<void> { if (this.savingHistory) { await this.savingHistory; } await this.bodies.close(); }
+
+  public freezeLiveBody(tx: MempoolTransactionExtended): void {
+    if (!this.txs.has(tx.txid)) { return; }
+    try {
+      const previous = this.txs.get(tx.txid), current = new RbfTxMetadata(tx);
+      const proposed = this.metadataBytes + current.budgetBytes - (previous?.budgetBytes || 0);
+      if (proposed > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
+      if (this.bodies.freezeLive(tx)) {
+        this.metadataBytes = proposed; this.txs.set(tx.txid, current);
+      }
+    }
+    catch { rbfRestoreState.fail('snapshot-oversize'); }
+    this.version++;
+  }
+
+  /** @asyncUnsafe Only complete immutable body references are published; ordinary growth retries next save. */
+  public saveHistory(root: string, network: string): Promise<void> {
+    if (this.savingHistory) { return this.savingHistory; }
+    const job = this.persistHistory(root, network);
+    this.savingHistory = job.catch(e => { rbfRestoreState.fail(e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed'); throw e; })
+      .finally(() => { this.savingHistory = null; }); return this.savingHistory;
+  }
+
+  /** @asyncUnsafe The old pointer survives failure; original legacy file is never overwritten. */
+  private async persistHistory(root: string, network: string): Promise<void> {
+    const updates = this.bodies.liveInputs().map(input => [input.txid, new RbfTxMetadata(input)] as const);
+    const proposed = updates.reduce((bytes, [id, current]) => bytes + current.budgetBytes - (this.txs.get(id)?.budgetBytes || 0), this.metadataBytes);
+    if (proposed > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
+    this.bodies.refreshLive();
+    for (const [id, current] of updates) { this.txs.set(id, current); }
+    this.metadataBytes = proposed;
+    const version = this.version, metadata = Array.from(this.txs.entries());
+    const trees = Array.from(this.rbfTrees.values(), tree => this.exportTree(tree));
+    const expiring = Array.from(this.expiring.entries());
+    await this.bodies.configure(root); await this.bodies.flush();
+    if (this.version !== version) { return; }
+    const bodies = this.bodies.references(metadata.map(([id]) => id));
+    if (bodies.some(body => !body.file && !body.sourceFile)) { throw new Error('RBF complete body persistence unavailable'); }
+    const protectedFiles = await writeRbfHistoryManifest(root, { schemaVersion: 'mempool-rbf-history-v2', network, metadata, bodies, trees, expiring });
+    this.bodies.maintainSegments(protectedFiles);
+  }
+
+  /** @asyncSafe Manifest/body correspondence and original graph guards run before native qualification. */
+  public async loadManifest(root: string, manifest: RbfHistoryManifest, mempool: any, spendMap: any): Promise<boolean> {
+    try {
+      await this.bodies.configure(root);
+      const inputs = await this.bodies.loadReferences(manifest.bodies, manifest.network);
+      const metadata = inputs.map(input => new RbfTxMetadata(input));
+      if (JSON.stringify(metadata.map(tx => [tx.txid, tx])) !== JSON.stringify(manifest.metadata)) { throw new Error('RBF manifest metadata mismatch'); }
+      validateRbfSnapshot({ network: manifest.network, rbfCacheSchemaVersion: 1,
+        rbf: { txs: inputs.map(input => [input.txid, input]), trees: manifest.trees, expiring: manifest.expiring } }, manifest.network);
+      return this.load({ txs: inputs.map(value => ({ value })), trees: manifest.trees,
+        expiring: manifest.expiring.map(([key, value]) => ({ key, value })), mempool, spendMap, bodiesLoaded: true });
+    } catch { return false; }
   }
 
   public getRbfTree(txId: string): RbfTree | void {
@@ -387,6 +472,7 @@ class RbfCache {
   }
 
   private setTreeMined(tree: RbfTree, txid: string): void {
+    this.version++;
     if (tree.tx.txid === txid) {
       tree.tx.mined = true;
     } else {
@@ -396,18 +482,22 @@ class RbfCache {
     }
   }
 
+  /** @asyncUnsafe Callers own failure; immutable body data is retained and historical publication fails closed. */
   public async updateCache(): Promise<void> {
-    if (!config.REDIS.ENABLED || rbfRestoreState.unavailable) {
+    try {
+    if (rbfRestoreState.unavailable) {
       this.cacheQueue = [];
       return;
     }
+    await this.bodies.flush();
+    if (!config.REDIS.ENABLED) { this.cacheQueue = []; return; }
     // Update the Redis cache by replaying queued events
     for (const e of this.cacheQueue) {
       if (e.op === CacheOp.Add || e.op === CacheOp.Change) {
         let value = e.value;
           switch(e.type) {
             case 'tx': {
-              value = this.txs.get(e.txid);
+              value = this.txs.has(e.txid) ? await this.bodies.json(e.txid) : null;
             } break;
             case 'tree': {
               const tree = this.rbfTrees.get(e.txid);
@@ -415,31 +505,34 @@ class RbfCache {
             } break;
           }
           if (value != null) {
-            await redisCache.$setRbfEntry(e.type, e.txid, value);
+            if (e.type === 'tx') { await redisCache.$setRbfRawEntry(e.txid, value); }
+            else { await redisCache.$setRbfEntry(e.type, e.txid, value); }
           }
       } else if (e.op === CacheOp.Remove) {
         await redisCache.$removeRbfEntry(e.type, e.txid);
       }
     }
     this.cacheQueue = [];
+    } catch (e) { rbfRestoreState.fail(e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed'); throw e; }
   }
 
   public dump(): any {
     const trees = Array.from(this.rbfTrees.values()).map((tree: RbfTree) => { return this.exportTree(tree); });
 
     return {
-      txs: Array.from(this.txs.entries()),
+      txs: Array.from(this.txs.keys(), txid => [txid, this.bodies.memoryValue(txid)]),
       trees,
       expiring: Array.from(this.expiring.entries()),
     };
   }
 
   /** @asyncSafe */
-  public async load({ txs, trees, expiring, mempool, spendMap }): Promise<boolean> {
+  public async load({ txs, trees, expiring, mempool, spendMap, backing, backingFile, bodiesLoaded }: { txs: Array<{ value: RbfMetadataInput }>; trees: any[]; expiring: Array<{ key: string; value: number }>; mempool: any; spendMap: any; backing?: RbfRawBackingCandidate; backingFile?: string; bodiesLoaded?: boolean }): Promise<boolean> {
     try {
-      txs.forEach(txEntry => {
-        this.txs.set(txEntry.value.txid, txEntry.value);
-      });
+      const metadata = txs.map(txEntry => new RbfTxMetadata(txEntry.value));
+      if (metadata.reduce((bytes, tx) => bytes + tx.budgetBytes, 0) > 16 * 1024 * 1024) { throw new Error('RBF metadata budget exceeded'); }
+      if (backing) { this.bodies.adopt(backing, backingFile); } else if (!bodiesLoaded) { this.bodies.captureBatch(txs.map(entry => entry.value), false); }
+      for (const tx of metadata) { this.addTx(tx.txid, tx); }
       this.staleCount = 0;
       for (const deflatedTree of trees.sort((a, b) => Object.keys(b).length - Object.keys(a).length)) {
         const tree = await this.importTree(mempool, deflatedTree.root, deflatedTree.root, deflatedTree, this.txs);
@@ -459,13 +552,13 @@ class RbfCache {
       this.staleCount = 0;
 
       // connect cached trees to current mempool transactions
-      const conflicts: Record<string, { replacedBy: MempoolTransactionExtended, replaces: Set<MempoolTransactionExtended> }> = {};
+      const conflicts: Record<string, { replacedBy: MempoolTransactionExtended, replaces: Set<RbfTxMetadata> }> = {};
       for (const tree of this.rbfTrees.values()) {
-        const tx = this.getTx(tree.tx.txid);
+        const tx = this.txs.get(tree.tx.txid);
         if (!tx || tree.mined) {
           continue;
         }
-        for (const vin of tx.vin) {
+        for (const vin of tx.spends) {
           const conflict = spendMap.get(`${vin.txid}:${vin.vout}`);
           if (conflict && conflict.txid !== tx.txid) {
             if (!conflicts[conflict.txid]) {
@@ -514,7 +607,7 @@ class RbfCache {
     return deflated;
   }
 
-  importTree(mempool, root, txid, deflated, txs: Map<string, MempoolTransactionExtended>, mined: boolean = false): RbfTree | void {
+  importTree(mempool, root, txid, deflated, txs: Map<string, RbfTxMetadata>, mined: boolean = false): RbfTree | void {
     const treeInfo = deflated[txid];
     const replaces: RbfTree[] = [];
 
@@ -551,8 +644,8 @@ class RbfCache {
     if (!tx) {
       return;
     }
-    const strippedTx = Common.stripTransaction(tx) as RbfTransaction;
-    strippedTx.rbf = tx.vin.some((v) => v.sequence < 0xfffffffe);
+    const strippedTx = { ...tx.stripped } as RbfTransaction;
+    strippedTx.rbf = tx.signalsRbf;
     strippedTx.mined = treeInfo.txMined;
     const tree = {
       tx: strippedTx,

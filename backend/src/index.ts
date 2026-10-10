@@ -804,6 +804,7 @@ class Server {
         await DB.drain();
         await DB.close();
         await mempoolBlocks.closeSelectionWorker();
+        await rbfCache.closeBodies();
         bitcoinApi.closeTransport?.();
         memPool.destroy();
         rbfCache.destroy();

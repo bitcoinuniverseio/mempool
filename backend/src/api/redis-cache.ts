@@ -229,6 +229,18 @@ class RedisCache {
     }
   }
 
+  /** Complete body JSON is already validated by the owned store. Never serialize compact metadata.
+   * @asyncUnsafe Failure leaves immutable body data retained; no fullbody reconnect queue is allocated.
+   */
+  async $setRbfRawEntry(txid: string, json: string): Promise<void> {
+    if (!config.REDIS.ENABLED) { return; }
+    if (rbfRestoreState.unavailable || !this.connected) { throw new RbfSnapshotError('snapshot-read-failed'); }
+    if (!/^[0-9a-f]{64}$/.test(txid) || typeof json !== 'string' || Buffer.byteLength(json) > 32 * 1024 * 1024) {
+      throw new RbfSnapshotError('snapshot-invalid');
+    }
+    await this.client.set(`rbf:tx:${txid}`, json);
+  }
+
   /** @asyncSafe */
   async $removeRbfEntry(type: string, txid: string): Promise<void> {
     if (!config.REDIS.ENABLED) {

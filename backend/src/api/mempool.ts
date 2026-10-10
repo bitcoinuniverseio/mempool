@@ -410,6 +410,9 @@ class Mempool {
         }
       }
       for (const tx of deletedTransactions) {
+        // The old RBF cache retained this shared object. Freeze its final complete DTO
+        // before the mempool releases ownership; immutable body storage must not lose annotations.
+        rbfCache.freezeLiveBody(tx);
         delete this.mempoolCache[tx.txid];
       }
     }
@@ -451,8 +454,9 @@ class Mempool {
     if (config.REDIS.ENABLED) {
       await redisCache.$flushTransactions();
       await redisCache.$removeTransactions(deletedTransactions.map(tx => tx.txid));
-      await rbfCache.updateCache();
     }
+    // Complete body segments use the same owner even when Redis is disabled.
+    await rbfCache.updateCache();
 
     this.observedPollCallback?.(newTransactions, deletedTransactions, this.mempoolProtection !== 1 && transactions.length === newMempoolSize);
     this.lastMempoolUpdateAt = Date.now();
