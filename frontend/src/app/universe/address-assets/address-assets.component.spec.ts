@@ -639,12 +639,15 @@ describe('address holdings rendered panel', () => {
   it('words a proven empty address differently from a partial one', () => {
     const proven = render([scoped()], ONE_UTXO);
     expect(proven.nativeElement.textContent).toContain('Every unspent output this address holds was checked');
+    expect(proven.nativeElement.querySelector('.summary-count')?.textContent).toContain('None held');
 
     TestBed.resetTestingModule();
     const partial = render([scoped({ status: 'unavailable' as never })], ONE_UTXO);
     const text = partial.nativeElement.textContent as string;
     expect(text).toContain('not every output could be checked');
     expect(text).toContain('not proof');
+    expect(partial.nativeElement.querySelector('.summary-count')?.textContent).toContain('Not verified');
+    expect(partial.nativeElement.querySelector('.summary-count')?.textContent).not.toContain('None held');
   });
 
   it('offers a retry while the scope is partial', () => {
