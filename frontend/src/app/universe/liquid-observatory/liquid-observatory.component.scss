@@ -1,0 +1,29 @@
+button {
+  background: var(--u-surface-raised);
+  color: var(--u-text-primary);
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-sm);
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0.5rem 0 0;
+  font: inherit;
+
+  &:hover:not(:disabled) { background: var(--u-surface-hover); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid var(--u-focus-ring); outline-offset: 2px; }
+}
+
+select {
+  display: block;
+  min-height: 44px;
+  width: 100%;
+  max-width: 24rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--u-border-strong);
+  border-radius: var(--u-radius-sm);
+  background: var(--u-surface-raised);
+  color: var(--u-text-primary);
+  font: inherit;
+}
