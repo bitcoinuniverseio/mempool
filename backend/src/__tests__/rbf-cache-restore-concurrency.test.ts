@@ -32,6 +32,7 @@ jest.useFakeTimers({ doNotFake: ['setTimeout', 'clearTimeout', 'setImmediate', '
 const { default: rbfCache, RBF_CHECK_CONCURRENCY } = jest.requireActual('../api/rbf-cache');
 
 describe('RBF cache restore against an electrum or Core backend', () => {
+  beforeAll(() => { const state = require('../api/rbf-snapshot').rbfRestoreState; state.beginRestore(); state.completeRestore('no-file'); });
   const backend = config.MEMPOOL.BACKEND;
   afterAll(() => { config.MEMPOOL.BACKEND = backend; jest.clearAllTimers(); jest.useRealTimers(); });
 
@@ -89,4 +90,12 @@ describe('RBF restore response and disabled Redis ownership', () => {
       expect(rbfCache.getRbfTree(tx(1).txid)?.mined).toBe(false);
     } finally { release({ txid: tx(1).txid, status: { confirmed: false } }); await restoring; api.$getRawTransaction.mockImplementation(original); }
   });
+  it('does not accumulate quarantined historical notifications while preserving observed graph/body state', () => {
+    const state=require('../api/rbf-snapshot').rbfRestoreState; state.fail('snapshot-oversize');
+    for(let n=0;n<100;n++){ rbfCache.add([tx(n*2)],tx(n*2+1));rbfCache.mined(tx(n*2+1).txid); }
+    expect((rbfCache as any).dirtyTrees.size).toBe(0);expect((rbfCache as any).cacheQueue).toHaveLength(0);
+    expect(rbfCache.dump().txs).toHaveLength(200);expect(rbfCache.dump().trees).toHaveLength(100);
+    expect(rbfCache.getReplacedBy(tx(0).txid)).toBe(tx(1).txid);
+  });
+
 });

@@ -1,3 +1,4 @@
+import { rbfRestoreState, RbfSnapshotError } from './rbf-snapshot';
 import { createClient } from 'redis';
 import memPool from './mempool';
 import blocks from './blocks';
@@ -332,11 +333,12 @@ class RedisCache {
   }
 
   /** @asyncSafe */
-  async $getRbfEntries(type: string): Promise<any[]> {
+  async $getRbfEntries(type: string, strictRestore = false): Promise<any[]> {
     if (!config.REDIS.ENABLED) {
       return [];
     }
     if (!this.connected) {
+      if (strictRestore) { throw new RbfSnapshotError('snapshot-read-failed'); }
       logger.warn(`Failed to retrieve Rbf ${type}s from Redis cache: Redis is not connected`);
       return [];
     }
@@ -344,6 +346,7 @@ class RedisCache {
       const rbfEntries = await this.scanKeys<MempoolTransactionExtended[]>(`rbf:${type}:*`);
       return rbfEntries;
     } catch (e) {
+      if (strictRestore) { throw new RbfSnapshotError('snapshot-read-failed'); }
       logger.warn(`Failed to retrieve Rbf ${type}s from Redis cache: ${e instanceof Error ? e.message : e}`);
       return [];
     }
@@ -351,35 +354,35 @@ class RedisCache {
 
   /** @asyncUnsafe */
   async $loadCache(): Promise<void> {
-    if (!config.REDIS.ENABLED) {
-      return;
-    }
+    if (!config.REDIS.ENABLED || !rbfRestoreState.beginRestore()) { return; }
     logger.info('Restoring mempool and blocks data from Redis cache');
-
-    // Load mempool
-    const loadedMempool = await this.$getMempool();
-    this.inflateLoadedTxs(loadedMempool);
-    // Load rbf data
-    const rbfTxs = await this.$getRbfEntries('tx');
-    const rbfTrees = await this.$getRbfEntries('tree');
-    const rbfExpirations = await this.$getRbfEntries('exp');
-
-    // Load & set block data
-    if (!this.ignoreBlocksCache) {
-      const loadedBlocks = await this.$getBlocks();
-      const loadedBlockSummaries = await this.$getBlockSummaries();
-      blocks.setBlocks(loadedBlocks || []);
-      blocks.setBlockSummaries(loadedBlockSummaries || []);
+    // Preserve ordinary cache startup failure behavior, while fencing historical reads.
+    try {
+      const loadedMempool = await this.$getMempool();
+      this.inflateLoadedTxs(loadedMempool);
+      if (!this.ignoreBlocksCache) {
+        blocks.setBlocks(await this.$getBlocks() || []);
+        blocks.setBlockSummaries(await this.$getBlockSummaries() || []);
+      }
+      await memPool.$setMempool(loadedMempool);
+    } catch (error) { rbfRestoreState.fail('snapshot-read-failed'); throw error; }
+    try {
+      const rbfTxs = await this.$getRbfEntries('tx', true);
+      const rbfTrees = await this.$getRbfEntries('tree', true);
+      const rbfExpirations = await this.$getRbfEntries('exp', true);
+      const restored = await rbfCache.load({
+        txs: rbfTxs,
+        trees: rbfTrees.map(loadedTree => { loadedTree.value.key = loadedTree.key; return loadedTree.value; }),
+        expiring: rbfExpirations,
+        mempool: memPool.getMempool(),
+        spendMap: memPool.getSpendMap(),
+      });
+      if (!restored) { throw new RbfSnapshotError('snapshot-restore-failed'); }
+      rbfRestoreState.completeRestore('restored');
+    } catch (error) {
+      rbfRestoreState.fail(error instanceof RbfSnapshotError ? error.code : 'snapshot-restore-failed');
+      logger.warn('RBF retained Redis history unavailable; existing entries preserved.');
     }
-    // Set other data
-    await memPool.$setMempool(loadedMempool);
-    await rbfCache.load({
-      txs: rbfTxs,
-      trees: rbfTrees.map(loadedTree => { loadedTree.value.key = loadedTree.key; return loadedTree.value; }),
-      expiring: rbfExpirations,
-      mempool: memPool.getMempool(),
-      spendMap: memPool.getSpendMap(),
-    });
   }
 
   private inflateLoadedTxs(mempool: { [txid: string]: MempoolTransactionExtended }): void {
