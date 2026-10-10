@@ -55,8 +55,10 @@
         <span class="summary-count" role="status" aria-live="polite">
           <ng-container *ngIf="state.holdings.length"
             i18n="universe.address.count">{{ state.holdings.length }} held</ng-container>
-          <ng-container *ngIf="!state.holdings.length"
+          <ng-container *ngIf="!state.holdings.length && !state.partial"
             i18n="universe.address.none-count">None held</ng-container>
+          <ng-container *ngIf="!state.holdings.length && state.partial"
+            i18n="universe.address.unverified-count">Not verified</ng-container>
         </span>
         <span class="universe-chip summary-badge" [ngClass]="state.partial ? 'state-partial' : 'state-proven'">
           <ng-container *ngIf="state.partial" i18n="universe.address.scope.partial">Partial</ng-container>
