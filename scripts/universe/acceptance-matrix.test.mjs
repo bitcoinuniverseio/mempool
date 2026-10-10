@@ -19,6 +19,20 @@ test('OP Names successor keeps predecessor authority and cannot promote source t
   assert.throws(() => validateMatrix(tampered), /Source transition cannot accept/);
 });
 
+test('current matrix binds both address implementation and native entrypoint without promoting acceptance', () => {
+  const matrix = buildMatrix();
+  for (const path of ['backend/src/index.ts', 'backend/src/api/bitcoin/electrum-api.ts']) {
+    const actual = matrix.sources.find(entry => entry.path === path);
+    const expected = describeArtifact(path, readFileSync(path));
+    assert(actual, `Missing changed native source identity: ${path}`);
+    assert.equal(actual.sha256, expected.sha256);
+    assert.equal(actual.sha256Encoding, 'utf8-lf');
+    assert.notEqual(actual.sha256, describeArtifact(path, Buffer.from(readFileSync(path, 'utf8') + '\n// changed source token\n')).sha256);
+  }
+  assert.equal(matrix.operationDenominatorReconciled, false);
+  assert.equal(matrix.realNetworkE2ePasses, 0);
+});
+
 test('current text source identities are portable across Git LF and CRLF checkouts but retain token changes', () => {
   const lf = Buffer.from('export const state = "ready";\nexport const count = 1;\n');
   const crlf = Buffer.from(lf.toString().replaceAll('\n', '\r\n'));

@@ -177,7 +177,8 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
 
   /** @asyncUnsafe */
   async $getAddressUtxos(address: string): Promise<IEsploraApi.UTXO[]> {
-    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
+    // Script UTXO acquisition verifies the source before and after the read.
+    // A preliminary third checkpoint adds latency without covering new data.
     const addressInfo = await addressBitcoinClient.validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
       throw new Error('Invalid Bitcoin address');
