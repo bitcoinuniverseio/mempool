@@ -20,8 +20,11 @@ export class RbfRawBackingCandidate {
   private closePromise?: Promise<void>;
   private owners = new Set<Promise<void>>();
   private readonly ranges: Map<string, RbfBodyRange>;
-  private constructor(private handle: FileHandle, private stamp: fs.BigIntStats, readonly closure: RbfCompactClosureCandidate) {
+  private readonly sourceSha256: string;
+  private constructor(private handle: FileHandle, private stamp: fs.BigIntStats, private readonly sealedClosure: RbfCompactClosureCandidate) {
+    const closure = sealedClosure;
     this.ranges = new Map(closure.raw.bodies.map(range => [range.txid, { ...range }]));
+    this.sourceSha256 = closure.raw.sourceSha256;
   }
 
   /** Full input is scanned using one verified descriptor, never allocated as a whole string.
@@ -71,6 +74,7 @@ export class RbfRawBackingCandidate {
   }
 
   has(txid: string): boolean { return this.ranges.has(txid); }
+  get closure(): RbfCompactClosureCandidate { return structuredClone(this.sealedClosure); }
   get activeReads(): number { return this.owners.size; }
   get admitting(): boolean { return !this.closing; }
   stopAdmission(): void { this.closing = true; }
@@ -79,12 +83,24 @@ export class RbfRawBackingCandidate {
    * @asyncUnsafe Rejects missing/changed source, cancellation and closed admission.
    */
   async *body(txid: string, signal?: AbortSignal): AsyncIterable<Buffer> {
+    const range = this.ranges.get(txid);
+    if (!range) { return invalid(); }
+    yield* this.readRange(range, signal);
+  }
+
+  /** Full source copy for a new exclusive generation; never materializes all bodies.
+   * @asyncUnsafe The sink must discard an incomplete publication if read/hash/ownership fails.
+   */
+  async *snapshot(signal?: AbortSignal): AsyncIterable<Buffer> {
+    yield* this.readRange({ txid: '', offset: 0, bytes: Number(this.stamp.size), sha256: this.sourceSha256 }, signal);
+  }
+
+  /** @asyncUnsafe Propagates cancellation, source mutation and descriptor errors. */
+  private async *readRange(range: RbfBodyRange, signal?: AbortSignal): AsyncIterable<Buffer> {
     cancelled(signal);
     if (this.closing) { throw new RbfSnapshotError('snapshot-read-failed'); }
     // Derived file reads only; this is not an RPC pool or a change to native/RPC budgets.
     if (this.owners.size >= 2) { throw new Error('RBF body read admission busy'); }
-    const range = this.ranges.get(txid);
-    if (!range) { return invalid(); }
     let settle!: () => void;
     const owner = new Promise<void>(resolve => { settle = resolve; });
     this.owners.add(owner);
