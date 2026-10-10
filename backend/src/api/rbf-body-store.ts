@@ -19,6 +19,13 @@ const same = (a: fs.BigIntStats, b: fs.BigIntStats): boolean => a.dev === b.dev 
 /** Complete bodies are kept apart from compact graph metadata. One owner writes immutable segments.
  * Memory-only mode preserves the offered response with an explicit encoded-retention admission fence.
  */
+export class RbfBodyCleanupError extends Error {
+  constructor(public readonly primary: unknown, public readonly cleanup: unknown) {
+    super('RBF body persistence failed and descriptor cleanup failed');
+    this.name = 'RbfBodyCleanupError';
+  }
+}
+
 export class RbfBodyStore {
   private records = new Map<string, RecordBody>();
   private pendingBytes = 0;
@@ -241,7 +248,13 @@ export class RbfBodyStore {
         // No await between publishing the reference and releasing retained encoded bytes.
         record.file = file;
         this.ownedSegments.set(file, await fs.promises.lstat(join(this.root!, file), { bigint: true }));
-      } finally { if (handle) { await handle.close(); } }
+      } catch (primary) {
+        if (handle) {
+          try { await handle.close(); }
+          catch (cleanup) { throw new RbfBodyCleanupError(primary, cleanup); }
+        }
+        throw primary;
+      }
     } } finally {
       for (const record of batch) {
         record.writing = false;
