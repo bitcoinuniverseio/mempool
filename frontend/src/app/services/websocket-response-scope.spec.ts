@@ -1,3 +1,4 @@
+import { RbfHistoryState } from './rbf-history-state';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { WebsocketService } from './websocket.service';
 import { StateService } from './state.service';
@@ -46,7 +47,8 @@ describe('base WebsocketService scoped ingress with real RxJS WebSocketSubject',
   function build(network = 'signet', browser = true, bootstrap?: unknown): void {
     channels = new Map(); callbacks = []; init = new Subject(); rbf = new Subject();
     fee = new FeeEstimateState(network); live = new LiveFeedFreshness();
-    fields = { network, isBrowser: browser, env: { ROOT_NETWORK: '' }, latestBlockHeight: -1,
+    const rbfHistoryState = new RbfHistoryState();
+    fields = { rbfHistoryState, network, isBrowser: browser, env: { ROOT_NETWORK: '' }, latestBlockHeight: -1,
       networkChanged$: new Subject<string>(), resetBlocks: vi.fn(), addBlock: vi.fn(),
       updateChainTip: vi.fn(), resetChainTip: vi.fn(),
       retryLiveFeed: () => { fee.retry(); live.retry(); }, acceptFeeEstimate: (value: unknown) => fee.accept(value),
@@ -57,7 +59,7 @@ describe('base WebsocketService scoped ingress with real RxJS WebSocketSubject',
       return undefined;
     } }) as unknown as StateService;
     (fields.networkChanged$ as Subject<string>).subscribe(selected => {
-      fields.network = selected; fee.reset(selected); live.reset();
+      fields.network = selected; fee.reset(selected); live.reset(); (fields.rbfHistoryState as RbfHistoryState).reset();
     });
     vi.stubGlobal('WebSocket', MockSocket);
     vi.stubGlobal('document', { location: { protocol: 'https:', hostname: 'owned.test', port: '' } });
@@ -70,6 +72,43 @@ describe('base WebsocketService scoped ingress with real RxJS WebSocketSubject',
   function switchTo(network: string): void { (fields.networkChanged$ as Subject<string>).next(network); }
   beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date('2026-10-09T12:00:00Z')); MockSocket.sockets = []; });
   afterEach(() => { fee.destroy(); live.destroy(); vi.clearAllTimers(); vi.unstubAllGlobals(); vi.useRealTimers(); });
+
+  it('quarantines same-frame fresh RBF data and only recovers from an explicit owner marker plus new data', () => {
+    build(); const socket = MockSocket.sockets[0]; socket.open();
+    const marker = { schemaVersion: 'universe-rbf-history-availability-v1', status: 'unavailable', reason: 'snapshot-oversize' };
+    socket.frame({ ...chainFrame('signet'), rbfHistoryAvailability: marker, rbfLatest: [], rbfLatestSummary: [], rbfInfo: { tx: { txid: 'old' } }, txReplaced: { txid: 'old' } });
+    expect(channels.get('rbfLatest$')).toBeUndefined(); expect(channels.get('txRbfInfo$')).toBeUndefined();
+    const history = fields.rbfHistoryState as RbfHistoryState;
+    expect(history.summary$.value.status).toBe('unavailable');
+    socket.frame({ rbfLatestSummary: [] }); expect(history.summary$.value.status).toBe('unavailable');
+    socket.frame({ rbfHistoryAvailability: { ...marker, status: 'available', reason: null } });
+    expect(history.summary$.value.status).toBe('unavailable');
+    socket.frame({ rbfLatestSummary: [] }); expect(history.summary$.value).toEqual({ status: 'ready', value: [] });
+  });
+
+  it('preserves a live scoped replacement fact but never cached txReplaced or history during quarantine', () => {
+    build(); const socket = MockSocket.sockets[0]; socket.open();
+    const marker = { schemaVersion: 'universe-rbf-history-availability-v1', status: 'unavailable', reason: 'snapshot-oversize' };
+    socket.frame({ rbfHistoryAvailability: marker, txReplaced: { txid: 'a'.repeat(64) }, rbfTransaction: { txid: 'b'.repeat(64) } });
+    expect(channels.get('txReplaced$')).toBeUndefined();
+    socket.frame({ ...chainFrame('signet'), rbfHistoryAvailability: marker, rbfTransaction: { txid: 'b'.repeat(64) }, txReplaced: { txid: 'a'.repeat(64) }, rbfLatestSummary: [] });
+    expect(channels.get('txReplaced$')?.value).toEqual({ txid: 'b'.repeat(64) });
+    expect((fields.rbfHistoryState as RbfHistoryState).summary$.value.status).toBe('unavailable');
+  });
+
+  it('does not borrow wrong-network quarantine or late old-socket RBF data', () => {
+    build(); const old = MockSocket.sockets[0]; old.open(); const history = fields.rbfHistoryState as RbfHistoryState;
+    old.frame({ rbfLatestSummary: [] }); expect(history.summary$.value.status).toBe('ready');
+    old.frame({ ...chainFrame('mainnet'), rbfHistoryAvailability: { schemaVersion: 'universe-rbf-history-availability-v1', status: 'unavailable', reason: 'snapshot-invalid' } }); expect(history.summary$.value.status).toBe('ready');
+    switchTo(''); const fresh = MockSocket.sockets[1]; fresh.open(); expect(history.summary$.value.status).toBe('loading');
+    old.frame({ rbfLatestSummary: [] }); expect(history.summary$.value.status).toBe('loading'); fresh.frame({ ...chainFrame('mainnet'), rbfLatestSummary: [] }); expect(history.summary$.value.status).toBe('ready');
+  });
+
+  it('coalesces concurrent SSR summary attempts and contains failed REST history without unhandled rejection', async () => {
+    build('signet', false); const first = service.initRbfSummary(), second = service.initRbfSummary();
+    expect(rbf.observers).toHaveLength(1); rbf.error({ status: 503, error: { error: 'rbf_history_unavailable' } }); await Promise.all([first, second]);
+    expect((fields.rbfHistoryState as RbfHistoryState).summary$.value.status).toBe('unavailable'); expect(channels.get('rbfLatestSummary$')).toBeUndefined();
+  });
 
   it.each(['live', 'fee', 'sync', 'top'])('rejects explicit wrong scope %s before blocks, mempool or address mutation on the correctly scoped socket', kind => {
     build(); const socket = MockSocket.sockets[0]; socket.open();

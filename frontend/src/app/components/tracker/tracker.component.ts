@@ -1,3 +1,4 @@
+import { scopedRbfRead$, validRbfHistory } from '@app/services/rbf-history-state';
 import { Component, OnInit, OnDestroy, HostListener, Inject, ChangeDetectorRef, ChangeDetectionStrategy, NgZone } from '@angular/core';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
@@ -88,6 +89,10 @@ export class TrackerComponent implements OnInit, OnDestroy {
   replaced: boolean = false;
   latestReplacement: string;
   rbfReplaces: string[];
+  private readonly rbfContextChanged$ = new Subject<string>();
+  rbfHistoryRequested = false;
+  rbfCachedUnavailable = false;
+  rbfHistoryStatus: 'loading' | 'ready' | 'unavailable' = 'loading';
   rbfInfo: RbfTree;
   cpfpInfo: CpfpInfo | null;
   hasCpfp: boolean = false;
@@ -222,18 +227,14 @@ export class TrackerComponent implements OnInit, OnDestroy {
         this.setCpfpInfo(cpfpInfo);
       });
 
-    this.fetchRbfSubscription = this.fetchRbfHistory$
-    .pipe(
-      switchMap((txId) =>
-        this.apiService
-          .getRbfHistory$(txId)
-      ),
-      catchError(() => {
-        return of(null);
-      })
-    ).subscribe((rbfResponse) => {
+    this.fetchRbfSubscription = scopedRbfRead$(this.fetchRbfHistory$, merge(this.stateService.networkChanged$, this.rbfContextChanged$), this.stateService.rbfHistoryAvailability$,
+      () => this.stateService.network, () => this.stateService.rbfHistoryState.canUseHistory(), txId => { this.rbfHistoryRequested = true; return this.apiService.getRbfHistory$(txId); }, validRbfHistory)
+    .subscribe(state => {
+      this.rbfHistoryStatus = state.status;
+      const rbfResponse = state.status === 'ready' ? state.value : null;
       this.rbfInfo = rbfResponse?.replacements;
       this.rbfReplaces = rbfResponse?.replaces || null;
+      this.latestReplacement = '';
       if (this.rbfInfo) {
         // link to the latest pending version
         this.latestReplacement = this.rbfInfo.tx.txid;
@@ -253,21 +254,17 @@ export class TrackerComponent implements OnInit, OnDestroy {
           }
         }
       }
+      this.cd.markForCheck();
     });
 
-    this.fetchCachedTxSubscription = this.fetchCachedTx$
-    .pipe(
-      tap(() => {
-        this.loadingCachedTx = true;
-      }),
-      switchMap((txId) =>
-        this.apiService
-          .getRbfCachedTx$(txId)
-      ),
-      catchError(() => {
-        return of(null);
-      })
-    ).subscribe((tx) => {
+    this.fetchCachedTxSubscription = scopedRbfRead$(this.fetchCachedTx$, merge(this.stateService.networkChanged$, this.rbfContextChanged$), this.stateService.rbfHistoryAvailability$,
+      () => this.stateService.network, () => this.stateService.rbfHistoryState.canUseHistory(), txId => this.apiService.getRbfCachedTx$(txId))
+    .subscribe(state => {
+      this.loadingCachedTx = state.status === 'loading';
+      this.rbfCachedUnavailable = state.status === 'unavailable';
+      this.cd.markForCheck();
+      if (state.status !== 'ready') { return; }
+      const tx = state.value;
       this.loadingCachedTx = false;
       if (!tx) {
         this.seoService.logSoft404();
@@ -809,6 +806,10 @@ export class TrackerComponent implements OnInit, OnDestroy {
   }
 
   resetTransaction() {
+    this.rbfContextChanged$.next(this.stateService.network);
+    this.rbfHistoryStatus = 'loading';
+    this.rbfHistoryRequested = false;
+    this.rbfCachedUnavailable = false;
     this.error = undefined;
     this.tx = null;
     this.txChanged$.next(true);
@@ -863,6 +864,11 @@ export class TrackerComponent implements OnInit, OnDestroy {
     // unchanged from 380px upwards, where a fifth of the width already clears
     // it.
     this.blockchainHeight = Math.max(76, this.blockchainWidth / 5);
+  }
+
+  retryRbfHistory(): void {
+    if (!this.tx && this.rbfCachedUnavailable) { this.fetchCachedTx$.next(this.txId); }
+    else { this.fetchRbfHistory$.next(this.txId); }
   }
 
   ngOnDestroy() {

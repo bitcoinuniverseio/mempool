@@ -3,7 +3,14 @@ import { ILoadingIndicators } from '@app/services/state.service';
 import { Transaction } from '@interfaces/electrs.interface';
 import { Acceleration, BlockExtended, DifficultyAdjustment, RbfTree, TransactionStripped } from '@interfaces/node-api.interface';
 
+export interface RbfHistoryAvailability {
+  schemaVersion: 'universe-rbf-history-availability-v1';
+  status: 'available' | 'unavailable';
+  reason: null | 'snapshot-oversize' | 'snapshot-invalid' | 'snapshot-changed' | 'snapshot-read-failed' | 'snapshot-restore-failed' | 'rbf_restore_pending';
+}
+
 export interface WebsocketResponse {
+  rbfHistoryAvailability?: RbfHistoryAvailability;
   backend?: 'esplora' | 'electrum' | 'none';
   block?: BlockExtended;
   blocks?: BlockExtended[];

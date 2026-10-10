@@ -7,6 +7,7 @@ import { Router, NavigationStart } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { filter, map, scan, share, shareReplay } from 'rxjs/operators';
 import { FeeEstimateState } from './fee-estimate';
+import { RbfHistoryState } from './rbf-history-state';
 import { LiveFeedFreshness } from './live-feed-freshness';
 import { LoadState } from '@app/shared/load-state';
 import { StorageService } from '@app/services/storage.service';
@@ -216,6 +217,9 @@ export class StateService {
   txConfirmed$ = new Subject<[string, BlockExtended]>();
   txReplaced$ = new Subject<ReplacedTransaction>();
   txRbfInfo$ = new Subject<RbfTree>();
+  readonly rbfHistoryState = new RbfHistoryState();
+  readonly rbfHistoryAvailability$ = this.rbfHistoryState.availability$;
+  readonly rbfSummaryState$ = this.rbfHistoryState.summary$;
   rbfLatest$ = new Subject<RbfTree[]>();
   rbfLatestSummary$ = new Subject<ReplacementInfo[]>();
   utxoSpent$ = new Subject<object>();
@@ -418,6 +422,7 @@ export class StateService {
     });
 
     this.networkChanged$.subscribe((network) => {
+      this.rbfHistoryState.reset();
       this.feeState.reset(network);
       this.liveFreshness.reset();
       this.transactions$ = new BehaviorSubject<TransactionStripped[]>(null);
@@ -467,6 +472,7 @@ export class StateService {
     this.feeEstimate$.subscribe(snapshot => this.recommendedFees$.next(snapshot.status === 'ready' ? snapshot.values : null));
     this.connectionState$.subscribe(state => {
       if (state !== 2) {
+        this.rbfHistoryState.offline();
         this.feeState.offline();
         this.liveFreshness.offline();
       }
@@ -625,6 +631,7 @@ export class StateService {
   invalidateLiveObservation(): void { this.liveFreshness.offline(); }
 
   ngOnDestroy(): void {
+    this.rbfHistoryState.destroy();
     this.feeState.destroy();
     this.liveFreshness.destroy();
   }

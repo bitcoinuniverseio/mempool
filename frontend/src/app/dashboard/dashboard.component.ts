@@ -115,6 +115,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.stateService.retryLiveFeed();
   }
 
+  retryRbfSummary(): void { this.websocketService.startTrackRbfSummary(); }
+
   ngOnDestroy(): void {
     this.filterSubscription.unsubscribe();
     this.mempoolInfoSubscription.unsubscribe();
@@ -255,7 +257,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       );
 
-    this.replacements$ = this.stateService.rbfLatestSummary$;
+    this.replacements$ = this.stateService.rbfSummaryState$.pipe(map(state => state.status === 'ready' ? state.value : null));
 
     this.mempoolStats$ = this.stateService.connectionState$
       .pipe(

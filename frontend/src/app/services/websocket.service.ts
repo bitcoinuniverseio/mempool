@@ -2,13 +2,15 @@ import { Injectable } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { WebsocketResponse } from '@interfaces/websocket.interface';
 import { StateService } from '@app/services/state.service';
+import { RbfTree } from '@interfaces/node-api.interface';
 import { Transaction } from '@interfaces/electrs.interface';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { ApiService } from '@app/services/api.service';
-import { take } from 'rxjs/operators';
+import { take, timeout } from 'rxjs/operators';
 import { TransferState, makeStateKey } from '@angular/core';
 import { CacheService } from '@app/services/cache.service';
 import { uncompressDeltaChange, uncompressTx } from '@app/shared/common.utils';
+import { RBF_READ_TIMEOUT_MS, validRbfList, validRbfSummary } from './rbf-history-state';
 import { decodeFeeEstimate } from './fee-estimate';
 import { websocketResponseMatchesScope } from './websocket-response-scope';
 
@@ -33,6 +35,8 @@ export class WebsocketService {
   private isTrackingMempoolBlock = false;
   private isTrackingRbf: 'all' | 'fullRbf' | false = false;
   private isTrackingRbfSummary = false;
+  private rbfTrackedGeneration = -1;
+  private rbfSummaryTrackedGeneration = -1;
   private isTrackingAddress: string | false = false;
   private isTrackingAddresses: string[] | false = false;
   private isTrackingAccelerations: boolean = false;
@@ -49,6 +53,7 @@ export class WebsocketService {
   private subscription: Subscription;
   private network = '';
   private contextGeneration = 0;
+  private rbfSummaryRequest: { generation: number; network: string; promise: Promise<void> } | null = null;
 
   constructor(
     private stateService: StateService,
@@ -113,6 +118,7 @@ export class WebsocketService {
     console.log('reconnecting websocket');
     clearTimeout(this.retryTimeout);
     this.stateService.retryLiveFeed();
+    if (this.isTrackingRbfSummary) { this.stateService.rbfHistoryState?.beginSummary(); }
     this.subscription.unsubscribe();
     this.websocketSubject.complete();
     this.websocketSubject = webSocket<WebsocketResponse>(
@@ -178,6 +184,8 @@ export class WebsocketService {
           this.stateService.connectionState$.next(2);
         }
 
+        if (this.isTrackingRbf && this.rbfTrackedGeneration !== generation) { this.startTrackRbf(this.isTrackingRbf); }
+        if (this.isTrackingRbfSummary && this.rbfSummaryTrackedGeneration !== generation) { this.startTrackRbfSummary(); }
         this.startOnlineCheck(generation, subject);
       },
       (err: Error) => {
@@ -284,6 +292,7 @@ export class WebsocketService {
   startTrackRbf(mode: 'all' | 'fullRbf') {
     this.websocketSubject.next({ 'track-rbf': mode });
     this.isTrackingRbf = mode;
+    this.rbfTrackedGeneration = this.contextGeneration;
   }
 
   stopTrackRbf() {
@@ -292,9 +301,12 @@ export class WebsocketService {
   }
 
   startTrackRbfSummary() {
+    if (this.isTrackingRbfSummary && this.rbfSummaryTrackedGeneration === this.contextGeneration && this.stateService.rbfHistoryState?.summary$.value.status === 'loading') { return; }
+    this.stateService.rbfHistoryState?.beginSummary();
     this.initRbfSummary();
     this.websocketSubject.next({ 'track-rbf-summary': true });
     this.isTrackingRbfSummary = true;
+    this.rbfSummaryTrackedGeneration = this.contextGeneration;
   }
 
   stopTrackRbfSummary() {
@@ -430,23 +442,27 @@ export class WebsocketService {
       this.stateService.conversions$.next(response.conversions);
     }
 
-    if (response.rbfTransaction) {
+    const rbfAllowed = this.stateService.rbfHistoryState?.acceptMarker(response.rbfHistoryAvailability) ?? true;
+    // A live, scope-validated producer replacement fact is independent of restored history.
+    // Bootstrap/track-tx txReplaced and all history-derived panels remain quarantined.
+    if (response.rbfTransaction && (rbfAllowed || proof?.status === 'ready')) {
       this.stateService.txReplaced$.next(response.rbfTransaction);
     }
 
-    if (response.rbfInfo) {
+    if (rbfAllowed && response.rbfInfo) {
       this.stateService.txRbfInfo$.next(response.rbfInfo);
     }
 
-    if (response.rbfLatest) {
+    if (rbfAllowed && Array.isArray(response.rbfLatest)) {
       this.stateService.rbfLatest$.next(response.rbfLatest);
     }
 
-    if (response.rbfLatestSummary !== undefined) {
-      this.stateService.rbfLatestSummary$.next(response.rbfLatestSummary || []);
-    }
+    if (rbfAllowed && validRbfSummary(response.rbfLatestSummary)) {
+      this.stateService.rbfHistoryState?.acceptSummary(response.rbfLatestSummary);
+      this.stateService.rbfLatestSummary$.next(response.rbfLatestSummary);
+    } else if (rbfAllowed && response.rbfLatestSummary !== undefined) { this.stateService.rbfHistoryState?.failSummary(); }
 
-    if (response.txReplaced) {
+    if (rbfAllowed && response.txReplaced) {
       this.stateService.txReplaced$.next(response.txReplaced);
     }
 
@@ -622,12 +638,24 @@ export class WebsocketService {
   }
 
   async initRbfSummary(): Promise<void> {
+    if (this.stateService.isBrowser) { return; }
+    const generation = this.contextGeneration, network = this.stateService.network;
+    if (this.rbfSummaryRequest?.generation === generation && this.rbfSummaryRequest.network === network) { return this.rbfSummaryRequest.promise; }
+    const request = { generation, network, promise: this.loadRbfSummary() };
+    this.rbfSummaryRequest = request;
+    try { await request.promise; } finally { if (this.rbfSummaryRequest === request) { this.rbfSummaryRequest = null; } }
+  }
+
+  private async loadRbfSummary(): Promise<void> {
     if (!this.stateService.isBrowser) {
       const generation = this.contextGeneration;
       const network = this.stateService.network;
-      const rbfList = await firstValueFrom(this.apiService.getRbfList$(false));
+      this.stateService.rbfHistoryState?.beginSummary();
+      let rbfList: RbfTree[];
+      try { rbfList = await firstValueFrom(this.apiService.getRbfList$(false).pipe(timeout({ first: RBF_READ_TIMEOUT_MS }))); }
+      catch { if (generation === this.contextGeneration && network === this.stateService.network) { this.stateService.rbfHistoryState?.failSummary(); } return; }
       if (generation !== this.contextGeneration || network !== this.stateService.network) return;
-      if (rbfList) {
+      if (validRbfList(rbfList) && (this.stateService.rbfHistoryState?.canUseHistory() ?? true)) {
         const rbfSummary = rbfList.slice(0, 6).map(rbfTree => {
           let oldFee = 0;
           let oldVsize = 0;
@@ -645,8 +673,9 @@ export class WebsocketService {
             newVsize: rbfTree.tx.vsize,
           };
         });
+        this.stateService.rbfHistoryState?.acceptSummary(rbfSummary);
         this.stateService.rbfLatestSummary$.next(rbfSummary);
-      }
+      } else { this.stateService.rbfHistoryState?.failSummary(); }
     }
   }
 }
