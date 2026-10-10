@@ -102,6 +102,19 @@ const BUCKETS: { label: string; min: number; max: number }[] = [
 
 export const TIME_MACHINE_LIMITS = { checkpoints: 288, events: 50_000, eventsPerTx: 64 } as const;
 
+type TransactionMetrics = Readonly<{ vsize: number; weight: number; fee: number }>;
+
+/** Share unchanged immutable metrics with the preceding retained checkpoint. */
+function checkpointTransactions(entries: Iterable<readonly [string, TransactionMetrics]>, previous?: Map<string, TransactionMetrics>): Map<string, TransactionMetrics> {
+  const transactions = new Map<string, TransactionMetrics>();
+  for (const [txid, metrics] of entries) {
+    const retained = previous?.get(txid);
+    transactions.set(txid, retained && retained.vsize === metrics.vsize && retained.weight === metrics.weight && retained.fee === metrics.fee
+      ? retained : { vsize: metrics.vsize, weight: metrics.weight, fee: metrics.fee });
+  }
+  return transactions;
+}
+
 export class TimeMachineService {
   private static instance: TimeMachineService;
   private eventLog: HistoricalMempoolEvent[] = [];
@@ -110,7 +123,7 @@ export class TimeMachineService {
   private lastPollComplete = false;
   private pollGeneration = 0;
   private checkpoints: MempoolCheckpoint[] = [];
-  private stateCache: Map<string, { summary: ReplayStateSummary; transactions: Map<string, { vsize: number; weight: number; fee: number }> }> = new Map();
+  private stateCache: Map<string, { summary: ReplayStateSummary; transactions: Map<string, TransactionMetrics> }> = new Map();
   private evictedThrough = 0;
   private evictedSequence = 0;
   private observedThrough = 0;
@@ -148,9 +161,11 @@ export class TimeMachineService {
         this.observedThrough = value.observedThrough;
         this.gaps = value.gaps;
         this.checkpoints = value.checkpoints.map(entry => entry.checkpoint);
+        let previousTransactions: Map<string, TransactionMetrics> | undefined;
         for (const entry of value.checkpoints) {
-          const transactions = new Map(entry.transactions);
+          const transactions = checkpointTransactions(entry.transactions, previousTransactions);
           this.stateCache.set(entry.checkpoint.state_hash, { summary: this.summarize(entry.checkpoint, entry.checkpoint.timestamp_utc, entry.checkpoint.block_height, 0), transactions });
+          previousTransactions = transactions;
         }
         for (const orphan of value.orphanConfirmations ?? []) this.orphanConfirmations.set(orphan.txid, orphan);
         this.canonicalRestorationTarget = value.canonicalRestorationTarget ?? null;
@@ -429,8 +444,13 @@ export class TimeMachineService {
     this.checkpoints = this.checkpoints.filter(existing => existing.block_height < block.height);
     this.checkpoints.push(checkpoint);
     if (this.checkpoints.length > TIME_MACHINE_LIMITS.checkpoints) { this.checkpoints.shift(); }
+    const previousCheckpoint = this.checkpoints[this.checkpoints.length - 2];
+    const previousTransactions = previousCheckpoint ? this.stateCache.get(previousCheckpoint.state_hash)?.transactions : undefined;
+    function* snapshotEntries(): IterableIterator<readonly [string, TransactionMetrics]> {
+      for (const tx of snapshot) { yield [tx.txid, tx]; }
+    }
     this.stateCache.set(checkpoint.state_hash, { summary: this.summarize(checkpoint, checkpoint.timestamp_utc, checkpoint.block_height, 0),
-      transactions: new Map(snapshot.map(tx => [tx.txid, { vsize: tx.vsize, weight: tx.weight, fee: tx.fee }])) });
+      transactions: checkpointTransactions(snapshotEntries(), previousTransactions) });
     const retained = new Set(this.checkpoints.map(item => item.state_hash));
     for (const hash of this.stateCache.keys()) if (!retained.has(hash)) this.stateCache.delete(hash);
     this.schedulePersistence();
