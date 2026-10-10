@@ -216,7 +216,8 @@ class WebsocketHandler {
 
   public getSerializedInitData(): string {
     this.refreshFeeState();
-    this.updateSocketDataFields({ rbfHistoryAvailability: rbfRestoreState.diagnostic() });
+    this.updateSocketDataFields({ rbfHistoryAvailability: rbfRestoreState.diagnostic(),
+      rbfSummary: rbfRestoreState.unavailable ? null : this.lastRbfSummary });
     return this.serializedInitData;
   }
 
@@ -293,7 +294,7 @@ class WebsocketHandler {
               // Client is telling the transaction wasn't found
               if (parsedMessage['watch-mempool']) {
                 const rbfCacheTxid = rbfCache.getReplacedBy(trackTxid);
-                if (rbfCacheTxid) {
+                if (rbfCacheTxid && !rbfRestoreState.unavailable) {
                   response['txReplaced'] = JSON.stringify({
                     txid: rbfCacheTxid,
                   });
@@ -449,7 +450,7 @@ class WebsocketHandler {
           if (parsedMessage && parsedMessage['track-rbf'] !== undefined) {
             if (['all', 'fullRbf'].includes(parsedMessage['track-rbf'])) {
               client['track-rbf'] = parsedMessage['track-rbf'];
-              response['rbfLatest'] = JSON.stringify(rbfCache.getRbfTrees(parsedMessage['track-rbf'] === 'fullRbf'));
+              if (!rbfRestoreState.unavailable) { response['rbfLatest'] = JSON.stringify(rbfCache.getRbfTrees(parsedMessage['track-rbf'] === 'fullRbf')); }
               response['rbfHistoryAvailability'] = JSON.stringify(rbfRestoreState.diagnostic());
             } else {
               client['track-rbf'] = false;
@@ -460,7 +461,7 @@ class WebsocketHandler {
             if (parsedMessage['track-rbf-summary']) {
               client['track-rbf-summary'] = true;
               response['rbfHistoryAvailability'] = JSON.stringify(rbfRestoreState.diagnostic());
-              if (this.socketData['rbfSummary'] != null) {
+              if (!rbfRestoreState.unavailable && this.socketData['rbfSummary'] != null) {
                 response['rbfLatestSummary'] = this.socketData['rbfSummary'];
               }
             } else {
@@ -605,7 +606,7 @@ class WebsocketHandler {
   /** @asyncSafe */
   private async $trackedTxStatus(txid: string): Promise<TxTrackingInfo> {
     const rbfCacheTxid = rbfCache.getReplacedBy(txid);
-    if (rbfCacheTxid) {
+    if (rbfCacheTxid && !rbfRestoreState.unavailable) {
       return { replacedBy: rbfCacheTxid, confirmed: false, status: 'replaced' };
     }
     const tx = memPool.getMempool()[txid];
@@ -813,11 +814,20 @@ class WebsocketHandler {
     const da = difficultyAdjustment.getDifficultyAdjustment();
     const accelerations = accelerationApi.getAccelerations();
     memPool.handleRbfTransactions(rbfTransactions);
-    const rbfChanges = rbfCache.getRbfChanges();
+    const currentReplacements = new Map<string, string>();
+    if (memPool.isInSync()) {
+      for (const match of Object.values(rbfTransactions)) {
+        const replacing = match.replacedBy?.txid;
+        if (replacing && newMempool[replacing]?.txid === replacing) {
+          for (const replaced of match.replaced) { currentReplacements.set(replaced.txid, replacing); }
+        }
+      }
+    }
+    const rbfChanges = rbfRestoreState.unavailable ? { map: {}, trees: {} } : rbfCache.getRbfChanges();
     let rbfReplacements;
     let fullRbfReplacements;
     let rbfSummary;
-    if (Object.keys(rbfChanges.trees).length || !this.lastRbfSummary) {
+    if (!rbfRestoreState.unavailable && (Object.keys(rbfChanges.trees).length || !this.lastRbfSummary)) {
       rbfReplacements = rbfCache.getRbfTrees(false);
       fullRbfReplacements = rbfCache.getRbfTrees(true);
       rbfSummary = rbfCache.getLatestRbfSummary() || [];
@@ -873,9 +883,8 @@ class WebsocketHandler {
       'feeEstimate': feeEstimate,
       'liveObservation': this.getLiveObservation(),
     };
-    if (rbfSummary) {
-      socketDataFields['rbfSummary'] = rbfSummary;
-    }
+    if (rbfRestoreState.unavailable) { socketDataFields['rbfSummary'] = null; }
+    else if (rbfSummary) { socketDataFields['rbfSummary'] = rbfSummary; }
     this.updateSocketDataFields(socketDataFields);
 
     // cache serialized objects to avoid stringify-ing the same thing for every client
@@ -1072,7 +1081,8 @@ class WebsocketHandler {
           response['utxoSpent'] = JSON.stringify(outspends);
         }
 
-        const rbfReplacedBy = rbfChanges.map[client['track-tx']] ? rbfCache.getReplacedBy(client['track-tx']) : false;
+        const rbfReplacedBy = rbfRestoreState.unavailable ? currentReplacements.get(trackTxid)
+          : rbfChanges.map[trackTxid] ? rbfCache.getReplacedBy(trackTxid) : false;
         if (rbfReplacedBy) {
           response['rbfTransaction'] = JSON.stringify({
             txid: rbfReplacedBy,
@@ -1080,7 +1090,7 @@ class WebsocketHandler {
         }
 
         const rbfChange = rbfChanges.map[client['track-tx']];
-        if (rbfChange) {
+        if (rbfChange && !rbfRestoreState.unavailable) {
           response['rbfInfo'] = JSON.stringify(rbfChanges.trees[rbfChange]);
         }
 
@@ -1124,7 +1134,8 @@ class WebsocketHandler {
           if (outspends && Object.keys(outspends).length) {
             txInfo.utxoSpent = outspends;
           }
-          const replacedBy = rbfChanges.map[txid] ? rbfCache.getReplacedBy(txid) : false;
+          const replacedBy = rbfRestoreState.unavailable ? currentReplacements.get(txid)
+            : rbfChanges.map[txid] ? rbfCache.getReplacedBy(txid) : false;
           if (replacedBy) {
             txInfo.replacedBy = replacedBy;
           }
@@ -1172,13 +1183,13 @@ class WebsocketHandler {
       if (client['track-rbf'] || client['track-rbf-summary'] || client['track-tx'] || client['track-txs']) {
         response['rbfHistoryAvailability'] = JSON.stringify(rbfRestoreState.diagnostic());
       }
-      if (client['track-rbf'] === 'all' && rbfReplacements) {
+      if (!rbfRestoreState.unavailable && client['track-rbf'] === 'all' && rbfReplacements) {
         response['rbfLatest'] = getCachedResponse('rbfLatest', rbfReplacements);
-      } else if (client['track-rbf'] === 'fullRbf' && fullRbfReplacements) {
+      } else if (!rbfRestoreState.unavailable && client['track-rbf'] === 'fullRbf' && fullRbfReplacements) {
         response['rbfLatest'] = getCachedResponse('fullrbfLatest', fullRbfReplacements);
       }
 
-      if (client['track-rbf-summary'] && rbfSummary) {
+      if (!rbfRestoreState.unavailable && client['track-rbf-summary'] && rbfSummary) {
         response['rbfLatestSummary'] = getCachedResponse('rbfLatestSummary', rbfSummary);
       }
 

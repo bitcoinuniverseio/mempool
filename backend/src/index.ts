@@ -100,6 +100,7 @@ import { globalNetworkService } from './api/intelligence/global-network/global-n
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
 import { startPrivateRelayWorker } from './api/intelligence/private-submission/private-relay.runtime';
 import rbfCache from './api/rbf-cache';
+import { rbfRestoreState } from './api/rbf-snapshot';
 import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
 import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
 import silentPaymentsRoutes from './api/intelligence/silent-payments/silent-payments.routes';
@@ -281,6 +282,9 @@ class Server {
       } else if (config.REDIS.ENABLED) {
         /** @asyncUnsafe */
         await redisCache.$loadCache();
+      } else {
+        // Deliberately memory-only mode; this does not prove an absent historical file.
+        if (rbfRestoreState.beginRestore()) { rbfRestoreState.completeRestore('not-configured'); }
       }
     }
 

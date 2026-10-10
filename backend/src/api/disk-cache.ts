@@ -183,6 +183,7 @@ class DiskCache {
     if (!config.MEMPOOL.CACHE_ENABLED) {
       return;
     }
+    if (!rbfRestoreState.beginRestore()) { return; }
     try {
       const start = Date.now();
       let data: any = {};
@@ -255,6 +256,7 @@ class DiskCache {
         });
         if (!restored) { throw new RbfSnapshotError('snapshot-restore-failed'); }
       }
+      rbfRestoreState.completeRestore(retained ? 'restored' : 'no-file');
     } catch (e) {
       const reason = e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed';
       rbfRestoreState.fail(reason);

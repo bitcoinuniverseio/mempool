@@ -86,11 +86,23 @@ describe('RBF snapshot allocation admission and graph closure', () => {
 });
 
 describe('RBF historical failure remains distinct from fresh observations', () => {
+  it('starts pending, refuses unowned completion and publishes only an explicit completed outcome', () => {
+    jest.isolateModules(() => {
+      const state = require('../api/rbf-snapshot').rbfRestoreState;
+      expect(state.diagnostic().reason).toBe('rbf_restore_pending'); expect(state.unavailable).toBe(true);
+      expect(state.completeRestore('no-file')).toBe(false); expect(state.beginRestore()).toBe(true);
+      expect(state.beginRestore()).toBe(false); expect(state.completeRestore('forged')).toBe(false);
+      expect(state.unavailable).toBe(true); expect(state.completeRestore('no-file')).toBe(true);
+      expect(state.diagnostic()).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'available',reason:null});
+      expect(state.beginRestore()).toBe(false);
+    });
+  });
   it('returns a copy, stays unavailable and preserves first failure reason', () => {
     jest.isolateModules(() => {
       const state = require('../api/rbf-snapshot').rbfRestoreState;
       state.fail('snapshot-oversize'); const copy = state.diagnostic(); copy.reason = null;
       state.fail('snapshot-invalid'); expect(state.unavailable).toBe(true);
+      expect(state.beginRestore()).toBe(false); expect(state.completeRestore('restored')).toBe(false);
       expect(state.diagnostic()).toEqual({ schemaVersion: 'universe-rbf-history-availability-v1', status: 'unavailable', reason: 'snapshot-oversize' });
     });
   });

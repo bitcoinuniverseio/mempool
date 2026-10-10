@@ -19,7 +19,10 @@ function fixture() {
     '../config': defaultMock(config), './mempool': defaultMock(mempool), './blocks': defaultMock(blocks), './mempool-blocks': defaultMock(projected),
     './backend-info': defaultMock(info), './bitcoin/bitcoin-source-observation': { bitcoinObservationMatches },
   }).default;
+  // Each fixture owns the real availability state independently of fee readiness.
+  const rbfSnapshot = isolatedBackend('api/rbf-snapshot.ts', { fs: require('fs') });
   const websocket = isolatedBackend('api/websocket-handler.ts', {
+    './rbf-snapshot': rbfSnapshot,
     '../config': defaultMock(config), './mempool': defaultMock(mempool), './blocks': defaultMock(blocks), './mempool-blocks': defaultMock(projected),
     './fee-api': { ...defaultMock(fees), FEE_ESTIMATE_MAX_AGE_MS: 120_000 }, '../logger': quietLogger,
     './difficulty-adjustment': defaultMock({ getDifficultyAdjustment: () => null }),
@@ -33,9 +36,10 @@ function fixture() {
   const messages: any[] = [];
   websocket.addWebsocketServer({ clients: new Set([{ readyState: 1, 'want-stats': true, send: (value: string) => messages.push(JSON.parse(value)) }]) });
   const routes = isolatedBackend('api/bitcoin/bitcoin.routes.ts', {
+    '../rbf-snapshot': rbfSnapshot,
     '../../config': defaultMock(config), '../mempool': defaultMock(mempool), '../fee-api': defaultMock(fees),
   }).default;
-  return { state, config, fees, websocket, messages, routes };
+  return { state, config, fees, websocket, messages, routes, rbfSnapshot };
 }
 
 beforeEach(() => jest.spyOn(Date, 'now').mockReturnValue(1_790_000_000_000));
@@ -48,6 +52,7 @@ test('bootstrap requires producer proof, empty indicators cannot qualify cached 
   const ready = JSON.parse(websocket.getSerializedInitData());
   expect(ready.feeEstimate).toMatchObject({ status: 'ready', tip: { height: 123, hash: HASH }, reason: null });
   expect(ready.fees).toEqual(ready.feeEstimate.values);
+  expect(ready.rbfHistoryAvailability).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'rbf_restore_pending'});
   expect(ready.liveObservation).toMatchObject({ status: 'ready', schemaVersion: 'universe-live-observation-v1' });
   state.synced = false;
   websocket.handleLoadingChanged({});
