@@ -5,6 +5,8 @@ import { tmpdir } from 'os';
 import { join, dirname, basename } from 'path';
 import { HistoryStore, historyPathForRole } from './history-store';
 import { TimeMachineService, TIME_MACHINE_LIMITS } from './time-machine.service';
+import { createHash } from 'crypto';
+import { gunzipSync } from 'zlib';
 const tx = (id: string) => ({ txid: id.repeat(64), vsize: 100, weight: 400, fee: 200 } as any);
 const block = (height: number) => ({height, id: height.toString(16).padStart(64,'0'), weight: 4000, extras:{totalFees:100}} as any);
 describe('durable observed history', () => {
@@ -12,6 +14,23 @@ describe('durable observed history', () => {
   beforeEach(() => { directory = mkdtempSync(join(tmpdir(),'history-test-')); });
   afterEach(() => { rmSync(directory,{recursive:true,force:true}); });
   const create = (store: HistoryStore, now=1000) => new TimeMachineService({store,network:'signet',now,feed:()=>({'a':tx('a')})});
+  it('streams the compatible envelope and captures observation bytes before asynchronous writes', async () => {
+    const path = join(directory, 'captured.gz'); const store = new HistoryStore(path, 'signet');
+    const value = { transactions: [['a'.repeat(64), { fee: 1 }]], unicode: '🌍'.repeat(20000) };
+    const expected = JSON.stringify(value);
+    const writing = store.write(value); value.transactions.push(['b'.repeat(64), { fee: 2 }]);
+    await writing;
+    expect(gunzipSync(readFileSync(path)).toString()).toBe(JSON.stringify({ schema: 'mempool-history-v1',
+      network: 'signet', sha256: createHash('sha256').update(expected).digest('hex'), body: expected }));
+    expect(store.read()).toEqual(JSON.parse(expected)); store.close();
+  });
+  it('preserves the last durable history when capture rejects an invalid cyclic observation', async () => {
+    const path = join(directory, 'preserved.gz'); const store = new HistoryStore(path, 'signet');
+    await store.write({ valid: true }); const before = readFileSync(path);
+    const bad: any = {}; bad.self = bad;
+    await expect(store.write(bad)).rejects.toThrow(/cycle/);
+    expect(readFileSync(path)).toEqual(before); expect(store.read()).toEqual({ valid: true }); store.close();
+  });
   it('restores events, rejects restart gaps and reanchors after restart', async () => {
     const store = new HistoryStore(join(directory,'state.gz'),'signet'); const service=create(store);
     const checkpoint=service.observeBlock(block(1),[],1000);

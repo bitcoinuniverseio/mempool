@@ -9,6 +9,7 @@ import { TransactionExtended } from '../mempool.interfaces';
 import { Common } from './common';
 import rbfCache from './rbf-cache';
 import { TaskDrain } from './task-drain';
+import { readRbfSnapshot, RbfSnapshotError, rbfRestoreState } from './rbf-snapshot';
 
 class DiskCache {
   private readonly work = new TaskDrain();
@@ -120,6 +121,8 @@ class DiskCache {
       this.isWritingCache = false;
     }
 
+    // Preserve a rejected/partially restored file. New observations cannot replace retained history.
+    if (rbfRestoreState.unavailable) { return; }
     try {
       logger.debug('Writing rbf data to disk cache (async)...');
       this.isWritingCache = true;
@@ -183,7 +186,7 @@ class DiskCache {
 
   /** @asyncSafe */
   async $loadMempoolCache(): Promise<void> {
-    if (!config.MEMPOOL.CACHE_ENABLED || !fs.existsSync(DiskCache.FILE_NAME)) {
+    if (!config.MEMPOOL.CACHE_ENABLED) {
       return;
     }
     try {
@@ -195,11 +198,13 @@ class DiskCache {
         data = JSON.parse(cacheData);
         if (data.cacheSchemaVersion === undefined || data.cacheSchemaVersion !== this.cacheSchemaVersion) {
           logger.notice('Disk cache contains an outdated schema version. Clearing it and skipping the cache loading.');
-          return this.wipeCache();
+          this.wipeCache();
+          throw new Error('Ordinary disk cache failed schema or network validation.');
         }
         if (data.network && data.network !== config.MEMPOOL.NETWORK) {
           logger.notice('Disk cache contains data from a different network. Clearing it and skipping the cache loading.');
-          return this.wipeCache();
+          this.wipeCache();
+          throw new Error('Ordinary disk cache failed schema or network validation.');
         }
 
         if (data.mempoolArray) {
@@ -244,32 +249,22 @@ class DiskCache {
     }
 
     try {
-      let rbfData: any = {};
-      const rbfCacheData = fs.readFileSync(DiskCache.RBF_FILE_NAME, 'utf8');
-      if (rbfCacheData) {
+      const retained = readRbfSnapshot(DiskCache.RBF_FILE_NAME, config.MEMPOOL.NETWORK);
+      if (retained) {
         logger.info('Restoring rbf data from disk cache');
-        rbfData = JSON.parse(rbfCacheData);
-        if (rbfData.rbfCacheSchemaVersion === undefined || rbfData.rbfCacheSchemaVersion !== this.rbfCacheSchemaVersion) {
-          logger.notice('Rbf disk cache contains an outdated schema version. Clearing it and skipping the cache loading.');
-          return this.wipeRbfCache();
-        }
-        if (rbfData.network && rbfData.network !== config.MEMPOOL.NETWORK) {
-          logger.notice('Rbf disk cache contains data from a different network. Clearing it and skipping the cache loading.');
-          return this.wipeRbfCache();
-        }
-      }
-
-      if (rbfData?.rbf) {
-        await rbfCache.load({
-          txs: rbfData.rbf.txs.map(([txid, entry]) => ({ value: entry })),
-          trees: rbfData.rbf.trees,
-          expiring: rbfData.rbf.expiring.map(([txid, value]) => ({ key: txid, value })),
+        const restored = await rbfCache.load({
+          txs: retained.txs.map(([, entry]) => ({ value: entry })),
+          trees: retained.trees,
+          expiring: retained.expiring.map(([txid, value]) => ({ key: txid, value })),
           mempool: memPool.getMempool(),
           spendMap: memPool.getSpendMap(),
         });
+        if (!restored) { throw new RbfSnapshotError('snapshot-restore-failed'); }
       }
     } catch (e) {
-      logger.warn('Failed to parse rbf cache. Skipping. Reason: ' + (e instanceof Error ? e.message : e));
+      const reason = e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed';
+      rbfRestoreState.fail(reason);
+      logger.warn('RBF retained history unavailable; original snapshot preserved. Reason: ' + reason);
     }
   }
 

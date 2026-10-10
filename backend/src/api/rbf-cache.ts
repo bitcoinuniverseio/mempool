@@ -94,35 +94,40 @@ class RbfCache {
    * Low level cache operations
    */
 
+  private queueCacheEvent(event: CacheEvent): void {
+    // This queue serves Redis persistence only; disabled Redis has no consumer.
+    if (config.REDIS.ENABLED) { this.cacheQueue.push(event); }
+  }
+
   private addTx(txid: string, tx: MempoolTransactionExtended): void {
     this.txs.set(txid, tx);
-    this.cacheQueue.push({ op: CacheOp.Add, type: 'tx', txid });
+    this.queueCacheEvent({ op: CacheOp.Add, type: 'tx', txid });
   }
 
   private addTree(txid: string, tree: RbfTree): void {
     this.rbfTrees.set(txid, tree);
     this.dirtyTrees.add(txid);
-    this.cacheQueue.push({ op: CacheOp.Add, type: 'tree', txid });
+    this.queueCacheEvent({ op: CacheOp.Add, type: 'tree', txid });
   }
 
   private addExpiration(txid: string, expiry: number): void {
     this.expiring.set(txid, expiry);
-    this.cacheQueue.push({ op: CacheOp.Add, type: 'exp', txid, value: expiry });
+    this.queueCacheEvent({ op: CacheOp.Add, type: 'exp', txid, value: expiry });
   }
 
   private removeTx(txid: string): void {
     this.txs.delete(txid);
-    this.cacheQueue.push({ op: CacheOp.Remove, type: 'tx', txid });
+    this.queueCacheEvent({ op: CacheOp.Remove, type: 'tx', txid });
   }
 
   private removeTree(txid: string): void {
     this.rbfTrees.delete(txid);
-    this.cacheQueue.push({ op: CacheOp.Remove, type: 'tree', txid });
+    this.queueCacheEvent({ op: CacheOp.Remove, type: 'tree', txid });
   }
 
   private removeExpiration(txid: string): void {
     this.expiring.delete(txid);
-    this.cacheQueue.push({ op: CacheOp.Remove, type: 'exp', txid });
+    this.queueCacheEvent({ op: CacheOp.Remove, type: 'exp', txid });
   }
 
   /**
@@ -212,7 +217,7 @@ class RbfCache {
         this.setTreeMined(tree, txid);
         tree.mined = true;
         this.dirtyTrees.add(treeId);
-        this.cacheQueue.push({ op: CacheOp.Change, type: 'tree', txid: treeId });
+        this.queueCacheEvent({ op: CacheOp.Change, type: 'tree', txid: treeId });
       }
     }
     this.evict(txid);
@@ -392,6 +397,7 @@ class RbfCache {
 
   public async updateCache(): Promise<void> {
     if (!config.REDIS.ENABLED) {
+      this.cacheQueue = [];
       return;
     }
     // Update the Redis cache by replaying queued events
@@ -428,7 +434,7 @@ class RbfCache {
   }
 
   /** @asyncSafe */
-  public async load({ txs, trees, expiring, mempool, spendMap }): Promise<void> {
+  public async load({ txs, trees, expiring, mempool, spendMap }): Promise<boolean> {
     try {
       txs.forEach(txEntry => {
         this.txs.set(txEntry.value.txid, txEntry.value);
@@ -478,9 +484,11 @@ class RbfCache {
       await this.checkTrees();
       logger.debug(`loaded ${txs.length} txs, ${trees.length} trees into rbf cache, ${expiring.length} due to expire, ${this.staleCount} were stale`);
       this.cleanup();
+      return true;
 
     } catch (e) {
-      logger.err('failed to restore RBF cache: ' + (e instanceof Error ? e.message : e));
+      logger.err('failed to restore RBF cache');
+      return false;
     }
   }
 
@@ -562,7 +570,17 @@ class RbfCache {
       return !this.expiring.has(txid) && !this.getRbfTree(txid)?.mined;
     });
 
-    const processTxs = (txs: IEsploraApi.Transaction[]): void => {
+    const processTxs = (txs: IEsploraApi.Transaction[], expected: string[]): void => {
+      if (!Array.isArray(txs) || txs.length !== expected.length) { throw new Error('Incomplete RBF transaction qualification'); }
+      const seen = new Set<string>();
+      for (const tx of txs) {
+        if (!tx || !expected.includes(tx.txid) || seen.has(tx.txid) || typeof tx.status?.confirmed !== 'boolean'
+          || tx.status.confirmed && (!Number.isSafeInteger(tx.status.block_height) || tx.status.block_height! < 0
+            || !/^[0-9a-f]{64}$/.test(tx.status.block_hash ?? '') || !Number.isSafeInteger(tx.status.block_time) || tx.status.block_time! < 0)) {
+          throw new Error('Invalid RBF transaction qualification');
+        }
+        seen.add(tx.txid);
+      }
       for (const tx of txs) {
         found[tx.txid] = true;
         if (tx.status?.confirmed) {
@@ -576,6 +594,7 @@ class RbfCache {
       }
     };
 
+    let failedReads = false;
     if (config.MEMPOOL.BACKEND === 'esplora') {
       let processedCount = 0;
       const sliceLength = Math.ceil(config.ESPLORA.BATCH_QUERY_BASE_SIZE / 40);
@@ -584,9 +603,10 @@ class RbfCache {
         processedCount += slice.length;
         try {
           const txs = await bitcoinApi.$getRawTransactions(slice);
-          processTxs(txs);
+          processTxs(txs, slice);
           logger.debug(`fetched and processed ${processedCount} of ${txids.length} cached rbf transactions (${(processedCount / txids.length * 100).toFixed(2)}%)`);
         } catch (err) {
+          failedReads = true;
           logger.err(`failed to fetch or process ${slice.length} cached rbf transactions`);
         }
       }
@@ -596,27 +616,28 @@ class RbfCache {
       // unexpired transactions read sequentially through the Core RPC tunnel
       // held the whole API down for about half an hour on every restart. The
       // pool stays well inside the shared RPC budget.
-      const txs: IEsploraApi.Transaction[] = [];
       let next = 0;
       const worker = async (): Promise<void> => {
         while (next < txids.length) {
           const txid = txids[next++];
           try {
-            txs.push(await bitcoinApi.$getRawTransaction(txid, true, false));
+            // Process each bounded worker result immediately; do not retain all full responses.
+            processTxs([await bitcoinApi.$getRawTransaction(txid, false, false)], [txid]);
           } catch (err) {
-            // some 404s are expected, so continue quietly
+            // This path is Core RPC, including Electrum's inherited transaction reader.
+            // HTTP404 is an endpoint failure; only Core's structured TX-notfound is absence.
+            const failure = err as { code?: unknown; rpcMethod?: unknown } | null;
+            if (failure?.code !== -5 || failure.rpcMethod !== 'getrawtransaction') { failedReads = true; }
           }
         }
       };
-      try {
-        await Promise.all(Array.from({ length: Math.min(RBF_CHECK_CONCURRENCY, txids.length) }, () => worker()));
-      } catch (err) {
-        logger.err('failed to check cached rbf transactions: ' + (err instanceof Error ? err.message : err));
-      }
-      processTxs(txs);
+      const completed = await Promise.allSettled(Array.from({ length: Math.min(RBF_CHECK_CONCURRENCY, txids.length) }, () => worker()));
+      if (completed.some(result => result.status === 'rejected')) { failedReads = true; }
     }
 
-    // evict missing transactions
+    // Every worker has completed. Unknown source failures cannot schedule missing expiry.
+    if (failedReads) { throw new Error('RBF native transaction qualification was incomplete'); }
+    // evict transactions genuinely absent from the qualified Core response
     for (const txid of txids) {
       if (!found[txid]) {
         this.evict(txid, false);
