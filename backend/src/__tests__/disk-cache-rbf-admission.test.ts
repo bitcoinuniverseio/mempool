@@ -62,4 +62,25 @@ describe('nonfatal RBF snapshot rejection preserves existing historical bytes', 
     await loaded.disk.$loadMempoolCache(); expect(loaded.state.unavailable).toBe(false);
     expect(loaded.rbf.load).toHaveBeenCalledWith({ txs: [], trees: [], expiring: [], mempool: {}, spendMap: new Map() });
   });
+  it('keeps partially imported maps quarantined until the actual load settles', async () => {
+    main(); fs.writeFileSync(join(directory, 'rbfcache.json'), JSON.stringify(rbf)); const loaded = modules();
+    let release!: (success: boolean) => void; loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const restoring = loaded.disk.$loadMempoolCache();
+    for (let n = 0; n < 10 && !release; n++) { await Promise.resolve(); }
+    expect(loaded.state.diagnostic()).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'rbf_restore_pending'});
+    await loaded.disk.$loadMempoolCache(); expect(loaded.rbf.load).toHaveBeenCalledTimes(1);
+    release(true); await restoring; expect(loaded.state.unavailable).toBe(false);
+  });
+  it('cannot clear failure through a late successful completion', async () => {
+    main(); fs.writeFileSync(join(directory, 'rbfcache.json'), JSON.stringify(rbf)); const loaded = modules();
+    let release!: (success: boolean) => void; loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const restoring = loaded.disk.$loadMempoolCache();
+    for (let n = 0; n < 10 && !release; n++) { await Promise.resolve(); }
+    loaded.state.fail('snapshot-read-failed'); release(true); await restoring;
+    expect(loaded.state.unavailable).toBe(true); expect(loaded.state.diagnostic().reason).toBe('snapshot-read-failed');
+  });
+  it('completes an actual absent optional file explicitly instead of publishing pending forever', async () => {
+    main(); const loaded = modules(); await loaded.disk.$loadMempoolCache();
+    expect(loaded.rbf.load).not.toHaveBeenCalled(); expect(loaded.state.unavailable).toBe(false);
+  });
 });

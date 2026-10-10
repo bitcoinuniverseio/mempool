@@ -138,12 +138,12 @@ export class ApiService {
     return this.httpClient.get<AddressInformation>(this.apiBaseUrl + this.apiBasePath + '/api/v1/validate-address/' + address);
   }
 
-  getRbfHistory$(txid: string): Observable<{ replacements: RbfTree, replaces: string[] }> {
-    return this.httpClient.get<{ replacements: RbfTree, replaces: string[] }>(this.apiBaseUrl + this.apiBasePath + '/api/v1/tx/' + txid + '/rbf');
+  getRbfHistory$(txid: string): Observable<{ replacements: RbfTree | null, replaces: string[] | null }> {
+    return this.httpClient.get<{ replacements: RbfTree | null, replaces: string[] | null }>(this.apiBaseUrl + this.apiBasePath + '/api/v1/tx/' + txid + '/rbf');
   }
 
-  getRbfCachedTx$(txid: string): Observable<Transaction> {
-    return this.httpClient.get<Transaction>(this.apiBaseUrl + this.apiBasePath + '/api/v1/tx/' + txid + '/cached');
+  getRbfCachedTx$(txid: string): Observable<Transaction | null> {
+    return this.httpClient.get<Transaction | null>(this.apiBaseUrl + this.apiBasePath + '/api/v1/tx/' + txid + '/cached');
   }
 
   getRbfList$(fullRbf: boolean, after?: string): Observable<RbfTree[]> {

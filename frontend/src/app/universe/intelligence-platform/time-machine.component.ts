@@ -71,7 +71,7 @@ function validHistoryCoverage(value: any, network: string): boolean {
       </div>
       <p *ngIf="coverageError" role="alert">{{ coverageError }}</p>
       <ng-container *ngIf="coverage">
-        <p>History persistence: {{ coverage.persistence.enabled ? 'Enabled' : 'Disabled' }}{{ coverage.persistence.pending ? ' Â· Pending write' : '' }}</p>
+        <p>History persistence: {{ coverage.persistence.enabled ? 'Enabled' : 'Disabled' }}{{ coverage.persistence.pending ? ' · Pending write' : '' }}</p>
         <p *ngIf="coverage.persistence.error" role="alert">{{ coverage.persistence.error }}</p>
         <details *ngIf="coverage.coverage_gaps.length"><summary>Observed coverage gaps</summary><pre>{{ coverage.coverage_gaps | json }}</pre></details>
       </ng-container>

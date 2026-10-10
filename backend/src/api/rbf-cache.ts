@@ -5,6 +5,7 @@ import bitcoinApi from './bitcoin/bitcoin-api-factory';
 import { IEsploraApi } from './bitcoin/esplora-api.interface';
 import { Common } from './common';
 import redisCache from './redis-cache';
+import { rbfRestoreState } from './rbf-snapshot';
 
 /** Concurrent RPC reads when a restored RBF cache is checked against the node. */
 export const RBF_CHECK_CONCURRENCY = 8;
@@ -96,7 +97,7 @@ class RbfCache {
 
   private queueCacheEvent(event: CacheEvent): void {
     // This queue serves Redis persistence only; disabled Redis has no consumer.
-    if (config.REDIS.ENABLED) { this.cacheQueue.push(event); }
+    if (config.REDIS.ENABLED && rbfRestoreState.canQueuePersistence) { this.cacheQueue.push(event); }
   }
 
   private addTx(txid: string, tx: MempoolTransactionExtended): void {
@@ -106,7 +107,7 @@ class RbfCache {
 
   private addTree(txid: string, tree: RbfTree): void {
     this.rbfTrees.set(txid, tree);
-    this.dirtyTrees.add(txid);
+    if (!rbfRestoreState.unavailable) { this.dirtyTrees.add(txid); }
     this.queueCacheEvent({ op: CacheOp.Add, type: 'tree', txid });
   }
 
@@ -216,7 +217,7 @@ class RbfCache {
       if (tree) {
         this.setTreeMined(tree, txid);
         tree.mined = true;
-        this.dirtyTrees.add(treeId);
+        if (!rbfRestoreState.unavailable) { this.dirtyTrees.add(treeId); }
         this.queueCacheEvent({ op: CacheOp.Change, type: 'tree', txid: treeId });
       }
     }
@@ -396,7 +397,7 @@ class RbfCache {
   }
 
   public async updateCache(): Promise<void> {
-    if (!config.REDIS.ENABLED) {
+    if (!config.REDIS.ENABLED || rbfRestoreState.unavailable) {
       this.cacheQueue = [];
       return;
     }

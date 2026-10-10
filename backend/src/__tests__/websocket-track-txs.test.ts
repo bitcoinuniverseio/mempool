@@ -57,7 +57,7 @@ const TXID_DOWN = '5'.repeat(64);
 const TXID_NODE_MEMPOOL = '6'.repeat(64);
 const HASH = 'a'.repeat(64);
 
-function connect(): { send: (message: Record<string, unknown>) => Promise<Record<string, any>[]>; publishStratum: (job: StratumJob) => Record<string, any>[] } {
+function connect(): { send: (message: Record<string, unknown>) => Promise<Record<string, any>[]>; publishStratum: (job: StratumJob) => Record<string, any>[]; client: any; publishMempool: (pool: any, added: any[], removed: any[][]) => Promise<any[]> } {
   const events: Record<string, any> = {};
   const clientEvents: Record<string, any> = {};
   const messages: Record<string, any>[] = [];
@@ -69,6 +69,8 @@ function connect(): { send: (message: Record<string, unknown>) => Promise<Record
   server.clients.add(client);
   events.connection(client, { headers: {}, socket: { remoteAddress: '127.0.0.1' } });
   return {
+    client,
+    publishMempool: async (pool, added, removed) => { messages.length=0; await websocketHandler.$handleMempoolChange(pool,Object.keys(pool).length,added,removed,[]); return messages; },
     publishStratum: (job) => {
       messages.length = 0;
       websocketHandler.handleNewStratumJob(job);
@@ -83,6 +85,7 @@ function connect(): { send: (message: Record<string, unknown>) => Promise<Record
 }
 
 describe('websocket track-txs initial status', () => {
+  beforeAll(() => { const state = require('../api/rbf-snapshot').rbfRestoreState; state.beginRestore(); state.completeRestore('no-file'); });
   it('publishes an explicit available marker on bootstrap and both subscription families before any failed restore', async () => {
     const expected = {schemaVersion:'universe-rbf-history-availability-v1',status:'available',reason:null};
     expect(JSON.parse(websocketHandler.getSerializedInitData()).rbfHistoryAvailability).toEqual(expected);
@@ -185,12 +188,49 @@ describe('retained RBF history failure is explicit without hiding fresh observat
     const state = require('../api/rbf-snapshot').rbfRestoreState; state.fail('snapshot-oversize');
     expect(JSON.parse(websocketHandler.getSerializedInitData()).rbfHistoryAvailability).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'snapshot-oversize'});
   });
-  it('marks both RBF and summary subscriptions unavailable while preserving supplied fresh RBF data', async () => {
+  it('quarantines both history subscription families even when a partial cache has entries', async () => {
     const state = require('../api/rbf-snapshot').rbfRestoreState; state.fail('snapshot-oversize');
     const fresh = [{ current: 'controlled-current-observation' }];
     const rbf = require('../api/rbf-cache').default; rbf.getRbfTrees = () => fresh;
     const subscription = connect(); const messages = await subscription.send({'track-rbf':'all','track-rbf-summary':true});
-    expect(messages[0].rbfLatest).toEqual(fresh);
+    expect(messages[0].rbfLatest).toBeUndefined();
     expect(messages[0].rbfHistoryAvailability).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'snapshot-oversize'});
+  });
+});
+
+
+describe('quarantined bootstrap and independently current replacement facts', () => {
+  it('does not clear tracking or emit cached txReplaced when the old cache has a replacement hint', async () => {
+    require('../api/rbf-snapshot').rbfRestoreState.fail('snapshot-oversize');
+    rbfState.replaced[TXID_UNKNOWN]='b'.repeat(64); mempoolState.txs={};
+    nodeState.getRawTransaction.mockRejectedValue(new Error('No such mempool or blockchain transaction'));
+    const socket=connect(); const [message]=await socket.send({'track-tx':TXID_UNKNOWN,'watch-mempool':true});
+    expect(message.txReplaced).toBeUndefined(); expect(socket.client['track-tx']).toBe(TXID_UNKNOWN);
+    expect(socket.client['track-mempool-tx']).toBe(TXID_UNKNOWN);
+    const [multi]=await socket.send({'track-txs':[TXID_UNKNOWN]});
+    expect(multi['tracked-txs'][TXID_UNKNOWN]).toEqual({confirmed:false,status:'unknown'});
+  });
+  it('current replacement requires the genuine poll delta, synchronized source and present replacing transaction', async () => {
+    require('../api/rbf-snapshot').rbfRestoreState.fail('snapshot-oversize');
+    const mp=require('../api/mempool').default; const templates=require('../api/mempool-blocks').default;
+    const accel=require('../api/services/acceleration').default; const rbf=require('../api/rbf-cache').default;
+    Object.assign(mp,{handleRbfTransactions:()=>undefined,removeFromSpendMap:()=>undefined,addToSpendMap:()=>undefined});
+    Object.assign(templates,{$updateBlockTemplates:async()=>[],getMempoolBlockDeltas:()=>[]});
+    Object.assign(accel,{getAccelerations:()=>({}),getAccelerationDelta:()=>[]});
+    const dirty=jest.fn(()=>({map:{[TXID_REPLACED]:'legacy-root'},trees:{'legacy-root':{}}}));
+    Object.assign(rbf,{getRbfChanges:dirty,evict:()=>undefined});
+    const old:any={txid:TXID_REPLACED,vin:[{txid:'f'.repeat(64),vout:0}],vout:[],fee:100,adjustedFeePerVsize:1};
+    const fresh:any={...old,txid:TXID_NODE_MEMPOOL,fee:200,adjustedFeePerVsize:2};
+    rbfState.replaced[old.txid]='b'.repeat(64); nodeState.getRawTransaction.mockRejectedValue(new Error('No such mempool or blockchain transaction'));
+    const socket=connect(); await socket.send({'track-tx':old.txid}); await socket.send({'track-txs':[old.txid]});
+    mp.isInSync=()=>true;
+    const [current]=await socket.publishMempool({[fresh.txid]:fresh},[fresh],[[old]]);
+    expect(current.rbfTransaction).toEqual({txid:fresh.txid}); expect(current['tracked-txs'][old.txid].replacedBy).toBe(fresh.txid); expect(current.rbfInfo).toBeUndefined(); expect(dirty).not.toHaveBeenCalled();
+    const [noDelta]=await socket.publishMempool({[fresh.txid]:fresh},[],[]);
+    expect(noDelta.rbfTransaction).toBeUndefined();
+    const [absent]=await socket.publishMempool({},[fresh],[[old]]);expect(absent.rbfTransaction).toBeUndefined();
+    mp.isInSync=()=>false;
+    const [unsynced]=await socket.publishMempool({[fresh.txid]:fresh},[fresh],[[old]]);expect(unsynced.rbfTransaction).toBeUndefined();
+    mp.isInSync=()=>true;
   });
 });

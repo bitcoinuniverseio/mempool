@@ -1,3 +1,4 @@
+import { scopedRbfRead$, validRbfHistory } from '@app/services/rbf-history-state';
 import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, Inject, ChangeDetectorRef } from '@angular/core';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
@@ -108,6 +109,10 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
   rbfTransaction: undefined | Transaction;
   replaced: boolean = false;
   rbfReplaces: string[];
+  private readonly rbfContextChanged$ = new Subject<string>();
+  rbfHistoryRequested = false;
+  rbfCachedUnavailable = false;
+  rbfHistoryStatus: 'loading' | 'ready' | 'unavailable' = 'loading';
   rbfInfo: RbfTree;
   cpfpInfo: CpfpInfo | null;
   hasCpfp: boolean = false;
@@ -319,33 +324,24 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.setCpfpInfo(cpfpInfo);
       });
 
-    this.fetchRbfSubscription = this.fetchRbfHistory$
-    .pipe(
-      switchMap((txId) =>
-        this.apiService
-          .getRbfHistory$(txId)
-      ),
-      catchError(() => {
-        return of(null);
-      })
-    ).subscribe((rbfResponse) => {
+    this.fetchRbfSubscription = scopedRbfRead$(this.fetchRbfHistory$, merge(this.stateService.networkChanged$, this.rbfContextChanged$), this.stateService.rbfHistoryAvailability$,
+      () => this.stateService.network, () => this.stateService.rbfHistoryState.canUseHistory(), txId => { this.rbfHistoryRequested = true; return this.apiService.getRbfHistory$(txId); }, validRbfHistory)
+    .subscribe(state => {
+      this.rbfHistoryStatus = state.status;
+      const rbfResponse = state.status === 'ready' ? state.value : null;
       this.rbfInfo = rbfResponse?.replacements;
       this.rbfReplaces = rbfResponse?.replaces || null;
+      this.cd.markForCheck();
     });
 
-    this.fetchCachedTxSubscription = this.fetchCachedTx$
-    .pipe(
-      tap(() => {
-        this.loadingCachedTx = true;
-      }),
-      switchMap((txId) =>
-        this.apiService
-          .getRbfCachedTx$(txId)
-      ),
-      catchError(() => {
-        return of(null);
-      })
-    ).subscribe((tx) => {
+    this.fetchCachedTxSubscription = scopedRbfRead$(this.fetchCachedTx$, merge(this.stateService.networkChanged$, this.rbfContextChanged$), this.stateService.rbfHistoryAvailability$,
+      () => this.stateService.network, () => this.stateService.rbfHistoryState.canUseHistory(), txId => this.apiService.getRbfCachedTx$(txId))
+    .subscribe(state => {
+      this.loadingCachedTx = state.status === 'loading';
+      this.rbfCachedUnavailable = state.status === 'unavailable';
+      this.cd.markForCheck();
+      if (state.status !== 'ready') { return; }
+      const tx = state.value;
       this.loadingCachedTx = false;
       if (!tx) {
         this.seoService.logSoft404();
@@ -372,6 +368,8 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
         this.txRbfInfoSubscription = this.stateService.txRbfInfo$.subscribe((rbfInfo) => {
           if (this.tx) {
             this.rbfInfo = rbfInfo;
+          this.rbfHistoryStatus = 'ready';
+          this.cd.markForCheck();
           }
         });
         this.txChanged$.next(true);
@@ -799,6 +797,8 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.txRbfInfoSubscription = this.stateService.txRbfInfo$.subscribe((rbfInfo) => {
       if (this.tx) {
         this.rbfInfo = rbfInfo;
+        this.rbfHistoryStatus = 'ready';
+        this.cd.markForCheck();
       }
     });
 
@@ -1074,6 +1074,10 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   resetTransaction() {
+    this.rbfContextChanged$.next(this.stateService.network);
+    this.rbfHistoryStatus = 'loading';
+    this.rbfHistoryRequested = false;
+    this.rbfCachedUnavailable = false;
     this.firstLoad = false;
     this.gotInitialPosition = false;
     this.error = undefined;
@@ -1224,6 +1228,11 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       && this.notAcceleratedOnLoad // avoid briefly showing accelerator checkout on already accelerated txs
     );
+  }
+
+  retryRbfHistory(): void {
+    if (!this.tx && this.rbfCachedUnavailable) { this.fetchCachedTx$.next(this.txId); }
+    else { this.fetchRbfHistory$.next(this.txId); }
   }
 
   ngOnDestroy() {
