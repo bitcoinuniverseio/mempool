@@ -8,6 +8,19 @@ import test from 'node:test';
 const workflow = name => readFileSync(new URL(`../../.github/workflows/${name}.yml`, import.meta.url), 'utf8').replaceAll('\r\n', '\n');
 const payload = 'literal-$(printf INJECTED)-`printf INJECTED`-"; printf INJECTED; #';
 
+test('all browser jobs consume one sealed frontend instead of rebuilding on cache misses', () => {
+  const source = workflow('universe-ci');
+  const browserJobs = source.slice(source.indexOf('  visual:'));
+  assert.doesNotMatch(browserJobs, /npm run build:universe|actions\/cache\/restore/);
+  assert.equal((browserJobs.match(/uses: actions\/download-artifact@v4/g) || []).length, 3);
+  assert.equal((browserJobs.match(/frontend-ci-artifact\.mjs verify/g) || []).length, 3);
+  assert.equal((source.match(/frontend-ci-artifact\.mjs seal/g) || []).length, 1);
+  assert.equal((source.match(/name: universe-frontend-\$\{\{ github.sha \}\}/g) || []).length, 4);
+  const engines = source.slice(source.indexOf('  mobile-engines:'));
+  assert.doesNotMatch(engines, /pids=|2>&1 &/);
+  assert.match(engines, /A third engine[^\n]*\n\s+if: \$\{\{ !cancelled\(\) \}\}/);
+});
+
 test('focused Firefox regression shares the established container launch environment', () => {
   const source = workflow('universe-ci');
   const validate = text => {

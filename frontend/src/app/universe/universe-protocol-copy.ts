@@ -49,6 +49,10 @@ const FAMILY_COPY: Record<string, ProtocolCopy> = {
 };
 
 const PROTOCOL_COPY: Record<string, ProtocolCopy> = {
+  names: {
+    summary: $localize`:@@universe.copy.names:Explore names recorded on Bitcoin and their ownership history.`,
+    actions: ['register', 'transfer'],
+  },
   ordinals: {
     summary: $localize`:@@universe.copy.ordinals:Ordinal theory numbers every satoshi in the order it was mined, which makes individual satoshis trackable. An inscription attaches content to one of them, so images, text, and other files live directly in Bitcoin's witness data.`,
     actions: ['inscribe', 'reveal', 'transfer'],

@@ -142,6 +142,9 @@ export function objectsSummary(
   page: ExplorerProtocolObjectsPage,
   totalItems: number,
 ): string {
+  if (page.state !== 'served' && page.degradedReason?.startsWith('The legacy Marketplace objects GET is quarantined')) {
+    return 'A verified read-only collection is not available on this network.';
+  }
   switch (page.state) {
     case 'served':
       return totalItems === 1
