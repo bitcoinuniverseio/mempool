@@ -90,6 +90,18 @@ describe('time machine: observed history only', () => {
     expect(timeMachineService.exportState(second.state_hash)?.txids).toEqual(['shared', ...added].sort());
   });
 
+  it('retains exact earlier metrics when a later checkpoint changes the same transaction', () => {
+    pool = { a: mem('a', 100, 100), b: mem('b', 200, 200) };
+    const first = timeMachineService.observeBlock(block(100, 1000), [], 1_000_000);
+    pool.a.fee = 900;
+    pool.a.weight = 800;
+    pool.a.vsize = 200;
+    const second = timeMachineService.observeBlock(block(101, 1600), [], 1_600_000);
+    expect(timeMachineService.replayToTimestampOrHeight(undefined, 100)).toMatchObject({ total_fees_sats: 300, total_weight: 1200 });
+    expect(timeMachineService.replayToTimestampOrHeight(undefined, 101)).toMatchObject({ total_fees_sats: 1100, total_weight: 1600 });
+    expect(timeMachineService.compareStates(first.state_hash, second.state_hash)?.delta).toMatchObject({ fees_delta_sats: 800, weight_delta: 400, added_txids: [], removed_txids: [] });
+  });
+
   it('applies same-millisecond events after the checkpoint and removes replacements', () => {
     pool = { a: mem('a', 100, 100) };
     timeMachineService.observeBlock(block(100, 1000), [], 1_000_000);
