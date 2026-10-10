@@ -8,12 +8,12 @@ jest.mock('../api/blocks', () => ({ __esModule: true, default: {
   setBlocks: jest.fn(), setBlockSummaries: jest.fn(), getBlocks: jest.fn(() => []), getBlockSummaries: jest.fn(() => []),
 } }));
 jest.mock('../api/common', () => ({ Common: { shuffleArray: jest.fn() } }));
-jest.mock('../api/rbf-cache', () => ({ __esModule: true, default: { load: jest.fn(async () => true), dump: jest.fn() } }));
+jest.mock('../api/rbf-cache', () => ({ __esModule: true, default: { load: jest.fn(async () => true), loadManifest: jest.fn(async () => true), configureBodyPersistence: jest.fn(async () => undefined), saveHistory: jest.fn(async () => undefined), dump: jest.fn() } }));
 
 describe('nonfatal RBF snapshot rejection preserves existing historical bytes', () => {
   let directory: string;
   let oldSignals: Function[];
-  beforeEach(() => { directory = fs.mkdtempSync(join(tmpdir(), 'rbf-loader-')); oldSignals = process.listeners('SIGINT'); });
+  beforeEach(async () => { directory = fs.mkdtempSync(join(await fs.promises.realpath(tmpdir()), 'rbf-loader-')); oldSignals = process.listeners('SIGINT'); });
   afterEach(() => {
     for (const listener of process.listeners('SIGINT')) { if (!oldSignals.includes(listener)) { process.removeListener('SIGINT', listener); } }
     fs.rmSync(directory, { recursive: true, force: true });
@@ -32,7 +32,7 @@ describe('nonfatal RBF snapshot rejection preserves existing historical bytes', 
   function main(): void { fs.writeFileSync(join(directory, 'cache.json'), JSON.stringify({ network: 'signet', cacheSchemaVersion: 3, mempool: {}, blocks: [], blockSummaries: [] })); }
   it.each(['malformed', 'oversize', 'foreign-network', 'partial-import'])('keeps %s history unchanged across cache save and marks it explicitly unavailable', async kind => {
     main(); const file = join(directory, 'rbfcache.json');
-    if (kind === 'oversize') { const fd = fs.openSync(file, 'w'); fs.ftruncateSync(fd, 320675973); fs.closeSync(fd); }
+    if (kind === 'oversize') { const fd = fs.openSync(file, 'w'); fs.ftruncateSync(fd, 512 * 1024 * 1024 + 1); fs.closeSync(fd); }
     else { fs.writeFileSync(file, kind === 'malformed' ? '{' : JSON.stringify(kind === 'foreign-network' ? { ...rbf, network: 'mainnet' } : rbf)); }
     const before = fs.statSync(file); const text = kind === 'oversize' ? null : fs.readFileSync(file, 'utf8');
     const loaded = modules(); if (kind === 'partial-import') { loaded.rbf.load.mockResolvedValueOnce(false); }
@@ -60,13 +60,14 @@ describe('nonfatal RBF snapshot rejection preserves existing historical bytes', 
   it('restores a valid snapshot and never calls a provider from the file reader', async () => {
     main(); fs.writeFileSync(join(directory, 'rbfcache.json'), JSON.stringify(rbf)); const loaded = modules();
     await loaded.disk.$loadMempoolCache(); expect(loaded.state.unavailable).toBe(false);
-    expect(loaded.rbf.load).toHaveBeenCalledWith({ txs: [], trees: [], expiring: [], mempool: {}, spendMap: new Map() });
+    expect(loaded.rbf.load).toHaveBeenCalledWith(expect.objectContaining({ txs: [], trees: [], expiring: [], mempool: {}, spendMap: new Map() }));
+    expect(loaded.rbf.load.mock.calls[0][0].backing).toBeDefined(); expect(loaded.rbf.saveHistory).toHaveBeenCalled();
   });
   it('keeps partially imported maps quarantined until the actual load settles', async () => {
     main(); fs.writeFileSync(join(directory, 'rbfcache.json'), JSON.stringify(rbf)); const loaded = modules();
     let release!: (success: boolean) => void; loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
     const restoring = loaded.disk.$loadMempoolCache();
-    for (let n = 0; n < 10 && !release; n++) { await Promise.resolve(); }
+    for (let n = 0; n < 200 && !release; n++) { await new Promise(resolve => setTimeout(resolve, 2)); }
     expect(loaded.state.diagnostic()).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'rbf_restore_pending'});
     await loaded.disk.$loadMempoolCache(); expect(loaded.rbf.load).toHaveBeenCalledTimes(1);
     release(true); await restoring; expect(loaded.state.unavailable).toBe(false);
@@ -75,7 +76,7 @@ describe('nonfatal RBF snapshot rejection preserves existing historical bytes', 
     main(); fs.writeFileSync(join(directory, 'rbfcache.json'), JSON.stringify(rbf)); const loaded = modules();
     let release!: (success: boolean) => void; loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
     const restoring = loaded.disk.$loadMempoolCache();
-    for (let n = 0; n < 10 && !release; n++) { await Promise.resolve(); }
+    for (let n = 0; n < 200 && !release; n++) { await new Promise(resolve => setTimeout(resolve, 2)); }
     loaded.state.fail('snapshot-read-failed'); release(true); await restoring;
     expect(loaded.state.unavailable).toBe(true); expect(loaded.state.diagnostic().reason).toBe('snapshot-read-failed');
   });

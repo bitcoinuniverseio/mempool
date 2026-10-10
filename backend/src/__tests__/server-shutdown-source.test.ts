@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import * as vm from 'vm';
 import * as ts from 'typescript';
+import { RbfBodyStore } from '../api/rbf-body-store';
 import { TaskDrain } from '../api/task-drain';
 import { gracefulShutdown } from '../api/graceful-shutdown';
 import * as http from 'http';
@@ -11,13 +12,14 @@ import WebSocket from 'ws';
 /** Execute the actual entrypoint class without booting its production singleton. */
 function sourceServer(mining: Promise<void>, database: Promise<void>) {
   const events: string[] = [];
+  let shutdown: Promise<void> | undefined;
   const noop = () => undefined;
   const done = async () => undefined;
   const modules: Record<string, unknown> = {
     './config': { default: { MEMPOOL: { SPAWN_CLUSTER_PROCS: 0 }, LIGHTNING: { ENABLED: false }, REDIS: { ENABLED: false } } },
     './api/task-drain': { TaskDrain },
     './api/common': { Common: { isLiquid: () => false } },
-    './api/graceful-shutdown': { gracefulShutdown },
+    './api/graceful-shutdown': { gracefulShutdown: (steps: Parameters<typeof gracefulShutdown>[0]) => { shutdown = gracefulShutdown(steps); return shutdown; } },
     './database': { default: { drain: () => database, close: async () => { events.push('database-closed'); } } },
     './indexer': { default: { stop: () => { events.push('indexer-stopped'); }, drain: () => mining } },
     './api/statistics/statistics': { default: { stop: noop, drain: done } },
@@ -34,7 +36,7 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
     './api/fractal/fractal.runtime': { closeFractalRuntime: done },
     './api/mempool-blocks': { default: { closeSelectionWorker: done } },
     './api/mempool': { default: { destroy: noop } },
-    './api/rbf-cache': { default: { destroy: noop } },
+    './api/rbf-cache': { default: { destroy: noop, closeBodies: done } },
     './api/memory-cache': { default: { destroy: noop } },
     './api/bitcoin/bitcoin-api-factory': { default: { closeTransport: () => { events.push('transport-closed'); } } },
     './logger': { default: { debug: noop, notice: noop, err: noop } },
@@ -57,7 +59,7 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
   server.work = new TaskDrain();
   server.timers = new Set();
   server.mainLoopWatchdog = { end: noop };
-  return { server, events, processState, modules };
+  return { server, events, processState, modules, shutdown: () => shutdown };
 }
 
 /** Load the actual maintenance constructors without connecting native clients. */
@@ -65,7 +67,8 @@ function maintenanceSingleton(file: string): any {
   const source = readFileSync(resolve(__dirname, '../api', file), 'utf8');
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText;
   const sandbox: any = { exports: {}, setInterval, clearInterval,
-    require: (name: string) => ({ __esModule: true, default: name === '../config' ? { MEMPOOL: { NETWORK: 'mainnet' } } : {} }) };
+    require: (name: string) => name === './rbf-body-store' ? { __esModule: true, RbfBodyStore }
+      : ({ __esModule: true, default: name === '../config' ? { MEMPOOL: { NETWORK: 'mainnet' } } : {} }) };
   vm.runInNewContext(code, sandbox);
   return sandbox.exports.default;
 }
@@ -182,7 +185,7 @@ describe('actual native signal shutdown source', () => {
     jest.useFakeTimers();
     let startupReady!: () => void;
     const startup = new Promise<void>(resolve => { startupReady = resolve; });
-    const { server, events, processState, modules } = sourceServer(Promise.resolve(), Promise.resolve());
+    const { server, events, processState, modules, shutdown } = sourceServer(Promise.resolve(), Promise.resolve());
     (modules['./config'] as any).default.DATABASE = { ENABLED: true };
     (modules['./api/fractal/fractal.runtime'] as any).startFractalRuntime = () => startup;
     const acquireOwner = jest.fn();
@@ -196,7 +199,7 @@ describe('actual native signal shutdown source', () => {
     expect(processState.exitCode).toBeUndefined();
     startupReady();
     await startupWork;
-    for (let i = 0; i < 32; i++) await Promise.resolve();
+    await shutdown();
     expect(acquireOwner).not.toHaveBeenCalled();
     expect(server.server).toBeUndefined();
     expect(server.wss).toBeUndefined();

@@ -17,6 +17,16 @@ function fixture(): any {
   return result;
 }
 describe('Redis retained-history qualification owns a pending fence', () => {
+  it('writes complete JSON body bytes verbatim and refuses quarantined writes', async () => {
+    const { redis, state } = fixture(); state.beginRestore(); state.completeRestore('no-file');
+    redis.client = { set: jest.fn(async () => undefined) };
+    const id = 'a'.repeat(64), full = JSON.stringify({ txid: id, vin: [{ witness: ['complete'] }], status: { confirmed: true }, unknown: { original: true } });
+    await redis.$setRbfRawEntry(id, full);
+    expect(redis.client.set).toHaveBeenCalledWith('rbf:tx:' + id, full);
+    state.fail('snapshot-invalid');
+    await expect(redis.$setRbfRawEntry(id, full)).rejects.toThrow('snapshot-read-failed');
+    expect(redis.client.set).toHaveBeenCalledTimes(1);
+  });
   it('does not treat disconnected strict restore reads as an empty eligible history', async () => {
     const { redis, state } = fixture(); redis.connected = false;
     await expect(redis.$getRbfEntries('tx', true)).rejects.toThrow('snapshot-read-failed');

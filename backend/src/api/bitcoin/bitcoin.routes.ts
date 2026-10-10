@@ -20,7 +20,7 @@ import bitcoinClient from './bitcoin-client';
 import difficultyAdjustment from '../difficulty-adjustment';
 import transactionRepository from '../../repositories/TransactionRepository';
 import rbfCache from '../rbf-cache';
-import { rbfRestoreState } from '../rbf-snapshot';
+import { rbfRestoreState, RbfSnapshotError } from '../rbf-snapshot';
 import { calculateMempoolTxCpfp } from '../cpfp';
 import { handleError } from '../../utils/api';
 import { classifyAddressError, sendAddressError } from './address-errors';
@@ -1092,16 +1092,37 @@ class BitcoinRoutes {
       return;
     }
     if (rbfRestoreState.unavailable) { res.status(503).json({ error: 'rbf_history_unavailable', ...rbfRestoreState.diagnostic() }); return; }
+    const controller = new AbortController();
+    const abort = (): void => { controller.abort(); };
+    req.once('aborted', abort); res.once('close', abort);
     try {
-      const result = rbfCache.getTx(req.params.txId);
-      if (result) {
-        res.json(result);
-      } else {
+      if (!rbfCache.hasBody(req.params.txId)) {
         res.status(204).send();
+        return;
       }
+      res.type('application/json');
+      for await (const chunk of rbfCache.body(req.params.txId, controller.signal)) {
+        if (controller.signal.aborted) { return; }
+        if (!res.write(chunk)) {
+          await new Promise<void>((resolve, reject) => {
+            const cleanup = (): void => { res.off('drain', drained); res.off('close', closed); res.off('error', failed); };
+            const drained = (): void => { cleanup(); resolve(); };
+            const closed = (): void => { cleanup(); reject(new Error('RBF body response closed')); };
+            const failed = (): void => { cleanup(); reject(new Error('RBF body response failed')); };
+            res.once('drain', drained); res.once('close', closed); res.once('error', failed);
+            if (res.destroyed || controller.signal.aborted) { closed(); }
+          });
+        }
+      }
+      if (!controller.signal.aborted) { res.end(); }
     } catch (e) {
-      handleError(req, res, 500, 'Failed to get cached tx');
-    }
+      if (controller.signal.aborted) { return; }
+      if (e instanceof RbfSnapshotError) { rbfRestoreState.fail(e.code); }
+      if (res.headersSent) { res.destroy(); }
+      else if (e instanceof Error && e.message === 'RBF body read admission busy') { res.status(503).json({ error: 'rbf_body_busy' }); }
+      else if (rbfRestoreState.unavailable) { res.status(503).json({ error: 'rbf_history_unavailable', ...rbfRestoreState.diagnostic() }); }
+      else { handleError(req, res, 500, 'Failed to get cached tx'); }
+    } finally { req.off('aborted', abort); res.off('close', abort); }
   }
 
   private async getTransactionOutspends(req: Request, res: Response) {

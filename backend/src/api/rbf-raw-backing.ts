@@ -21,10 +21,13 @@ export class RbfRawBackingCandidate {
   private owners = new Set<Promise<void>>();
   private readonly ranges: Map<string, RbfBodyRange>;
   private readonly sourceSha256: string;
-  private constructor(private handle: FileHandle, private stamp: fs.BigIntStats, private readonly sealedClosure: RbfCompactClosureCandidate) {
-    const closure = sealedClosure;
+  private readonly descriptor: { network: string; sourceSha256: string; sourceBytes: number };
+  private sealedClosure: RbfCompactClosureCandidate | null;
+  private constructor(private handle: FileHandle, private stamp: fs.BigIntStats, closure: RbfCompactClosureCandidate, private readonly path: string) {
+    this.sealedClosure = closure;
     this.ranges = new Map(closure.raw.bodies.map(range => [range.txid, { ...range }]));
     this.sourceSha256 = closure.raw.sourceSha256;
+    this.descriptor = { network: closure.raw.network, sourceSha256: closure.raw.sourceSha256, sourceBytes: closure.raw.sourceBytes };
   }
 
   /** Full input is scanned using one verified descriptor, never allocated as a whole string.
@@ -37,9 +40,9 @@ export class RbfRawBackingCandidate {
     try {
       const named = await fs.promises.lstat(path, { bigint: true });
       if (!named.isFile() || named.isSymbolicLink()) { return invalid(); }
-      handle = await fs.promises.open(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+      handle = await fs.promises.open(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0));
       const stamp = await handle.stat({ bigint: true });
-      if (!same(named, stamp)) { return changed(); }
+      if (!stamp.isFile() || !same(named, stamp)) { return changed(); }
       if (stamp.size > BigInt(maximumSourceBytes)) { throw new RbfSnapshotError('snapshot-oversize'); }
       const reader = handle;
       const chunks = async function* (): AsyncIterable<Buffer> {
@@ -63,8 +66,8 @@ export class RbfRawBackingCandidate {
         throw new RbfSnapshotError('snapshot-invalid');
       }
       const after = await handle.stat({ bigint: true });
-      if (!same(stamp, after)) { return changed(); }
-      const result = new RbfRawBackingCandidate(handle, stamp, closure);
+      if (!same(stamp, after) || !same(stamp, await fs.promises.lstat(path, { bigint: true }))) { return changed(); }
+      const result = new RbfRawBackingCandidate(handle, stamp, closure, path);
       handle = undefined; // Ownership transfers only after complete validation.
       return result;
     } catch (e) {
@@ -74,7 +77,14 @@ export class RbfRawBackingCandidate {
   }
 
   has(txid: string): boolean { return this.ranges.has(txid); }
-  get closure(): RbfCompactClosureCandidate { return structuredClone(this.sealedClosure); }
+  get closure(): RbfCompactClosureCandidate { if (!this.sealedClosure) { return invalid(); } return structuredClone(this.sealedClosure); }
+  takeClosure(): RbfCompactClosureCandidate {
+    if (!this.sealedClosure) { return invalid(); }
+    const owned = this.sealedClosure; this.sealedClosure = null; return owned;
+  }
+  sourceDescriptor(): { network: string; sourceSha256: string; sourceBytes: number } { return { ...this.descriptor }; }
+  rangeReferences(): RbfBodyRange[] { return Array.from(this.ranges.values(), range => ({ ...range })); }
+  rangeReference(txid: string): RbfBodyRange | undefined { const range = this.ranges.get(txid); return range ? { ...range } : undefined; }
   get activeReads(): number { return this.owners.size; }
   get admitting(): boolean { return !this.closing; }
   stopAdmission(): void { this.closing = true; }
@@ -117,7 +127,8 @@ export class RbfRawBackingCandidate {
         yield bytes;
       }
       cancelled(signal);
-      if (hash.digest('hex') !== range.sha256 || !same(this.stamp, await this.handle.stat({ bigint: true }))) { return changed(); }
+      if (hash.digest('hex') !== range.sha256 || !same(this.stamp, await this.handle.stat({ bigint: true }))
+        || !same(this.stamp, await fs.promises.lstat(this.path, { bigint: true }))) { return changed(); }
     } catch (e) {
       if (e instanceof RbfSnapshotError) { throw e; }
       throw new RbfSnapshotError('snapshot-read-failed');
