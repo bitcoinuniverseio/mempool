@@ -4,14 +4,12 @@
   <div *ngIf="isLoading" class="spinner-border ml-3" role="status"></div>
 
   <div class="mode-toggle float-right">
-    <form class="formRadioGroup">
-      <div class="btn-group btn-group-toggle" name="radioBasic">
-        <label class="btn btn-primary btn-sm" [class.active]="!fullRbf">
-          <input type="radio" [value]="'All'" fragment="" [routerLink]="[]"><span i18n="all">All</span></label>
-        <label class="btn btn-primary btn-sm" [class.active]="fullRbf">
-          <input type="radio" [value]="'Full RBF'" fragment="fullrbf" [routerLink]="[]" i18n="transaction.full-rbf">Full RBF</label>
-      </div>
-    </form>
+    <div class="btn-group" role="group" aria-label="Replacement history filter">
+      <button type="button" class="btn btn-primary btn-sm" [class.active]="!fullRbf"
+        [attr.aria-pressed]="!fullRbf" fragment="" [routerLink]="[]" i18n="all">All</button>
+      <button type="button" class="btn btn-primary btn-sm" [class.active]="fullRbf"
+        [attr.aria-pressed]="fullRbf" fragment="fullrbf" [routerLink]="[]" i18n="transaction.full-rbf">Full RBF</button>
+    </div>
   </div>
 
   <div class="clearfix"></div>

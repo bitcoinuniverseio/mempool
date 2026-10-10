@@ -17,14 +17,14 @@
 <ng-container *ngIf="feeEstimate$ | async as estimate">
   <p class="feed-unavailable" role="status" *ngIf="estimate.status !== 'ready'">
     @if (estimate.status === 'stale') {
-      <span i18n="fees-box.stale">Last known fee estimates, stale.</span>
+      <span i18n="fees-box.stale">Last known fees (out of date).</span>
       <time>{{ estimate.observedAt | date:'medium' }}</time>
     } @else if (estimate.status === 'syncing') {
-      <span i18n="fees-box.syncing">Waiting for synchronized fee estimates.</span>
+      <span i18n="fees-box.syncing">Updating fee estimates.</span>
     } @else {
       <span i18n="fees-box.unavailable">Fee estimates unavailable.</span>
     }
-    <button type="button" class="btn btn-sm btn-outline-light" (click)="retry()" [disabled]="estimate.status === 'syncing'" i18n="fees-box.retry">Retry</button>
+    <button type="button" class="btn btn-sm btn-outline-primary" (click)="retry()" [disabled]="estimate.status === 'syncing'" i18n="fees-box.retry">Retry</button>
   </p>
 <div class="fee-estimation-wrapper" *ngIf="estimate.values as recommendedFees; else loadingFees">
   <div class="fee-scale">
