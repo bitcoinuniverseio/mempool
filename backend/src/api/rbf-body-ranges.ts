@@ -1,5 +1,5 @@
 import { createHash, Hash } from 'crypto';
-import { scanRbfJson, JsonPath } from './rbf-stream-json';
+import { scanRbfJson, JsonPath, JsonEvent } from './rbf-stream-json';
 
 export interface RbfBodyRange { txid: string; offset: number; bytes: number; sha256: string }
 export interface RbfRangeCandidate {
@@ -19,15 +19,16 @@ const fail = (): never => { throw new Error('RBF body range candidate invalid or
  * @asyncUnsafe Rejects malformed input, resource excess, caller cancellation and source iterator errors.
  * Candidate ONLY: graph/expiry, immutable file ownership and body semantics are not qualified here.
  */
-export async function scanRbfBodyRanges(chunks: AsyncIterable<Buffer>, network: string, signal?: AbortSignal): Promise<RbfRangeCandidate> {
+export async function scanRbfBodyRanges(chunks: AsyncIterable<Buffer>, network: string, signal?: AbortSignal, projection?: { captureString: (path: JsonPath) => boolean; onEvent: (event: JsonEvent) => void }): Promise<RbfRangeCandidate> {
   const all = createHash('sha256'), bodies: RbfBodyRange[] = [], ids = new Set<string>();
   let declaredNetwork: unknown, declaredVersion: unknown, tuples = 0, txsSeen = false;
   let id: string | null = null, bodyTxid: string | null = null;
   let active: { hash: Hash; start: number; next: number; tuple: number } | null = null;
   const scanned = await scanRbfJson(chunks, {
     signal,
-    captureString: p => p.length === 1 && p[0] === 'network' || tuple(p) && (p.length === 4 && p[3] === 0 || p.length === 5 && p[3] === 1 && p[4] === 'txid'),
+    captureString: p => !!projection?.captureString(p) || p.length === 1 && p[0] === 'network' || tuple(p) && (p.length === 4 && p[3] === 0 || p.length === 5 && p[3] === 1 && p[4] === 'txid'),
     onEvent: (e, chunk, base) => {
+      projection?.onEvent(e);
       if (e.kind === 'scalar' && e.path.length === 1) {
         if (e.path[0] === 'network') { declaredNetwork = e.value; }
         if (e.path[0] === 'rbfCacheSchemaVersion') { declaredVersion = e.value; }
