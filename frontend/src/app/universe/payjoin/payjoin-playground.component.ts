@@ -74,29 +74,29 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
         <!-- Step Indicators -->
         <div class="row g-3 mb-4 text-center">
-          <div class="col-4">
+          <div class="col-12 col-sm-4">
             <div class="p-3 border rounded" [ngClass]="session.step === 'original_created' ? 'border-primary bg-body' : 'bg-body-secondary'">
               <div class="fw-bold small">Step 1</div>
-              <div class="small">Original PSBT (Sender)</div>
+              <div class="small">Prepare payment</div>
             </div>
           </div>
-          <div class="col-4">
+          <div class="col-12 col-sm-4">
             <div class="p-3 border rounded" [ngClass]="session.step === 'proposal_generated' ? 'border-primary bg-body' : 'bg-body-secondary'">
               <div class="fw-bold small">Step 2</div>
-              <div class="small">Receiver UTXO Injection</div>
+              <div class="small">Add receiver contribution</div>
             </div>
           </div>
-          <div class="col-4">
+          <div class="col-12 col-sm-4">
             <div class="p-3 border rounded" [ngClass]="session.step === 'signed_and_broadcast' ? 'border-success bg-body text-success' : 'bg-body-secondary'">
               <div class="fw-bold small">Step 3</div>
-              <div class="small">Signing and Broadcast Walkthrough</div>
+              <div class="small">Explain signing and sending</div>
             </div>
           </div>
         </div>
 
         <!-- Next Action Button -->
-        <div class="d-flex justify-content-between align-items-center" *ngIf="session.step !== 'signed_and_broadcast'">
-          <span class="text-muted small">Advance simulation to next collaborative stage.</span>
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center" *ngIf="session.step !== 'signed_and_broadcast'">
+          <span class="text-muted small">Continue to the next step.</span>
           <button class="btn btn-primary" (click)="advanceSession()" [disabled]="advancing">
             <span *ngIf="advancing" class="spinner-border spinner-border-sm me-1" role="status"></span>
             {{ session.step === 'original_created' ? 'Explain Receiver Proposal' : 'Explain Signing & Broadcast' }}
@@ -110,10 +110,10 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
 
       <!-- Events Trace Log -->
       <div *ngIf="session && session.events_trace.length > 0" class="card p-4 bg-body-tertiary border">
-        <h3 class="h6 mb-3">Telemetry Event Trace</h3>
+        <h3 class="h6 mb-3">Simulation activity</h3>
         <ul class="list-group list-group-flush">
           <li *ngFor="let ev of session.events_trace" class="list-group-item bg-transparent px-0">
-            <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-1">
               <span class="fw-bold">{{ ev.phase }}</span>
               <span class="text-muted small">{{ ev.timestamp }}</span>
             </div>
