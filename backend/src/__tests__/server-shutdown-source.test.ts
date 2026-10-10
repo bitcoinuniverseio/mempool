@@ -33,6 +33,9 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
     './api/intelligence/events/intelligence-event-bus': { eventBus: { drain: done } },
     './api/fractal/fractal.runtime': { closeFractalRuntime: done },
     './api/mempool-blocks': { default: { closeSelectionWorker: done } },
+    './api/mempool': { default: { destroy: noop } },
+    './api/rbf-cache': { default: { destroy: noop } },
+    './api/memory-cache': { default: { destroy: noop } },
     './api/bitcoin/bitcoin-api-factory': { default: { closeTransport: () => { events.push('transport-closed'); } } },
     './logger': { default: { debug: noop, notice: noop, err: noop } },
   };
@@ -57,7 +60,40 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
   return { server, events, processState, modules };
 }
 
+/** Load the actual maintenance constructors without connecting native clients. */
+function maintenanceSingleton(file: string): any {
+  const source = readFileSync(resolve(__dirname, '../api', file), 'utf8');
+  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText;
+  const sandbox: any = { exports: {}, setInterval, clearInterval,
+    require: (name: string) => ({ __esModule: true, default: name === '../config' ? { MEMPOOL: { NETWORK: 'mainnet' } } : {} }) };
+  vm.runInNewContext(code, sandbox);
+  return sandbox.exports.default;
+}
+
 describe('actual native signal shutdown source', () => {
+  it('releases all actual maintenance intervals only after driver completion and preserves cached data', /** @asyncUnsafe Jest owns the test. */ async () => {
+    jest.useFakeTimers();
+    let completeDriver!: () => void;
+    const driver = new Promise<void>(resolve => { completeDriver = resolve; });
+    const { server, modules, events, processState } = sourceServer(Promise.resolve(), driver);
+    const caches = ['mempool.ts', 'rbf-cache.ts', 'memory-cache.ts'].map(maintenanceSingleton);
+    ['mempool', 'rbf-cache', 'memory-cache'].forEach((name, i) => { (modules['./api/' + name] as any).default = caches[i]; });
+    caches[2].set('fixture', 'retained', 'value', 60);
+    expect(jest.getTimerCount()).toBe(3);
+    server.forceExit('SIGTERM');
+    for (let i = 0; i < 32; i++) await Promise.resolve();
+    expect(events).toEqual(['indexer-stopped']);
+    expect(jest.getTimerCount()).toBe(4);
+    completeDriver();
+    for (let i = 0; i < 32; i++) await Promise.resolve();
+    expect(processState.exitCode).toBe(0);
+    expect(jest.getTimerCount()).toBe(0);
+    expect(caches[2].get('fixture', 'retained')).toBe('value');
+    for (const cache of caches) cache.destroy();
+    expect(jest.getTimerCount()).toBe(0);
+    jest.useRealTimers();
+  });
+
   it('does not exit or close resources before controlled late mining and real driver completion', /** @asyncUnsafe Jest owns the test. */ async () => {
     jest.useFakeTimers();
     let completeMining!: () => void;

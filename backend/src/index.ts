@@ -101,6 +101,7 @@ import { globalNetworkService } from './api/intelligence/global-network/global-n
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
 import { startPrivateRelayWorker, stopPrivateRelayWorker, drainPrivateRelayWorker } from './api/intelligence/private-submission/private-relay.runtime';
 import rbfCache from './api/rbf-cache';
+import memoryCache from './api/memory-cache';
 import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
 import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
 import silentPaymentsRoutes from './api/intelligence/silent-payments/silent-payments.routes';
@@ -800,6 +801,9 @@ class Server {
         await DB.close();
         await mempoolBlocks.closeSelectionWorker();
         bitcoinApi.closeTransport?.();
+        memPool.destroy();
+        rbfCache.destroy();
+        memoryCache.destroy();
         if (this.shutdownHold) clearInterval(this.shutdownHold);
         process.exitCode = code ?? 0;
         logger.notice('Native writers drained; waiting for remaining transport handles to close.');
