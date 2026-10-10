@@ -20,7 +20,7 @@ function reorg(): any {
     timeline:[{observed_at_utc:v.observed_at_utc,stage:'detected',source_ids:['core-one']}] }];v.count=1;return v;
 }
 describe('Incident observation protocol guards',()=>{
-  it('matches owning canonical profile bytes despite response object key ordering',()=>{
+  it('matches owning normalized profile bytes despite response object key ordering',()=>{
     const v=fixture();v.profile.sources[0]=Object.fromEntries(Object.entries(v.profile.sources[0]).reverse());
     expect(incidentProfileDigest(v.profile)).toBe(v.profile_sha256);expect(validIncidentResponse(v,'signet')).toBe(true);
   });
@@ -49,7 +49,7 @@ describe('Incident observation protocol guards',()=>{
 
 describe('Type-specific retained evidence (controlled fixtures)',()=>{
   it('rejects changed branches labelled as a stale tip',()=>{const v=reorg();v.incidents[0].incident_type='stale_tip';v.incidents[0].reorg_depth=null;expect(validIncidentResponse(v,'signet')).toBe(false);});
-  it('rejects an ordinary canonical extension labelled as a reorg',()=>{const v=reorg(),i=v.incidents[0];i.evidence.after=[...i.evidence.before,{height:3,hash:'d'.repeat(64),parent:'a'.repeat(64),timestamp:3}];i.block_height=3;i.block_hash='d'.repeat(64);expect(validIncidentResponse(v,'signet')).toBe(false);});
+  it('rejects an ordinary best-chain extension labelled as a reorg',()=>{const v=reorg(),i=v.incidents[0];i.evidence.after=[...i.evidence.before,{height:3,hash:'d'.repeat(64),parent:'a'.repeat(64),timestamp:3}];i.block_height=3;i.block_hash='d'.repeat(64);expect(validIncidentResponse(v,'signet')).toBe(false);});
   it('rejects a reorg improperly attributed to multiple source observations',()=>{const v=reorg();v.profile.sources.push({...v.profile.sources[0],source_id:'core-two',independence_id:'host-two'});v.profile_sha256=createHash('sha256').update(JSON.stringify(v.profile)).digest('hex');v.sources.push({...v.sources[0],source_id:'core-two'});v.incidents[0].source_ids.push('core-two');expect(validIncidentResponse(v,'signet')).toBe(false);});
 });
 

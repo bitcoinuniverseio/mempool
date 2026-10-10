@@ -123,7 +123,7 @@ export function readArkBatchPage(value: unknown, network: string, window: ArkBat
   return value as ArkBatchPage;
 }
 function psbtBytes(tx: string): Uint8Array {
-  if (typeof tx !== 'string' || tx.length > 90000 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(tx)) reject('Original native PSBT must use bounded canonical base64.');
+  if (typeof tx !== 'string' || tx.length > 90000 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(tx)) reject('Original native PSBT must use bounded strict base64.');
   let binary: string;
   try {binary = atob(tx);} catch {reject('Invalid native PSBT base64.');}
   if (binary.length > 65536 || btoa(binary) !== tx || !binary.startsWith('psbt\xff')) reject('A complete original signed PSBT is required.');

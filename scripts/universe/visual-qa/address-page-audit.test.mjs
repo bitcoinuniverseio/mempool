@@ -54,7 +54,8 @@ test('bitcoin.routes.ts implements getAddressTransactionSummary correctly', () =
   assert.match(fnBody, /config\.MEMPOOL\.BACKEND !== 'esplora'/, 'checks for esplora backend');
   assert.match(fnBody, /sendAddressError\(req, res, 'address-backend-unavailable'/, 'sends address-backend-unavailable when not esplora');
   assert.match(fnBody, /ADDRESS_REGEX\.test\(req\.params\.address\)/, 'validates address parameter format');
-  assert.match(fnBody, /bitcoinApi\.\$getAddressTransactionSummary\(req\.params\.address\)/, 'calls bitcoinApi.$getAddressTransactionSummary');
+  // Reads pass the optional summary cursor and go through address read admission.
+  assert.match(fnBody, /addressReadAdmission\.run\(\(\) => bitcoinApi\.\$getAddressTransactionSummary\(req\.params\.address[,)]/, 'calls bitcoinApi.$getAddressTransactionSummary under read admission');
   assert.match(fnBody, /res\.json\(summary\)/, 'responds with json summary');
 });
 
