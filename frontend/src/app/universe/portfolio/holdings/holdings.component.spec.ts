@@ -6,7 +6,23 @@ import {HoldingsComponent} from './holdings.component';import {PortfolioDataServ
 import {PortfolioDataStateComponent} from '../shared/data-state.component';
 @Component({selector:'app-portfolio-data-state',standalone:true,inputs:['state'],template:''}) class StateFixture {state:string='';}
 beforeAll(()=>TestBed.initTestEnvironment(BrowserDynamicTestingModule,platformBrowserDynamicTesting()));afterEach(()=>TestBed.resetTestingModule());
-function fixture(value='25',total='100') {const hidden=signal(false);const data=signal({loading:false,aggregation:{pricedTotal:total,holdings:[{assetKey:'bitcoin:btc',displayName:'Coin',protocol:'base',chain:'bitcoin',accountIds:['one'],quantityAtomic:'717171',decimals:0,pricedValue:value,state:'proven',locations:[{kind:'outpoint',reference:'tx:0',quantityAtomic:'828282'}]}]}});TestBed.configureTestingModule({providers:[{provide:PortfolioDataService,useValue:{state:data}},{provide:PortfolioSessionService,useValue:{valuesHidden:hidden}}]});TestBed.overrideComponent(HoldingsComponent,{remove:{imports:[PortfolioDataStateComponent]},add:{imports:[StateFixture]}});const view=TestBed.createComponent(HoldingsComponent);view.detectChanges();return {view,hidden,component:view.componentInstance};}
+function fixture(value='25',total='100') {const hidden=signal(false);const data=signal({loading:false,aggregation:{pricedTotal:total,holdings:[{assetKey:'bitcoin:btc',displayName:'Coin',protocol:'base',chain:'bitcoin',accountIds:['one'],quantityAtomic:'717171',decimals:0,pricedValue:value,state:'proven',locations:[{kind:'outpoint',reference:'tx:0',quantityAtomic:'828282'}]}]}});TestBed.configureTestingModule({providers:[{provide:PortfolioDataService,useValue:{state:data}},{provide:PortfolioSessionService,useValue:{valuesHidden:hidden}}]});TestBed.overrideComponent(HoldingsComponent,{remove:{imports:[PortfolioDataStateComponent]},add:{imports:[StateFixture]}});const view=TestBed.createComponent(HoldingsComponent);view.detectChanges();return {view,hidden,data,component:view.componentInstance};}
 it.each([['25','100','25%'],['0.25','1','25%'],['1','4.000','25%'],['0','0.0','-'],['1','bad','-']])('exact shares %s/%s', (value,total,expected)=>{expect(fixture(value,total).component.rows()[0].share).toBe(expected);});
 it('privacy hides desktop, mobile and expanded quantities',()=>{const {view,hidden,component}=fixture();component.expanded.set('bitcoin:btc');hidden.set(true);view.detectChanges();expect(view.nativeElement.textContent).not.toContain('717');expect(view.nativeElement.textContent).not.toContain('828');});
 it('the control describes filters instead of claiming grouping',()=>{const {view}=fixture();expect(view.nativeElement.querySelector('.group').textContent).toContain('Filter');expect(view.nativeElement.querySelector('.group').textContent).toContain('Priced only');});
+
+it('mobile cards expose the same location details with a native keyboard-operable toggle',()=>{
+  const {view}=fixture(); const button=view.nativeElement.querySelector('.cards .location-toggle') as HTMLButtonElement;
+  expect(button.getAttribute('aria-label')).toBe('Locations for Coin');expect(button.getAttribute('aria-expanded')).toBe('false');expect(button.tabIndex).toBe(0);
+  button.click();view.detectChanges();expect(button.getAttribute('aria-expanded')).toBe('true');
+  expect(view.nativeElement.querySelector('.cards .card-locations').textContent).toContain('tx:0');
+  expect(view.nativeElement.querySelector('.cards .card-locations').textContent).toContain('828');
+  button.click();view.detectChanges();expect(view.nativeElement.querySelector('.cards .card-locations')).toBeNull();
+});
+
+it.each(['partial','unavailable','stale','unsupported','outside_coverage','pending'])('never describes an empty %s source view as no holdings',state=>{
+  const data=signal({loading:false,aggregation:{state,pricedTotal:null,holdings:[]}});
+  TestBed.configureTestingModule({providers:[{provide:PortfolioDataService,useValue:{state:data}},{provide:PortfolioSessionService,useValue:{valuesHidden:signal(false)}}]});
+  TestBed.overrideComponent(HoldingsComponent,{remove:{imports:[PortfolioDataStateComponent]},add:{imports:[StateFixture]}});
+  const view=TestBed.createComponent(HoldingsComponent);view.detectChanges();expect(view.nativeElement.textContent).toContain('empty view does not confirm');expect(view.nativeElement.textContent).not.toContain('No holdings yet');
+});

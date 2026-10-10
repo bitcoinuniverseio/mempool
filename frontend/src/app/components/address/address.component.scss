@@ -12,6 +12,7 @@
 }
 
 .qr-control {
+  flex-shrink: 0;
   display: inline-flex;
   position: relative;
 }

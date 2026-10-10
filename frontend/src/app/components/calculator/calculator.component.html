@@ -1,36 +1,37 @@
 <div class="container-xl">
   <div class="text-center">
-    <h2 i18n="shared.calculator">Calculator</h2>
+    <h2 i18n="calculator.amount-converter">Amount converter</h2>
   </div>
 
-  <ng-container *ngIf="price$ | async; else loading">
+  <ng-container *ngIf="form">
 
     <div class="row justify-content-center">
 
       <form [formGroup]="form">
         <div class="input-group input-group-lg mb-1">
           <div class="input-group-prepend">
-            <span class="input-group-text">{{ currency$ | async }}</span>
+            <label class="input-group-text" for="calculator-fiat">{{ currency$ | async }}</label>
           </div>
-          <input type="text" inputmode="decimal" class="form-control" formControlName="fiat" (input)="transformInput('fiat')" (click)="selectAll($event)">
-          <app-clipboard [button]="true" [text]="form.get('fiat').value" [class]="'btn btn-lg btn-secondary ml-1'"></app-clipboard>
+          <input type="text" inputmode="decimal" class="form-control" id="calculator-fiat" aria-label="Fiat amount" i18n-aria-label="calculator.fiat-label" [attr.placeholder]="fiatAvailable ? null : 'Unavailable'" [attr.aria-describedby]="fiatAvailable ? null : 'calculator-fiat-status'" formControlName="fiat" (input)="transformInput('fiat')" (click)="selectAll($event)">
+          <app-clipboard [button]="true" [text]="copyValue('fiat')" ariaLabel="Copy fiat amount" i18n-ariaLabel="calculator.copy-fiat" [class]="'btn btn-lg btn-secondary ml-1'"></app-clipboard>
         </div>
 
         <div class="input-group input-group-lg mb-1">
           <div class="input-group-prepend">
-            <span class="input-group-text">BTC</span>
+            <label class="input-group-text" for="calculator-bitcoin">BTC</label>
           </div>
-          <input type="text" inputmode="decimal" class="form-control" formControlName="bitcoin" (input)="transformInput('bitcoin')" (click)="selectAll($event)">
-          <app-clipboard [button]="true" [text]="form.get('bitcoin').value" [class]="'btn btn-lg btn-secondary ml-1'"></app-clipboard>
+          <input type="text" inputmode="decimal" class="form-control" id="calculator-bitcoin" aria-label="Bitcoin amount" i18n-aria-label="calculator.bitcoin-label" formControlName="bitcoin" (input)="transformInput('bitcoin')" (click)="selectAll($event)">
+          <app-clipboard [button]="true" [text]="copyValue('bitcoin')" ariaLabel="Copy bitcoin amount" i18n-ariaLabel="calculator.copy-bitcoin" [class]="'btn btn-lg btn-secondary ml-1'"></app-clipboard>
         </div>
 
         <div class="input-group input-group-lg mb-1">
           <div class="input-group-prepend">
-            <span class="input-group-text" i18n="shared.sats">sats</span>
+            <label class="input-group-text" for="calculator-satoshis" i18n="shared.sats">sats</label>
           </div>
-          <input type="text" inputmode="numeric" class="form-control" formControlName="satoshis" (input)="transformInput('satoshis')" (click)="selectAll($event)">
-          <app-clipboard [button]="true" [text]="form.get('satoshis').value" [class]="'btn btn-lg btn-secondary ml-1'"></app-clipboard>
+          <input type="text" inputmode="numeric" class="form-control" id="calculator-satoshis" aria-label="Satoshi amount" i18n-aria-label="calculator.satoshis-label" formControlName="satoshis" (input)="transformInput('satoshis')" (click)="selectAll($event)">
+          <app-clipboard [button]="true" [text]="copyValue('satoshis')" ariaLabel="Copy satoshi amount" i18n-ariaLabel="calculator.copy-satoshis" [class]="'btn btn-lg btn-secondary ml-1'"></app-clipboard>
         </div>
+        <p id="calculator-fiat-status" role="status" *ngIf="!fiatAvailable" i18n="calculator.fiat-unavailable">Fiat conversion is unavailable. Bitcoin and satoshi conversion remains available.</p>
       </form>
 
     </div>
@@ -53,23 +54,21 @@
 
     <div class="row justify-content-center">
       <div class="fiat-text">
-        <app-fiat [value]="form.get('satoshis').value" digitsInfo="1.2-2"></app-fiat>
+        <app-fiat *ngIf="fiatAvailable" [value]="form.get('satoshis').value" digitsInfo="1.2-2" unavailableLabel="Unavailable" i18n-unavailableLabel="calculator.fiat-unavailable-label"></app-fiat>
       </div>
     </div>
 
-    <div class="row justify-content-center mt-3">
-      <div class="symbol">
-        Fiat price last updated <app-time kind="since" [time]="lastFiatPrice$ | async" [fastRender]="true"></app-time>: {{ price$ | async | fiatCurrency : '1.0-0' : (currency$ | async) }}
+    <div class="row justify-content-center mt-3" *ngIf="quote$ | async as quote">
+      <div class="symbol" *ngIf="quote.price !== null">
+        <ng-container *ngIf="quote.time !== null; else noTimestamp">
+          Fiat price last updated <app-time kind="since" [time]="quote.time" [fastRender]="true"></app-time>:
+        </ng-container>
+        <ng-template #noTimestamp><span i18n="calculator.price-time-unavailable">Fiat price update time is unavailable.</span></ng-template>
+        {{ quote.price | fiatCurrency : '1.0-0' : (currency$ | async) }}
       </div>
     </div>
 
 
   </ng-container>
-
-  <ng-template #loading>
-    <div class="text-center">
-      Waiting for price feed...
-    </div>
-  </ng-template>
 
 </div>
