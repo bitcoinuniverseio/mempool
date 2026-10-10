@@ -1,12 +1,22 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { combineLatest, Observable, Subject } from 'rxjs';
-import { map, switchMap, takeUntil } from 'rxjs/operators';
+import { map, shareReplay, startWith, takeUntil } from 'rxjs/operators';
 import { StateService } from '@app/services/state.service';
 import { WebsocketService } from '@app/services/websocket.service';
 
 const MAX_BTC_SUPPLY = 21000000;
 const MAX_SATOSHI_SUPPLY = MAX_BTC_SUPPLY * 100_000_000;
+
+export interface CalculatorQuote { price: number | null; time: number | null; }
+export function calculatorQuote(conversions: Record<string, number> | null | undefined, currency: string): CalculatorQuote {
+  const price = conversions?.[currency];
+  const time = conversions?.time;
+  return {
+    price: typeof price === 'number' && Number.isFinite(price) && price > 0 ? price : null,
+    time: typeof time === 'number' && Number.isSafeInteger(time) && time > 0 && time <= Date.now() / 1000 ? time : null,
+  };
+}
 
 @Component({
   selector: 'app-calculator',
@@ -19,12 +29,13 @@ export class CalculatorComponent implements OnInit, OnDestroy {
   private readonly destroyed$ = new Subject<void>();
   satoshis = 10000;
   form: FormGroup;
-  currentPrice = 0;
+  currentPrice: number | null = null;
   isMaxSupply = false;
 
   currency$ = this.stateService.fiatCurrency$;
-  price$: Observable<number>;
-  lastFiatPrice$: Observable<number>;
+  price$: Observable<number | null>;
+  lastFiatPrice$: Observable<number | null>;
+  quote$: Observable<CalculatorQuote>;
 
   constructor(
     private stateService: StateService,
@@ -39,85 +50,69 @@ export class CalculatorComponent implements OnInit, OnDestroy {
       satoshis: [0],
     });
 
-    this.lastFiatPrice$ = this.stateService.conversions$.asObservable()
-      .pipe(
-        map((conversions) => conversions.time)
-      );
-
-    let currency;
-    this.price$ = this.currency$.pipe(
-      switchMap((result) => {
-        currency = result;
-        return this.stateService.conversions$.asObservable();
-      }),
-      map((conversions) => {
-        return conversions[currency];
-      })
+    this.quote$ = combineLatest([this.currency$, this.stateService.conversions$]).pipe(
+      map(([currency, conversions]) => calculatorQuote(conversions, currency)),
+      startWith({ price: null, time: null }),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
-
-    combineLatest([
-      this.price$,
-      this.form.get('fiat').valueChanges
-    ]).pipe(takeUntil(this.destroyed$)).subscribe(([price, value]) => {
-      this.currentPrice = price;
-      const maxFiat = price * MAX_BTC_SUPPLY;
-      const isMaxSupply = value >= maxFiat;
-      this.isMaxSupply = isMaxSupply;
-      if (isMaxSupply) {
-        value = maxFiat;
-        this.form.get('fiat').setValue(this.formatFiat(value), { emitEvent: false });
+    this.price$ = this.quote$.pipe(map(quote => quote.price));
+    this.lastFiatPrice$ = this.quote$.pipe(map(quote => quote.time));
+    this.quote$.pipe(takeUntil(this.destroyed$)).subscribe(quote => {
+      this.currentPrice = quote.price;
+      if (quote.price === null) {
+        this.form.get('fiat').disable({ emitEvent: false });
+        this.form.get('fiat').setValue(null, { emitEvent: false });
+      } else {
+        this.form.get('fiat').enable({ emitEvent: false });
+        // Feed updates convert the current BTC amount. They never replay an
+        // older fiat input or rewrite independently valid BTC/satoshi values.
+        this.updateFiat(this.amount(this.form.get('bitcoin').value));
       }
-      let rate = parseFloat((value / price).toFixed(8));
-      if (rate >= MAX_BTC_SUPPLY) {
-        rate = MAX_BTC_SUPPLY;
-      }
-      const satsRate = Math.round(rate * 100_000_000);
-      if (isNaN(value)) {
-        return;
-      }
-      this.form.get('bitcoin').setValue(isMaxSupply ? MAX_BTC_SUPPLY.toString() : rate.toFixed(8), { emitEvent: false });
-      this.form.get('satoshis').setValue(satsRate, { emitEvent: false } );
     });
-
-    combineLatest([
-      this.price$,
-      this.form.get('bitcoin').valueChanges
-    ]).pipe(takeUntil(this.destroyed$)).subscribe(([price, value]) => {
-      this.currentPrice = price;
-      const isMaxSupply = parseFloat(value) >= MAX_BTC_SUPPLY;
-      this.isMaxSupply = isMaxSupply;
-      const rate = parseFloat((value * price).toFixed(8));
-      if (isNaN(value)) {
-        return;
-      }
-      this.form.get('fiat').setValue(this.formatFiat(rate), { emitEvent: false } );
-      this.form.get('satoshis').setValue(Math.min(Math.round(value * 100_000_000), MAX_SATOSHI_SUPPLY), { emitEvent: false } );
+    this.form.get('fiat').valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(value => {
+      const amount = this.amount(value);
+      if (amount === null || this.currentPrice === null) {return;}
+      const bitcoin = Math.min(amount / this.currentPrice, MAX_BTC_SUPPLY);
+      this.isMaxSupply = bitcoin >= MAX_BTC_SUPPLY;
+      if (this.isMaxSupply) {this.updateFiat(bitcoin);}
+      this.form.get('bitcoin').setValue(this.isMaxSupply ? MAX_BTC_SUPPLY.toString() : bitcoin.toFixed(8), { emitEvent: false });
+      this.form.get('satoshis').setValue(Math.round(bitcoin * 100_000_000), { emitEvent: false });
     });
-
-    combineLatest([
-      this.price$,
-      this.form.get('satoshis').valueChanges
-    ]).pipe(takeUntil(this.destroyed$)).subscribe(([price, value]) => {
-      this.currentPrice = price;
-      let bitcoinValue = value / 100_000_000;
-      const isMaxSupply = bitcoinValue >= MAX_BTC_SUPPLY;
-      this.isMaxSupply = isMaxSupply;
-      if (isMaxSupply) {
-        bitcoinValue = MAX_BTC_SUPPLY;
-        value = MAX_SATOSHI_SUPPLY;
-        this.form.get('satoshis').setValue(value, { emitEvent: false });
-      }
-      const rate = parseFloat((bitcoinValue * price).toFixed(8));
-      const bitcoinRate = isMaxSupply ? MAX_BTC_SUPPLY.toString() : bitcoinValue.toFixed(8);
-      if (isNaN(value)) {
-        return;
-      }
-      this.form.get('fiat').setValue(this.formatFiat(rate), { emitEvent: false } );
-      this.form.get('bitcoin').setValue(bitcoinRate, { emitEvent: false });
+    this.form.get('bitcoin').valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(value => {
+      const amount = this.amount(value);
+      if (amount === null) {return;}
+      const bitcoin = Math.min(amount, MAX_BTC_SUPPLY);
+      this.isMaxSupply = amount >= MAX_BTC_SUPPLY;
+      if (this.isMaxSupply) {this.form.get('bitcoin').setValue(MAX_BTC_SUPPLY.toString(), { emitEvent: false });}
+      this.form.get('satoshis').setValue(Math.round(bitcoin * 100_000_000), { emitEvent: false });
+      this.updateFiat(bitcoin);
     });
-
-    // Default form with 1 BTC
+    this.form.get('satoshis').valueChanges.pipe(takeUntil(this.destroyed$)).subscribe(value => {
+      const amount = this.amount(value);
+      if (amount === null) {return;}
+      const satoshis = Math.min(Math.round(amount), MAX_SATOSHI_SUPPLY);
+      this.isMaxSupply = amount >= MAX_SATOSHI_SUPPLY;
+      if (this.isMaxSupply) {this.form.get('satoshis').setValue(satoshis, { emitEvent: false });}
+      const bitcoin = satoshis / 100_000_000;
+      this.form.get('bitcoin').setValue(this.isMaxSupply ? MAX_BTC_SUPPLY.toString() : bitcoin.toFixed(8), { emitEvent: false });
+      this.updateFiat(bitcoin);
+    });
     this.form.get('bitcoin').setValue(1, { emitEvent: true });
+  }
+
+  get fiatAvailable(): boolean { return this.currentPrice !== null; }
+  copyValue(name: string): string {
+    const value: unknown = this.form.get(name)?.value;
+    return value === null || value === undefined ? '' : String(value);
+  }
+  private amount(value: unknown): number | null {
+    if (typeof value !== 'number' && (typeof value !== 'string' || value.trim() === '')) {return null;}
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 ? number : null;
+  }
+  private updateFiat(bitcoin: number | null): void {
+    const fiat = bitcoin === null || this.currentPrice === null ? null : bitcoin * this.currentPrice;
+    this.form.get('fiat').setValue(fiat !== null && Number.isFinite(fiat) ? this.formatFiat(fiat) : null, { emitEvent: false });
   }
 
   ngOnDestroy(): void {

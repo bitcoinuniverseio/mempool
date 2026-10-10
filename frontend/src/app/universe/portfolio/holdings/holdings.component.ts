@@ -47,6 +47,8 @@ type GroupMode = 'asset' | 'account' | 'chain' | 'protocol' | 'priced';
 
       @if (data().loading && rows().length === 0) {
         <p role="status" i18n="@@universe.portfolio.holdings.loading">Loading holdings…</p>
+      } @else if (rows().length === 0 && data().aggregation && data().aggregation.state !== 'proven') {
+        <p class="soft" role="status" i18n="@@universe.portfolio.holdings.unknown-empty">Holdings are not available from all sources. Refresh to retry; an empty view does not confirm there are no holdings.</p>
       } @else if (rows().length === 0) {
         <p class="soft" i18n="@@universe.portfolio.holdings.empty">
           No holdings yet. Add accounts, or refresh once the addresses have activity.
@@ -125,6 +127,22 @@ type GroupMode = 'asset' | 'account' | 'chain' | 'protocol' | 'priced';
                 <span>{{ session.valuesHidden() ? masked() : quantity(row.holding) }}</span>
                 <app-portfolio-data-state [state]="row.holding.state" />
               </div>
+              <button type="button" class="location-toggle"
+                (click)="expanded.set(expanded() === row.holding.assetKey ? '' : row.holding.assetKey)"
+                [attr.aria-expanded]="expanded() === row.holding.assetKey"
+                [attr.aria-label]="'Locations for ' + (row.holding.displayName ?? row.holding.ticker ?? shortKey(row.holding))"
+                i18n="@@universe.portfolio.holdings.locations">Locations</button>
+              @if (expanded() === row.holding.assetKey) {
+                <ul class="card-locations">
+                  @for (location of row.holding.locations; track location.reference) {
+                    <li class="mono">
+                      <span>{{ location.kind === 'outpoint' ? 'Output' : location.kind === 'protocol-ledger' ? 'Protocol ledger' : 'Manual' }}</span>
+                      <span>{{ location.reference }}</span>
+                      <span>{{ session.valuesHidden() ? masked() : (location.quantityAtomic === null ? '-' : quantityText(location.quantityAtomic, row.holding.decimals)) }}</span>
+                    </li>
+                  }
+                </ul>
+              }
             </li>
           }
         </ul>
@@ -153,9 +171,12 @@ type GroupMode = 'asset' | 'account' | 'chain' | 'protocol' | 'priced';
       .expansion li { display: flex; gap: 14px; font-size: 12.5px; justify-content: space-between; flex-wrap: wrap; }
       .mono { font-family: monospace; }
       .cards { display: none; list-style: none; margin: 0; padding: 0; gap: 10px; flex-direction: column; }
-      .cards li { border: 1px solid var(--u-separator, rgba(0,0,0,0.1)); border-radius: 12px; padding: 12px; }
+      .cards > li { border: 1px solid var(--u-separator, rgba(0,0,0,0.1)); border-radius: 12px; padding: 12px; }
       .card-head { display: flex; justify-content: space-between; gap: 8px; }
       .card-sub { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 12.5px; color: var(--u-fg-soft, inherit); font-variant-numeric: tabular-nums; }
+      .location-toggle { min-height: 44px; margin-top: 6px; padding: 6px 10px; color: inherit; background: transparent; border: 1px solid var(--u-separator, rgba(0,0,0,0.1)); border-radius: 8px; }
+      .card-locations { padding: 8px 0 0; margin: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+      .card-locations li { display: flex; flex-direction: column; gap: 3px; overflow-wrap: anywhere; font-size: 12.5px; }
       .soft { color: var(--u-fg-soft, inherit); font-size: 13px; }
       .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
       @media (max-width: 767px) {

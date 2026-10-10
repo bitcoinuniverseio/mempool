@@ -48,7 +48,7 @@
         <p><a [routerLink]="['/docs/api' | relativeUrl]" i18n="footer.api-documentation">API documentation</a></p>
         <p><a [routerLink]="['/tx/push' | relativeUrl]" i18n="shared.broadcast-transaction|Broadcast Transaction">Broadcast a transaction</a></p>
         <p><a [routerLink]="['/tx/test' | relativeUrl]" i18n="shared.test-transaction|Test Transaction">Test a transaction</a></p>
-        <p><a [routerLink]="['/tools/calculator']" i18n="shared.calculator">Fee calculator</a></p>
+        <p><a [routerLink]="['/tools/calculator']" i18n="calculator.amount-converter">Amount converter</a></p>
       </div>
 
       <div class="links" *ngIf="env.TESTNET_ENABLED || env.TESTNET4_ENABLED || env.SIGNET_ENABLED || env.REGTEST_ENABLED">

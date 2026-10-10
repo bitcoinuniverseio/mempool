@@ -1,15 +1,16 @@
+import { assetRouteContext$ } from '@app/universe/asset-route-context';
 import { fillTapTree } from '@app/shared/taproot-tree.utils';
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, Optional } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import { ActivatedRoute, ParamMap } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { ElectrsApiService } from '@app/services/electrs-api.service';
-import { switchMap, filter, catchError, map, tap } from 'rxjs/operators';
+import { switchMap, filter, catchError, map, tap, startWith, distinctUntilChanged, shareReplay } from 'rxjs/operators';
 import { Address, ChainStats, Transaction, Utxo, Vin } from '@interfaces/electrs.interface';
 import { WebsocketService } from '@app/services/websocket.service';
 import { StateService } from '@app/services/state.service';
 import { AudioService } from '@app/services/audio.service';
 import { ApiService } from '@app/services/api.service';
-import { of, merge, Subscription, Observable, forkJoin, Subject, EMPTY } from 'rxjs';
+import { of, merge, Subscription, Observable, forkJoin, Subject, EMPTY, combineLatest } from 'rxjs';
 import { SeoService } from '@app/services/seo.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { AddressInformation } from '@interfaces/node-api.interface';
@@ -111,7 +112,7 @@ export class AddressComponent implements OnInit, OnDestroy {
   private refreshAfterLoading = false;
 
   private deferLiveUpdate(): boolean {
-    if (!this.address) { return true; }
+    if (!this.addressContextReady || this.network !== this.stateService.network || !this.address) { return true; }
     if (!this.transactions) {
       this.refreshAfterLoading = true;
       return true;
@@ -122,10 +123,13 @@ export class AddressComponent implements OnInit, OnDestroy {
   retryAddress(): void {
     this.addressRetry$.next(this.route.snapshot.paramMap);
   }
-  private qrHovered = false;
 
   address: Address;
-  addressString: string;
+  addressString: string = '';
+  contextUnavailable = false;
+  private addressContextReady = false;
+  private trackingAddress = false;
+  private lastAcceptedContext: { reference: string; network: string; navigationId?: number; url?: string } | undefined;
   isLoadingAddress = true;
   transactions: Transaction[];
   utxos: Utxo[];
@@ -204,22 +208,34 @@ export class AddressComponent implements OnInit, OnDestroy {
     private seoService: SeoService,
     private formBuilder: UntypedFormBuilder,
     private addressCapabilityService: AddressCapabilityService,
+    @Optional() private router?: Router,
   ) { }
 
   onQrEnter(): void {
-    this.qrHovered = true;
+    // Touch-generated mouse events must not take ownership of the toggle.
+    if (typeof window.matchMedia === 'function' && !window.matchMedia('(hover: hover)').matches) {return;}
     this.showQR = true;
   }
 
   onQrLeave(): void {
-    this.qrHovered = false;
     this.showQR = false;
   }
 
+  onQrFocus(event: FocusEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (target?.matches?.(':focus-visible')) {this.showQR = true;}
+  }
+
+  resetQr(): void {
+    this.showQR = false;
+  }
+
+  get qrButtonLabel(): string {
+    return this.showQR ? $localize`:@@address.hide-qr:Hide address QR code` : $localize`:@@address.show-qr:Show address QR code`;
+  }
+
   toggleQr(): void {
-    if (!this.qrHovered) {
-      this.showQR = !this.showQR;
-    }
+    this.showQR = !this.showQR;
   }
 
   /**
@@ -262,9 +278,9 @@ export class AddressComponent implements OnInit, OnDestroy {
     this.network = this.stateService.network;
     this.networkChangeSubscription = this.stateService.networkChanged$.subscribe((network) => {
       if (this.network !== network) {
-        this.loadMoreSubscription?.unsubscribe();
+        this.addressContextReady = false;
         this.network = network;
-        this.utxoSourceState = 'idle';
+        this.clearAddressContext(true);
       }
       this.updateAccelerationSubscription();
     });
@@ -289,25 +305,113 @@ export class AddressComponent implements OnInit, OnDestroy {
 
     this.updateAccelerationSubscription();
 
-    this.mainSubscription = merge(this.route.paramMap, this.addressRetry$)
-      .pipe(
-        switchMap((params: ParamMap) => {
-          this.clearError();
-          this.isLoadingAddress = true;
-          this.fullyLoaded = false;
-          this.address = null;
-          this.refreshAfterLoading = false;
-          this.isLoadingTransactions = true;
-          this.loadMoreSubscription?.unsubscribe();
-          this.transactions = null;
-          this.utxos = null;
-          this.utxoSourceState = 'idle';
-          this.addressInfo = null;
-          this.exampleChannel = null;
-          this.tapTreeIncomplete = false;
-          this.taprootPsbtExpanded = false;
-          this.psbtForm?.reset({ psbt: '', tapleaf: '', taptree: '', ikey: '' });
-          this.psbtError = undefined;
+    const contexts$ = assetRouteContext$(combineLatest([
+      this.route.paramMap,
+      this.stateService.networkChanged$.pipe(startWith(this.stateService.network), distinctUntilChanged()),
+    ]).pipe(map(([params, network]) => ({ params, network, reference: params.get('id') || '' }))), this.router)
+      .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    this.mainSubscription = this.addressRetry$.pipe(
+      map(() => true), startWith(false),
+      switchMap(retry => {
+        let restoreOnce = retry;
+        return contexts$.pipe(
+        map(context => {
+          const restore = restoreOnce; restoreOnce = false;
+          return restore && context.phase === 'unavailable' && this.canRetryAcceptedContext(context.value)
+            ? { ...context, phase: 'ready' as const } : context;
+        }),
+        distinctUntilChanged((a, b) => a.phase === b.phase && a.value.reference === b.value.reference && a.value.network === b.value.network),
+        switchMap(context => {
+          this.addressContextReady = false;
+          this.clearAddressContext(context.phase === 'pending' || context.phase === 'ready');
+          if (context.phase !== 'ready' || context.value.network !== this.stateService.network) {
+            this.contextUnavailable = context.phase !== 'pending';
+            if (this.contextUnavailable) {
+              this.isLoadingAddress = false; this.isLoadingTransactions = false;
+              // This is a local route failure, not an invitation to query a
+              // capability endpoint for an unaccepted selected context.
+              this.error = { status: 503, error: { code: 'address-context-unavailable' } };
+              this.addressFailure = 'backend-unavailable';
+            }
+            return EMPTY;
+          }
+          this.addressContextReady = true;
+          this.contextUnavailable = false;
+          this.lastAcceptedContext = { reference: context.value.reference, network: context.value.network,
+            navigationId: this.router?.lastSuccessfulNavigation?.id, url: this.router?.url };
+          return this.readAddressContext(context.value.params).pipe(
+            tap(times => this.acceptAddressTransactions(times)),
+            catchError(error => {
+              this.addressContextReady = false;
+              if (this.trackingAddress) { this.websocketService.stopTrackingAddress(); this.trackingAddress = false; }
+              this.setError(error); this.isLoadingAddress = false; this.isLoadingTransactions = false; return EMPTY;
+            }),
+          );
+        }),
+        );
+      }),
+    ).subscribe();
+
+    this.mempoolTxSubscription = this.stateService.mempoolTransactions$
+      .subscribe(tx => {
+        if (this.deferLiveUpdate()) { return; }
+        this.addTransaction(tx);
+        this.mempoolStats.addTx(tx);
+      });
+
+    this.mempoolRemovedTxSubscription = this.stateService.mempoolRemovedTransactions$
+      .subscribe(tx => {
+        if (this.deferLiveUpdate()) { return; }
+        this.removeTransaction(tx);
+        this.mempoolStats.removeTx(tx);
+      });
+
+    this.blockTxSubscription = this.stateService.blockTransactions$
+      .subscribe((transaction) => {
+        if (this.deferLiveUpdate()) { return; }
+        const tx = this.transactions.find((t) => t.txid === transaction.txid);
+        if (tx) {
+          tx.status = transaction.status;
+          this.transactions = this.transactions.slice();
+          this.mempoolStats.removeTx(transaction);
+          this.audioService.playSound('magic');
+          this.confirmTransaction(tx);
+        } else {
+          if (this.addTransaction(transaction, false)) {
+            this.audioService.playSound('magic');
+          }
+        }
+        this.chainStats.addTx(transaction);
+      });
+  }
+
+  private canRetryAcceptedContext(value: { reference: string; network: string }): boolean {
+    const accepted = this.lastAcceptedContext;
+    return !!accepted && !!this.router && !this.router.getCurrentNavigation()
+      && accepted.navigationId === this.router.lastSuccessfulNavigation?.id
+      && accepted.url === this.router.url && accepted.reference === value.reference
+      && accepted.network === value.network && value.network === this.stateService.network;
+  }
+
+  private trackAddress(address: string): void {
+    this.trackingAddress = true; this.websocketService.startTrackAddress(address);
+  }
+
+  private clearAddressContext(loading: boolean): void {
+    this.clearError(); this.resetQr(); this.contextUnavailable = false;
+    this.isLoadingAddress = loading; this.isLoadingTransactions = loading;
+    this.fullyLoaded = false; this.refreshAfterLoading = false;
+    this.loadMoreSubscription?.unsubscribe();
+    if (this.trackingAddress) { this.websocketService.stopTrackingAddress(); this.trackingAddress = false; }
+    this.address = null; this.addressString = ''; this.transactions = null; this.utxos = null;
+    this.tempTransactions = []; this.timeTxIndexes = []; this.lastTransactionTxId = undefined; this.retryLoadMore = false;
+    this.chainStats = null; this.mempoolStats = null; this.utxoSourceState = 'idle';
+    this.addressInfo = null; this.exampleChannel = null; this.tapTreeIncomplete = false;
+    this.taprootPsbtExpanded = false;
+    this.psbtForm?.reset({ psbt: '', tapleaf: '', taptree: '', ikey: '' }); this.psbtError = undefined;
+  }
+
+  private readAddressContext(params: ParamMap): Observable<number[]> {
           document.body.scrollTo(0, 0);
           this.addressString = params.get('id') || '';
           if (/^[A-Z]{2,5}1[AC-HJ-NP-Z02-9]{8,100}|04[a-fA-F0-9]{128}|(02|03)[a-fA-F0-9]{64}$/.test(this.addressString)) {
@@ -338,21 +442,23 @@ export class AddressComponent implements OnInit, OnDestroy {
                 })
               )
             )
-          );
-        })
-      )
+          )
       .pipe(
+        map(address => {
+          if (!address && this.isLoadingAddress) {throw new Error('Address response is unavailable');}
+          if (address && (typeof address.address !== 'string' || !address.chain_stats || !address.mempool_stats)) {throw new Error('Address response is malformed');}
+          return address;
+        }),
         filter((address) => !!address),
-        tap((address: Address) => {
-          if ((this.stateService.network === 'liquid' || this.stateService.network === 'liquidtestnet') && /^([a-zA-HJ-NP-Z1-9]{26,35}|[a-z]{2,5}1[ac-hj-np-z02-9]{8,100}|[a-km-zA-HJ-NP-Z1-9]{80})$/.test(address.address)) {
-            this.apiService.validateAddress$(address.address)
-              .subscribe((addressInfo) => {
-                this.addressInfo = addressInfo;
-                this.websocketService.startTrackAddress(addressInfo.unconfidential);
-              });
-          } else {
-            this.websocketService.startTrackAddress(address.address);
+        switchMap((address: Address) => {
+          if ((this.network === 'liquid' || this.network === 'liquidtestnet') && /^([a-zA-HJ-NP-Z1-9]{26,35}|[a-z]{2,5}1[ac-hj-np-z02-9]{8,100}|[a-km-zA-HJ-NP-Z1-9]{80})$/.test(address.address)) {
+            return this.apiService.validateAddress$(address.address).pipe(
+              addressReadDeadline(),
+              tap(addressInfo => { this.addressInfo = addressInfo; this.trackAddress(addressInfo.unconfidential); }),
+              map(() => address),
+            );
           }
+          this.trackAddress(address.address); return of(address);
         }),
         switchMap((address) => {
           this.address = address;
@@ -389,7 +495,7 @@ export class AddressComponent implements OnInit, OnDestroy {
         }),
         switchMap(([transactions, utxos]) => {
           this.utxos = utxos;
-          if (Array.isArray(utxos)) this.utxoSourceState = 'complete';
+          if (Array.isArray(utxos)) {this.utxoSourceState = 'complete';}
 
           this.tempTransactions = transactions;
           if (transactions.length) {
@@ -417,14 +523,13 @@ export class AddressComponent implements OnInit, OnDestroy {
               return of([]);
             })
           );
-        })
-      )
-      .subscribe((times: number[] | null) => {
-        if (!times) {
-          return;
-        }
+        }));
+  }
+
+  private acceptAddressTransactions(times: number[] | null): void {
+        if (!Array.isArray(times) || times.length > this.timeTxIndexes.length) {throw new Error('Transaction time response is malformed');}
         times.forEach((time, index) => {
-          this.tempTransactions[this.timeTxIndexes[index]].firstSeen = time;
+          if (Number.isFinite(time) && time > 0) {this.tempTransactions[this.timeTxIndexes[index]].firstSeen = time;}
         });
         this.tempTransactions.sort((a, b) => {
           if (b.status.confirmed) {
@@ -468,44 +573,7 @@ export class AddressComponent implements OnInit, OnDestroy {
           this.refreshAfterLoading = false;
           this.retryAddress();
         }
-      },
-      (error) => {
-        this.setError(error);
-        this.seoService.logSoft404();
-        this.isLoadingAddress = false;
-      });
 
-    this.mempoolTxSubscription = this.stateService.mempoolTransactions$
-      .subscribe(tx => {
-        if (this.deferLiveUpdate()) { return; }
-        this.addTransaction(tx);
-        this.mempoolStats.addTx(tx);
-      });
-
-    this.mempoolRemovedTxSubscription = this.stateService.mempoolRemovedTransactions$
-      .subscribe(tx => {
-        if (this.deferLiveUpdate()) { return; }
-        this.removeTransaction(tx);
-        this.mempoolStats.removeTx(tx);
-      });
-
-    this.blockTxSubscription = this.stateService.blockTransactions$
-      .subscribe((transaction) => {
-        if (this.deferLiveUpdate()) { return; }
-        const tx = this.transactions.find((t) => t.txid === transaction.txid);
-        if (tx) {
-          tx.status = transaction.status;
-          this.transactions = this.transactions.slice();
-          this.mempoolStats.removeTx(transaction);
-          this.audioService.playSound('magic');
-          this.confirmTransaction(tx);
-        } else {
-          if (this.addTransaction(transaction, false)) {
-            this.audioService.playSound('magic');
-          }
-        }
-        this.chainStats.addTx(transaction);
-      });
   }
 
   addTransaction(transaction: Transaction, playSound: boolean = true): boolean {
@@ -621,7 +689,7 @@ export class AddressComponent implements OnInit, OnDestroy {
   }
 
   loadMore(): void {
-    if (this.isLoadingTransactions || this.fullyLoaded) {
+    if (!this.addressContextReady || !this.address || this.isLoadingTransactions || this.fullyLoaded) {
       return;
     }
     this.isLoadingTransactions = true;
@@ -786,6 +854,7 @@ export class AddressComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.addressContextReady = false;
     this.loadMoreSubscription?.unsubscribe();
     this.mainSubscription.unsubscribe();
     this.mempoolTxSubscription.unsubscribe();
