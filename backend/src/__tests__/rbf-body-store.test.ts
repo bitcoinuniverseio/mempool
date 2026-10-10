@@ -96,4 +96,28 @@ describe('complete body store with bounded immutable segment ownership', () => {
     const captured = JSON.parse(Buffer.concat(bytes).toString()); expect(captured.extra.version).toBe(1); expect(captured.newField).toBeUndefined();
     expect(JSON.parse(await read(store, id(0))).extra.version).toBe(2);
   });
+  it('retains actual fsync and descriptor cleanup failures without publishing or releasing failed ownership', async () => {
+    const primary = new Error('fixture native segment fsync failure');
+    const cleanup = new Error('fixture cleanup failure after actual descriptor close');
+    const originalOpen = fs.promises.open.bind(fs.promises);
+    const unrelated = join(directory, 'unowned'); fs.writeFileSync(unrelated, 'preserve');
+    store.captureBatch([body(0)], false); await store.configure(directory);
+    jest.spyOn(fs.promises, 'open').mockImplementation(async (...args: Parameters<typeof fs.promises.open>) => {
+      const handle = await originalOpen(...args);
+      if (String(args[0]).includes('rbf-body-') && args[1] === 'wx') {
+        jest.spyOn(handle, 'sync').mockRejectedValue(primary);
+        const close = handle.close.bind(handle);
+        jest.spyOn(handle, 'close').mockImplementation(async () => { await close(); throw cleanup; });
+      }
+      return handle;
+    });
+    await expect(store.flush()).rejects.toMatchObject({ name: 'RbfBodyCleanupError', primary, cleanup });
+    await expect(store.close()).rejects.toMatchObject({ name: 'RbfBodyCleanupError', primary, cleanup });
+    await expect(store.flush()).rejects.toMatchObject({ primary, cleanup });
+    expect(() => store.captureBatch([body(1)], false)).toThrow('snapshot-restore-failed');
+    expect(store.references([id(0)])[0].file).toBeUndefined();
+    expect(store.retainedEncodedBytes).toBeGreaterThan(200_000);
+    expect(fs.readFileSync(unrelated, 'utf8')).toBe('preserve');
+  });
+
 });
