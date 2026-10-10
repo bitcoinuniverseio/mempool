@@ -8,8 +8,12 @@ import config from '../config';
 import { TransactionExtended } from '../mempool.interfaces';
 import { Common } from './common';
 import rbfCache from './rbf-cache';
+import { TaskDrain } from './task-drain';
 
 class DiskCache {
+  private readonly work = new TaskDrain();
+
+  public drain(): Promise<void> { return this.work.drain(); }
   private cacheSchemaVersion = 3;
   private rbfCacheSchemaVersion = 1;
 
@@ -32,14 +36,16 @@ class DiskCache {
     if (!cluster.isPrimary || !config.MEMPOOL.CACHE_ENABLED) {
       return;
     }
-    process.on('SIGINT', (e) => {
-      void this.$saveCacheToDisk(true);
-      process.exit(0);
-    });
+    // The server owns signal handling and saves only after writers drain.
   }
 
   /** @asyncSafe */
-  async $saveCacheToDisk(sync: boolean = false): Promise<void> {
+  $saveCacheToDisk(sync: boolean = false): Promise<void> {
+    return this.work.track(this.saveCacheToDisk(sync));
+  }
+
+  /** @asyncSafe */
+  private async saveCacheToDisk(sync: boolean): Promise<void> {
     if (!cluster.isPrimary || !config.MEMPOOL.CACHE_ENABLED) {
       return;
     }

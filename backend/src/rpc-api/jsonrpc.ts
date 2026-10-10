@@ -1,6 +1,7 @@
 const http = require('http');
 const https = require('https');
 import { readFileSync } from 'fs';
+import { createGunzip } from 'zlib';
 
 const JsonRPC = function (this: any, opts) {
   // @ts-ignore
@@ -39,7 +40,8 @@ const JsonRPC = function (this: any, opts) {
  * no transport failure stalls the indexer, and no uncertain write is replayed.
  * Rollback: restore the previous client only with bounded caller deadlines;
  * no database migration is required. Keep logs free of credentials/raw txs.
- * Preparation only; executable transport behavior is unchanged.
+ * Historical preparation annotation; the transport below now implements the lifecycle
+ * guards and negotiated bounded gzip. Component tests do not qualify live fee data.
  */
 JsonRPC.prototype.call = function (method, params, options?) {
   return new Promise((resolve, reject) => {
@@ -55,7 +57,7 @@ JsonRPC.prototype.call = function (method, params, options?) {
     const requestOptions = {
       host: this.opts.host || 'localhost', port: this.opts.port || 8332,
       method: 'POST', path: '/',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload), 'Accept-Encoding': 'gzip' },
       agent: this.agent, rejectUnauthorized: this.opts.ssl && this.opts.sslStrict !== false,
     };
     if (this.opts.ssl && this.opts.sslCa) requestOptions['ca'] = this.opts.sslCa;
@@ -67,6 +69,7 @@ JsonRPC.prototype.call = function (method, params, options?) {
     }
     let settled = false;
     let response;
+    let decoder;
     const request = this.http.request(requestOptions);
     const finish = (error?, result?) => {
       if (settled) return;
@@ -75,6 +78,7 @@ JsonRPC.prototype.call = function (method, params, options?) {
       signal?.removeEventListener('abort', onAbort);
       request.setTimeout(0);
       if (error) {
+        decoder?.destroy();
         response?.destroy();
         request.destroy();
         reject(error);
@@ -89,21 +93,42 @@ JsonRPC.prototype.call = function (method, params, options?) {
       response = incoming;
       const chunks: Buffer[] = [];
       let bytes = 0;
+      let wireBytes = 0;
+      const maxWireBytes = Math.min(this.opts.maxWireResponseBytes || maxBytes, maxBytes);
+      const encoding = String(incoming.headers['content-encoding'] || 'identity').trim().toLowerCase();
+      if (encoding !== 'identity' && encoding !== 'gzip') {
+        finish(failure('ERPC_ENCODING', 'Unsupported RPC response encoding')); return;
+      }
+      if (incoming.statusCode === 401 && this.opts.cookie) this.cachedCookie = undefined;
+      const length = incoming.headers['content-length'];
+      if (typeof length === 'string' && /^\d+$/.test(length) && Number(length) > maxWireBytes) {
+        finish(failure('ERPC_SIZE', 'RPC wire response exceeds the byte limit')); return;
+      }
+      decoder = encoding === 'gzip' ? createGunzip() : undefined;
+      const body = decoder || incoming;
+      if (decoder) decoder.on('error', () => finish(failure('ERPC_ENCODING', 'Invalid compressed RPC response')));
+      incoming.on('data', chunk => {
+        wireBytes += chunk.length;
+        if (wireBytes > maxWireBytes) finish(failure('ERPC_SIZE', 'RPC wire response exceeds the byte limit'));
+      });
       incoming.on('error', () => finish(failure('ERPC_BODY', 'RPC response failed')));
       incoming.on('aborted', () => finish(failure('ERPC_BODY', 'RPC response was aborted')));
       incoming.on('close', () => {
         if (!incoming.complete) finish(failure('ERPC_BODY', 'RPC response closed before completion'));
       });
-      incoming.on('data', chunk => {
+      body.on('data', chunk => {
         if (settled) return;
         bytes += chunk.length;
         if (bytes > maxBytes) return finish(failure('ERPC_SIZE', 'RPC response exceeds the byte limit'));
         chunks.push(Buffer.from(chunk));
       });
-      incoming.on('end', () => {
+      body.on('end', () => {
         if (settled) return;
         if (!incoming.complete) return finish(failure('ERPC_BODY', 'RPC response is incomplete'));
-        if (incoming.statusCode === 401 && this.opts.cookie) this.cachedCookie = undefined;
+        // Only a matching valid200/500 JSON-RPC envelope may supply a Core domain code.
+        if (incoming.statusCode !== 200 && incoming.statusCode !== 500) {
+          finish(failure('ERPC_HTTP', `RPC response status ${incoming.statusCode}`)); return;
+        }
         try {
           const decoded = JSON.parse(Buffer.concat(chunks, bytes).toString('utf8'));
           const answers = batch ? decoded : [decoded];
@@ -132,9 +157,12 @@ JsonRPC.prototype.call = function (method, params, options?) {
           if (Date.now() - time >= timeout) return finish(failure('ETIMEDOUT', 'RPC operation exceeded its deadline'));
           finish(undefined, batch ? ordered.map(answer => answer.result) : ordered[0].result);
         } catch {
-          finish(failure('ERPC_RESPONSE', 'Malformed RPC response or mismatched identity'));
+          finish(incoming.statusCode !== 200
+            ? failure('ERPC_HTTP', `RPC response status ${incoming.statusCode}`)
+            : failure('ERPC_RESPONSE', 'Malformed RPC response or mismatched identity'));
         }
       });
+      if (decoder) incoming.pipe(decoder);
     });
     request.end(payload);
   });

@@ -3,6 +3,21 @@ import { Application } from 'express';
 import config from '../../config';
 import { verifyAddressSource } from './address-source-checkpoint';
 
+/** Static profile fingerprint only: computes no source observations or RPC reads. */
+export function chainSourceConfigurationSha256(selector: unknown): string {
+  return createHash('sha256')
+    .update(
+      JSON.stringify({
+        schema: 'universe-chain-source-configuration-v1',
+        network: config.MEMPOOL.NETWORK,
+        core: { host: config.CORE_RPC.HOST, port: config.CORE_RPC.PORT },
+        index: selector,
+        signetChallenge: process.env.UNIVERSE_SIGNET_CHALLENGE ?? null,
+      })
+    )
+    .digest('hex');
+}
+
 export interface IdentityIndexReader {
   selector: unknown;
   tip(signal: AbortSignal): Promise<number | null>;
@@ -32,11 +47,7 @@ export class ChainSourceIdentity {
     const work = /** @asyncUnsafe */ async () => {
       ensureActive();
       const reader = this.dependencies.index();
-      const configurationSha256 = createHash('sha256').update(JSON.stringify({
-        schema: 'universe-chain-source-configuration-v1', network: config.MEMPOOL.NETWORK,
-        core: { host: config.CORE_RPC.HOST, port: config.CORE_RPC.PORT },
-        index: reader.selector, signetChallenge: process.env.UNIVERSE_SIGNET_CHALLENGE ?? null,
-      })).digest('hex');
+      const configurationSha256 = chainSourceConfigurationSha256(reader.selector);
       const tip = await reader.tip(controller.signal);
       ensureActive();
       const core = { rpc: { call: /** @asyncUnsafe */ async (method: string, params: unknown[]) => {

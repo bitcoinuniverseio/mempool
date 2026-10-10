@@ -43,8 +43,10 @@ export function checkedReconstructionV4(value: unknown, address: string, network
     || g.initialIdentity !== null && !hash(g.initialIdentity)
     || g.fallbackReason !== null && (typeof g.fallbackReason !== 'string' || !g.fallbackReason.length || g.fallbackReason.length > 4096)) throw Error('V4 global proof exceeds its bounded contract.');
   if (g.mode === 'irrelevant-delta-proof' && (g.transactionCount === null || g.transactionCount > 100 || !hash(g.initialIdentity) || g.fallbackReason !== null)
-    || g.mode === 'strict-global-fallback' && !g.fallbackReason
-    || g.mode !== 'irrelevant-delta-proof' && (g.retainedBytes !== 0 || g.transitions.length !== 0)) throw Error('V4 global proof mode is inconsistent.');
+    // The producer retains a fixed metadata reservation even when it holds no raw proofs.
+    || g.mode === 'strict-global-fallback' && (!g.fallbackReason || g.retainedBytes !== 512)
+    || g.mode === 'uninitialized' && g.retainedBytes !== 0
+    || g.mode !== 'irrelevant-delta-proof' && g.transitions.length !== 0) throw Error('V4 global proof mode is inconsistent.');
   if (!terminal(v) && (v.mempoolAnchor === null
     ? g.mode !== 'uninitialized' || g.initialIdentity !== null || g.transactionCount !== null || g.sequenceAtomic !== null || g.verifiedOutputContext !== null
     : g.mode === 'uninitialized' || g.transactionCount === null || !hash(g.initialIdentity))) throw Error('V4 phase has no matching global proof acquisition.');

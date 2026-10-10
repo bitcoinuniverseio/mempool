@@ -238,8 +238,11 @@ Bearer tokens are **named, never embedded**:
 ]
 ```
 
-Parsing is strict and all or nothing: one invalid descriptor disables the whole
-registry rather than serving partially trusted data. The release preflight
+Parsing is strict. In the paired backend-apis revision `a3361bdb`, invalid
+individual descriptors are quarantined while valid descriptors remain available.
+Malformed JSON, a non-array document or a document size-limit failure disables
+the source set. Each accepted descriptor must still pass network, role and
+authorization checks; configuration acceptance is not service readiness. The release preflight
 refuses a cutover when the registry does not parse, and again when a protocol
 the build presents as readable has no authority behind it.
 
@@ -301,3 +304,6 @@ curl -s http://127.0.0.1:8999/api/v1/capabilities
 A feature that is `enabled` with `routesRegistered: false` is a configuration
 fault, not a data problem. So is a dependency reported as `configured: true`
 and `reachable: false`.
+
+
+Current endpoint/contract audit: [API repair preparation, 9 October 2026](API-REPAIR-HANDOFF-20261009.md). Its dated observations supersede historical deployment assumptions; it is not a deployed repair.

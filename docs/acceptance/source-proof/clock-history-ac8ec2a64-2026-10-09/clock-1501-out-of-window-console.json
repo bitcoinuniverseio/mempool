@@ -1,0 +1,32 @@
+[
+  {
+    "level": "error",
+    "message": "ERROR TypeError: Cannot read properties of undefined (reading 'height')\n    at fo (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:788191)\n    at l2 (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:986694)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992426)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ea (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993676)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992733)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ph (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993736)",
+    "timestamp": "2026-10-09T18:09:45.448Z",
+    "url": "http://127.0.0.1:4200/main.b5270c293ebcbc96.js"
+  },
+  {
+    "level": "error",
+    "message": "ERROR TypeError: Cannot read properties of undefined (reading 'height')\n    at fo (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:788191)\n    at l2 (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:986694)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992426)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ea (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993676)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992733)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ph (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993736)",
+    "timestamp": "2026-10-09T18:09:45.581Z",
+    "url": "http://127.0.0.1:4200/main.b5270c293ebcbc96.js"
+  },
+  {
+    "level": "error",
+    "message": "ERROR TypeError: Cannot read properties of undefined (reading 'height')\n    at fo (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:788191)\n    at l2 (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:986694)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992426)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ea (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993676)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992733)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ph (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993736)",
+    "timestamp": "2026-10-09T18:09:45.833Z",
+    "url": "http://127.0.0.1:4200/main.b5270c293ebcbc96.js"
+  },
+  {
+    "level": "error",
+    "message": "ERROR TypeError: Cannot read properties of undefined (reading 'height')\n    at fo (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:788191)\n    at l2 (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:986694)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992426)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ea (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993676)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992733)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ph (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993736)",
+    "timestamp": "2026-10-09T18:09:46.085Z",
+    "url": "http://127.0.0.1:4200/main.b5270c293ebcbc96.js"
+  },
+  {
+    "level": "error",
+    "message": "ERROR TypeError: Cannot read properties of undefined (reading 'height')\n    at fo (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:788191)\n    at l2 (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:986694)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992426)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ea (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993676)\n    at vu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:992733)\n    at Zl (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993988)\n    at Cu (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993791)\n    at Ph (http://127.0.0.1:4200/main.b5270c293ebcbc96.js:1:993736)",
+    "timestamp": "2026-10-09T18:09:46.333Z",
+    "url": "http://127.0.0.1:4200/main.b5270c293ebcbc96.js"
+  }
+]

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StateService } from '@app/services/state.service';
-import { UniverseWebsocketService } from '@app/universe/universe-websocket.service';
+import { UniverseWebsocketService, UniverseStreamState } from '@app/universe/universe-websocket.service';
 import { merge } from 'rxjs';
 import {
   BufferReport,
@@ -59,6 +59,7 @@ export class LiveUniverseComponent {
   readonly announcement = signal('');
   readonly now = signal(Date.now());
 
+  readonly streamStatus$ = this.websocket.status$;
   readonly chains = CHAINS;
   readonly channels = ['chain-status', 'mempool-snapshot', 'candidate-buckets', 'confirmed-protocol-activity'] as const;
   readonly completions = ['complete', 'partial', 'unavailable'] as const;
@@ -69,6 +70,38 @@ export class LiveUniverseComponent {
       this.reducedMotion.set(query.matches);
       query.addEventListener?.('change', (event) => this.reducedMotion.set(event.matches));
 
+      /**
+       * IMPLEMENTATION-HANDOFF [API-05] API-05-LIVE-VIEW | F-FE-002 | FAIL.
+       * stream$ currently supplies Mainnet Bitcoin even in selected Signet and
+       * completes silently for a producer-rejected Dogecoin/Zcash test network.
+       * 1. Consume API-04/API-05's explicit per-chain stream status beside data;
+       *    show the actual network and unavailable/reconnecting reason without
+       *    treating silence as an empty successful feed.
+       * 2. Clear the prior context's visible buffer and resume state on network
+       *    switch. Partition entries by chain+network+channel+snapshot and mark
+       *    gaps/resync until an authoritative replacement snapshot arrives.
+       * 3. Retain REST consumers and existing buffer/pause/filter controls while
+       *    a stream is unavailable. Do not manufacture live events.
+       * 4. Extend live-buffer.spec.ts and PROPOSED NEW live-universe.component.spec.ts
+       *    for unsupported networks, offline/reconnect, resync and context switch;
+       *    run targeted npm test, lint/build and actual Signet/justified Testnet UI.
+       * Evidence frontend-source-reproductions.json; producer contract pinned in
+       *    UniverseWebsocketService#API-05-WS. Dependencies API-02..API-04.
+       * Rollback coordinated stream contract while preserving explicit status.
+       */
+      this.stateService.networkChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+        this.buffer.set(EMPTY_BUFFER);
+        this.position.set(null);
+      });
+      this.websocket.status$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(statuses => {
+        for (const state of Object.values(statuses)) {
+          if (state.status === 'resync-required') {
+            this.buffer.update(buffer => ({ ...buffer,
+              entries: buffer.entries.filter(entry => !(entry.envelope.chain === state.chain && entry.envelope.network === state.network && entry.envelope.channel === state.channel)),
+              gaps: buffer.gaps.filter(gap => !gap.key.startsWith(`${state.chain}/${state.network}/${state.channel}/`)) }));
+          }
+        }
+      });
       merge(...CHAINS.map((chain) => this.websocket.stream$(chain)))
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((envelope) => {
@@ -77,8 +110,17 @@ export class LiveUniverseComponent {
         });
 
       // Ages are words, not ticking numbers, so the page stays calm.
-      setInterval(() => this.now.set(Date.now()), 5_000);
+      const ageTimer = setInterval(() => this.now.set(Date.now()), 5_000);
+      this.destroyRef.onDestroy(() => clearInterval(ageTimer));
     }
+  }
+
+  streamLabel(state: UniverseStreamState | undefined): string {
+    if (!state || state.status === 'connecting') return $localize`:@@universe.live.connecting:Connecting`;
+    if (state.status === 'live') return $localize`:@@universe.live.receiving:Receiving stream updates`;
+    if (state.status === 'reconnecting') return $localize`:@@universe.live.reconnecting:Reconnecting`;
+    if (state.status === 'resync-required') return $localize`:@@universe.live.resync:Refreshing the source snapshot`;
+    return $localize`:@@universe.live.unavailable:Live data unavailable`;
   }
 
   private announce(chain: string, channel: string, completeness: string): void {

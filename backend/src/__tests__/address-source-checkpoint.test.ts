@@ -44,4 +44,40 @@ describe('address source checkpoint identity',()=>{
     await expect(pending).resolves.toMatchObject({blockHeight:100,genesisHash:hash(0),blockHash:hash(100)});
     expect(info).toHaveBeenCalledTimes(2);
   });
+  it('settles every started Core read when an index callback throws synchronously', async () => {
+    const pending: AbortSignal[] = [];
+    const rpc = { call: jest.fn((method: string, _params: unknown[], options: { signal: AbortSignal }) => {
+      if (method === 'getblockchaininfo') return core.getBlockchainInfo();
+      pending.push(options.signal);
+      return new Promise((_, reject) => options.signal.addEventListener('abort',
+        () => reject(Object.assign(new Error('RPC request cancelled'), {code: 'EABORTED'})), {once: true}));
+    }) };
+    await expect(verifyAddressSource(100, () => { throw new Error('Index probe cancelled'); }, {...core, rpc}))
+      .rejects.toThrow('Index probe cancelled');
+    await new Promise<void>(resolve => setImmediate(resolve));
+    expect(pending).toHaveLength(2);
+    expect(pending.every(signal => signal.aborted)).toBe(true);
+  });
+  it('cancels the owned Core read at the caller deadline and permits a fresh retry', async () => {
+    const controller = new AbortController();
+    const reads = jest.fn(async (height: number) => hash(height));
+    const rpc = { call: jest.fn((_method: string, _params: unknown[], options: { signal: AbortSignal }) =>
+      new Promise((_, reject) => options.signal.addEventListener('abort',
+        () => reject(new Error('RPC request cancelled')), {once: true}))) };
+    const result = verifyAddressSource(100, reads, {...core, rpc}, 1000, controller.signal);
+    const rejected = expect(result).rejects.toThrow('RPC request cancelled');
+    controller.abort();
+    await rejected;
+    expect(rpc.call).toHaveBeenCalledTimes(1);
+    expect(reads).not.toHaveBeenCalled();
+    await expect(verifyAddressSource(100, reads, core)).resolves.toMatchObject({blockHeight: 100});
+  });
+  it('does not enqueue Core work for a caller that is already cancelled', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const rpc = {call: jest.fn()};
+    await expect(verifyAddressSource(100, async height => hash(height), {...core, rpc}, 1000, controller.signal))
+      .rejects.toThrow('deadline');
+    expect(rpc.call).not.toHaveBeenCalled();
+  });
 });

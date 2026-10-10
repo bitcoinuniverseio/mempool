@@ -73,9 +73,13 @@
               </dd>
             </ng-container>
 
-            <ng-container *ngIf="coverageLabel(vm.protocol) as coverage">
+            <ng-container *ngIf="coverageLabel(vm.protocol, vm.registry, vm.network) as coverage">
               <dt i18n="universe.detail.field-coverage">Coverage</dt>
               <dd>{{ coverage }}</dd>
+            </ng-container>
+            <ng-container *ngIf="registryCoverageLabel(vm.protocol) as declaration">
+              <dt i18n="universe.detail.field-registry-metadata">Registry metadata</dt>
+              <dd>{{ declaration }}</dd>
             </ng-container>
           </dl>
         </section>
@@ -129,8 +133,10 @@
 
               <ul class="authority-event-list" *ngIf="objects.rows.length; else objectsEmpty">
                 <li *ngFor="let row of objects.rows; trackBy: trackByObject">
-                  <span class="identifier">{{ row.id ? shorten(row.id, 18) : '' }}</span>
-                  <span class="kind" *ngIf="row.kind">{{ row.kind }}</span>
+                  <a class="identifier" *ngIf="namesObjectReference(row, vm.protocol.id) as reference; else plainObjectIdentity"
+                     [routerLink]="['/inscription' | relativeUrl, reference]" [queryParams]="{protocol:'names'}">{{ shorten(reference, 18) }}</a>
+                  <ng-template #plainObjectIdentity><span class="identifier">{{ row.id ? shorten(row.id, 18) : '' }}</span></ng-template>
+                  <span class="kind" *ngIf="objectKindLabel(row, vm.protocol.id) as kind">{{ kind }}</span>
                 </li>
               </ul>
               <ng-template #objectsEmpty></ng-template>

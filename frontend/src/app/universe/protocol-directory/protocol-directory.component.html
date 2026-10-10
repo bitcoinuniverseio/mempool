@@ -36,9 +36,10 @@
               <span class="state-chip chip-neutral">{{ capabilityLabel(protocol) }}</span>
               <span
                 class="state-chip"
-                [ngClass]="coverageKnown(protocol) ? 'chip-neutral' : 'chip-unknown'"
-              >{{ coverageLabel(protocol) }}</span>
+                [ngClass]="coverageKnown(protocol, vm.registry, vm.network) ? 'chip-neutral' : 'chip-unknown'"
+              >{{ coverageLabel(protocol, vm.registry, vm.network) }}</span>
             </div>
+            <p class="protocol-evidence" *ngIf="registryCoverageLabel(protocol) as declaration">{{ declaration }}</p>
             <p class="protocol-evidence" *ngIf="sourceFor(protocol, vm.sourcesByAuthority) as source">
               <span *ngIf="sourceDetail(source) as detail">{{ detail }}</span>
               <span class="checked-at" *ngIf="checkedAtSeconds(source) as checked">

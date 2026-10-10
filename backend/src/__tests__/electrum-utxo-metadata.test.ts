@@ -50,3 +50,18 @@ it('cancels the total request and schedules no later reads when a provider hangs
   expect(reader).toHaveBeenCalledTimes(4);
   expect(signals.every(signal => signal.aborted)).toBe(true);
 });
+
+it('aborts sibling reads on a provider failure and preserves the original failure', async () => {
+  const failure = new Error('controlled provider rejection');
+  const signals: AbortSignal[] = [];
+  const reader = jest.fn((_method: string, params: unknown[], signal: AbortSignal) => {
+    signals.push(signal);
+    if (params[0] === 1) return Promise.reject(failure);
+    return new Promise<never>((_, reject) => {
+      signal.addEventListener('abort', () => reject(new Error('controlled sibling cancellation')), { once: true });
+    });
+  });
+  await expect(readElectrumUtxoMetadata(Array.from({ length: 8 }, (_, i) => row(i + 1)), reader)).rejects.toBe(failure);
+  expect(reader).toHaveBeenCalledTimes(4);
+  expect(signals.every(signal => signal.aborted)).toBe(true);
+});

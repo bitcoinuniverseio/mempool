@@ -92,14 +92,16 @@ import { watchlistMatcher } from './api/intelligence/watchlists/watchlist-matche
 import { blockspaceService } from './api/intelligence/blockspace/blockspace.service';
 import { timeMachineService } from './api/intelligence/time-machine/time-machine.service';
 import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
-import { boundedHistoryFlush } from './api/intelligence/time-machine/history-shutdown';
+import { gracefulShutdown } from './api/graceful-shutdown';
+import { TaskDrain } from './api/task-drain';
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
 import { eventBus } from './api/intelligence/events/intelligence-event-bus';
 import { orderingEvidenceService } from './api/intelligence/private-submission/ordering-evidence.service';
 import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
-import { startPrivateRelayWorker } from './api/intelligence/private-submission/private-relay.runtime';
+import { startPrivateRelayWorker, stopPrivateRelayWorker, drainPrivateRelayWorker } from './api/intelligence/private-submission/private-relay.runtime';
 import rbfCache from './api/rbf-cache';
+import memoryCache from './api/memory-cache';
 import globalNetworkRoutes from './api/intelligence/global-network/global-network.routes';
 import lightningReliabilityRoutes from './api/intelligence/lightning/lightning-reliability.routes';
 import silentPaymentsRoutes from './api/intelligence/silent-payments/silent-payments.routes';
@@ -130,6 +132,18 @@ import nodeSecurityRoutes from './api/intelligence/node-security/node-security.r
 import collaborativePrivacyRoutes from './api/intelligence/collaborative-privacy/collaborative-privacy.routes';
 
 class Server {
+  private readonly work = new TaskDrain();
+  private readonly timers = new Set<NodeJS.Timeout>();
+  private shutdownHold: NodeJS.Timeout | undefined;
+
+  private schedule(callback: () => void, delayMs: number): void {
+    if (this.shuttingDown) return;
+    const timer = setTimeout(() => {
+      this.timers.delete(timer);
+      if (!this.shuttingDown) callback();
+    }, delayMs);
+    this.timers.add(timer);
+  }
   private wss: WebSocket.Server | undefined;
   private wssUnixSocket: WebSocket.Server | undefined;
   private server: http.Server | undefined;
@@ -145,9 +159,17 @@ class Server {
 
   constructor() {
     this.app = express();
+    this.app.use((_request, response, next) => {
+      if (this.shuttingDown) {
+        response.setHeader('Connection', 'close');
+        response.status(503).json({ error: 'Backend is draining.' });
+        return;
+      }
+      next();
+    });
 
     if (!config.MEMPOOL.SPAWN_CLUSTER_PROCS) {
-      void this.startServer();
+      this.work.track(this.startServer()).catch(error => this.forceExit('startup-failure', 1));
       return;
     }
 
@@ -162,16 +184,18 @@ class Server {
       }
 
       cluster.on('exit', (worker, code, signal) => {
+        if (this.shuttingDown) return;
         const workerId = worker.process['env'].workerId;
         logger.warn(`Mempool Worker PID #${worker.process.pid} workerId: ${workerId} died. Restarting in 10 seconds... ${signal || code}`);
-        setTimeout(() => {
+        this.schedule(() => {
+          if (this.shuttingDown) return;
           const env = { workerId: workerId };
           const newWorker = cluster.fork(env);
           newWorker.process['env'] = env;
         }, 10000);
       });
     } else {
-      void this.startServer(true);
+      this.work.track(this.startServer(true)).catch(error => this.forceExit('startup-failure', 1));
     }
   }
 
@@ -216,16 +240,20 @@ class Server {
     } catch {
       throw new Error('The selected Fractal reader configuration or read-only role failed startup validation.');
     }
+    if (this.shuttingDown) return;
 
     if (config.DATABASE.ENABLED) {
       DB.getPidLock();
 
       await DB.checkDbConnection();
+      if (this.shuttingDown) return;
       try {
         if (process.env.npm_config_reindex_blocks === 'true') { // Re-index requests
           await databaseMigration.$blocksReindexingTruncate();
+          if (this.shuttingDown) return;
         }
         await databaseMigration.$initializeOrMigrateDatabase();
+        if (this.shuttingDown) return;
       } catch (e) {
         throw new Error(e instanceof Error ? e.message : 'Error');
       }
@@ -253,6 +281,7 @@ class Server {
     if (config.DATABASE.ENABLED) {
       /** @asyncUnsafe */
       await priceUpdater.$initializeLatestPriceWithDb();
+      if (this.shuttingDown) return;
     }
 
     this.server = http.createServer(this.app);
@@ -265,15 +294,18 @@ class Server {
     this.setUpWebsocketHandling();
 
     await poolsUpdater.updatePoolsJson(); // Needs to be done before loading the disk cache because we sometimes wipe it
+    if (this.shuttingDown) return;
     if (config.DATABASE.ENABLED === true && config.MEMPOOL.ENABLED && ['mainnet', 'testnet', 'signet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK) && !poolsUpdater.currentSha) {
       logger.err(`Failed to retreive pools-v2.json sha, cannot run block indexing. Please make sure you've set valid urls in your mempool-config.json::MEMPOOL::POOLS_JSON_URL and mempool-config.json::MEMPOOL::POOLS_JSON_TREE_UR, aborting now`);
-      return process.exit(1);
+      throw new Error('Mining pool source initialization failed.');
     }
 
     await syncAssets.syncAssets$();
+    if (this.shuttingDown) return;
     if (config.DATABASE.ENABLED) {
       /** @asyncUnsafe */
       await mempoolBlocks.updatePools$();
+      if (this.shuttingDown) return;
     }
     if (config.MEMPOOL.ENABLED) {
       if (config.MEMPOOL.CACHE_ENABLED) {
@@ -283,6 +315,8 @@ class Server {
         await redisCache.$loadCache();
       }
     }
+
+    if (this.shuttingDown) return;
 
     if (config.STATISTICS.ENABLED && config.DATABASE.ENABLED && cluster.isPrimary) {
       statistics.startStatistics();
@@ -299,19 +333,20 @@ class Server {
       // Run once on startup.
       refreshIcons();
       // Matches crontab refresh interval for asset db.
-      setInterval(refreshIcons, 3600_000);
+      this.timers.add(setInterval(refreshIcons, 3600_000));
     }
 
     if (config.FIAT_PRICE.ENABLED) {
-      void priceUpdater.$run();
+      this.work.track(priceUpdater.$run()).catch(error => logger.err(`Price update failed: ${error}`));
     }
     await chainTips.updateOrphanedBlocks();
+    if (this.shuttingDown) return;
 
     runtimeMetrics.start();
     // A restart in the middle of an operation leaves a run with an expired
     // lease. Reclaiming here is what stops the panel from showing a spinner
     // nothing will ever resolve.
-    void adminAdapterRunStore.reconcileAbandonedRuns();
+    this.work.track(adminAdapterRunStore.reconcileAbandonedRuns()).catch(error => logger.err(`Run reconciliation failed: ${error}`));
 
     this.setUpHttpApiRoutes();
 
@@ -322,10 +357,10 @@ class Server {
       // So is each slice of a mempool sync after a restart or an outage.
       memPool.setSyncProgressCallback(() => { this.mainLoopWatchdog.progress(); });
       void this.runMainUpdateLoop();
-      setInterval(() => { this.mainLoopWatchdog.check(); }, 30_000);
+      this.timers.add(setInterval(() => { if (!this.shuttingDown) this.mainLoopWatchdog.check(); }, 30_000));
     }
 
-    setInterval(() => { this.healthCheck(); }, 2500);
+    this.timers.add(setInterval(() => { if (!this.shuttingDown) this.healthCheck(); }, 2500));
 
     if (config.LIGHTNING.ENABLED) {
       void this.$runLightningBackend();
@@ -349,7 +384,7 @@ class Server {
       });
     }
 
-    void poolsUpdater.$startService();
+    this.work.track(poolsUpdater.$startService()).catch(error => logger.err(`Pool updater failed: ${error}`));
   }
 
   /**
@@ -367,12 +402,18 @@ class Server {
     },
     onExit: (elapsedMs) => {
       logger.err(`runMainUpdateLoop() has not finished for ${Math.round(elapsedMs / 1000)} s; exiting so the service manager restarts the backend`);
-      process.exit(70);
+      if (!this.shuttingDown) process.exit(70);
     },
   });
 
   /** @asyncSafe */
-  async runMainUpdateLoop(): Promise<void> {
+  runMainUpdateLoop(): Promise<void> {
+    if (this.shuttingDown) return Promise.resolve();
+    return this.work.track(this.executeMainUpdateLoop());
+  }
+
+  /** @asyncSafe */
+  private async executeMainUpdateLoop(): Promise<void> {
     if (this.shuttingDown) return;
     const start = Date.now();
     this.mainLoopWatchdog.begin();
@@ -412,19 +453,20 @@ class Server {
           }
         }
       }
+      if (this.shuttingDown) return;
       void indexer.$run();
       if (config.WALLETS.ENABLED) {
         // might take a while, so run in the background
-        void walletApi.$syncWallets();
+        this.work.track(walletApi.$syncWallets()).catch(error => logger.err(`Wallet sync failed: ${error}`));
       }
       if (config.FIAT_PRICE.ENABLED) {
-        void priceUpdater.$run();
+        this.work.track(priceUpdater.$run()).catch(error => logger.err(`Price update failed: ${error}`));
       }
 
       // rerun immediately if we skipped the mempool update, otherwise wait POLL_RATE_MS
       const elapsed = Date.now() - start;
       const remainingTime = Math.max(0, pollRate - elapsed);
-      setTimeout(this.runMainUpdateLoop.bind(this), numHandledBlocks > 0 ? 0 : remainingTime);
+      this.schedule(() => { void this.runMainUpdateLoop(); }, numHandledBlocks > 0 ? 0 : remainingTime);
       this.backendRetryCount = 0;
     } catch (e: any) {
       this.backendRetryCount++;
@@ -446,7 +488,7 @@ class Server {
       if (e instanceof AxiosError) {
         logger.debug(`AxiosError: ${e?.message}`);
       }
-      setTimeout(this.runMainUpdateLoop.bind(this), 1000 * this.currentBackendRetryInterval);
+      this.schedule(() => { void this.runMainUpdateLoop(); }, 1000 * this.currentBackendRetryInterval);
     } finally {
       this.mainLoopWatchdog.end();
       diskCache.unlock();
@@ -515,6 +557,7 @@ class Server {
     // Record the current poll delta exactly once, including unchanged complete
     // polls. Recently-deleted history belongs to other consumers, not replay.
     memPool.setObservedPollCallback((newTransactions, deletedTransactions, complete) => {
+      websocketHandler.handleMempoolObservation(complete);
       timeMachineService.observePoll(newTransactions, deletedTransactions, complete);
       relayCollectorService.observeMempoolPoll(newTransactions, deletedTransactions, complete);
     });
@@ -705,22 +748,70 @@ class Server {
     if (exitEvent === 'uncaughtException' || exitEvent === 'unhandledRejection') {
       process.exit(code ?? 1);
     }
-    this.server?.close();
-    this.serverUnixSocket?.close();
-    templateCollectorService.stopPolling();
-    backendInfo.stopPolling();
-    boundedHistoryFlush(/** @asyncUnsafe boundedHistoryFlush catches and reports shutdown rejection. */ async () => {
-      await Promise.all([timeMachineService.closeHistory(), eventBus.drain(), closeFractalRuntime()]);
-    }).then(
-      flushed => {
-        if (!flushed) logger.warn('Time Machine shutdown flush failed or exceeded 5 seconds; the next start will expose a history gap.');
-        process.exit(code ?? (flushed ? 0 : 1));
+    // Keep an incomplete or rejected drain alive for diagnosis. A timeout is
+    // never permission to exit while a writer may still own work.
+    this.shutdownHold = setInterval(() => undefined, 60_000);
+    const httpDrain: Promise<void>[] = [];
+    gracefulShutdown({
+      stopAdmission: () => {
+        for (const timer of this.timers) clearTimeout(timer);
+        this.timers.clear();
+        this.mainLoopWatchdog.end();
+        indexer.stop();
+        statistics.stop();
+        poolsUpdater.stop();
+        templateCollectorService.stopPolling();
+        stopPrivateRelayWorker();
+        backendInfo.stopPolling();
+        runtimeMetrics.stop();
+        // Upgraded sockets are independent of HTTP request completion. Close
+        // their admission and start the close handshake before HTTP drain.
+        for (const server of [this.wss, this.wssUnixSocket]) {
+          if (server) {
+            httpDrain.push(new Promise<void>((resolve, reject) => {
+              server.close(error => error ? reject(error) : resolve());
+            }));
+            for (const client of server.clients) client.close(1001, 'Backend shutdown');
+          }
+        }
+        for (const server of [this.server, this.serverUnixSocket]) {
+          if (server?.listening) httpDrain.push(new Promise<void>((resolve, reject) => {
+            server.close(error => error ? reject(error) : resolve());
+          }));
+        }
       },
-      (error: unknown) => {
-        logger.warn('Time Machine shutdown flush threw: ' + (error instanceof Error ? error.message : String(error)));
-        process.exit(code ?? 1);
+      drainProducers: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
+        await this.work.drain();
+        await Promise.all(httpDrain);
+        await Promise.all([indexer.drain(), statistics.drain(), blocks.drain(), diskCache.drain(), templateCollectorService.drain(), drainPrivateRelayWorker()]);
+        // These independent recurrent owners still require their own source
+        // completion contracts. Refuse to release resources in those profiles.
+        if (config.LIGHTNING.ENABLED || config.REDIS.ENABLED || config.MEMPOOL.SPAWN_CLUSTER_PROCS || Common.isLiquid()) {
+          throw new Error('Graceful drain is unavailable for enabled Lightning, Redis, clustered workers, or Liquid parser callbacks.');
+        }
       },
-    );
+      drainDatabase: () => DB.drain(),
+      flushHistory: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
+        await Promise.all([timeMachineService.closeHistory(), eventBus.drain(), closeFractalRuntime()]);
+        await diskCache.$saveCacheToDisk(true);
+        await diskCache.drain();
+      },
+      releaseResources: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
+        await DB.drain();
+        await DB.close();
+        await mempoolBlocks.closeSelectionWorker();
+        bitcoinApi.closeTransport?.();
+        memPool.destroy();
+        rbfCache.destroy();
+        memoryCache.destroy();
+        if (this.shutdownHold) clearInterval(this.shutdownHold);
+        process.exitCode = code ?? 0;
+        logger.notice('Native writers drained; waiting for remaining transport handles to close.');
+      },
+    }).catch((error: unknown) => {
+      logger.err('Graceful shutdown held: ' + (error instanceof Error ? error.message : String(error)));
+      process.exitCode = code ?? 1;
+    });
   }
   exitCleanup(): void {
     backendInfo.stopPolling();

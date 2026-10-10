@@ -34,6 +34,34 @@ function transition(): UtxoReconstructionV4View {
   v.globalMempoolProof.verifiedOutputContext.identity=v.mempoolAnchor.identity;return v;
 }
 describe('explicit bounded V4 global transition consumer',()=>{
+  it('replays actual native strict fallback acquisition, closure and cancellation with the512-byte metadata reservation',()=>{
+    const fixture=JSON.parse(readFileSync('src/app/components/address/utxo-reconstruction-v4-native-fallback.fixture.json','utf8'));
+    let previous:UtxoReconstructionV4View;
+    fixture.views.forEach((value:UtxoReconstructionV4View,index:number)=>{
+      const checked=checkedReconstructionV4(value,fixture.address,'signet',previous,index?'next':'create');
+      if(checked.mempoolAnchor)expect(checked.globalMempoolProof.retainedBytes).toBe(512);
+      if(checked.status==='PARTIAL')expect(checked.result).toBeUndefined();previous=checked;
+    });
+    expect(previous.status).toBe('COMPLETE_AT_OBSERVED_TIP');expect(previous.result).toMatchObject({outputCount:0,balanceAtomic:'0',items:[]});
+    expect(checkedReconstructionV4(fixture.cancelled,fixture.address,'signet',previous,'cancel').status).toBe('CANCELLED');
+  });
+  it('rejects fake fallback bytes, transitions, missingreason or false finaldigest while allowing the exact producer reservation',()=>{
+    const fixture=JSON.parse(readFileSync('src/app/components/address/utxo-reconstruction-v4-native-fallback.fixture.json','utf8'));
+    const index=fixture.views.findIndex((value:UtxoReconstructionV4View)=>value.mempoolAnchor!==null);
+    for(const bytes of [0,1,511,513,524288]){
+      const value=structuredClone(fixture.views[index]);value.globalMempoolProof.retainedBytes=bytes;
+      expect(()=>checkedReconstructionV4(value,fixture.address,'signet',fixture.views[index-1],'next')).toThrow();
+    }
+    const uninitialized=structuredClone(fixture.views[0]);uninitialized.globalMempoolProof.retainedBytes=512;uninitialized.progress.retainedBytes=512;
+    expect(()=>checkedReconstructionV4(uninitialized,fixture.address,'signet')).toThrow();
+    const value=structuredClone(fixture.views[index]);value.globalMempoolProof.fallbackReason=null;
+    expect(()=>checkedReconstructionV4(value,fixture.address,'signet',fixture.views[index-1],'next')).toThrow();
+    value.globalMempoolProof.fallbackReason='GLOBAL_POOL_EXCEEDS_PROOF_CAPACITY';value.globalMempoolProof.transitions=[{}];
+    expect(()=>checkedReconstructionV4(value,fixture.address,'signet',fixture.views[index-1],'next')).toThrow();
+    const complete=structuredClone(fixture.views[fixture.views.length-1]);complete.globalMempoolProof.verifiedOutputContext.outpointsSha256='f'.repeat(64);
+    expect(()=>checkedReconstructionV4(complete,fixture.address,'signet',fixture.views[fixture.views.length-2],'next')).toThrow();
+  });
+
   it('accepts the preserved actual native complete-zero receipt with refreshed canonical measurement',()=>{
     const fixture=JSON.parse(readFileSync('src/app/components/address/utxo-reconstruction-v4-native-measurement.fixture.json','utf8'));
     const result=checkedReconstructionV4(fixture.value,fixture.address,'signet',fixture.previous,'next');

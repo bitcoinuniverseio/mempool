@@ -3,7 +3,7 @@ jest.mock('../api/fee-api', () => ({}));
 jest.mock('../api/mempool-blocks', () => ({}));
 jest.mock('../api/mempool', () => ({ getMempool: () => ({}), getFirstSeenForTransactions: jest.fn(() => []) }));
 jest.mock('../api/rbf-cache', () => ({}));
-jest.mock('../api/bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: { $testMempoolAccept: jest.fn(), $getBlockHash: jest.fn(), $getTxIdsForBlock: jest.fn(), $getScriptHash: jest.fn(), $getAddressTransactionSummary: jest.fn(), $getScriptHashTransactionSummary: jest.fn() }, bitcoinCoreApi: {} }));
+jest.mock('../api/bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: { $testMempoolAccept: jest.fn(), $getAddress: jest.fn(), $getAddressTransactions: jest.fn(), $getBlockHash: jest.fn(), $getTxIdsForBlock: jest.fn(), $getScriptHash: jest.fn(), $getAddressTransactionSummary: jest.fn(), $getScriptHashTransactionSummary: jest.fn() }, bitcoinCoreApi: {} }));
 jest.mock('../api/common', () => ({ Common: { indexingEnabled: () => true, getTransactionsFromRequest: req => req.body } }));
 jest.mock('../api/backend-info', () => ({}));
 jest.mock('../api/transaction-utils', () => ({ $getTransactionExtended: jest.fn(), convertScriptSigAsm: () => '', translateScriptPubKeyType: () => 'unknown' }));
@@ -66,16 +66,18 @@ test('summary routes mount in supported Esplora mode and deliver both validated 
  (api.$getScriptHashTransactionSummary as jest.Mock).mockResolvedValue(summary);
  try {
   for(const kind of ['address','scripthash']) {
-   for(const cursor of ['?after_txid='+id,'/'+id]) {
+   for(const cursor of ['', '?after_txid='+id,'/'+id]) {
     const response=await fetch(base+kind+'/'+id+'/txs/summary'+cursor);
     expect(response.status).toBe(200);expect(await response.json()).toEqual(summary);
    }
    expect((await fetch(base+kind+'/'+id+'/txs/summary?after_txid=bad')).status).toBe(400);
    expect((await fetch(base+kind+'/'+id+'/txs/summary/'+id+'?after_txid='+ 'cd'.repeat(32))).status).toBe(400);
   }
-  expect(api.$getAddressTransactionSummary).toHaveBeenCalledTimes(2);
+  expect(api.$getAddressTransactionSummary).toHaveBeenCalledTimes(3);
+  expect(api.$getAddressTransactionSummary).toHaveBeenCalledWith(id,undefined);
   expect(api.$getAddressTransactionSummary).toHaveBeenCalledWith(id,id);
-  expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledTimes(2);
+  expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledTimes(3);
+  expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledWith(id,undefined);
   expect(api.$getScriptHashTransactionSummary).toHaveBeenCalledWith(id,id);
  } finally {config.MEMPOOL.BACKEND=previous;await new Promise<void>(resolve=>supported.close(()=>resolve()));}
 });
@@ -118,4 +120,25 @@ test('block pages never silently omit failed transactions and preserve genuine n
  expect((await fetch(origin+'block/'+id+'/txs')).status).toBe(503);
  (api.$getTxIdsForBlock as jest.Mock).mockRejectedValue({code:-5,message:'Block not found'});
  expect((await fetch(origin+'block/'+id+'/txs')).status).toBe(404);
+});
+
+test('mounted address readers receive cancellable signals and release ordinary responses', async () => {
+ (api.$getAddress as jest.Mock).mockResolvedValue({address:'tb1pqualification'});
+ (api.$getAddressTransactions as jest.Mock).mockResolvedValue([]);
+ expect((await fetch(origin+'address/tb1pqualification')).status).toBe(200);
+ expect((api.$getAddress as jest.Mock).mock.calls[0][1]).toBeInstanceOf(AbortSignal);
+ expect((await fetch(origin+'address/tb1pqualification/txs?after_txid='+id)).status).toBe(200);
+ expect(api.$getAddressTransactions).toHaveBeenCalledWith('tb1pqualification',id,expect.any(AbortSignal));
+});
+test('mounted address reader aborts on caller disconnect and permits a fresh request', async () => {
+ let resolveStarted: () => void, resolveCancelled: () => void;
+ const started=new Promise<void>(resolve=>resolveStarted=resolve), cancelled=new Promise<void>(resolve=>resolveCancelled=resolve);
+ (api.$getAddress as jest.Mock).mockImplementation((_address:string,signal:AbortSignal)=>new Promise((_resolve,reject)=>{
+  signal.addEventListener('abort',()=>{resolveCancelled();reject(Object.assign(new Error('cancelled'),{code:'ETIMEDOUT'}));},{once:true});resolveStarted();
+ }));
+ const controller=new AbortController(), pending=fetch(origin+'address/tb1pqualification',{signal:controller.signal});
+ const pendingResult=pending.catch(error=>error);
+ await started;controller.abort();expect((await pendingResult).name).toBe('AbortError');await cancelled;
+ (api.$getAddress as jest.Mock).mockResolvedValue({address:'tb1pqualification'});
+ expect((await fetch(origin+'address/tb1pqualification')).status).toBe(200);
 });

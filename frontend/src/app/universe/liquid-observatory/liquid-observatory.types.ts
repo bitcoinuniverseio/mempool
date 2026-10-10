@@ -1,3 +1,4 @@
+import { LIQUID_OBSERVATORY_V1_SCOPE } from '../../shared/liquid-observatory-wire';
 export type LiquidNetwork = 'liquidv1' | 'liquidtestnet' | 'elementsregtest';
 export interface LiquidPairProfile {
  schema: 'universe-liquid-pair-profile-v1'; network: LiquidNetwork; parentNetwork: 'main'|'test'|'regtest';
@@ -29,7 +30,7 @@ export interface LiquidObservatoryCoverage {
   source: LiquidPairObservation;
   progress: { processedBlocks: number; expectedBlocks: number; nextHeight: number; pageLimit: 16 };
   cursor: { height: number; blockHash: string | null };
-  scope: 'canonical-public-blocks-and-parent-peg-evidence';
+  scope: typeof LIQUID_OBSERVATORY_V1_SCOPE;
 }
 export interface LiquidAssetRecord extends LiquidRegistryEntry {
   coverage: LiquidObservatoryCoverage;

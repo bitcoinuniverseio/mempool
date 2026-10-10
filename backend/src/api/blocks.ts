@@ -38,6 +38,7 @@ import database from '../database';
 import { CanonicalChange, CanonicalRecoveryRequest } from './intelligence/observation/block-observation-hub';
 import { btcToSats } from './intelligence/utxo/utxo-evidence';
 import { getBlockFirstSeenFromLogs, getOldestLogTimestampFromLogs, scanLogsForBlocksFirstSeen } from '../utils/file-read';
+import { TaskDrain } from './task-drain';
 
 /**
  * More transactions than this missing from the mempool, and a Core-backed
@@ -46,6 +47,9 @@ import { getBlockFirstSeenFromLogs, getOldestLogTimestampFromLogs, scanLogsForBl
 export const CORE_BULK_BLOCK_READ_THRESHOLD = 50;
 
 class Blocks {
+  private readonly detachedWork = new TaskDrain();
+
+  public drain(): Promise<void> { return this.detachedWork.drain(); }
   private blocks: BlockExtended[] = [];
   private blockSummaries: BlockSummary[] = [];
   private currentBlockHeight = 0;
@@ -1210,7 +1214,7 @@ class Blocks {
             this.updateTimerProgress(timer, `saved block summary for ${this.currentBlockHeight}`);
           }
           if (config.MEMPOOL.CPFP_INDEXING) {
-            void this.$saveCpfp(blockExtended.id, this.currentBlockHeight, cpfpSummary);
+            this.detachedWork.track(this.$saveCpfp(blockExtended.id, this.currentBlockHeight, cpfpSummary)).catch(error => logger.err(`CPFP persistence failed: ${error}`));
             this.updateTimerProgress(timer, `saved cpfp for ${this.currentBlockHeight}`);
           }
         }
@@ -1278,7 +1282,7 @@ class Blocks {
         this.newBlockCallbacks.forEach((cb) => cb(blockExtended, txIds, transactions));
       }
       if (config.MEMPOOL.CACHE_ENABLED && !memPool.hasPriority() && (block.height % config.MEMPOOL.DISK_CACHE_BLOCK_INTERVAL === 0)) {
-        void diskCache.$saveCacheToDisk();
+        this.detachedWork.track(diskCache.$saveCacheToDisk()).catch(error => logger.err(`Disk cache persistence failed: ${error}`));
       }
 
       // Update Redis cache

@@ -23,6 +23,11 @@ export interface PrivateRelayRuntime {
 
 let runtime: PrivateRelayRuntime | null = null;
 
+export function stopPrivateRelayWorker(): void { runtime?.worker?.stop(); }
+
+/** @asyncUnsafe Server shutdown waits for the exact configured worker. */
+export async function drainPrivateRelayWorker(): Promise<void> { await runtime?.worker?.drain(); }
+
 export function getPrivateRelayRuntime(): PrivateRelayRuntime {
   if (!runtime) runtime = buildRuntime();
   return runtime;

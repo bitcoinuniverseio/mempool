@@ -1,0 +1,320 @@
+import {
+  Observable,
+  defaultIfEmpty,
+  catchError,
+  concat,
+  map,
+  of,
+  startWith,
+  switchMap,
+  timer,
+  timeout,
+} from 'rxjs';
+export interface NamesExplorerAssetResponse {
+  readonly schemaVersion: 'universe-names-explorer-asset-v1';
+  readonly chain: string;
+  readonly network: string;
+  readonly authorityId: 'index-names';
+  readonly status: 'served' | 'not-found' | 'unconfigured' | 'unavailable';
+  readonly value: NamesExplorerAssetView | null;
+}
+export interface NamesExplorerAssetView {
+  readonly schemaVersion: 'index-names-explorer-asset-v1';
+  readonly protocolId: 'names';
+  readonly network: string;
+  readonly chainIdentity: string;
+  readonly ready: true;
+  readonly assetId: string;
+  readonly kind: 'name' | 'namespace';
+  readonly name: string | null;
+  readonly namespace: string;
+  readonly observedAt: string;
+  readonly stateVersion: string;
+  readonly authorityStateVersion: string;
+  readonly reorgEpochAtomic: string;
+  readonly source: 'index-names-explorer-asset-v1';
+  readonly inscriptionViews: ReadonlyArray<{
+    protocolId: string;
+    assetId: string;
+    quantityAtomic: string;
+  }>;
+  readonly checkpoint: {
+    readonly network: string;
+    readonly heightAtomic: string;
+    readonly blockHash: string;
+    readonly observedAt: string;
+  };
+  readonly firstClaim: {
+    readonly inscriptionNumberAtomic: string;
+    readonly revealHeightAtomic: string;
+    readonly revealBlockHash: string;
+    readonly contentSha256: string;
+    readonly resolverRevision: string;
+  };
+  readonly ownership: {
+    readonly status: 'verified-unspent';
+    readonly owner: string;
+    readonly scriptPubKey: string;
+    readonly outpoint: string;
+    readonly valueAtomic: string;
+    readonly offsetAtomic: string;
+    readonly confirmationsAtomic: string;
+    readonly blockHeightAtomic: string;
+    readonly blockHash: string;
+    readonly observedAt: string;
+    readonly checkpoint: unknown;
+    readonly source: 'index-names-explorer-ownership-v1';
+  };
+  readonly fullSpecMembershipQualified: false;
+  readonly namespaceRegistrationPrivileges: false;
+  readonly eligibility: 'indexed-nonnegative-first-claims';
+}
+export type NamesAssetViewState =
+  | { readonly kind: 'absent' | 'loading' }
+  | { readonly kind: 'unavailable'; readonly reason: string }
+  | { readonly kind: 'ready'; readonly value: NamesExplorerAssetView };
+const VIEW_PROTOCOL_IDS = new Set([
+  'ordinals',
+  'tap',
+  'dmt',
+  'unat',
+  'bitmap',
+  'names',
+  'dust20',
+  'stamps',
+  'src20',
+  'brc20',
+  'runes',
+  'runes_native',
+  'mezcal',
+  'alkanes',
+  'op_return',
+  'op_names',
+  'op_inscriptions',
+  'op_drop',
+  'drops',
+  'tap_doge',
+  'drc20',
+  'doginals',
+  'arc20',
+  'atomicals_nft',
+  'realms',
+  'subrealms',
+  'rare_sats',
+  'cat20',
+  'ordex',
+  'rpow',
+]);
+const hash = (v: unknown): v is string =>
+  typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
+const atomic = (v: unknown): v is string =>
+  typeof v === 'string' && /^(0|[1-9][0-9]{0,77})$/.test(v);
+const record = (v: unknown): v is Record<string, unknown> =>
+  !!v && typeof v === 'object' && !Array.isArray(v);
+export const NAMES_INSCRIPTION_ID = /^[0-9a-f]{64}i(0|[1-9][0-9]{0,9})$/;
+export function decodeNamesAsset(
+  response: unknown,
+  assetId: string,
+  network: string,
+  now = Date.now()
+): NamesAssetViewState {
+  const unavailable = (reason: string): NamesAssetViewState => ({
+    kind: 'unavailable',
+    reason,
+  });
+  if (
+    !record(response) ||
+    response.schemaVersion !== 'universe-names-explorer-asset-v1' ||
+    response.chain !== 'bitcoin' ||
+    response.network !== network ||
+    response.authorityId !== 'index-names'
+  ) {
+    return unavailable('Names evidence did not match the selected context.');
+  }
+  if (response.status !== 'served') {
+    return unavailable(
+      response.status === 'unconfigured'
+        ? 'Names details are not configured for this network.'
+        : response.status === 'not-found'
+          ? 'No indexed first Names claim matches this inscription. Complete SNS membership is not established.'
+          : 'The Names detail authority is unavailable.'
+    );
+  }
+  const v = response.value;
+  if (
+    !record(v) ||
+    v.schemaVersion !== 'index-names-explorer-asset-v1' ||
+    v.protocolId !== 'names' ||
+    v.assetId !== assetId ||
+    !NAMES_INSCRIPTION_ID.test(assetId) ||
+    v.network !== `bitcoin:${network}` ||
+    v.ready !== true ||
+    !hash(v.chainIdentity) ||
+    !hash(v.stateVersion) ||
+    !hash(v.authorityStateVersion) ||
+    !atomic(v.reorgEpochAtomic) ||
+    v.source !== 'index-names-explorer-asset-v1' ||
+    v.namespaceRegistrationPrivileges !== false ||
+    v.fullSpecMembershipQualified !== false ||
+    v.eligibility !== 'indexed-nonnegative-first-claims' ||
+    !['name', 'namespace'].includes(String(v.kind)) ||
+    typeof v.namespace !== 'string' ||
+    v.namespace.includes('.') ||
+    v.namespace !== v.namespace.toLowerCase() ||
+    /\s/u.test(v.namespace) ||
+    v.namespace.includes('\0') ||
+    new TextEncoder().encode(v.namespace).length > 2048 ||
+    (v.kind === 'namespace' && (!v.namespace || v.name !== null)) ||
+    (v.kind === 'name' &&
+      (typeof v.name !== 'string' ||
+        v.name.split('.').length !== 2 ||
+        v.name.split('.')[1] !== v.namespace ||
+        v.name !== v.name.toLowerCase() ||
+        /\s/u.test(v.name) ||
+        v.name.includes('\0') ||
+        new TextEncoder().encode(v.name).length > 2048))
+  ) {
+    return unavailable('Names detail evidence is invalid.');
+  }
+  const cp = v.checkpoint,
+    own = v.ownership,
+    claim = v.firstClaim;
+  if (
+    !record(cp) ||
+    !record(own) ||
+    !record(claim) ||
+    cp.network !== v.network ||
+    cp.authoritative !== true ||
+    cp.reorgDetected !== false ||
+    cp.source !== 'bitcoin-core+ord+index-names-checkpoint-v1' ||
+    !atomic(cp.heightAtomic) ||
+    !hash(cp.blockHash) ||
+    cp.observedAt !== v.observedAt ||
+    typeof v.observedAt !== 'string' ||
+    !atomic(claim.inscriptionNumberAtomic) ||
+    !atomic(claim.revealHeightAtomic) ||
+    BigInt(claim.revealHeightAtomic) > BigInt(cp.heightAtomic) ||
+    !hash(claim.revealBlockHash) ||
+    !hash(claim.contentSha256) ||
+    !hash(claim.resolverRevision) ||
+    own.status !== 'verified-unspent' ||
+    own.source !== 'index-names-explorer-ownership-v1' ||
+    own.observedAt !== v.observedAt ||
+    typeof own.owner !== 'string' ||
+    !own.owner ||
+    own.owner.length > 128 ||
+    typeof own.scriptPubKey !== 'string' ||
+    !/^([0-9a-f]{2}){1,10000}$/.test(own.scriptPubKey) ||
+    typeof own.outpoint !== 'string' ||
+    !/^[0-9a-f]{64}:(0|[1-9][0-9]{0,9})$/.test(own.outpoint) ||
+    !atomic(own.valueAtomic) ||
+    BigInt(own.valueAtomic) > 2100000000000000n ||
+    !atomic(own.offsetAtomic) ||
+    BigInt(own.offsetAtomic) >= BigInt(own.valueAtomic) ||
+    !atomic(own.confirmationsAtomic) ||
+    BigInt(own.confirmationsAtomic) < 1n ||
+    !atomic(own.blockHeightAtomic) ||
+    BigInt(own.blockHeightAtomic) > BigInt(cp.heightAtomic) ||
+    !hash(own.blockHash) ||
+    BigInt(own.confirmationsAtomic) !==
+      BigInt(cp.heightAtomic) - BigInt(own.blockHeightAtomic) + 1n ||
+    !record(own.checkpoint) ||
+    Object.keys(cp).some(
+      (key) => (own.checkpoint as Record<string, unknown>)[key] !== cp[key]
+    )
+  ) {
+    return unavailable('Names ownership proof is unavailable.');
+  }
+  const t = Date.parse(v.observedAt);
+  if (
+    !Number.isFinite(t) ||
+    new Date(t).toISOString() !== v.observedAt ||
+    t > now ||
+    now - t > 30000
+  ) {
+    return unavailable('Names observation is stale.');
+  }
+  if (
+    !Array.isArray(v.inscriptionViews) ||
+    v.inscriptionViews.length < 1 ||
+    v.inscriptionViews.length > 30
+  ) {
+    return unavailable('Names inscription views are invalid.');
+  }
+  const seen = new Set<string>();
+  let names = 0;
+  for (const view of v.inscriptionViews) {
+    if (
+      !record(view) ||
+      typeof view.protocolId !== 'string' ||
+      !VIEW_PROTOCOL_IDS.has(view.protocolId) ||
+      seen.has(view.protocolId) ||
+      view.assetId !==
+        (view.protocolId === 'ordex'
+          ? `ordex:${assetId}@${own.outpoint}`
+          : assetId) ||
+      typeof view.quantityAtomic !== 'string' ||
+      !/^[1-9][0-9]*$/.test(view.quantityAtomic)
+    ) {
+      return unavailable('Names inscription views are invalid.');
+    }
+    seen.add(view.protocolId);
+    if (view.protocolId === 'names') {
+      if (view.quantityAtomic !== '1') {
+        return unavailable('Names inscription quantity is invalid.');
+      }
+      names++;
+    }
+  }
+  if (names !== 1) {
+    return unavailable('Names inscription view is missing.');
+  }
+  return {
+    kind: 'ready',
+    value: structuredClone(v) as unknown as NamesExplorerAssetView,
+  };
+}
+/** Restore only the original observation deadline; no extended or synthetic freshness. */
+export function namesObservationState$(
+  state: NamesAssetViewState
+): Observable<NamesAssetViewState> {
+  if (state.kind !== 'ready') {
+    return of(state);
+  }
+  const remaining = 30000 - (Date.now() - Date.parse(state.value.observedAt));
+  if (!Number.isFinite(remaining) || remaining <= 0 || remaining > 30000) {
+    return of({ kind: 'unavailable', reason: 'Names observation is stale.' });
+  }
+  return concat(
+    of(state),
+    timer(remaining).pipe(
+      map((): NamesAssetViewState => ({
+        kind: 'unavailable',
+        reason: 'Names observation is stale.',
+      }))
+    )
+  );
+}
+/** One local expiry deadline; no polling or ordinary-inscription enrichment. */
+export function namesAssetState$(
+  request: Observable<NamesExplorerAssetResponse>,
+  assetId: string,
+  network: string
+): Observable<NamesAssetViewState> {
+  return request.pipe(
+    timeout({ first: 20000 }),
+    map((value) => decodeNamesAsset(value, assetId, network)),
+    switchMap((state) => namesObservationState$(state)),
+    defaultIfEmpty<NamesAssetViewState, NamesAssetViewState>({
+      kind: 'unavailable',
+      reason: 'The Names detail authority returned no observation.',
+    }),
+    catchError(() =>
+      of<NamesAssetViewState>({
+        kind: 'unavailable',
+        reason: 'The Names detail authority is unavailable.',
+      })
+    ),
+    startWith<NamesAssetViewState>({ kind: 'loading' })
+  );
+}

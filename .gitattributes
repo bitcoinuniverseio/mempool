@@ -13,3 +13,8 @@ docs/acceptance/wp07-repair-2026-09-06.json -text
 docs/protocols/PROTOCOL-COVERAGE.json -text
 docs/acceptance/operation-matrix-source-successor-2026-10-03.json -text
 docs/acceptance/protocol-authority-transitions-2026-10-03.json -text
+
+# Full required roster and frozen source proof bytes must survive checkout.
+docs/acceptance/reconciled-operations.json -text
+docs/acceptance/required-application-coverage-2026-10-09.json -text
+docs/acceptance/source-proof/** -text

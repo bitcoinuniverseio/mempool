@@ -28,7 +28,36 @@ export interface WebsocketResponse {
   loadingIndicators?: ILoadingIndicators;
   backendInfo?: IBackendInfo;
   da?: DifficultyAdjustment;
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-CONTRACT | F-FE-001 | FAIL.
+   * Observed 2026-10-09: fees/recommended returned 503 while init-data supplied
+   * unqualified cached fees. Source: bitcoin.routes.ts#getRecommendedFees,
+   * websocket-handler.ts#updateSocketData; evidence public-http.json and
+   * frontend-source-reproductions.json in the server preparation directory.
+   * 1. Add FeeEstimateSnapshot and optional WebsocketResponse.feeEstimate:
+   *    schemaVersion 'universe-fee-estimate-v1', chain 'bitcoin', network,
+   *    status 'ready'|'syncing'|'stale'|'unavailable', observedAt ISO|null,
+   *    tip {height,hash}|null, values Recommendedfees|null, reason string|null.
+   *    Validate the envelope at runtime; this interface alone proves no input.
+   * 2. Keep Recommendedfees numeric sat/vB fields unchanged. Only authoritative
+   *    ready snapshots may populate legacy fees. Missing, malformed, expired or
+   *    wrong-network metadata must not make cached values current.
+   * 3. Coordinate this additive contract with backend websocket-handler.ts,
+   *    StateService.feeEstimate$ (PROPOSED NEW), WebsocketService.handleResponse,
+   *    FeesBoxComponent and ClockComponent in API-05 after API-01 through API-04.
+   * 4. Add PROPOSED NEW services/fee-estimate.spec.ts and component fee tests.
+   *    Assert REST/init/socket parity, absent proof, stale values, reconnect,
+   *    network switch and fresh recovery; run npm test -- <new test paths>
+   *    from frontend, then npm run lint and npm run build:universe.
+   *    Test commands using proposed files remain unverified until implemented.
+   * Acceptance: real Signet fee reads and rendered data have matching producer
+   *    observation/tip; controlled sync/outage faults never show current fees.
+   * Rollback producer and consumer together; do not accept bare legacy values.
+   * Preparation only: no executable behavior changed here.
+   */
   fees?: Recommendedfees;
+  feeEstimate?: FeeEstimateSnapshot;
+  liveObservation?: Omit<FeeEstimateSnapshot, 'schemaVersion' | 'values'> & { schemaVersion: 'universe-live-observation-v1' };
   'track-tx'?: string;
   'track-address'?: string;
   'track-addresses'?: string[];
@@ -144,6 +173,17 @@ export interface Recommendedfees {
   hourFee: number;
   minimumFee: number;
   economyFee: number;
+}
+
+export interface FeeEstimateSnapshot {
+  schemaVersion: 'universe-fee-estimate-v1';
+  chain: 'bitcoin';
+  network: string;
+  status: 'ready' | 'syncing' | 'stale' | 'unavailable';
+  observedAt: string | null;
+  tip: { height: number; hash: string } | null;
+  values: Recommendedfees | null;
+  reason: string | null;
 }
 
 export interface HealthCheckHost {
