@@ -31,7 +31,8 @@ describe('actual RBF list template/controller failure and recovery', () => {
   it('renders typed503 unavailable with usable Retry, then renders real empty success', () => {
     const fixture = render(throwError(() => ({ status: 503, error: { error: 'rbf_history_unavailable' } })));
     expect(fixture.nativeElement.textContent).toContain('Replacement history is unavailable'); expect(fixture.nativeElement.textContent).not.toContain('No replacements are available'); expect(fixture.nativeElement.querySelector('.spinner-border')).toBeNull();
-    api.getRbfList$.mockReturnValue(of([])); fixture.nativeElement.querySelector('button').click(); fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain('No replacements are available'); expect(fixture.nativeElement.querySelector('[role=alert]')).toBeNull(); expect(api.getRbfList$).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.mode-toggle button').getAttribute('aria-pressed')).toBe('true');
+    api.getRbfList$.mockReturnValue(of([])); fixture.nativeElement.querySelector('[role=alert] button').click(); fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain('No replacements are available'); expect(fixture.nativeElement.querySelector('[role=alert]')).toBeNull(); expect(api.getRbfList$).toHaveBeenCalledTimes(2);
   });
   it('bounds NEVER loading and hides the empty-success claim until a response', () => {
     vi.useFakeTimers(); const fixture = render(NEVER); expect(fixture.nativeElement.querySelector('.spinner-border')).not.toBeNull(); expect(fixture.nativeElement.textContent).not.toContain('No replacements are available'); vi.advanceTimersByTime(RBF_READ_TIMEOUT_MS); fixture.detectChanges(); expect(fixture.nativeElement.querySelector('.spinner-border')).toBeNull(); expect(fixture.nativeElement.textContent).toContain('Replacement history is unavailable');

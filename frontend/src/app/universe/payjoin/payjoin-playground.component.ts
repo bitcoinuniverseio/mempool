@@ -16,11 +16,11 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
     <div class="intelligence-page container-xl">
       <header class="page-header mb-4">
         <div class="title-row d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <h1 class="m-0">Payjoin Interactive Playground</h1>
-          <span class="badge bg-primary">Narrated Simulation</span>
+          <h1 class="m-0">Payjoin playground</h1>
+          <span class="badge bg-primary">Simulation</span>
         </div>
         <p class="subtitle text-muted mt-2 mb-3">
-          Step-by-step simulation of the collaborative Payjoin handshake between sender and receiver wallets with a simulated event trace. This service builds no PSBT and performs no signing or broadcast.
+          Follow a simulated payment between two wallets, one step at a time.
         </p>
 
         <!-- Navigation Tabs -->
@@ -33,12 +33,15 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
         </nav>
       </header>
 
-      <p class="alert alert-secondary" id="payjoin-wallet-prerequisites">Actual Sign &amp; Broadcast is unavailable here. It requires a connected signing wallet, owned spendable UTXOs, a supported BIP77 or BIP78 sender/receiver workflow, and an operated broadcast endpoint. This API supplies only a narrated simulation.</p>
-      <button class="btn btn-outline-secondary mb-3" disabled aria-describedby="payjoin-wallet-prerequisites">Sign &amp; Broadcast Payjoin: unavailable</button>
+      <p class="alert alert-secondary" id="payjoin-wallet-prerequisites">Simulation only. No real payment is created, signed or sent.</p>
+      <details class="mb-3">
+        <summary>About real payments</summary>
+        <p>Real Payjoin payments need a connected signing wallet, spendable funds, a compatible sender and receiver, and a service that submits the transaction. Signing and sending are unavailable here.</p>
+      </details>
       <div *ngIf="errorMessage" class="alert alert-danger" role="alert">{{ errorMessage }} Retry the current step or reset the simulation.</div>
       <!-- Start Session Card -->
       <div *ngIf="!session" class="card p-4 mb-4 bg-body-tertiary border">
-        <h2 class="h5 mb-3">Start Simulated Collaborative Handshake</h2>
+        <h2 class="h5 mb-3">Start a simulation</h2>
         <div class="row g-3 align-items-end">
           <div class="col-12 col-md-6">
             <label for="amountInput" class="form-label small text-muted">Simulated Payment Amount (Satoshis)</label>

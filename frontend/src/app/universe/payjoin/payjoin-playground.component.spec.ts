@@ -45,7 +45,7 @@ describe('Payjoin narrated simulation lifecycle', () => {
       app.components[0].instance.errorMessage = 'Could not advance this simulation session.';
       app.components[0].changeDetectorRef.detectChanges(); return app;
     }, { document: '<html><body><app-payjoin-playground></app-payjoin-playground></body></html>', url: 'http://localhost/', allowedHosts: ['localhost'] });
-    expect(html).toContain('connected signing wallet'); expect(html).toContain('Sign &amp; Broadcast Payjoin: unavailable'); expect(html).toContain('Explain Signing &amp; Broadcast'); expect(html).toContain('role="alert"'); expect(html).toContain('Retry the current step');
+    expect(html).toContain('connected signing wallet'); expect(html).toContain('Simulation only. No real payment is created, signed or sent.'); expect(html).toContain('Signing and sending are unavailable here.'); expect(html).toContain('Explain Signing &amp; Broadcast'); expect(html).toContain('role="alert"'); expect(html).toContain('Retry the current step');
     expect(html).not.toContain('Safe Signet/Regtest Sandbox');
   });
 });

@@ -3,9 +3,7 @@
   <div class="head">
     <h1 class="title" i18n="universe.live.title">Live universe</h1>
     <p class="lede" i18n="universe.live.lede">
-      What this deployment's stream is delivering right now. Replay covers
-      what arrived while this page has been open, and never pretends to
-      reach further back.
+      Live activity received while this page is open. Use the timeline to review earlier arrivals.
     </p>
   </div>
 
@@ -37,7 +35,7 @@
       i18n="universe.live.jump">Jump to live</button>
 
     <label class="control labelled">
-      <ng-container i18n="universe.live.scrub">Scrub</ng-container>
+      <ng-container i18n="universe.live.scrub">Timeline</ng-container>
       <input
         type="range"
         min="0"
@@ -84,7 +82,7 @@
 
   <p class="state-note" *ngIf="paused()" role="status">
     <ng-container i18n="universe.live.paused-note">
-      The view is paused. Arrivals keep filling the buffer behind it.
+      View paused. New activity is still being received.
     </ng-container>
     {{ position() !== null ? (position() + 1) : 0 }} / {{ filtered().length }}
   </p>

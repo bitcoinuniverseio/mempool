@@ -21,7 +21,7 @@
           <li *ngFor="let protocol of group.protocols; trackBy: trackByProtocol" class="protocol-row">
             <div class="protocol-name">
               <app-protocol-badge [protocol]="protocol"></app-protocol-badge>
-              <span class="display-name">{{ protocol.displayName }}</span>
+              <a class="display-name" [routerLink]="[protocol.id]">{{ protocol.displayName }}</a>
             </div>
             <div class="protocol-state">
               <!--
@@ -39,7 +39,10 @@
                 [ngClass]="coverageKnown(protocol, vm.registry, vm.network) ? 'chip-neutral' : 'chip-unknown'"
               >{{ coverageLabel(protocol, vm.registry, vm.network) }}</span>
             </div>
-            <p class="protocol-evidence" *ngIf="registryCoverageLabel(protocol) as declaration">{{ declaration }}</p>
+            <details class="protocol-evidence" *ngIf="registryCoverageLabel(protocol) as declaration">
+              <summary i18n="universe.protocols.evidence">History details</summary>
+              <p>{{ declaration }}</p>
+            </details>
             <p class="protocol-evidence" *ngIf="sourceFor(protocol, vm.sourcesByAuthority) as source">
               <span *ngIf="sourceDetail(source) as detail">{{ detail }}</span>
               <span class="checked-at" *ngIf="checkedAtSeconds(source) as checked">

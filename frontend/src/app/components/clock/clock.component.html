@@ -62,7 +62,7 @@
       -->
       <ng-container *ngIf="feeEstimate$ | async as estimate">
         <p *ngIf="estimate.values as fees"><app-fee-rate [fee]="fees.fastestFee" unitClass="" rounding="1.0-2"></app-fee-rate></p>
-        <p class="label" role="status" *ngIf="estimate.status !== 'ready'">
+        <p class="label fee-status" role="status" *ngIf="estimate.status !== 'ready'">
           @if (estimate.status === 'stale') {
             <span i18n="clock.fees-stale">Stale</span> <time>{{ estimate.observedAt | date:'short' }}</time>
           } @else if (estimate.status === 'syncing') {
@@ -70,7 +70,7 @@
           } @else {
             <span i18n="clock.fees-unavailable">Unavailable</span>
           }
-          <button type="button" class="btn btn-sm btn-outline-light" (click)="retryFees()" [disabled]="estimate.status === 'syncing'" i18n="clock.fees-retry">Retry</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="retryFees()" [disabled]="estimate.status === 'syncing'" i18n="clock.fees-retry">Retry</button>
         </p>
       </ng-container>
     </div>
