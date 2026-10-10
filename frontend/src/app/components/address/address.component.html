@@ -3,8 +3,7 @@
     <h1 i18n="shared.address">Address</h1>
     <div class="tx-link" *ngIf="addressString">
       <app-truncate [text]="addressString" [lastChars]="8" [link]="['/address/' | relativeUrl, addressString]">
-        <span class="qr-control" (mouseenter)="onQrEnter()" (mouseleave)="onQrLeave()"
-          (focusin)="onQrFocus($event)" (focusout)="showQR = false">
+        <span class="qr-control">
           <button type="button" class="qrSpan" [attr.aria-label]="qrButtonLabel" aria-controls="address-qr-code"
             [attr.aria-expanded]="showQR" [disabled]="!addressString" (click)="toggleQr()">
             <fa-icon [icon]="['fas', 'qrcode']" [fixedWidth]="true" [style.font-size]="isMobile ? '18px' : '12px'" aria-hidden="true"></fa-icon>
