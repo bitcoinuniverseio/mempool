@@ -14,6 +14,7 @@ import loadingIndicators from './loading-indicators';
 import config from '../config';
 import transactionUtils from './transaction-utils';
 import rbfCache, { ReplacementInfo } from './rbf-cache';
+import { rbfRestoreState } from './rbf-snapshot';
 import difficultyAdjustment from './difficulty-adjustment';
 import feeApi, { FEE_ESTIMATE_MAX_AGE_MS, FeeEstimate } from './fee-api';
 import { bitcoinObservationMatches } from './bitcoin/bitcoin-source-observation';
@@ -209,11 +210,13 @@ class WebsocketHandler {
       'feeEstimate': feeApi.getFeeEstimate(),
       'liveObservation': this.getLiveObservation(),
       'fees': feeApi.getFeeEstimate().values,
+      'rbfHistoryAvailability': rbfRestoreState.diagnostic(),
     });
   }
 
   public getSerializedInitData(): string {
     this.refreshFeeState();
+    this.updateSocketDataFields({ rbfHistoryAvailability: rbfRestoreState.diagnostic() });
     return this.serializedInitData;
   }
 
@@ -244,6 +247,9 @@ class WebsocketHandler {
           const parsedMessage: WebsocketResponse = JSON.parse(message);
           this.refreshFeeState();
           const response = {};
+          if (parsedMessage && (parsedMessage['track-tx'] !== undefined || parsedMessage['track-txs'] !== undefined)) {
+            response['rbfHistoryAvailability'] = JSON.stringify(rbfRestoreState.diagnostic());
+          }
 
           const wantNow = {};
           if (parsedMessage && parsedMessage.action === 'want' && Array.isArray(parsedMessage.data)) {
@@ -444,6 +450,7 @@ class WebsocketHandler {
             if (['all', 'fullRbf'].includes(parsedMessage['track-rbf'])) {
               client['track-rbf'] = parsedMessage['track-rbf'];
               response['rbfLatest'] = JSON.stringify(rbfCache.getRbfTrees(parsedMessage['track-rbf'] === 'fullRbf'));
+              response['rbfHistoryAvailability'] = JSON.stringify(rbfRestoreState.diagnostic());
             } else {
               client['track-rbf'] = false;
             }
@@ -452,6 +459,7 @@ class WebsocketHandler {
           if (parsedMessage && parsedMessage['track-rbf-summary'] != null) {
             if (parsedMessage['track-rbf-summary']) {
               client['track-rbf-summary'] = true;
+              response['rbfHistoryAvailability'] = JSON.stringify(rbfRestoreState.diagnostic());
               if (this.socketData['rbfSummary'] != null) {
                 response['rbfLatestSummary'] = this.socketData['rbfSummary'];
               }
@@ -1161,6 +1169,9 @@ class WebsocketHandler {
         }
       }
 
+      if (client['track-rbf'] || client['track-rbf-summary'] || client['track-tx'] || client['track-txs']) {
+        response['rbfHistoryAvailability'] = JSON.stringify(rbfRestoreState.diagnostic());
+      }
       if (client['track-rbf'] === 'all' && rbfReplacements) {
         response['rbfLatest'] = getCachedResponse('rbfLatest', rbfReplacements);
       } else if (client['track-rbf'] === 'fullRbf' && fullRbfReplacements) {

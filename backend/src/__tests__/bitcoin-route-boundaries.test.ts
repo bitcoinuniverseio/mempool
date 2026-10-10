@@ -140,3 +140,17 @@ test('mounted address reader aborts on caller disconnect and permits a fresh req
  (api.$getAddress as jest.Mock).mockResolvedValue({address:'tb1pqualification'});
  expect((await fetch(origin+'address/tb1pqualification')).status).toBe(200);
 });
+
+
+test('rejected retained RBF is typed unavailable while transaction validation and ordinary reads remain independent', async () => {
+ const state = require('../api/rbf-snapshot').rbfRestoreState;
+ state.fail('snapshot-oversize');
+ for(const path of ['tx/'+id+'/rbf','tx/'+id+'/cached','replacements','fullrbf/replacements']) {
+  const response=await fetch(origin+path);expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({error:'rbf_history_unavailable',schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'snapshot-oversize'});
+ }
+ expect((await fetch(origin+'tx/bad/rbf')).status).toBe(501);
+ expect((await fetch(origin+'tx/bad/cached')).status).toBe(501);
+ (api.$getBlockHash as jest.Mock).mockResolvedValue(id);
+ expect((await fetch(origin+'block-height/0')).status).toBe(200);
+});

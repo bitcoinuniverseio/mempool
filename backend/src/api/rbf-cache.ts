@@ -86,35 +86,40 @@ class RbfCache {
    * Low level cache operations
    */
 
+  private queueCacheEvent(event: CacheEvent): void {
+    // This queue serves Redis persistence only; disabled Redis has no consumer.
+    if (config.REDIS.ENABLED) { this.cacheQueue.push(event); }
+  }
+
   private addTx(txid: string, tx: MempoolTransactionExtended): void {
     this.txs.set(txid, tx);
-    this.cacheQueue.push({ op: CacheOp.Add, type: 'tx', txid });
+    this.queueCacheEvent({ op: CacheOp.Add, type: 'tx', txid });
   }
 
   private addTree(txid: string, tree: RbfTree): void {
     this.rbfTrees.set(txid, tree);
     this.dirtyTrees.add(txid);
-    this.cacheQueue.push({ op: CacheOp.Add, type: 'tree', txid });
+    this.queueCacheEvent({ op: CacheOp.Add, type: 'tree', txid });
   }
 
   private addExpiration(txid: string, expiry: number): void {
     this.expiring.set(txid, expiry);
-    this.cacheQueue.push({ op: CacheOp.Add, type: 'exp', txid, value: expiry });
+    this.queueCacheEvent({ op: CacheOp.Add, type: 'exp', txid, value: expiry });
   }
 
   private removeTx(txid: string): void {
     this.txs.delete(txid);
-    this.cacheQueue.push({ op: CacheOp.Remove, type: 'tx', txid });
+    this.queueCacheEvent({ op: CacheOp.Remove, type: 'tx', txid });
   }
 
   private removeTree(txid: string): void {
     this.rbfTrees.delete(txid);
-    this.cacheQueue.push({ op: CacheOp.Remove, type: 'tree', txid });
+    this.queueCacheEvent({ op: CacheOp.Remove, type: 'tree', txid });
   }
 
   private removeExpiration(txid: string): void {
     this.expiring.delete(txid);
-    this.cacheQueue.push({ op: CacheOp.Remove, type: 'exp', txid });
+    this.queueCacheEvent({ op: CacheOp.Remove, type: 'exp', txid });
   }
 
   /**
@@ -204,7 +209,7 @@ class RbfCache {
         this.setTreeMined(tree, txid);
         tree.mined = true;
         this.dirtyTrees.add(treeId);
-        this.cacheQueue.push({ op: CacheOp.Change, type: 'tree', txid: treeId });
+        this.queueCacheEvent({ op: CacheOp.Change, type: 'tree', txid: treeId });
       }
     }
     this.evict(txid);
@@ -384,6 +389,7 @@ class RbfCache {
 
   public async updateCache(): Promise<void> {
     if (!config.REDIS.ENABLED) {
+      this.cacheQueue = [];
       return;
     }
     // Update the Redis cache by replaying queued events
@@ -420,7 +426,7 @@ class RbfCache {
   }
 
   /** @asyncSafe */
-  public async load({ txs, trees, expiring, mempool, spendMap }): Promise<void> {
+  public async load({ txs, trees, expiring, mempool, spendMap }): Promise<boolean> {
     try {
       txs.forEach(txEntry => {
         this.txs.set(txEntry.value.txid, txEntry.value);
@@ -470,9 +476,11 @@ class RbfCache {
       await this.checkTrees();
       logger.debug(`loaded ${txs.length} txs, ${trees.length} trees into rbf cache, ${expiring.length} due to expire, ${this.staleCount} were stale`);
       this.cleanup();
+      return true;
 
     } catch (e) {
-      logger.err('failed to restore RBF cache: ' + (e instanceof Error ? e.message : e));
+      logger.err('failed to restore RBF cache');
+      return false;
     }
   }
 
@@ -588,13 +596,13 @@ class RbfCache {
       // unexpired transactions read sequentially through the Core RPC tunnel
       // held the whole API down for about half an hour on every restart. The
       // pool stays well inside the shared RPC budget.
-      const txs: IEsploraApi.Transaction[] = [];
       let next = 0;
       const worker = async (): Promise<void> => {
         while (next < txids.length) {
           const txid = txids[next++];
           try {
-            txs.push(await bitcoinApi.$getRawTransaction(txid, true, false));
+            // Process each bounded worker result immediately; do not retain all full responses.
+            processTxs([await bitcoinApi.$getRawTransaction(txid, true, false)]);
           } catch (err) {
             // some 404s are expected, so continue quietly
           }
@@ -605,7 +613,6 @@ class RbfCache {
       } catch (err) {
         logger.err('failed to check cached rbf transactions: ' + (err instanceof Error ? err.message : err));
       }
-      processTxs(txs);
     }
 
     // evict missing transactions
