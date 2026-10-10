@@ -3,7 +3,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { createHash } from 'crypto';
 import { RbfRawBackingCandidate } from '../api/rbf-raw-backing';
-import { RbfGenerationPublisher } from '../api/rbf-generation';
+import { RbfGenerationPublisher, RbfGenerationCleanupError } from '../api/rbf-generation';
 const id = 'a'.repeat(64);
 const value = { network: 'signet', rbfCacheSchemaVersion: 1, extraOriginalRoot: { retainExactly: true }, rbf: {
   txs: [[id, { txid: id, weight: 400, vin: [], vout: [], witness: 'x'.repeat(200_000), originalFields: { complete: true } }]], trees: [], expiring: [],
@@ -100,5 +100,25 @@ describe('exclusive derived RBF generation candidate under one writer', () => {
     expect(fs.existsSync(join(directory, incomplete[0], 'snapshot.json'))).toBe(true);
     expect(fs.existsSync(join(directory, incomplete[0], 'manifest.json'))).toBe(false);
     expect(fs.existsSync(join(output.path, 'manifest.json'))).toBe(true);
+  });
+  it('preserves actual fsync and cleanup failures together, original bytes and failed owner state', async () => {
+    const primary = new Error('fixture generation fsync failure'), cleanup = new Error('fixture close failure after actual close');
+    const originalOpen = fs.promises.open.bind(fs.promises), before = fs.readFileSync(sourcePath);
+    jest.spyOn(fs.promises, 'open').mockImplementation(async (...args: Parameters<typeof fs.promises.open>) => {
+      const handle = await originalOpen(...args);
+      if (String(args[0]).includes('.rbf-incomplete-') && args[1] === 'wx') {
+        jest.spyOn(handle, 'sync').mockRejectedValue(primary);
+        const close = handle.close.bind(handle);
+        jest.spyOn(handle, 'close').mockImplementation(async () => { await close(); throw cleanup; });
+      }
+      return handle;
+    });
+    const publisher = new RbfGenerationPublisher();
+    await expect(publisher.publish(directory, source)).rejects.toMatchObject({ name: 'RbfGenerationCleanupError', primary, cleanup });
+    await expect(publisher.drain()).rejects.toBeInstanceOf(RbfGenerationCleanupError);
+    await expect(publisher.publish(directory, source)).rejects.toThrow('unavailable');
+    expect(fs.readFileSync(sourcePath)).toEqual(before);
+    expect(fs.readdirSync(directory).some(name => name.startsWith('rbf-generation-'))).toBe(false);
+    expect(fs.readdirSync(directory).some(name => name.startsWith('.rbf-incomplete-'))).toBe(true);
   });
 });

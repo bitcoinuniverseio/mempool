@@ -42,7 +42,8 @@ export class RbfRawBackingCandidate {
       if (!named.isFile() || named.isSymbolicLink()) { return invalid(); }
       handle = await fs.promises.open(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0));
       const stamp = await handle.stat({ bigint: true });
-      if (!stamp.isFile() || !same(named, stamp)) { return changed(); }
+      if (!stamp.isFile()) { return invalid(); }
+      if (!same(named, stamp)) { return changed(); }
       if (stamp.size > BigInt(maximumSourceBytes)) { throw new RbfSnapshotError('snapshot-oversize'); }
       const reader = handle;
       const chunks = async function* (): AsyncIterable<Buffer> {
@@ -66,6 +67,7 @@ export class RbfRawBackingCandidate {
         throw new RbfSnapshotError('snapshot-invalid');
       }
       const after = await handle.stat({ bigint: true });
+      if (!after.isFile()) { return invalid(); }
       if (!same(stamp, after) || !same(stamp, await fs.promises.lstat(path, { bigint: true }))) { return changed(); }
       const result = new RbfRawBackingCandidate(handle, stamp, closure, path);
       handle = undefined; // Ownership transfers only after complete validation.

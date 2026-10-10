@@ -8,6 +8,13 @@ import { RbfRawBackingCandidate } from './rbf-raw-backing';
 const cancelled = (signal?: AbortSignal): void => { if (signal?.aborted) { throw new Error('RBF generation publication cancelled'); } };
 const samePath = (a: string, b: string): boolean => process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b;
 
+export class RbfGenerationCleanupError extends Error {
+  constructor(public readonly primary: unknown, public readonly cleanup: unknown) {
+    super('RBF generation failed and descriptor cleanup failed');
+    this.name = 'RbfGenerationCleanupError';
+  }
+}
+
 /** One derived publisher under the existing cache owner. No canonical producer, RPC or queue.
  * A completed source-only generation is not native readiness, adoption or whole artifact qualification.
  */
@@ -88,12 +95,24 @@ export class RbfGenerationPublisher {
       if (process.platform !== 'win32') { await this.syncDirectory(normalized); }
       // No current-generation pointer or runtime availability marker is changed by this candidate.
       return { path: final, sourceSha256: closure.raw.sourceSha256, manifestSha256: manifest.sha256, nativeQualified: false };
-    } finally { if (file) { await file.close(); } }
+    } catch (primary) {
+      if (file) {
+        try { await file.close(); }
+        catch (cleanup) { throw new RbfGenerationCleanupError(primary, cleanup); }
+      }
+      throw primary;
+    }
   }
 
   /** @asyncUnsafe Directory sync failure remains an unacknowledged publication, never auto-retried. */
   private async syncDirectory(path: string): Promise<void> {
     const directory = await fs.promises.open(path, fs.constants.O_RDONLY);
-    try { await directory.sync(); } finally { await directory.close(); }
+    try { await directory.sync(); }
+    catch (primary) {
+      try { await directory.close(); }
+      catch (cleanup) { throw new RbfGenerationCleanupError(primary, cleanup); }
+      throw primary;
+    }
+    await directory.close();
   }
 }

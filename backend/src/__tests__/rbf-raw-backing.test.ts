@@ -69,4 +69,14 @@ describe('fixed raw RBF backing ownership candidate', () => {
     const chunks: Buffer[] = []; for await (const chunk of reader.body(id)) { chunks.push(chunk); }
     expect(JSON.parse(Buffer.concat(chunks).toString())).toEqual(value().rbf.txs[0][1]);
   });
+  it('rejects a nonregular opened descriptor before any read and closes it', async () => {
+    const original = fs.promises.open.bind(fs.promises); let read: jest.SpyInstance | undefined, close: jest.SpyInstance | undefined;
+    jest.spyOn(fs.promises, 'open').mockImplementation(async (...args: Parameters<typeof fs.promises.open>) => {
+      const handle = await original(...args); const stamp = await handle.stat({ bigint: true });
+      jest.spyOn(handle, 'stat').mockResolvedValue(Object.assign(stamp, { isFile: () => false }) as any);
+      read = jest.spyOn(handle, 'read'); close = jest.spyOn(handle, 'close'); return handle;
+    });
+    await expect(RbfRawBackingCandidate.open(file, 'signet', 1_000_000)).rejects.toMatchObject({ code: 'snapshot-invalid' });
+    expect(read).not.toHaveBeenCalled(); expect(close).toHaveBeenCalledTimes(1);
+  });
 });
