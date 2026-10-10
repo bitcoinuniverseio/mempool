@@ -94,11 +94,18 @@
         flex-wrap: wrap;
       }
 
-      .protocol-evidence {
+      details.protocol-evidence {
         grid-column: 2;
         grid-row: 1;
         margin: 0;
         justify-self: end;
+      }
+
+      p.protocol-evidence {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        margin: 0;
+        justify-self: start;
       }
     }
   }
@@ -107,11 +114,17 @@
     .protocol-row {
       grid-template-columns: minmax(0, 1fr);
 
-      .protocol-evidence {
+      details.protocol-evidence {
         grid-column: 1;
         grid-row: 3;
         margin-top: 0.25rem;
         justify-self: start;
+      }
+
+      p.protocol-evidence {
+        grid-column: 1;
+        grid-row: 4;
+        margin-top: 0.25rem;
       }
     }
   }
