@@ -3,7 +3,7 @@ import { bitcoinObservationMatches } from '../api/bitcoin/bitcoin-source-observa
 import { rbfRestoreState } from '../api/rbf-snapshot';
 
 const HASH = 'a'.repeat(64);
-function fixture(rbfState = rbfRestoreState) {
+function fixture(rbfState?: typeof rbfRestoreState) {
   const state = { synced: true, network: 'main', tip: { height: 123, id: HASH }, poll: Date.now(), minimum: 0.000001,
     nodeHash: HASH, nodeHeight: 123, nodeObserved: Date.now(), nodeIbd: false };
   const config = { MEMPOOL: { NETWORK: 'mainnet', INITIAL_BLOCKS_AMOUNT: 8 }, FIAT_PRICE: {}, STATISTICS: {}, DATABASE: {}, WALLETS: {} };
@@ -23,7 +23,6 @@ function fixture(rbfState = rbfRestoreState) {
   // Each fixture owns the real availability state independently of fee readiness.
   const rbfSnapshot = isolatedBackend('api/rbf-snapshot.ts', { fs: require('fs') });
   const websocket = isolatedBackend('api/websocket-handler.ts', {
-    './rbf-snapshot': rbfSnapshot,
     '../config': defaultMock(config), './mempool': defaultMock(mempool), './blocks': defaultMock(blocks), './mempool-blocks': defaultMock(projected),
     './fee-api': { ...defaultMock(fees), FEE_ESTIMATE_MAX_AGE_MS: 120_000 }, '../logger': quietLogger,
     './difficulty-adjustment': defaultMock({ getDifficultyAdjustment: () => null }),
@@ -32,15 +31,14 @@ function fixture(rbfState = rbfRestoreState) {
     './loading-indicators': defaultMock({ getLoadingIndicators: () => ({}) }),
     './common': { Common: { findRbfTransactions: () => ({}), findMinedRbfTransactions: () => ({}) } },
     './rbf-cache': defaultMock({ getRbfChanges: () => ({ trees: {} }), getRbfTrees: () => ({}), getLatestRbfSummary: () => [] }),
-    './rbf-snapshot': { rbfRestoreState: rbfState },
+    './rbf-snapshot': { ...rbfSnapshot, rbfRestoreState: rbfState ?? rbfSnapshot.rbfRestoreState },
     './services/acceleration': defaultMock({ getAccelerations: () => ({}), getAccelerationDelta: () => [] }),
   }).default;
   const messages: any[] = [];
   websocket.addWebsocketServer({ clients: new Set([{ readyState: 1, 'want-stats': true, send: (value: string) => messages.push(JSON.parse(value)) }]) });
   const routes = isolatedBackend('api/bitcoin/bitcoin.routes.ts', {
-    '../rbf-snapshot': rbfSnapshot,
     '../../config': defaultMock(config), '../mempool': defaultMock(mempool), '../fee-api': defaultMock(fees),
-    '../rbf-snapshot': { rbfRestoreState: rbfState },
+    '../rbf-snapshot': { ...rbfSnapshot, rbfRestoreState: rbfState ?? rbfSnapshot.rbfRestoreState },
   }).default;
   return { state, config, fees, websocket, messages, routes, rbfSnapshot };
 }
@@ -49,6 +47,7 @@ beforeEach(() => jest.spyOn(Date, 'now').mockReturnValue(1_790_000_000_000));
 afterEach(() => jest.restoreAllMocks());
 
 test('unavailable retained RBF history remains explicit without qualifying or disabling independently proved fees', () => {
+  const ambient = rbfRestoreState.diagnostic();
   let isolatedState!: typeof rbfRestoreState;
   jest.isolateModules(() => { isolatedState = jest.requireActual('../api/rbf-snapshot').rbfRestoreState; });
   isolatedState.fail('snapshot-restore-failed');
@@ -59,7 +58,7 @@ test('unavailable retained RBF history remains explicit without qualifying or di
   expect(bootstrap.feeEstimate.status).toBe('ready');
   expect(bootstrap.rbfHistoryAvailability).toEqual({ schemaVersion: 'universe-rbf-history-availability-v1',
     status: 'unavailable', reason: 'snapshot-restore-failed' });
-  expect(rbfRestoreState.unavailable).toBe(false);
+  expect(rbfRestoreState.diagnostic()).toEqual(ambient);
 });
 
 test('bootstrap requires producer proof, empty indicators cannot qualify cached fees, and restored sync needs a new poll', () => {
