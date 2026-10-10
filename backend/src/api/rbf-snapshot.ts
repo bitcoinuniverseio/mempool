@@ -87,11 +87,26 @@ export function readRbfSnapshot(path: string, network: string, maximumBytes = RB
 
 /** A failed historical restore is never repaired by fresh observations or overwritten. */
 class RbfRestoreState {
+  private phase: 'pending' | 'restoring' | 'available' | 'failed' = 'pending';
   private reason: RbfRestoreFailure | null = null;
-  fail(reason: RbfRestoreFailure): void { this.reason ??= reason; }
-  get unavailable(): boolean { return this.reason !== null; }
-  diagnostic(): { schemaVersion: 'universe-rbf-history-availability-v1'; status: 'available' | 'unavailable'; reason: RbfRestoreFailure | null } {
-    return { schemaVersion: 'universe-rbf-history-availability-v1', status: this.reason ? 'unavailable' : 'available', reason: this.reason };
+  /** One startup owner; a concurrent/repeated request cannot publish or reset it. */
+  beginRestore(): boolean {
+    if (this.phase !== 'pending') { return false; }
+    this.phase = 'restoring'; return true;
+  }
+  completeRestore(outcome: 'restored' | 'no-file' | 'not-configured'): boolean {
+    if (this.phase !== 'restoring' || !['restored', 'no-file', 'not-configured'].includes(outcome)) { return false; }
+    this.phase = 'available'; return true;
+  }
+  fail(reason: RbfRestoreFailure): void {
+    if (this.phase === 'failed') { return; }
+    this.phase = 'failed'; this.reason = reason;
+  }
+  get canQueuePersistence(): boolean { return this.phase === 'restoring' || this.phase === 'available'; }
+  get unavailable(): boolean { return this.phase !== 'available'; }
+  diagnostic(): { schemaVersion: 'universe-rbf-history-availability-v1'; status: 'available' | 'unavailable'; reason: RbfRestoreFailure | 'rbf_restore_pending' | null } {
+    return { schemaVersion: 'universe-rbf-history-availability-v1', status: this.unavailable ? 'unavailable' : 'available',
+      reason: this.phase === 'pending' || this.phase === 'restoring' ? 'rbf_restore_pending' : this.reason };
   }
 }
 export const rbfRestoreState = new RbfRestoreState();

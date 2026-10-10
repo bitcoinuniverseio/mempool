@@ -102,6 +102,19 @@ const BUCKETS: { label: string; min: number; max: number }[] = [
 
 export const TIME_MACHINE_LIMITS = { checkpoints: 288, events: 50_000, eventsPerTx: 64 } as const;
 
+type TransactionMetrics = Readonly<{ vsize: number; weight: number; fee: number }>;
+
+/** Share unchanged immutable metrics with the preceding retained checkpoint. */
+function checkpointTransactions(entries: Iterable<readonly [string, TransactionMetrics]>, previous?: Map<string, TransactionMetrics>): Map<string, TransactionMetrics> {
+  const transactions = new Map<string, TransactionMetrics>();
+  for (const [txid, metrics] of entries) {
+    const retained = previous?.get(txid);
+    transactions.set(txid, retained && retained.vsize === metrics.vsize && retained.weight === metrics.weight && retained.fee === metrics.fee
+      ? retained : { vsize: metrics.vsize, weight: metrics.weight, fee: metrics.fee });
+  }
+  return transactions;
+}
+
 export class TimeMachineService {
   private static instance: TimeMachineService;
   private eventLog: HistoricalMempoolEvent[] = [];
@@ -110,7 +123,7 @@ export class TimeMachineService {
   private lastPollComplete = false;
   private pollGeneration = 0;
   private checkpoints: MempoolCheckpoint[] = [];
-  private stateCache: Map<string, { summary: ReplayStateSummary; txids: Set<string>; transactions: Map<string, { vsize: number; weight: number; fee: number }> }> = new Map();
+  private stateCache: Map<string, { summary: ReplayStateSummary; transactions: Map<string, TransactionMetrics> }> = new Map();
   private evictedThrough = 0;
   private evictedSequence = 0;
   private observedThrough = 0;
@@ -148,9 +161,11 @@ export class TimeMachineService {
         this.observedThrough = value.observedThrough;
         this.gaps = value.gaps;
         this.checkpoints = value.checkpoints.map(entry => entry.checkpoint);
+        let previousTransactions: Map<string, TransactionMetrics> | undefined;
         for (const entry of value.checkpoints) {
-          const transactions = new Map(entry.transactions);
-          this.stateCache.set(entry.checkpoint.state_hash, { summary: this.summarize(entry.checkpoint, entry.checkpoint.timestamp_utc, entry.checkpoint.block_height, 0), txids: new Set(transactions.keys()), transactions });
+          const transactions = checkpointTransactions(entry.transactions, previousTransactions);
+          this.stateCache.set(entry.checkpoint.state_hash, { summary: this.summarize(entry.checkpoint, entry.checkpoint.timestamp_utc, entry.checkpoint.block_height, 0), transactions });
+          previousTransactions = transactions;
         }
         for (const orphan of value.orphanConfirmations ?? []) this.orphanConfirmations.set(orphan.txid, orphan);
         this.canonicalRestorationTarget = value.canonicalRestorationTarget ?? null;
@@ -429,8 +444,13 @@ export class TimeMachineService {
     this.checkpoints = this.checkpoints.filter(existing => existing.block_height < block.height);
     this.checkpoints.push(checkpoint);
     if (this.checkpoints.length > TIME_MACHINE_LIMITS.checkpoints) { this.checkpoints.shift(); }
+    const previousCheckpoint = this.checkpoints[this.checkpoints.length - 2];
+    const previousTransactions = previousCheckpoint ? this.stateCache.get(previousCheckpoint.state_hash)?.transactions : undefined;
+    function* snapshotEntries(): IterableIterator<readonly [string, TransactionMetrics]> {
+      for (const tx of snapshot) { yield [tx.txid, tx]; }
+    }
     this.stateCache.set(checkpoint.state_hash, { summary: this.summarize(checkpoint, checkpoint.timestamp_utc, checkpoint.block_height, 0),
-      txids: new Set(snapshot.map(tx => tx.txid)), transactions: new Map(snapshot.map(tx => [tx.txid, { vsize: tx.vsize, weight: tx.weight, fee: tx.fee }])) });
+      transactions: checkpointTransactions(snapshotEntries(), previousTransactions) });
     const retained = new Set(this.checkpoints.map(item => item.state_hash));
     for (const hash of this.stateCache.keys()) if (!retained.has(hash)) this.stateCache.delete(hash);
     this.schedulePersistence();
@@ -554,7 +574,7 @@ export class TimeMachineService {
     summary.state_hash = crypto.createHash('sha256').update(`${nearest.block_hash}:${[...transactions.keys()].sort().join(',')}`).digest('hex');
     // Replayed states share the existing bounded state cache and are exported
     // through the same API as observed checkpoints.
-    this.stateCache.set(summary.state_hash, { summary, txids: new Set(transactions.keys()), transactions });
+    this.stateCache.set(summary.state_hash, { summary, transactions });
     const checkpointHashes = new Set(this.checkpoints.map(item => item.state_hash));
     while (this.stateCache.size > TIME_MACHINE_LIMITS.checkpoints * 2) {
       const evict = [...this.stateCache.keys()].find(hash => !checkpointHashes.has(hash));
@@ -577,6 +597,16 @@ export class TimeMachineService {
     const a = this.stateCache.get(stateHashA);
     const b = this.stateCache.get(stateHashB);
     if (!a || !b) { return null; }
+    // Membership is already represented by the exact transaction map. Retaining
+    // another Set for every checkpoint duplicates the same keys for no benefit.
+    const difference = (left: typeof a.transactions, right: typeof a.transactions): string[] => {
+      const result: string[] = [];
+      for (const txid of left.keys()) {
+        if (!right.has(txid)) { result.push(txid); }
+        if (result.length === 1000) { break; }
+      }
+      return result;
+    };
     return {
       state_a: a.summary, state_b: b.summary,
       delta: {
@@ -584,8 +614,8 @@ export class TimeMachineService {
         weight_delta: b.summary.total_weight - a.summary.total_weight,
         fees_delta_sats: b.summary.total_fees_sats - a.summary.total_fees_sats,
         median_feerate_delta: Number((b.summary.median_feerate_sats_vb - a.summary.median_feerate_sats_vb).toFixed(2)),
-        added_txids: [...b.txids].filter(txid => !a.txids.has(txid)).slice(0, 1000),
-        removed_txids: [...a.txids].filter(txid => !b.txids.has(txid)).slice(0, 1000),
+        added_txids: difference(b.transactions, a.transactions),
+        removed_txids: difference(a.transactions, b.transactions),
       },
     };
   }
@@ -593,7 +623,7 @@ export class TimeMachineService {
   /** The state and its transaction set, produced now. There is no export queue. */
   public exportState(stateHash: string): { state: ReplayStateSummary; txids: string[] } | null {
     const entry = this.stateCache.get(stateHash);
-    return entry ? { state: entry.summary, txids: [...entry.txids].sort() } : null;
+    return entry ? { state: entry.summary, txids: [...entry.transactions.keys()].sort() } : null;
   }
 }
 

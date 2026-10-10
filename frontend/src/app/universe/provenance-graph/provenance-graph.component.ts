@@ -1,3 +1,4 @@
+import { rbfRead$, validRbfHistory } from '@app/services/rbf-history-state';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,7 +9,7 @@ import { StateService } from '@app/services/state.service';
 import { readGraphTransaction, readGraphOutspends, readGraphReplacements, readGraphPackage } from './provenance-sources';
 import { RbfTree } from '@interfaces/node-api.interface';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
-import { catchError, distinctUntilChanged, map, shareReplay, startWith, switchMap, take } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, filter, map, shareReplay, startWith, switchMap, take } from 'rxjs/operators';
 import {
   GraphEdge,
   ProvenanceGraph,
@@ -79,7 +80,7 @@ export class ProvenanceGraphComponent {
     return forkJoin({
       tx: this.electrsApi.getTransaction$(txid).pipe(take(1), catchError(() => of(null))),
       outspends: this.electrsApi.getOutspends$(txid).pipe(take(1), catchError(() => of(null))),
-      rbf: this.apiService.getRbfHistory$(txid).pipe(take(1), catchError(() => of(null))),
+      rbf: rbfRead$(() => this.apiService.getRbfHistory$(txid), validRbfHistory).pipe(filter(state => state.status !== 'loading'), map(state => state.status === 'ready' ? state.value : null), take(1)),
       pack: this.universeApi.getMempoolPackage$(txid).pipe(take(1), catchError(() => of(null))),
     }).pipe(map(({ tx, outspends, rbf, pack }) => {
       const transaction = readGraphTransaction(tx, txid);

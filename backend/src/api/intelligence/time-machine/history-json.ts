@@ -64,6 +64,11 @@ function* encode(value: any, ancestors: Set<object>, depth: number): Generator<s
   } finally { ancestors.delete(value); }
 }
 
+/** Stream the shared JSON encoder without collecting a complete body or duplicating its semantics. */
+export function* historyJsonChunks(value: unknown): Generator<string> {
+  yield* encode(prepare(value, ''), new Set(), 0);
+}
+
 /** Capture synchronously, as JSON.stringify did, before any observation can mutate. */
 export function captureHistoryJson(value: unknown, maximumBytes: number): { chunks: string[]; sha256: string; bytes: number } {
   const chunks: string[] = [];
