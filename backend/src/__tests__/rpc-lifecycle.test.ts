@@ -43,8 +43,9 @@ describe('RPC complete lifecycle', () => {
         const call=JSON.parse(body);res.statusCode=500;res.end(JSON.stringify({id:call.id,result:null,error:{code:-5,message:'sensitive caller parameters'}}));
       });
     }, async client=>{
-      await expect(client.call('getrawtransaction',['opaque'])).rejects.toMatchObject({code:-5,message:'No such mempool or blockchain transaction'});
+      await expect(client.call('getrawtransaction',['opaque'])).rejects.toMatchObject({code:-5,rpcMethod:'getrawtransaction',message:'No such mempool or blockchain transaction'});
       await expect(client.call('getblock',['opaque'])).rejects.toMatchObject({code:-5,message:'Block not found'});
+      await expect(client.call('getblockheader',['opaque'])).rejects.toMatchObject({code:-5,rpcMethod:'getblockheader',message:'Block not found'});
     });
   });  it('cancels an active request once and recovers on a following call', async () => {
     let first=true;

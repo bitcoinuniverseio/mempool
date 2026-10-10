@@ -57,9 +57,9 @@ export function readRbfSnapshot(path: string, network: string, maximumBytes = RB
   try {
     const pathStat = fs.lstatSync(path);
     if (!pathStat.isFile() || pathStat.isSymbolicLink()) { throw new RbfSnapshotError('snapshot-invalid'); }
-    fd = fs.openSync(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+    fd = fs.openSync(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0));
     const before = fs.fstatSync(fd);
-    if (before.dev !== pathStat.dev || before.ino !== pathStat.ino) { throw new RbfSnapshotError('snapshot-changed'); }
+    if (!before.isFile() || before.dev !== pathStat.dev || before.ino !== pathStat.ino) { throw new RbfSnapshotError('snapshot-changed'); }
     if (!Number.isSafeInteger(before.size) || before.size > maximumBytes) { throw new RbfSnapshotError('snapshot-oversize'); }
     const bytes = Buffer.alloc(before.size);
     let offset = 0;
@@ -73,7 +73,11 @@ export function readRbfSnapshot(path: string, network: string, maximumBytes = RB
       || after.mtimeMs !== before.mtimeMs || after.ctimeMs !== before.ctimeMs) { throw new RbfSnapshotError('snapshot-changed'); }
     let value: unknown;
     try { value = JSON.parse(bytes.toString('utf8')); } catch { throw new RbfSnapshotError('snapshot-invalid'); }
-    return validateRbfSnapshot(value, network);
+    const retained = validateRbfSnapshot(value, network);
+    const finalPath = fs.lstatSync(path);
+    if (!finalPath.isFile() || finalPath.isSymbolicLink() || finalPath.dev !== before.dev || finalPath.ino !== before.ino
+      || finalPath.size !== after.size || finalPath.mtimeMs !== after.mtimeMs || finalPath.ctimeMs !== after.ctimeMs) { throw new RbfSnapshotError('snapshot-changed'); }
+    return retained;
   } catch (error: any) {
     if (fd === undefined && error?.code === 'ENOENT') { return null; }
     if (error instanceof RbfSnapshotError) { throw error; }

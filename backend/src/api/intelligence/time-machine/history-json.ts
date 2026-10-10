@@ -10,6 +10,10 @@ const unsupported = (value: unknown) => value === undefined || typeof value === 
 
 function prepare(value: any, key: string): any {
   if (value && typeof value === 'object' && typeof value.toJSON === 'function') value = value.toJSON(key);
+  // JSON.stringify rejects boxed BigInt too; never persist it as an empty object.
+  if (value && typeof value === 'object' && (value instanceof BigInt || Object.prototype.toString.call(value) === '[object BigInt]')) {
+    throw new TypeError('History JSON cannot encode boxed BigInt.');
+  }
   if (value instanceof Number || value instanceof Boolean || value instanceof String) value = value.valueOf();
   return value;
 }

@@ -657,6 +657,9 @@ export function buildMatrix({ evidencePath } = {}) {
       row.sources.push(ref(evidencePath, { rowId: item.id }));
     }
   }
+  // Address implementation changes must invalidate the same source ledger as
+  // route registration changes, even when the public route roster is stable.
+  read('backend/src/api/bitcoin/electrum-api.ts');
   read('scripts/universe/acceptance-matrix.mjs');
   const rows = [...records.values()];
   const matrix = { schemaVersion: 'universe-operation-matrix-v1', sourceBaseline: 'b8d5e3bdc837681c7ce2b8cb91616262f432a313',

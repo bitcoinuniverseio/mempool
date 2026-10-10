@@ -16,6 +16,15 @@ describe('bounded history JSON capture and streamed envelope', () => {
     expect(envelope).toBe(JSON.stringify({ schema: 'mempool-history-v1', network: 'signet',
       sha256: createHash('sha256').update(expected).digest('hex'), body: expected }));
   });
+  it('rejects boxed BigInt roots, nested values and masked brands instead of persisting empty objects', () => {
+    const masked = Object(BigInt(1)); Object.defineProperty(masked, Symbol.toStringTag, { value: 'Object' });
+    for (const value of [Object(BigInt(1)), { value: Object(BigInt(1)) }, masked]) {
+      expect(() => JSON.stringify(value)).toThrow(TypeError);
+      expect(() => captureHistoryJson(value, 4096)).toThrow(/BigInt/);
+    }
+    const explicit = Object(BigInt(1)); explicit.toJSON = () => '1';
+    expect(captureHistoryJson(explicit, 4096).chunks.join('')).toBe(JSON.stringify(explicit));
+  });
   it('captures immutable bytes before an async writer can observe later mutations', () => {
     const entries = new Map([['a', { fee: 1 }]]);
     const captured = captureHistoryJson({ transactions: new HistoryJsonArray(entries) }, 1024);

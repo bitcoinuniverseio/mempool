@@ -45,9 +45,11 @@ describe('ordered migration completion',()=>{
   it('inspects and repairs a falsely advanced version before newer markers',async()=>{
     const test=setup(112,true);await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow();expect(test.markers).toEqual([]);
   });
-  function interrupted29(malformed: 'none'|'column'|'key' = 'none', dialect: 'mysql'|'mariadb-10.5'|'mariadb-11.4' = 'mysql', fresh=false) {
+  function interrupted29(malformed: 'none'|'column'|'key' = 'none', dialect: string = 'mysql', freshOrDefault: unknown=false) {
+    const fresh=typeof freshOrDefault==='boolean'?freshOrDefault:false;
+    const engine=dialect==='mysql'?'8.4':dialect==='mariadb-10.5'?'10.5.29-MariaDB':dialect==='mariadb-11.4'?'11.4.6-MariaDB':dialect;
     let geoExists=!fresh;
-    const charset=dialect==='mariadb-10.5'?'utf8':'utf8mb3', nullableDefault=dialect==='mysql'?null:'NULL';
+    const charset=dialect==='mariadb-10.5'?'utf8':'utf8mb3', nullableDefault=typeof freshOrDefault!=='boolean'?freshOrDefault:dialect==='mysql'?null:'NULL';
     const test=setup(28);test.subject.constructor.currentVersion=29;
     const query=test.db.query;
     const geo=[
@@ -61,6 +63,7 @@ describe('ordered migration completion',()=>{
     const nodes=new Map((fresh?[]:['as_number','city_id']).map(name=>[name,{COLUMN_NAME:name,COLUMN_TYPE:'int unsigned',IS_NULLABLE:'YES',COLUMN_DEFAULT:nullableDefault,EXTRA:''}]));
     test.db.query=async(input:any)=>{
       const sql=typeof input==='string'?input:input.sql;
+      if(sql.includes('SELECT VERSION'))return [[{version:engine}]];
       if(sql.includes('COUNT(*) FROM information_schema.tables')&&/table_name\s*=\s*'geo_names'/i.test(sql))return [[{'COUNT(*)':geoExists?1:0}]];
       if(sql.startsWith('CREATE TABLE geo_names'))geoExists=true;
       if(sql.includes("TABLE_NAME='geo_names'")&&sql.includes('information_schema.columns'))return [geo];
@@ -77,6 +80,19 @@ describe('ordered migration completion',()=>{
     expect(test.getVersion()).toBe(29);expect(test.markers).toEqual([29]);
     expect(test.statements.some(sql=>sql.startsWith('CREATE TABLE geo_names'))).toBe(false);
     expect(test.statements.filter(sql=>sql.startsWith('ALTER TABLE nodes ADD')).length).toBe(5);
+  });
+  it('accepts actual MariaDB11.4 SQLNULL metadata while retaining schema postconditions',async()=>{
+    const test=interrupted29('none','11.4.13-MariaDB-ubu2404','NULL');
+    await test.subject.$initializeOrMigrateDatabase();
+    expect(test.getVersion()).toBe(29);expect(test.markers).toEqual([29]);
+  });
+  it.each([
+    ['8.4.0','NULL'],['11.4.13-MariaDB-ubu2404',"'NULL'"],['10.2.6-MariaDB','NULL'],['unverified','NULL'],
+  ])('rejects literal/ambiguous NULL metadata for engine %s without completing29',async(engine,defaultValue)=>{
+    const test=interrupted29('none',engine,defaultValue);
+    await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');
+    expect(test.getVersion()).toBe(28);expect(test.markers).toEqual([]);
+    expect(test.statements.some(sql=>sql.startsWith('ALTER TABLE nodes ADD'))).toBe(false);
   });
   it.each(['column','key'] as const)('rejects an incompatible existing geo_names %s without advancing29',async(kind)=>{
     const test=interrupted29(kind);await expect(test.subject.$initializeOrMigrateDatabase()).rejects.toThrow('step 29');
