@@ -55,7 +55,9 @@ jobs:
       COMPOSE_PROJECT_NAME: mempool-images-${{ github.run_id }}-${{ github.run_attempt }}
     # Build-only: runs for every pull request in scope and every dispatch.
     runs-on: [self-hosted, universe-runners-1]
-    timeout-minutes: 30
+    # A cold build on the shared host takes over 20 minutes; warm builds reuse
+    # the daemon layer cache and finish in a few.
+    timeout-minutes: 45
     name: Test built Docker images
     steps:
       - name: Checkout project
@@ -100,6 +102,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # The docker driver builds in the host daemon, so layers persist
+          # between jobs on the fleet; a container builder starts cold each time.
+          driver: docker
 
       - name: Build frontend image locally
         run: |
