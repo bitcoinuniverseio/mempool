@@ -77,9 +77,17 @@ class RbfCache {
 
   private evictionCount = 0;
   private staleCount = 0;
+  private cleanupTimer: NodeJS.Timeout | null;
 
   constructor() {
-    setInterval(this.cleanup.bind(this), 1000 * 60 * 10);
+    this.cleanupTimer = setInterval(this.cleanup.bind(this), 1000 * 60 * 10);
+  }
+
+  public destroy(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
   }
 
   /**
