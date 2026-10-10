@@ -97,6 +97,12 @@
         <p class="panel-note" i18n="dashboard.rbf-note">Transactions resent at a higher fee to move ahead of the queue.</p>
       </div>
       <div class="table-scroll" tabindex="0" role="region" aria-labelledby="panel-rbf-title">
+        @if (stateService.rbfSummaryState$ | async; as history) {
+          @if (history.status === 'unavailable') {
+            <p role="alert">Replacement history is unavailable.</p>
+            <button type="button" class="btn btn-primary" (click)="retryRbfSummary()">Retry</button>
+          }
+        }
         <table class="table lastest-replacements-table">
           <thead>
             <tr>
@@ -107,6 +113,7 @@
             </tr>
           </thead>
           <tbody *ngIf="replacements$ | async as replacements; else replacementsSkeleton">
+            <tr *ngIf="!replacements.length"><td colspan="4">No recent replacements.</td></tr>
             <tr *ngFor="let replacement of replacements">
               <td class="table-cell-txid">
                 <a [routerLink]="['/tx' | relativeUrl, replacement.txid]">
@@ -265,6 +272,7 @@
 </ng-template>
 
 <ng-template #replacementsSkeleton>
+  @if ((stateService.rbfSummaryState$ | async)?.status === 'loading') {
   <tbody>
     <tr *ngFor="let i of [1,2,3,4,5,6]">
       <td class="table-cell-txid"><div class="skeleton-loader skeleton-loader-transactions"></div></td>
@@ -273,6 +281,7 @@
       <td class="table-cell-badges"><div class="skeleton-loader skeleton-loader-transactions"></div></td>
     </tr>
   </tbody>
+  }
 </ng-template>
 
 <ng-template #recentTransactionsSkeleton>

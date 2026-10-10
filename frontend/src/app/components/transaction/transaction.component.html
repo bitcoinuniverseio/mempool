@@ -1,3 +1,12 @@
+@if (rbfHistoryRequested && rbfHistoryStatus === 'loading') {
+  <p role="status" class="container-xl">Loading replacement history...</p>
+}
+@if (rbfHistoryStatus === 'unavailable' || (rbfCachedUnavailable && !tx)) {
+  <div role="alert" class="container-xl">
+    <p>Replacement history is unavailable.</p>
+    <button type="button" class="btn btn-primary" [disabled]="rbfHistoryStatus === 'loading' || loadingCachedTx" (click)="retryRbfHistory()">Retry replacement history</button>
+  </div>
+}
 <div class="container-xl">
 
   <div class="title-block">

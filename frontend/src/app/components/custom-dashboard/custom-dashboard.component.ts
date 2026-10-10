@@ -99,6 +99,8 @@ export class CustomDashboardComponent implements OnInit, OnDestroy, AfterViewIni
     this.stateService.focusSearchInputDesktop();
   }
 
+  retryRbfSummary(): void { this.websocketService.startTrackRbfSummary(); }
+
   ngOnDestroy(): void {
     this.filterSubscription.unsubscribe();
     this.mempoolInfoSubscription.unsubscribe();
@@ -223,7 +225,7 @@ export class CustomDashboardComponent implements OnInit, OnDestroy, AfterViewIni
         })
       );
 
-    this.replacements$ = this.stateService.rbfLatestSummary$;
+    this.replacements$ = this.stateService.rbfSummaryState$.pipe(map(state => state.status === 'ready' ? state.value : null));
 
     this.mempoolStats$ = this.stateService.connectionState$
       .pipe(
