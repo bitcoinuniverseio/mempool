@@ -3,7 +3,7 @@ import { ReplaySubject, BehaviorSubject, Subject, fromEvent, Observable } from '
 import { Transaction } from '@interfaces/electrs.interface';
 import { AccelerationDelta, HealthCheckHost, IBackendInfo, MempoolBlock, MempoolBlockUpdate, MempoolInfo, Recommendedfees, ReplacedTransaction, ReplacementInfo, StratumJob, isMempoolState } from '@interfaces/websocket.interface';
 import { Acceleration, AccelerationPosition, BlockExtended, CpfpInfo, DifficultyAdjustment, MempoolPosition, OptimizedMempoolStats, RbfTree, TransactionStripped } from '@interfaces/node-api.interface';
-import { Router, NavigationStart } from '@angular/router';
+import { Router, NavigationStart, NavigationCancel, NavigationError } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { filter, map, scan, share, shareReplay } from 'rxjs/operators';
 import { FeeEstimateState } from './fee-estimate';
@@ -13,6 +13,23 @@ import { LoadState } from '@app/shared/load-state';
 import { StorageService } from '@app/services/storage.service';
 import { hasTouchScreen } from '@app/shared/pipes/bytes-pipe/utils';
 import { ActiveFilter } from '@app/shared/filters.utils';
+
+/** Restore the independently accepted URL only for the latest failed navigation. */
+export function networkRouteUrls$(router: Router): Observable<string> {
+  return new Observable(subscriber => {
+    let latest = router.lastSuccessfulNavigation?.id ?? 0;
+    const subscription = router.events.subscribe(event => {
+      if (event instanceof NavigationStart && event.id >= latest) {
+        latest = event.id; subscriber.next(event.url);
+      } else if ((event instanceof NavigationCancel || event instanceof NavigationError) && event.id === latest) {
+        const active = router.getCurrentNavigation();
+        if (active && active.id > event.id) {return;}
+        subscriber.next(router.lastSuccessfulNavigation?.finalUrl?.toString() ?? router.url);
+      }
+    });
+    return () => subscription.unsubscribe();
+  });
+}
 
 export interface MarkBlockState {
   blockHeight?: number;
@@ -343,11 +360,9 @@ export class StateService {
 
     this.isProdDomain = this.testIsProdDomain(this.env.PROD_DOMAINS);
 
-    this.router.events.subscribe((event) => {
-      if (event instanceof NavigationStart) {
-        this.setNetworkBasedonUrl(event.url);
-        this.setLightningBasedonUrl(event.url);
-      }
+    networkRouteUrls$(this.router).subscribe(url => {
+      this.setNetworkBasedonUrl(url);
+      this.setLightningBasedonUrl(url);
     });
 
     this.liveMempoolBlockTransactions$ = this.mempoolBlockUpdate$.pipe(scan((acc: { block: number, transactions: { [txid: string]: TransactionStripped } }, change: MempoolBlockUpdate): { block: number, transactions: { [txid: string]: TransactionStripped } } => {

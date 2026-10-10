@@ -1,4 +1,12 @@
+:host { flex-shrink: 0; }
+
 .btn-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  min-width: 24px;
+  min-height: 24px;
   padding: 0.25rem 0 0.1rem 0rem;
   line-height: 0;
 }
@@ -22,4 +30,18 @@
   box-shadow: 0 .5rem 1rem -.5rem var(--u-text-primary);
   z-index: 1000;
   opacity: .9;
+}
+
+@media (pointer: coarse), (max-width: 991.98px) {
+  .btn-link {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.copy-error {
+  top: 100%;
+  right: 0;
+  width: min(15rem, calc(100vw - 2rem));
+  white-space: normal;
 }

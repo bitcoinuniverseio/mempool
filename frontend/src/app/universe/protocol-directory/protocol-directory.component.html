@@ -11,9 +11,12 @@
     </div>
 
     <ng-container *ngIf="!vm.error">
-      <p class="registry-summary" role="status" i18n="universe.protocols.live-count">
+      <p *ngIf="vm.sourcesByAuthority !== null; else statusUnknown" class="registry-summary" role="status" i18n="universe.protocols.live-count">
         {{ vm.liveCount }} of {{ vm.totalCount }} Bitcoin protocols can be read right now.
       </p>
+      <ng-template #statusUnknown>
+        <p class="registry-summary" role="status" i18n="universe.protocols.status-unknown">Current status is unavailable for {{ vm.totalCount }} Bitcoin protocols.</p>
+      </ng-template>
 
       <section *ngFor="let group of vm.groups; trackBy: trackByGroup" class="family-group">
         <h2>{{ group.label }}</h2>
@@ -56,7 +59,7 @@
       <p *ngIf="!vm.groups?.length" class="no-protocols" i18n="universe.protocols.none">The registry contains no {{ networkLabel(vm.network) }} protocols.</p>
 
       <p *ngIf="vm.sourcesByAuthority === null" class="chain-note" role="status">
-        <ng-container i18n="universe.protocols.sources-unavailable">Authority status could not be read, so nothing below can be called readable right now. The registry still describes what each protocol implements.</ng-container>
+        <ng-container i18n="universe.protocols.sources-unavailable">Retry to check which protocols are available.</ng-container>
         <button type="button" class="btn btn-sm btn-primary ml-2" (click)="onRetry()" i18n="universe.protocols.retry">Retry</button>
       </p>
 

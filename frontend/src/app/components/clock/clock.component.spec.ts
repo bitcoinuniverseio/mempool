@@ -22,6 +22,22 @@ describe('clock fee observation state', () => {
     fees.offline(); expect(fees.snapshot$.value.observedAt).toBe(observedAt); expect(fees.snapshot$.value.status).toBe('stale');
     component.retryFees(); component.retryFees(); expect(reconnect).toHaveBeenCalledTimes(1);
     fees.reset('signet'); expect(fees.snapshot$.value.values).toBeNull();
-    component.pageSubscription.unsubscribe(); component.blocksSubscription.unsubscribe();
+    component.ngOnDestroy();
   });
+  it('releases every route/feed observer when leaving Clock and permits a clean reentry', () => {
+    const blocks = new Subject(); const query = new Subject<Record<string, string>>(); const params = new Subject();
+    const changed = vi.fn();
+    const create = (): ClockComponent => new ClockComponent({ feeEstimate$: fees.snapshot$, blocks$: blocks, mempoolInfo$: new Subject(), env: { BLOCK_WEIGHT_UNITS: 4000000 } } as never,
+      { want: vi.fn() } as never, { queryParams: query, paramMap: params } as never,
+      { navigate: vi.fn() } as never, { transform: (value: string) => value } as never, { markForCheck: changed } as never);
+    const first = create(); first.ngOnInit(); params.next(convertToParamMap({ mode: 'mined', index: '0' }));
+    expect(blocks.observers).toHaveLength(1); expect(query.observers).toHaveLength(1); expect(params.observers).toHaveLength(1);
+    first.ngOnDestroy(); const calls = changed.mock.calls.length;
+    blocks.next([]); query.next({ width: '900' }); params.next(convertToParamMap({ mode: 'mined', index: '1' }));
+    expect(changed).toHaveBeenCalledTimes(calls); expect(first.blockIndex).toBe(0);
+    expect(blocks.observed || query.observed || params.observed).toBe(false);
+    const second = create(); second.ngOnInit(); expect(blocks.observers).toHaveLength(1); second.ngOnDestroy();
+    expect(blocks.observed || query.observed || params.observed).toBe(false);
+  });
+
 });

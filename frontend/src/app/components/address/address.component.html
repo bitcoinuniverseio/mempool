@@ -1,12 +1,12 @@
 <div class="container-xl" [class.liquid-address]="network === 'liquid' || network === 'liquidtestnet'">
   <div class="title-address">
     <h1 i18n="shared.address">Address</h1>
-    <div class="tx-link">
+    <div class="tx-link" *ngIf="addressString">
       <app-truncate [text]="addressString" [lastChars]="8" [link]="['/address/' | relativeUrl, addressString]">
         <span class="qr-control" (mouseenter)="onQrEnter()" (mouseleave)="onQrLeave()"
-          (focusin)="showQR = true" (focusout)="showQR = false">
-          <button type="button" class="qrSpan" aria-label="Show address QR code" aria-controls="address-qr-code"
-            [attr.aria-expanded]="showQR" (click)="toggleQr()">
+          (focusin)="onQrFocus($event)" (focusout)="showQR = false">
+          <button type="button" class="qrSpan" [attr.aria-label]="qrButtonLabel" aria-controls="address-qr-code"
+            [attr.aria-expanded]="showQR" [disabled]="!addressString" (click)="toggleQr()">
             <fa-icon [icon]="['fas', 'qrcode']" [fixedWidth]="true" [style.font-size]="isMobile ? '18px' : '12px'" aria-hidden="true"></fa-icon>
           </button>
           <div id="address-qr-code" class="qr-wrapper" [hidden]="!showQR" role="img" aria-label="QR code for this address">
@@ -20,7 +20,7 @@
 
   <div class="clearfix"></div>
 
-  <ng-template [ngIf]="!isLoadingAddress && !error">
+  <ng-template [ngIf]="!isLoadingAddress && !error && address && !contextUnavailable">
     <div class="box">
 
       <div class="row">
@@ -272,7 +272,11 @@
     address index that was not there and a request that ran out of time, and
     both were reported to the reader as a fact about their own money.
   -->
-  <ng-template [ngIf]="error">
+  <div *ngIf="contextUnavailable" role="alert" class="box">
+    <p i18n="address.navigation-incomplete">Navigation did not complete. Open this address again from the correct network, then retry.</p>
+    <button type="button" class="btn btn-primary address-retry" (click)="retryAddress()" i18n="shared.retry">Retry</button>
+  </div>
+  <ng-template [ngIf]="error && !contextUnavailable">
     <br>
       <div class="text-center address-error">
         @switch (addressFailure) {
