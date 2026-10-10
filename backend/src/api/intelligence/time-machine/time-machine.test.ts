@@ -75,6 +75,21 @@ describe('time machine: observed history only', () => {
     expect(timeMachineService.getCoverage().total_events).toBe(3);
   });
 
+  it('caps comparison differences while retaining complete exported membership', () => {
+    const ids = (prefix: string): string[] => Array.from({ length: 1002 }, (_, i) => prefix + i.toString().padStart(4, '0'));
+    const removed = ids('a'), added = ids('b');
+    pool = Object.fromEntries(['shared', ...removed].map(id => [id, mem(id, 100, 100)]));
+    const first = timeMachineService.observeBlock(block(100, 1000), []);
+    pool = Object.fromEntries(['shared', ...added].map(id => [id, mem(id, 100, 100)]));
+    const second = timeMachineService.observeBlock(block(101, 1600), []);
+    const report = timeMachineService.compareStates(first.state_hash, second.state_hash);
+    if (!report) { throw new Error('Expected retained checkpoint comparison'); }
+    expect(report.delta.added_txids).toEqual(added.slice(0, 1000));
+    expect(report.delta.removed_txids).toEqual(removed.slice(0, 1000));
+    expect(timeMachineService.exportState(first.state_hash)?.txids).toEqual(['shared', ...removed].sort());
+    expect(timeMachineService.exportState(second.state_hash)?.txids).toEqual(['shared', ...added].sort());
+  });
+
   it('applies same-millisecond events after the checkpoint and removes replacements', () => {
     pool = { a: mem('a', 100, 100) };
     timeMachineService.observeBlock(block(100, 1000), [], 1_000_000);
