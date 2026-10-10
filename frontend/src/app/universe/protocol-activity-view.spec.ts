@@ -102,6 +102,15 @@ describe('activitySummary', () => {
 import { readObjectRows, objectsSummary } from './protocol-activity-view';
 
 describe('readObjectRows', () => {
+  it('explains unavailable read-only collections without displaying internal route or custody operations', () => {
+    const objects: ExplorerProtocolObjectsPage = {
+      schemaVersion: 'universe-protocol-objects-v1', protocolId: 'names', state: 'unavailable',
+      authorityId: null, objectsPath: null, items: [], nextCursor: null, checkpoint: null,
+      degradedReason: 'The legacy Marketplace objects GET is quarantined because it performs maintenance or custody transitions. A qualified read-only catalog has not been configured.', observedAt: null,
+    };
+    expect(objectsSummary(objects, 0)).toBe('A verified read-only collection is not available on this network.');
+    expect(objects.degradedReason).toContain('custody transitions');
+  });
   it('reads the identity and status keys the object collections publish', () => {
     const rows = readObjectRows([
       { id: 'asset-1', status: 'alive', owner: 'bc1qexample', supply: '1000' },

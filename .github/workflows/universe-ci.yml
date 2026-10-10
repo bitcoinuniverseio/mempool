@@ -458,11 +458,16 @@ jobs:
 
       # The shards take this instead of building their own copy. See the note
       # on the `visual` job below for why that matters.
-      - name: Keep the build for the visual shards
-        uses: actions/cache/save@v4
+      - name: Seal the one frontend build
+        run: node scripts/universe/frontend-ci-artifact.mjs seal
+
+      - name: Keep the build for all browser jobs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
+          name: universe-frontend-${{ github.sha }}
           path: frontend/dist
-          key: universe-dist-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 1
 
       # Kept when there is something to look at, which is when a gate failed.
       #
@@ -551,23 +556,14 @@ jobs:
         with:
           node-version: '24.19.0'
 
-      - name: Take the build the frontend job made
-        id: dist
-        uses: actions/cache/restore@v4
+      - name: Take the exact frontend artifact
+        uses: actions/download-artifact@v4
         with:
+          name: universe-frontend-${{ github.sha }}
           path: frontend/dist
-          key: universe-dist-${{ github.sha }}
 
-      # A miss is survivable, not fatal: the shard builds what it needs. It
-      # costs the memory this change exists to save, so it should be rare, and
-      # it is loud in the log when it happens.
-      - name: Build it here if the cache did not have it
-        if: steps.dist.outputs.cache-hit != 'true'
-        working-directory: frontend
-        run: |
-          echo "no build cached for ${{ github.sha }}; building one here"
-          npm ci
-          npm run build:universe
+      - name: Verify source and all downloaded bytes
+        run: node scripts/universe/frontend-ci-artifact.mjs verify
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
@@ -698,22 +694,14 @@ jobs:
         with:
           node-version: '24.19.0'
 
-      - name: Take the build the frontend job made
-        id: dist
-        uses: actions/cache/restore@v4
+      - name: Take the exact frontend artifact
+        uses: actions/download-artifact@v4
         with:
+          name: universe-frontend-${{ github.sha }}
           path: frontend/dist
-          key: universe-dist-${{ github.sha }}
 
-      # Survivable, not fatal, and loud: a miss pays the memory this change
-      # exists to save.
-      - name: Build it here if the cache did not have it
-        if: steps.dist.outputs.cache-hit != 'true'
-        working-directory: frontend
-        run: |
-          echo "no build cached for ${{ github.sha }}; building one here"
-          npm ci
-          npm run build:universe
+      - name: Verify source and all downloaded bytes
+        run: node scripts/universe/frontend-ci-artifact.mjs verify
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
@@ -852,7 +840,7 @@ jobs:
       # reports the context as closed. Four gigabytes because the route pass
       # below runs three engines at once.
       options: --shm-size=4gb --ipc=host
-    timeout-minutes: 45
+    timeout-minutes: 90
     defaults:
       run:
         shell: bash
@@ -865,26 +853,14 @@ jobs:
         with:
           node-version: '24.19.0'
 
-      - name: Take the build the frontend job made
-        id: dist
-        uses: actions/cache/restore@v4
+      - name: Take the exact frontend artifact
+        uses: actions/download-artifact@v4
         with:
+          name: universe-frontend-${{ github.sha }}
           path: frontend/dist
-          key: universe-dist-${{ github.sha }}
 
-      # A cache miss is survivable, but still uses the same memory bounds as
-      # the owning frontend job. The normal path performs one production build
-      # per commit, then all browser engines consume that exact output.
-      - name: Build it here if the cache did not have it
-        if: steps.dist.outputs.cache-hit != 'true'
-        working-directory: frontend
-        env:
-          NG_BUILD_MAX_WORKERS: '1'
-          NODE_OPTIONS: --max-old-space-size=3072
-        run: |
-          echo "no build cached for ${{ github.sha }}; building one here"
-          npm ci
-          npm run build:universe
+      - name: Verify source and all downloaded bytes
+        run: node scripts/universe/frontend-ci-artifact.mjs verify
 
       - name: Install the visual QA harness
         working-directory: scripts/universe/visual-qa
@@ -915,17 +891,13 @@ jobs:
       - name: Every window a phone can be, on WebKit
         working-directory: scripts/universe/visual-qa
         run: |
-          pids=""
+          # Keep one WebKit engine alive at a time on the shared runner.
+          # Preserve every shard result and run Firefox even if one shard fails.
+          status=0
           for shard in $(seq 1 3); do
             node mobile-check.mjs --base=http://127.0.0.1:$GATEWAY_PORT \
               --browser=webkit --out=./artifacts-mobile-webkit-$shard --shard=$shard/3 \
-              > ./artifacts-mobile-webkit-$shard.log 2>&1 &
-            pids="$pids $!"
-          done
-          status=0
-          for pid in $pids; do wait "$pid" || status=1; done
-          for shard in $(seq 1 3); do
-            echo "----- shard $shard -----"
+              > ./artifacts-mobile-webkit-$shard.log 2>&1 || status=1
             cat ./artifacts-mobile-webkit-$shard.log
           done
           exit $status
@@ -937,6 +909,7 @@ jobs:
       # engine. A subset of routes, because this is the smoke check and the two
       # thorough passes are elsewhere.
       - name: A third engine, on the checks that do not need a thumb
+        if: ${{ !cancelled() }}
         working-directory: scripts/universe/visual-qa
         env:
           # Firefox refuses to start as root when HOME belongs to another uid,

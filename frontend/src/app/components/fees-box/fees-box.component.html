@@ -86,9 +86,7 @@
        fail: when the backend is down it connects and then says nothing. Once
        the feed has given up, placeholders that keep pulsing are promising an
        answer that is not coming. -->
-  @if ((isLoading$ | async) === false) {
-    <p class="feed-unavailable" i18n="fees-box.feed-unavailable">No live fee estimates: the chain feed is not answering.</p>
-  } @else {
+  @if (estimate.status === 'syncing') {
     <div class="fee-estimation-container loading-container">
       <div class="item">
         <div class="card-text">
