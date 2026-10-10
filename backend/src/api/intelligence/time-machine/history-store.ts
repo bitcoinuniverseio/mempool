@@ -1,11 +1,13 @@
-import { promises as fs, readFileSync, existsSync, statSync, mkdirSync, writeFileSync, unlinkSync, rmdirSync, readdirSync } from 'fs';
+import { promises as fs, createWriteStream, readFileSync, existsSync, statSync, mkdirSync, writeFileSync, unlinkSync, rmdirSync, readdirSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { hostname } from 'os';
 import { createHash, randomUUID } from 'crypto';
-import { gzip, gunzipSync } from 'zlib';
+import { createGzip, gunzipSync } from 'zlib';
 import { promisify } from 'util';
+import { Readable, pipeline } from 'stream';
+import { captureHistoryJson, historyEnvelopeChunks } from './history-json';
 
-const compress = promisify(gzip);
+const compressToFile = promisify(pipeline);
 const MAX_BYTES = 128 * 1024 * 1024;
 
 /** Stable cluster roles preserve their own history across worker replacement. */
@@ -82,16 +84,16 @@ export class HistoryStore {
   /** @asyncUnsafe rejections propagate to the caller, which handles them. */
   async write(value: unknown): Promise<void> {
     this.acquire();
-    const body = JSON.stringify(value);
-    if (Buffer.byteLength(body) > MAX_BYTES / 2) throw new Error('History snapshot exceeds the storage limit.');
-    const envelope = JSON.stringify({ schema: 'mempool-history-v1', network: this.network,
-      sha256: createHash('sha256').update(body).digest('hex'), body });
-    const bytes = await compress(envelope);
+    const snapshot = captureHistoryJson(value, MAX_BYTES / 2);
     await fs.mkdir(dirname(this.path), { recursive: true });
     const temporary = `${this.path}.${randomUUID()}.tmp`;
     const handle = await fs.open(temporary, 'wx', 0o600);
     try {
-      try { await handle.writeFile(bytes); await handle.sync(); } finally { await handle.close(); }
+      try {
+        await compressToFile(Readable.from(historyEnvelopeChunks(snapshot, this.network, MAX_BYTES)), createGzip(),
+          createWriteStream(temporary, { fd: handle.fd, autoClose: false }));
+        await handle.sync();
+      } finally { await handle.close(); }
       await fs.rename(temporary, this.path);
       // Linux persists the directory entry as well as the file contents.
       if (process.platform !== 'win32') {
