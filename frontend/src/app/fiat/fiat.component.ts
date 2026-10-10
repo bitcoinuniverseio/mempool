@@ -56,21 +56,22 @@ export class FiatComponent implements OnInit, OnDestroy {
    * as an empty result.
    */
   rateFrom(conversions: Record<string, number> | null | undefined): number | null {
-    if (!conversions) return null;
+    if (!conversions) {return null;}
     const preferred = conversions[this.currency];
-    return typeof preferred === 'number' && preferred > -1 ? preferred : null;
+    return typeof preferred === 'number' && Number.isFinite(preferred) && preferred > 0 ? preferred : null;
   }
 
   /** Same, for a price pinned to the block being viewed. */
   blockRate(): number | null {
     const price = this.blockConversion?.price;
-    if (!price) return null;
+    if (!price) {return null;}
     const preferred = price[this.currency];
-    if (typeof preferred === 'number' && preferred > -1) return preferred;
+    if (typeof preferred === 'number' && Number.isFinite(preferred) && preferred > 0) {return preferred;}
     const usd = price['USD'];
     const rate = this.blockConversion.exchangeRates?.['USD' + this.currency];
-    if (typeof usd === 'number' && usd > -1 && typeof rate === 'number') {
-      return usd * rate;
+    if (typeof usd === 'number' && Number.isFinite(usd) && usd > 0 && typeof rate === 'number' && Number.isFinite(rate) && rate > 0) {
+      const converted = usd * rate;
+      return Number.isFinite(converted) && converted > 0 ? converted : null;
     }
     return null;
   }

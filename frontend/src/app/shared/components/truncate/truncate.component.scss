@@ -37,6 +37,7 @@
   }
 
   .first {
+    white-space: nowrap;
     flex-grow: 0;
     flex-shrink: 1;
     min-width: 0;

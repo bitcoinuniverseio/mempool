@@ -28,7 +28,7 @@ class RoutedClock extends ClockComponent {
       feeEstimate$: new BehaviorSubject({ status: 'syncing', values: null }), mempoolInfo$: new BehaviorSubject({ usage: 1, size: 1 }) };
     super(state as never, { want: () => undefined } as never, inject(ActivatedRoute), inject(Router), new RelativeUrlPipe(state as never), inject(ChangeDetectorRef));
   }
-  ngOnDestroy(): void { this.pageSubscription.unsubscribe(); this.blocksSubscription.unsubscribe(); }
+  ngOnDestroy(): void { super.ngOnDestroy(); }
 }
 
 describe('actual Clock controller/template with Angular route history', () => {

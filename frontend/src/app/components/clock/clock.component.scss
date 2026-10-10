@@ -100,8 +100,13 @@
     font-size: calc(0.2 * var(--clock-width));
     padding: 0;
     margin: 0;
-    background: radial-gradient(var(--u-overlay-scrim), transparent 67%);
-    padding: calc(0.05 * var(--clock-width)) calc(0.15 * var(--clock-width));
+    // This heading overlays the transaction map in every theme. Fixed light
+    // text over a dark scrim preserves contrast even on the brightest cells.
+    color: #fff;
+    background: rgba(0, 0, 0, 0.82);
+    border-radius: var(--u-radius-sm, 0.25rem);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+    padding: calc(0.025 * var(--clock-width)) calc(0.035 * var(--clock-width));
   }
 }
 

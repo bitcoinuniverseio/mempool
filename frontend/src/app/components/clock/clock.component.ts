@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { Observable, Subscription, of, switchMap, tap } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { BlockExtended } from '@interfaces/node-api.interface';
@@ -14,11 +14,12 @@ import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pip
   standalone: false,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ClockComponent implements OnInit {
+export class ClockComponent implements OnInit, OnDestroy {
   hideStats: boolean = false;
   mode: 'mempool' | 'mined' = 'mined';
   blockIndex: number;
   pageSubscription: Subscription;
+  querySubscription: Subscription;
   blocksSubscription: Subscription;
   feeEstimate$: Observable<FeeEstimateSnapshot>;
   mempoolInfo$: Observable<MempoolInfo>;
@@ -50,7 +51,7 @@ export class ClockComponent implements OnInit {
     private relativeUrlPipe: RelativeUrlPipe,
     private cd: ChangeDetectorRef,
   ) {
-    this.route.queryParams.subscribe((params) => {
+    this.querySubscription = this.route.queryParams.subscribe((params) => {
       this.hideStats = params && params.stats === 'false';
       this.limitWidth = Number.parseInt(params.width) || null;
       this.limitHeight = Number.parseInt(params.height) || null;
@@ -118,6 +119,12 @@ export class ClockComponent implements OnInit {
     ).subscribe();
   }
 
+  ngOnDestroy(): void {
+    this.querySubscription?.unsubscribe();
+    this.pageSubscription?.unsubscribe();
+    this.blocksSubscription?.unsubscribe();
+  }
+
   /** Retain a valid requested index; missing observed data is not block zero. */
   get selectedBlock(): BlockExtended | null {
     if (this.mode === 'mempool') {
@@ -134,7 +141,7 @@ export class ClockComponent implements OnInit {
     this.websocketService.reconnectWebsocket();
   }
 
-  getStyleForBlock(block: BlockExtended) {
+  getStyleForBlock(block: BlockExtended): { background: string } {
     const greenBackgroundHeight = 100 - (block.weight / this.stateService.env.BLOCK_WEIGHT_UNITS) * 100;
 
     return {
