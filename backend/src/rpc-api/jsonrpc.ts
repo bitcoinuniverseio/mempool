@@ -150,7 +150,9 @@ JsonRPC.prototype.call = function (method, params, options?) {
                 ? 'No such mempool or blockchain transaction'
                 : code === -5 && ['getblock', 'getblockheader', 'getblockhash'].includes(calls[index].method)
                   ? 'Block not found' : 'RPC server rejected the request';
-              return finish(Object.assign(new Error(message), { code }));
+              // Fixed public contexts distinguish initial TX absence from a later header failure.
+              const rpcMethod = ['getrawtransaction', 'getblockheader'].includes(calls[index].method) ? calls[index].method : undefined;
+              return finish(Object.assign(new Error(message), { code, rpcMethod }));
             }
           }
           if (incoming.statusCode !== 200) return finish(failure('ERPC_HTTP', `RPC response status ${incoming.statusCode}`));

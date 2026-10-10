@@ -2,6 +2,7 @@ import * as crypto from 'crypto';
 import { join } from 'path';
 import cluster from 'cluster';
 import { HistoryStore, historyPathForRole } from './history-store';
+import { HistoryJsonArray } from './history-json';
 import { validateHistorySnapshot, validUtc } from './history-validation';
 import config from '../../../config';
 import mempool from '../../mempool';
@@ -190,7 +191,7 @@ export class TimeMachineService {
             observedThrough: this.observedThrough, gaps: this.gaps, events: this.eventLog,
             orphanConfirmations: [...this.orphanConfirmations.values()],
             canonicalRestorationTarget: this.canonicalRestorationTarget ?? undefined,
-            checkpoints: this.checkpoints.map(checkpoint => ({ checkpoint, transactions: [...this.stateCache.get(checkpoint.state_hash)!.transactions] })) });
+            checkpoints: this.checkpoints.map(checkpoint => ({ checkpoint, transactions: new HistoryJsonArray(this.stateCache.get(checkpoint.state_hash)!.transactions) })) });
           this.storageError = null;
         } catch {
           this.dirty = true;

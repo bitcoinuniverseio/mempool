@@ -20,6 +20,7 @@ import bitcoinClient from './bitcoin-client';
 import difficultyAdjustment from '../difficulty-adjustment';
 import transactionRepository from '../../repositories/TransactionRepository';
 import rbfCache from '../rbf-cache';
+import { rbfRestoreState } from '../rbf-snapshot';
 import { calculateMempoolTxCpfp } from '../cpfp';
 import { handleError } from '../../utils/api';
 import { classifyAddressError, sendAddressError } from './address-errors';
@@ -1052,6 +1053,7 @@ class BitcoinRoutes {
       handleError(req, res, 501, `Invalid transaction ID`);
       return;
     }
+    if (rbfRestoreState.unavailable) { res.status(503).json({ error: 'rbf_history_unavailable', ...rbfRestoreState.diagnostic() }); return; }
     try {
       const replacements = rbfCache.getRbfTree(req.params.txId) || null;
       const replaces = rbfCache.getReplaces(req.params.txId) || null;
@@ -1065,6 +1067,7 @@ class BitcoinRoutes {
   }
 
   private async getRbfReplacements(req: Request, res: Response) {
+    if (rbfRestoreState.unavailable) { res.status(503).json({ error: 'rbf_history_unavailable', ...rbfRestoreState.diagnostic() }); return; }
     try {
       const result = rbfCache.getRbfTrees(false);
       res.json(result);
@@ -1074,6 +1077,7 @@ class BitcoinRoutes {
   }
 
   private async getFullRbfReplacements(req: Request, res: Response) {
+    if (rbfRestoreState.unavailable) { res.status(503).json({ error: 'rbf_history_unavailable', ...rbfRestoreState.diagnostic() }); return; }
     try {
       const result = rbfCache.getRbfTrees(true);
       res.json(result);
@@ -1087,6 +1091,7 @@ class BitcoinRoutes {
       handleError(req, res, 501, `Invalid transaction ID`);
       return;
     }
+    if (rbfRestoreState.unavailable) { res.status(503).json({ error: 'rbf_history_unavailable', ...rbfRestoreState.diagnostic() }); return; }
     try {
       const result = rbfCache.getTx(req.params.txId);
       if (result) {
