@@ -211,21 +211,6 @@ export class AddressComponent implements OnInit, OnDestroy {
     @Optional() private router?: Router,
   ) { }
 
-  onQrEnter(): void {
-    // Touch-generated mouse events must not take ownership of the toggle.
-    if (typeof window.matchMedia === 'function' && !window.matchMedia('(hover: hover)').matches) {return;}
-    this.showQR = true;
-  }
-
-  onQrLeave(): void {
-    this.showQR = false;
-  }
-
-  onQrFocus(event: FocusEvent): void {
-    const target = event.target as HTMLElement | null;
-    if (target?.matches?.(':focus-visible')) {this.showQR = true;}
-  }
-
   resetQr(): void {
     this.showQR = false;
   }
