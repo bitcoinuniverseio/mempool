@@ -54,7 +54,7 @@ export class LiquidObservatoryService {
     const last = snapshot.state.blocks[snapshot.state.blocks.length - 1];
     return { schemaVersion: 'universe-liquid-observatory-v1', status: snapshot.status, source: snapshot.observation,
       progress: snapshot.progress, cursor: { height: last?.height ?? -1, blockHash: last?.hash ?? null },
-      scope: 'canonical-public-blocks-and-parent-peg-evidence' };
+      scope: 'best-chain-public-blocks-and-parent-peg-evidence' };
   }
   private page(offset: number, limit: number): void {
     if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {

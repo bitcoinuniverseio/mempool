@@ -29,7 +29,7 @@ export interface LiquidObservatoryCoverage {
   source: LiquidPairObservation;
   progress: { processedBlocks: number; expectedBlocks: number; nextHeight: number; pageLimit: 16 };
   cursor: { height: number; blockHash: string | null };
-  scope: 'canonical-public-blocks-and-parent-peg-evidence';
+  scope: 'best-chain-public-blocks-and-parent-peg-evidence';
 }
 export interface LiquidAssetRecord extends LiquidRegistryEntry {
   coverage: LiquidObservatoryCoverage;
