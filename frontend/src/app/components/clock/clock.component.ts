@@ -3,7 +3,7 @@ import { Observable, Subscription, of, switchMap, tap } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { BlockExtended } from '@interfaces/node-api.interface';
 import { WebsocketService } from '@app/services/websocket.service';
-import { MempoolInfo, Recommendedfees } from '@interfaces/websocket.interface';
+import { MempoolInfo, FeeEstimateSnapshot } from '@interfaces/websocket.interface';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 
@@ -20,7 +20,7 @@ export class ClockComponent implements OnInit {
   blockIndex: number;
   pageSubscription: Subscription;
   blocksSubscription: Subscription;
-  recommendedFees$: Observable<Recommendedfees>;
+  feeEstimate$: Observable<FeeEstimateSnapshot>;
   mempoolInfo$: Observable<MempoolInfo>;
   blocks: BlockExtended[] = [];
   clockSize: number = 300;
@@ -66,20 +66,41 @@ export class ClockComponent implements OnInit {
         this.blocks = blocks.slice(0, 16);
         if (this.blocks[this.blockIndex]) {
           this.blockStyle = this.getStyleForBlock(this.blocks[this.blockIndex]);
-          this.cd.markForCheck();
         }
+        this.cd.markForCheck();
       });
 
-    this.recommendedFees$ = this.stateService.recommendedFees$;
+    /**
+     * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-CLOCK | F-FE-001 | FAIL.
+     * This is the second consumer of the same unqualified fee replay used by
+     * FeesBoxComponent; clock.component.html renders fastestFee with no age.
+     * 1. Migrate the fee display to StateService.feeEstimate$ and the exact
+     *    API-05-FEES-CONTRACT; retain the clock layout and numeric units.
+     * 2. Render stale/unavailable/syncing state with original observation and
+     *    clear another network's snapshot immediately. Share recovery with the
+     *    main feed; do not open another socket or poll from the clock.
+     * 3. Add PROPOSED NEW clock.component.spec.ts for cached init, disconnect,
+     *    empty indicators, network switch and valid recovery; include responsive
+     *    clock rendering after the shared fee-estimate tests. Run targeted
+     *    npm test, frontend lint/build and actual Signet consumer readback.
+     * Prerequisites API-01..API-04 plus producer/state changes in API-05.
+     * Evidence: frontend-source-reproductions.json and FeesBox source path.
+     * Rollback producer and every fee consumer together; no stale bare replay.
+     */
+    this.feeEstimate$ = this.stateService.feeEstimate$;
     this.mempoolInfo$ = this.stateService.mempoolInfo$;
 
     this.pageSubscription = this.route.paramMap.pipe(
       switchMap((params: ParamMap) => {
         const rawMode: string = params.get('mode');
         const mode = rawMode === 'mempool' ? 'mempool' : 'mined';
-        const index: number = Number.parseInt(params.get('index'));
-        if (mode !== rawMode || index < 0 || isNaN(index)) {
-          this.router.navigate([this.relativeUrlPipe.transform('/clock'), mode, index || 0]);
+        const rawIndex = params.get('index') ?? '';
+        const parsedIndex = /^\d+$/.test(rawIndex) ? Number(rawIndex) : NaN;
+        const index = Number.isSafeInteger(parsedIndex) && parsedIndex >= 0 ? parsedIndex : 0;
+        if (mode !== rawMode || rawIndex !== String(index)) {
+          this.router.navigate([this.relativeUrlPipe.transform('/clock'), mode, index], {
+            replaceUrl: true, queryParamsHandling: 'preserve', preserveFragment: true,
+          });
         }
         return of({
           mode,
@@ -88,13 +109,29 @@ export class ClockComponent implements OnInit {
       }),
       tap((page: { mode: 'mempool' | 'mined', index: number }) => {
         this.mode = page.mode;
-        this.blockIndex = page.index || 0;
+        this.blockIndex = page.index;
         if (this.blocks[this.blockIndex]) {
           this.blockStyle = this.getStyleForBlock(this.blocks[this.blockIndex]);
-          this.cd.markForCheck();
         }
+        this.cd.markForCheck();
       })
     ).subscribe();
+  }
+
+  /** Retain a valid requested index; missing observed data is not block zero. */
+  get selectedBlock(): BlockExtended | null {
+    if (this.mode === 'mempool') {
+      const configured = this.stateService.env.MEMPOOL_BLOCKS_AMOUNT;
+      const capacity = Number.isSafeInteger(configured) && configured > 0 ? configured : 8;
+      if (this.blockIndex >= capacity) {return null;}
+      return this.blocks[0] ?? null;
+    }
+    return this.blocks[this.blockIndex] ?? null;
+  }
+
+  retryFees(): void {
+    if (this.stateService.feeEstimate$.value.status === 'syncing') {return;}
+    this.websocketService.reconnectWebsocket();
   }
 
   getStyleForBlock(block: BlockExtended) {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import logger from '../../../logger';
+import { TaskDrain } from '../../task-drain';
 import { endpointsForTransport, transportForMethod } from './private-relay.config';
 import {
   ConfirmationLookup,
@@ -42,6 +43,8 @@ export interface PrivateRelayWorkerOptions {
 }
 
 export class PrivateRelayWorker {
+  private stopping = false;
+  private readonly work = new TaskDrain();
   public readonly workerId: string;
   private readonly store: PrivateRelayStore;
   private readonly transport: PrivateRelayTransportAdapter;
@@ -83,6 +86,7 @@ export class PrivateRelayWorker {
   }
 
   public start(intervalMs = 2_000): void {
+    if (this.stopping) return;
     if (this.timer) return;
     this.timer = setInterval(() => {
       this.tick().catch(error => logger.warn('private relay worker: ' + describe(error)));
@@ -91,8 +95,11 @@ export class PrivateRelayWorker {
   }
 
   public stop(): void {
+    this.stopping = true;
     if (this.timer) { clearInterval(this.timer); this.timer = null; }
   }
+
+  public drain(): Promise<void> { return this.work.drain(); }
 
   public status(): PrivateRelayWorkerStatus {
     return {
@@ -110,7 +117,13 @@ export class PrivateRelayWorker {
    * the submitted rows whose confirmation check is due.
    * @asyncUnsafe The interval handler logs a rejection; tests await it directly.
    */
-  public async tick(): Promise<void> {
+  public tick(): Promise<void> {
+    if (this.stopping) return Promise.resolve();
+    return this.work.track(this.executeTick());
+  }
+
+  /** @asyncUnsafe The interval handler logs rejection; tests await directly. */
+  private async executeTick(): Promise<void> {
     if (this.ticking) return;
     this.ticking = true;
     try {

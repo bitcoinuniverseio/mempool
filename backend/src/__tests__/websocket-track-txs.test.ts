@@ -31,7 +31,9 @@ jest.mock('../api/mempool-blocks', () => ({ __esModule: true, default: { getMemp
 jest.mock('../api/loading-indicators', () => ({ __esModule: true, default: { getLoadingIndicators: () => ({}) } }));
 jest.mock('../api/transaction-utils', () => ({ __esModule: true, default: {} }));
 jest.mock('../api/difficulty-adjustment', () => ({ __esModule: true, default: { getDifficultyAdjustment: () => null } }));
-jest.mock('../api/fee-api', () => ({ __esModule: true, default: { getPreciseRecommendedFee: () => ({}) } }));
+jest.mock('../api/fee-api', () => ({ __esModule: true, default: { getFeeEstimate: () => ({
+  schemaVersion: 'universe-fee-estimate-v1', chain: 'bitcoin', network: 'signet', status: 'unavailable', observedAt: null, tip: null, values: null, reason: 'observation-unavailable',
+}) } }));
 jest.mock('../repositories/BlocksAuditsRepository', () => ({ __esModule: true, default: {} }));
 jest.mock('../repositories/BlocksSummariesRepository', () => ({ __esModule: true, default: {} }));
 jest.mock('../repositories/AccelerationRepository', () => ({ __esModule: true, default: {} }));

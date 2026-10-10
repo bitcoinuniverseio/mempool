@@ -15,3 +15,40 @@ export interface UtxoReconstructionV4View extends Omit<UtxoReconstructionV3View,
     verifiedOutputContext: null | { identity: string; checkpoint: AddressSourceCheckpoint; outpointsSha256: string; outputCount: number };
   };
 }
+
+export interface ReconstructionV4Binding {
+  network: string;
+  releaseSha: string;
+  configurationSha256: string;
+}
+/** State inspection is a historical progress receipt, never current-chain/output proof. */
+export interface UtxoReconstructionV4Inspection {
+  schema: 'universe-address-utxo-reconstruction-inspection-v1';
+  sessionId: string;
+  address: string;
+  network: string;
+  status: UtxoReconstructionV4View['status'];
+  busy: boolean;
+  cursor: number;
+  replayCursor: number | null;
+  expiresAt: string;
+  binding: ReconstructionV4Binding & {
+    sourceId: string;
+    confirmedAnchorSha256: string;
+  };
+  retainedBytes: number;
+  resultAvailable: boolean;
+  lastSuccessfulObservation: {
+    cursor: number;
+    observedAt: string;
+    checkpoint: AddressSourceCheckpoint;
+    progress: UtxoReconstructionV4View['progress'];
+  };
+  lastOperationError: null | {
+    cursor: number;
+    status: number;
+    code: string;
+    phase?: string;
+    failedAt: string;
+  };
+}

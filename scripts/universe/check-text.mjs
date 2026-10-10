@@ -7,7 +7,10 @@
  * enforced rather than remembered.
  *
  * The word "canonical" is banned inside the Universe-authored source, where we
- * choose the vocabulary. It is not policed across the inherited upstream tree,
+ * choose the vocabulary. Established wire enums are not vocabulary choices:
+ * the exact quoted Liquid v1 scope is preserved only in its three contract
+ * declaration, validation and fixture files below. Other prose in those files
+ * remains subject to this gate. It is not policed across the inherited upstream tree,
  * which uses the term for the HTML rel=canonical link standard and elsewhere.
  *
  * Usage:
@@ -66,6 +69,20 @@ const EM_DASH = String.fromCharCode(0x2014);
 const UNIVERSE_SOURCE_PREFIX = 'frontend/src/app/universe/';
 const CANONICAL_WORD = new RegExp(['can', 'onical'].join(''), 'i');
 
+// This is the existing Liquid v1 wire enum, not a display label. Changing its
+// bytes breaks the producer/consumer contract. Do not extend this exception to
+// a directory, unquoted text, other enum values or ordinary technical prose.
+const LIQUID_SCOPE_PATHS = new Set([
+  'frontend/src/app/universe/liquid-observatory/liquid-evidence.ts',
+  'frontend/src/app/universe/liquid-observatory/liquid-fixtures.ts',
+  'frontend/src/app/universe/liquid-observatory/liquid-observatory.types.ts',
+]);
+const LIQUID_SCOPE_LITERAL = /(['"])canonical-public-blocks-and-parent-peg-evidence\1/g;
+
+function authoredVocabulary(line, posix) {
+  return LIQUID_SCOPE_PATHS.has(posix) ? line.replace(LIQUID_SCOPE_LITERAL, '') : line;
+}
+
 function isSkipped(name) {
   return SKIPPED_DIRECTORIES.has(name);
 }
@@ -111,7 +128,7 @@ function findings(file) {
     if (line.includes(EM_DASH)) {
       hits.push({ kind: 'em dash', file: relativePath, line: index + 1, text: line.trim().slice(0, 120) });
     }
-    if (policeCanonical && CANONICAL_WORD.test(line)) {
+    if (policeCanonical && CANONICAL_WORD.test(authoredVocabulary(line, posix))) {
       hits.push({ kind: 'canonical', file: relativePath, line: index + 1, text: line.trim().slice(0, 120) });
     }
   });
@@ -162,4 +179,4 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log('Text gate passed: no em dash, no "canonical" in Universe source.');
+console.log('Text gate passed: no em dash, no banned authored vocabulary.');

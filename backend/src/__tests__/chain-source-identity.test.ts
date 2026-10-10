@@ -3,7 +3,14 @@ import { Server } from 'http';
 import { AddressInfo } from 'net';
 import config from '../config';
 import { ChainSourceIdentity, mountChainSourceIdentity } from '../api/bitcoin/chain-source-identity';
-jest.mock('../api/bitcoin/bitcoin-client', () => ({ __esModule: true, default: {} }));
+import { initChainSourceIdentityRoutes } from '../api/bitcoin/chain-source-identity.routes';
+jest.mock('../api/bitcoin/bitcoin-client', () => ({ __esModule: true, default: { rpc: { call: jest.fn(async (method, params) =>
+  method === 'getblockchaininfo' ? { chain: 'signet', blocks: 10, bestblockhash: '1'.repeat(64), signet_challenge: '51', initialblockdownload: false }
+    : (params[0] === 0 ? '0' : '1').repeat(64)) } } }));
+jest.mock('../api/bitcoin/bitcoin-api-factory', () => ({ __esModule: true, default: {
+  $getIndexedTip: async () => 10, $getIndexBlockHash: async height => (height === 0 ? '0' : '1').repeat(64),
+} }));
+jest.mock('../api/backend-info', () => ({ __esModule: true, default: { getBackendInfo: () => ({ releaseSha: 'a'.repeat(40) }) } }));
 
 const hash = (height: number) => (height === 0 ? '0' : '1').repeat(64);
 const releaseSha = 'a'.repeat(40);
@@ -70,4 +77,30 @@ it('mounts an anonymous read-only no-store endpoint with sanitized failures', as
     expect(response.status).toBe(503); expect(await response.json()).toEqual({ error: 'Configured chain source identity is unavailable' });
     expect((await fetch(origin + config.MEMPOOL.API_URL_PREFIX + 'chain-source/identity', { method: 'POST' })).status).toBe(404);
   } finally { await new Promise<void>(resolve => server.close(() => resolve())); }
+});
+
+it('binds an opt-in HTTP transport in the mounted identity without exposing its origin or changing the default commitment', async () => {
+  const previousBackend = config.MEMPOOL.BACKEND, previousOrigin = config.ELECTRUM.ADDRESS_HTTP_URL;
+  config.MEMPOOL.BACKEND = 'electrum'; delete config.ELECTRUM.ADDRESS_HTTP_URL;
+  const app = express(); initChainSourceIdentityRoutes(app);
+  const server = await new Promise<Server>(resolve => { const instance = app.listen(0, '127.0.0.1', () => resolve(instance)); });
+  const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}${config.MEMPOOL.API_URL_PREFIX}chain-source/identity`;
+  try {
+    const read = async () => { const response = await fetch(url); expect(response.status).toBe(200); return response.json(); };
+    const defaultIdentity = await read();
+    config.ELECTRUM.ADDRESS_HTTP_URL = 'http://127.0.0.1:3022';
+    const enabled = await read();
+    expect(enabled.configurationSha256).not.toBe(defaultIdentity.configurationSha256);
+    expect(enabled.checkpoint).toEqual(defaultIdentity.checkpoint);
+    expect(enabled.releaseSha).toBe(defaultIdentity.releaseSha);
+    expect(JSON.stringify(enabled)).not.toContain('3022');
+    config.ELECTRUM.ADDRESS_HTTP_URL = 'http://127.0.0.1:3023';
+    expect((await read()).configurationSha256).not.toBe(enabled.configurationSha256);
+    delete config.ELECTRUM.ADDRESS_HTTP_URL;
+    expect((await read()).configurationSha256).toBe(defaultIdentity.configurationSha256);
+  } finally {
+    config.MEMPOOL.BACKEND = previousBackend;
+    if (previousOrigin === undefined) delete config.ELECTRUM.ADDRESS_HTTP_URL; else config.ELECTRUM.ADDRESS_HTTP_URL = previousOrigin;
+    await new Promise<void>(resolve => server.close(() => resolve()));
+  }
 });

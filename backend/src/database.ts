@@ -5,6 +5,7 @@ import { createPool, Pool, PoolConnection } from 'mysql2/promise';
 import logger, { LogLevel } from './logger';
 import { FieldPacket, OkPacket, PoolOptions, ResultSetHeader, RowDataPacket } from 'mysql2/typings/mysql';
 import { execSync } from 'child_process';
+import { TaskDrain } from './api/task-drain';
 
  class DB {
   constructor() {
@@ -15,6 +16,26 @@ import { execSync } from 'child_process';
     }
   }
   private pool: Pool | null = null;
+  private readonly work = new TaskDrain();
+  private completionRefusal: 'driver-completion-lost' | 'commit-failed' | 'rollback-failed' | null = null;
+
+  /** Wait for driver completion, even when a caller's hard timeout fired first. */
+  public async drain(): Promise<void> {
+    await this.work.drain();
+    if (this.completionRefusal) throw new Error(`Database shutdown completion refused: ${this.completionRefusal}`);
+  }
+
+  /** @asyncUnsafe Caller retains the exact driver error; shutdown retains lost proof. */
+  private async observeDriver<T>(operation: Promise<T>): Promise<T> {
+    try { return await operation; } catch (error) {
+      const code = (error as { code?: unknown })?.code;
+      if ((error as { fatal?: unknown })?.fatal === true ||
+          ['PROTOCOL_SEQUENCE_TIMEOUT', 'PROTOCOL_CONNECTION_LOST', 'ECONNRESET', 'ETIMEDOUT', 'EPIPE'].includes(String(code))) {
+        this.completionRefusal = 'driver-completion-lost';
+      }
+      throw error;
+    }
+  }
   private poolConfig: PoolOptions = {
     port: config.DATABASE.PORT,
     database: config.DATABASE.DATABASE,
@@ -55,9 +76,9 @@ import { execSync } from 'child_process';
 
         // Use a specific connection if provided, otherwise delegate to the pool
         const connectionPromise = connection ? Promise.resolve(connection) : this.getPool();
-        connectionPromise.then((pool: PoolConnection | Pool) => {
-          return pool.query(query, params) as Promise<[T, FieldPacket[]]>;
-        }).then(result => {
+        this.work.track(connectionPromise.then((pool: PoolConnection | Pool) => {
+          return this.observeDriver(pool.query(query, params) as Promise<[T, FieldPacket[]]>);
+        })).then(result => {
           resolve(result);
         }).catch(error => {
           if (errorLogLevel !== 'silent') {
@@ -70,8 +91,10 @@ import { execSync } from 'child_process';
       });
     } else {
       try {
-        const pool = connection ?? await this.getPool();
-        return pool.query(query, params);
+        // Register acquisition before awaiting it. Drain must observe a query
+        // whose connection has not arrived yet as well as the driver call.
+        const connectionPromise = connection ? Promise.resolve(connection) : this.getPool();
+        return await this.work.track(connectionPromise.then(pool => this.observeDriver(pool.query(query, params) as Promise<[T, FieldPacket[]]>)));
       } catch (e) {
         if (errorLogLevel !== 'silent') {
           logger[errorLogLevel](`database query "${query?.sql?.slice(0, 160) || (typeof(query) === 'string' || query instanceof String ? query?.slice(0, 160) : 'unknown query')}" failed!`);
@@ -87,13 +110,21 @@ import { execSync } from 'child_process';
       await connection.rollback();
       await connection.release();
     } catch (e) {
+      this.completionRefusal = 'rollback-failed';
       logger.warn('Failed to rollback incomplete db transaction: ' + (e instanceof Error ? e.message : e));
     }
   }
 
   /** @asyncSafe */
-  public async $atomicQuery<T extends RowDataPacket[][] | RowDataPacket[] | OkPacket |
+  public $atomicQuery<T extends RowDataPacket[][] | RowDataPacket[] | OkPacket |
     OkPacket[] | ResultSetHeader>(queries: { query, params }[], errorLogLevel: LogLevel | 'silent' = 'debug'): Promise<[T, FieldPacket[]][]>
+  {
+    return this.work.track(this.executeAtomicQuery<T>(queries, errorLogLevel));
+  }
+
+  /** @asyncSafe */
+  private async executeAtomicQuery<T extends RowDataPacket[][] | RowDataPacket[] | OkPacket |
+    OkPacket[] | ResultSetHeader>(queries: { query, params }[], errorLogLevel: LogLevel | 'silent'): Promise<[T, FieldPacket[]][]>
   {
     const pool = await this.getPool();
     let connection;
@@ -107,7 +138,7 @@ import { execSync } from 'child_process';
         results.push(result);
       }
 
-      await connection.commit();
+      try { await connection.commit(); } catch (error) { this.completionRefusal = 'commit-failed'; throw error; }
 
       return results;
     } catch (e) {
@@ -125,15 +156,20 @@ import { execSync } from 'child_process';
 
 
   /** @asyncUnsafe Runs conditional work on one connection; rollback then rethrow to caller. */
-  public async $transaction<T>(work: (connection: PoolConnection) => Promise<T>): Promise<T> {
+  public $transaction<T>(work: (connection: PoolConnection) => Promise<T>): Promise<T> {
+    return this.work.track(this.executeTransaction(work));
+  }
+
+  /** @asyncUnsafe Rollback completes before the caller observes failure. */
+  private async executeTransaction<T>(work: (connection: PoolConnection) => Promise<T>): Promise<T> {
     const connection = await (await this.getPool()).getConnection();
     try {
       await connection.beginTransaction();
       const result = await work(connection);
-      await connection.commit();
+      try { await connection.commit(); } catch (error) { this.completionRefusal = 'commit-failed'; throw error; }
       return result;
     } catch (error) {
-      try { await connection.rollback(); } catch { connection.destroy(); }
+      try { await connection.rollback(); } catch { this.completionRefusal = 'rollback-failed'; connection.destroy(); }
       throw error;
     } finally {
       connection.release();
@@ -212,6 +248,7 @@ import { execSync } from 'child_process';
    * Close the database connection pool
    * This should only be called when the application is shutting down
    * or at the end of test suites
+   * @asyncUnsafe Pool close failure keeps the signal owner's diagnostic hold.
    */
   public async close(): Promise<void> {
     if (this.pool !== null) {
@@ -219,6 +256,7 @@ import { execSync } from 'child_process';
         await this.pool.end();
       } catch (e) {
         logger.err(`Exception in close. Reason: ${(e instanceof Error ? e.message : e)}`);
+        throw e;
       }
       this.pool = null;
       logger.debug('Database connection pool closed');

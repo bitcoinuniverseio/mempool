@@ -1,3 +1,5 @@
+import { ASSET_LOOKUP_GATEWAY_RESPONSE_MS, ASSET_LOOKUP_EXTENDED_RESPONSE_MS } from './asset-lookup';
+import { NamesExplorerAssetResponse, NAMES_INSCRIPTION_ID } from './names-explorer-asset';
 import { Sv2Family, Sv2Page } from './stratum-v2/stratum-v2.types';
 import { ArkBatchPage, ArkBatchWindow, ArkNativeProofInput, ArkNativeProofVerdict, readArkBatch, readArkBatchPage, readArkOperator } from './ark/ark-native-view';
 import { configuredSv2Profile, validateSv2Page } from './stratum-v2/stratum-v2.evidence';
@@ -134,8 +136,7 @@ export const CHAIN_MEMPOOL_LIMIT: Record<Exclude<ExplorerChain, 'bitcoin'>, numb
 export class UniverseApiService {
   private apiBaseUrl: string; // base URL is protocol, hostname, and port
 
-  private protocolsCache$: Observable<ProtocolsResponse> | null = null;
-  private protocolsCacheNetwork?: ExplorerNetwork;
+  private protocolsCache = new Map<string, Observable<ProtocolsResponse>>();
 
   constructor(
     private httpClient: HttpClient,
@@ -262,6 +263,34 @@ export class UniverseApiService {
   }
 
   /** Re-subscribes at a network switch, cancelling the previous HTTP request. */
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-SCOPE | C-FE-API-MAP | NOT TESTED.
+   * Source review confirms same-origin overlay /api/v1/universe and chain
+   * families use chain/network query context; backend-owned routes use the
+   * selected network path prefix. Current outage does not prove these public
+   * paths wrong. The owning authority origins belong behind the gateway.
+   * 1. Apply API-02/API-03 endpoint and adapter corrections server side, then
+   *    reconcile every method here and all 469 static transport occurrences
+   *    with frontend-api-inventory.json and frontend-http-transport-inventory.csv.
+   *    Preserve same-origin paths; do not put indexer IPs, credentials or
+   *    third-party fallbacks in browser code to mask an upstream failure.
+   * 2. Validate response context and each operation's owning decoder together:
+   *    source checkpoint, exact quantities, cursor and unavailable/error state.
+   *    Keep switchMap cancellation and network-partitioned cache ownership.
+   * 3. Execute all 39 protocol/123 operation declaration rows in
+   *    frontend-protocol-operation-coverage.csv against their corrected owned
+   *    authority, including detail, batch, holdings and pagination variants.
+   *    Registry declarations and HTTP200 do not establish full acceptance.
+   * 4. Run universe-api.service.spec.ts, protocol detail/directory specs and
+   *    services/{network-prefix.interceptor,cache-network-ownership}.spec.ts
+   *    with npm test -- <paths>, then lint/build and actual Signet journeys.
+   *    Capture requests, authoritative readback and reload/retry UI evidence.
+   * Governing sources: docs/protocols/PROTOCOL-COVERAGE.json (registry 1.1.0,
+   *    backend-apis 1a1a2548a74e419bf7341dd7af1cd57ff98e34c7) and API-03 contract
+   *    register; resolve newer-authority drift before changing a client path.
+   * Dependencies API-01..API-04. Rollback coordinated DTO/adapter versions and
+   *    retain explicit failure states. ANNOTATED is not a runtime PASS.
+   */
   private scopedRequest<T>(url: string, body?: unknown, chain = 'bitcoin',
     recover?: (error: unknown, network: ExplorerNetwork) => Observable<T>): Observable<T> {
     return this.chainNetwork$(chain).pipe(
@@ -270,6 +299,15 @@ export class UniverseApiService {
         return recover ? request.pipe(catchError((error) => recover(error, network))) : request;
       }),
     );
+  }
+
+  /** A consumer already owns scope switching; this attempt must match its captured scope. */
+  private assetRequest<T>(url: string, network?: ExplorerNetwork): Observable<T> {
+    if (network === undefined) {return this.scopedRequest<T>(url);}
+    return defer(() => {
+      if (this.network !== network) {throw new Error('asset-request-context-changed');}
+      return this.requestForNetwork<T>(url, network);
+    });
   }
 
   private assertResponseContext(value: unknown, network: ExplorerNetwork, chain = 'bitcoin'): void {
@@ -291,22 +329,34 @@ export class UniverseApiService {
     }
   }
 
-  getProtocols$(): Observable<ProtocolsResponse> {
-    return this.selectedNetwork$().pipe(switchMap((network) => {
-      if (!this.protocolsCache$ || this.protocolsCacheNetwork !== network) {
-        this.protocolsCacheNetwork = network;
-        this.protocolsCache$ = this.requestForNetwork<ProtocolsResponse>(
-          this.apiBaseUrl + '/api/v1/universe/protocols', network,
-        ).pipe(
-          catchError((error) => {
-            // Only clear the failed partition; a late failure cannot evict a newer network.
-            if (this.protocolsCacheNetwork === network) {this.protocolsCache$ = null;}
-            return throwError(() => error);
-          }),
-          shareReplay({ bufferSize: 1, refCount: true }),
-        );
+  getProtocols$(context?: { chain: string; network?: ExplorerNetwork }): Observable<ProtocolsResponse> {
+    const chain = context?.chain ?? 'bitcoin';
+    return this.chainNetwork$(chain).pipe(switchMap((network) => {
+      if (context?.network !== undefined && context.network !== network) {
+        return throwError(() => new Error('protocol-registry-context-unavailable'));
       }
-      return this.protocolsCache$;
+      const key = JSON.stringify([chain, network]);
+      const cached = this.protocolsCache.get(key);
+      if (cached) {return cached;}
+      const request = this.requestForNetwork<ProtocolsResponse>(
+        this.apiBaseUrl + '/api/v1/universe/protocols', network, undefined, chain,
+      ).pipe(
+        map(response => {
+          const binding = response.functionalAcceptanceBinding;
+          if (binding && (binding.chain !== chain || binding.deploymentNetwork !== network)) {
+            throw new Error('protocol-registry-context-mismatch');
+          }
+          return response;
+        }),
+        catchError(error => {
+          // A cancelled/late scope cannot evict another chain's successful cache.
+          if (this.protocolsCache.get(key) === request) {this.protocolsCache.delete(key);}
+          return throwError(() => error);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+      this.protocolsCache.set(key, request);
+      return request;
     }));
   }
 
@@ -410,23 +460,35 @@ export class UniverseApiService {
   }
 
   /** One inscription, addressed by id or by inscription number. */
-  getInscription$(reference: string): Observable<AssetLookupResult<OrdInscriptionView>> {
-    return this.scopedRequest<AssetLookupResult<OrdInscriptionView>>(
-      this.apiBaseUrl + '/api/v1/universe/inscriptions/' + encodeURIComponent(reference)
+  getInscription$(reference: string, network?: ExplorerNetwork): Observable<AssetLookupResult<OrdInscriptionView>> {
+    return this.assetRequest<AssetLookupResult<OrdInscriptionView>>(
+      this.apiBaseUrl + '/api/v1/universe/inscriptions/' + encodeURIComponent(reference), network
     );
   }
 
+  /** Existing gateway/direct source budgets determine the display deadline. */
+  get assetLookupDeadlineMs(): number {
+    return this.stateService.isBrowser ? ASSET_LOOKUP_GATEWAY_RESPONSE_MS : ASSET_LOOKUP_EXTENDED_RESPONSE_MS;
+  }
+
+  /** Explicit Names inscription request; ordinary reads never call this lane. */
+  getNamesObject$(reference: string, network?: ExplorerNetwork): Observable<NamesExplorerAssetResponse> {
+    if (!NAMES_INSCRIPTION_ID.test(reference)) {return throwError(() => new Error('Exact Names inscription id required'));}
+    return this.assetRequest<NamesExplorerAssetResponse>(
+      this.apiBaseUrl + '/api/v1/universe/protocols/names/objects/' + encodeURIComponent(reference), network);
+  }
+
   /** One rune, addressed by name or by rune id. */
-  getRune$(reference: string): Observable<AssetLookupResult<OrdRuneView>> {
-    return this.scopedRequest<AssetLookupResult<OrdRuneView>>(
-      this.apiBaseUrl + '/api/v1/universe/runes/' + encodeURIComponent(reference)
+  getRune$(reference: string, network?: ExplorerNetwork): Observable<AssetLookupResult<OrdRuneView>> {
+    return this.assetRequest<AssetLookupResult<OrdRuneView>>(
+      this.apiBaseUrl + '/api/v1/universe/runes/' + encodeURIComponent(reference), network
     );
   }
 
   /** One satoshi, addressed by its ordinal number. */
-  getSat$(reference: string): Observable<AssetLookupResult<OrdSatView>> {
-    return this.scopedRequest<AssetLookupResult<OrdSatView>>(
-      this.apiBaseUrl + '/api/v1/universe/sats/' + encodeURIComponent(reference)
+  getSat$(reference: string, network?: ExplorerNetwork): Observable<AssetLookupResult<OrdSatView>> {
+    return this.assetRequest<AssetLookupResult<OrdSatView>>(
+      this.apiBaseUrl + '/api/v1/universe/sats/' + encodeURIComponent(reference), network
     );
   }
 

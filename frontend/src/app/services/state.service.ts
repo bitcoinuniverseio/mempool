@@ -1,11 +1,13 @@
 import { Inject, Injectable, PLATFORM_ID, LOCALE_ID } from '@angular/core';
-import { ReplaySubject, BehaviorSubject, Subject, fromEvent, merge, Observable, timer } from 'rxjs';
+import { ReplaySubject, BehaviorSubject, Subject, fromEvent, Observable } from 'rxjs';
 import { Transaction } from '@interfaces/electrs.interface';
 import { AccelerationDelta, HealthCheckHost, IBackendInfo, MempoolBlock, MempoolBlockUpdate, MempoolInfo, Recommendedfees, ReplacedTransaction, ReplacementInfo, StratumJob, isMempoolState } from '@interfaces/websocket.interface';
 import { Acceleration, AccelerationPosition, BlockExtended, CpfpInfo, DifficultyAdjustment, MempoolPosition, OptimizedMempoolStats, RbfTree, TransactionStripped } from '@interfaces/node-api.interface';
 import { Router, NavigationStart } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { filter, map, scan, share, shareReplay, startWith, switchMap, take, takeUntil } from 'rxjs/operators';
+import { filter, map, scan, share, shareReplay } from 'rxjs/operators';
+import { FeeEstimateState } from './fee-estimate';
+import { LiveFeedFreshness } from './live-feed-freshness';
 import { LoadState } from '@app/shared/load-state';
 import { StorageService } from '@app/services/storage.service';
 import { hasTouchScreen } from '@app/shared/pipes/bytes-pipe/utils';
@@ -54,7 +56,7 @@ export type SignaturesMode = 'all' | 'interesting' | 'none' | null;
  * at ten seconds, whether the gate saw the panel depended on how slowly the
  * probes ran, which made the check a machine-speed race.
  */
-const LIVE_FEED_DEADLINE_MS = 5_000;
+
 
 export interface Env {
   MAINNET_ENABLED: boolean;
@@ -237,14 +239,38 @@ export class StateService {
    * timer each.
    */
   liveFeed$: Observable<LoadState<boolean>>;
-  private liveFeedRetry$ = new Subject<void>();
+  private readonly liveFreshness = new LiveFeedFreshness();
   isLoadingMempool$ = new BehaviorSubject<boolean>(true);
   vbytesPerSecond$ = new ReplaySubject<number>(1);
   previousRetarget$ = new ReplaySubject<number>(1);
   backendInfo$ = new ReplaySubject<IBackendInfo>(1);
   servicesBackendInfo$ = new ReplaySubject<IBackendInfo>(1);
   loadingIndicators$ = new ReplaySubject<ILoadingIndicators>(1);
-  recommendedFees$ = new ReplaySubject<Recommendedfees>(1);
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-STATE | F-FE-001 | FAIL.
+   * This bare replay retains fee numbers without source age/readiness and the
+   * networkChanged handler below does not clear it. Evidence and the exact
+   * versioned feeEstimate contract are beside WebsocketResponse.fees.
+   * 1. Introduce feeEstimate$ (PROPOSED NEW), shared by fees-box and clock, using
+   *    the validated producer envelope and selected network, not receipt time.
+   * 2. On network change discard the previous network's snapshot synchronously;
+   *    on timeout/disconnect mark same-network last-good values stale with their
+   *    original observedAt, or unavailable if absent. Never invent zeros.
+   * 3. Keep one bounded source-expiry/recovery stream and cancel timers on
+   *    teardown; do not add a timer or HTTP poll per widget. Migrate both current
+   *    recommendedFees$ consumers so an old replay cannot bypass this state.
+   * 4. Coordinate WebsocketService.handleResponse and API-05 producer comments.
+   *    Extend PROPOSED NEW services/fee-estimate.spec.ts with network switch,
+   *    disconnect, old replay on retry, malformed context and fresh recovery.
+   *    Run targeted npm test, frontend lint/build and the actual Signet UI.
+   * Dependencies: API-01, API-02, API-03, API-04. Source contract:
+   *    interfaces/websocket.interface.ts#API-05-FEES-CONTRACT.
+   * Rollback keeps producer/consumer versions aligned; cached data is not proof.
+   * ANNOTATED does not resolve the failure.
+   */
+  private readonly feeState = new FeeEstimateState();
+  readonly feeEstimate$ = this.feeState.snapshot$;
+  recommendedFees$ = new BehaviorSubject<Recommendedfees | null>(null);
   chainTip$ = new ReplaySubject<number>(-1);
   serverHealth$ = new Subject<HealthCheckHost[]>();
 
@@ -392,6 +418,8 @@ export class StateService {
     });
 
     this.networkChanged$.subscribe((network) => {
+      this.feeState.reset(network);
+      this.liveFreshness.reset();
       this.transactions$ = new BehaviorSubject<TransactionStripped[]>(null);
       this.stratumJobs$ = new BehaviorSubject<Record<string, StratumJob>>({});
       this.stratumJobUpdate$.next({ state: {} });
@@ -408,20 +436,41 @@ export class StateService {
     // feed is merely slow. Shared and reference counted: one timer runs however
     // many panels are watching, and it starts again when a dashboard is next
     // opened rather than holding a verdict from an earlier visit.
-    this.liveFeed$ = this.liveFeedRetry$.pipe(
-      startWith(undefined),
-      switchMap(() => {
-        const firstChainData$ = merge(this.blocks$, this.mempoolInfo$).pipe(take(1));
-        return merge(
-          firstChainData$.pipe(map((): LoadState<boolean> => ({ status: 'data', value: true, at: Date.now() }))),
-          timer(LIVE_FEED_DEADLINE_MS).pipe(
-            takeUntil(firstChainData$),
-            map((): LoadState<boolean> => ({ status: 'error', reason: 'timeout', at: Date.now() })),
-          ),
-        ).pipe(startWith<LoadState<boolean>>({ status: 'loading' }));
-      }),
-      shareReplay({ bufferSize: 1, refCount: true }),
-    );
+    /**
+     * IMPLEMENTATION-HANDOFF [API-05] API-05-RECOVERY | F-FE-003 | FAIL.
+     * The firstChainData$ take(1) accepts cached replay, cancels the only
+     * deadline, and never ages to error. Retry consumes the same replay and
+     * immediately claims data again with zero fresh arrivals. Reproduced with
+     * the exact source expression and real RxJS TestScheduler in
+     * frontend-source-reproductions.json; no live fault injection was used.
+     * 1. Separate initial-data-arrived state from continuing source freshness.
+     *    Derive live readiness from validated source observation metadata,
+     *    selected network, connection state and a bounded freshness deadline.
+     *    A block/mempoolInfo replay or socket ping alone is not current proof.
+     * 2. Invalidate on disconnect/context switch; retain same-network last-good
+     *    data only with stale status and its original source observation.
+     *    Re-arm a single shared deadline on actual valid producer observations,
+     *    and require fresh proof after retry instead of reusing old replay.
+     * 3. Coordinate producer observation/readiness via API-03, API-04 and the
+     *    API-05 feeEstimate contract. Dashboard, fees and clock must each read
+     *    the appropriate source state; fee readiness must not prove unrelated
+     *    panels. Preserve explicit empty-success versus no authoritative data.
+     * 4. Add PROPOSED NEW services/live-feed-freshness.spec.ts and
+     *    src/app/services/dashboard-live-state.spec.ts for stale replay,
+     *    silence after first data, network switching, cancellation and
+     *    bounded retry recovery.
+     *    Run targeted npm test then lint/build and actual Signet dashboard.
+     * Dependencies API-01..API-04. Rollback never reinstates cached replay as
+     *    freshness evidence. ANNOTATED is not repaired or accepted functionality.
+     */
+    this.liveFeed$ = this.liveFreshness.state$;
+    this.feeEstimate$.subscribe(snapshot => this.recommendedFees$.next(snapshot.status === 'ready' ? snapshot.values : null));
+    this.connectionState$.subscribe(state => {
+      if (state !== 2) {
+        this.feeState.offline();
+        this.liveFreshness.offline();
+      }
+    });
 
     const savedTimePreference = this.storageService.getValue('time-preference-ltr');
     const rtlLanguage = (this.locale.startsWith('ar') || this.locale.startsWith('fa') || this.locale.startsWith('he'));
@@ -565,7 +614,19 @@ export class StateService {
    * caller's job: this service does not own the connection.
    */
   retryLiveFeed(): void {
-    this.liveFeedRetry$.next();
+    this.liveFreshness.retry();
+    this.feeState.retry();
+  }
+
+  acceptFeeEstimate(input: unknown): void { this.feeState.accept(input); }
+
+  acceptLiveObservation(observedAt: string): void { this.liveFreshness.accept(observedAt); }
+
+  invalidateLiveObservation(): void { this.liveFreshness.offline(); }
+
+  ngOnDestroy(): void {
+    this.feeState.destroy();
+    this.liveFreshness.destroy();
   }
 
   isLiquid() {

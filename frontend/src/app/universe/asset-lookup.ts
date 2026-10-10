@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, map, of, startWith } from 'rxjs';
+import { Observable, catchError, defaultIfEmpty, defer, map, of, startWith, timeout } from 'rxjs';
 import { AssetLookupResult, AssetLookupStatus } from '@app/universe/universe.types';
 import { EvidenceTone } from '@app/universe/universe-evidence';
 
@@ -17,16 +17,38 @@ export interface AssetViewState<T> {
   readonly reference?: string;
 }
 
+/** Browser reads use the same-origin gateway's fixed 30s lane plus 5s margin.
+ * Direct SSR reads conservatively allow three sequential reads, each with two
+ * 60s attempts (including body abort), plus 5s. These are nominal I/O budgets,
+ * not a network guarantee. Neither limit changes any server or RPC budget.
+ */
+export const ASSET_LOOKUP_GATEWAY_RESPONSE_MS = 35_000;
+export const ASSET_LOOKUP_EXTENDED_RESPONSE_MS = 365_000;
+
+export interface AssetLookupOptions {
+  readonly firstResponseTimeoutMs?: number;
+}
+
 export function assetState$<T>(
   reference: string,
-  request$: Observable<AssetLookupResult<T>>,
+  request$: Observable<AssetLookupResult<T>> | (() => Observable<AssetLookupResult<T>>),
+  options: AssetLookupOptions = {},
 ): Observable<AssetViewState<T>> {
-  return request$.pipe(
+  const deadline = options.firstResponseTimeoutMs ?? ASSET_LOOKUP_GATEWAY_RESPONSE_MS;
+  return defer(() => {
+    if (!Number.isSafeInteger(deadline) || deadline <= 0 || deadline > ASSET_LOOKUP_EXTENDED_RESPONSE_MS) {
+      throw new Error('Invalid asset first-response deadline');
+    }
+    return typeof request$ === 'function' ? request$() : request$;
+  }).pipe(
+    // Only the first response is bounded. Ready streams have no idle timer.
+    timeout({ first: Number.isSafeInteger(deadline) && deadline > 0 ? deadline : ASSET_LOOKUP_GATEWAY_RESPONSE_MS }),
     map((result): AssetViewState<T> =>
       result?.status === 'ok' && result.value
         ? { kind: 'ready', result, reference }
         : { kind: 'unavailable', result, reference },
     ),
+    defaultIfEmpty<AssetViewState<T>, AssetViewState<T>>({ kind: 'unavailable', reference }),
     catchError((error: HttpErrorResponse) => {
       const body = error?.error;
       const result: AssetLookupResult<T> | undefined =

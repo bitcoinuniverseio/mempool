@@ -4,6 +4,7 @@ import { writeFileSync, mkdirSync, realpathSync, existsSync } from 'node:fs';
 import { resolve, relative, dirname, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rootedProofReader } from './reconciled-operations.mjs';
+import { validateAcceptanceContexts } from './acceptance-contexts.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -48,7 +49,8 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
     }
   }
   assert.equal(mapped.size, operationIds.size, 'Application operation lacks source lineage');
-  assert.equal(acceptance.schemaVersion, 'universe-application-acceptance-v1');
+  const mixed = protocol.schemaVersion === 'universe-explorer-acceptance-v2';
+  assert.equal(acceptance.schemaVersion, mixed ? 'universe-application-acceptance-v2' : 'universe-application-acceptance-v1');
   assert.equal(acceptance.rosterSha256, digest(rosterBytes), 'Acceptance roster drift');
   assert.equal(acceptance.protocolAcceptanceSha256, digest(protocolBytes), 'Protocol evidence drift');
   assert.deepEqual(acceptance.candidate, protocol.candidate, 'Application and protocol candidate bindings differ');
@@ -69,6 +71,8 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
   }
   const componentDigest = digest(Buffer.from(JSON.stringify(acceptance.componentBindings)));
   const identityDigest = digest(Buffer.from(JSON.stringify(acceptance.candidate)));
+  const qualifiedContexts = mixed ? validateAcceptanceContexts(acceptance.candidate, readProof) : null;
+  if (mixed) assert.deepEqual([...qualifiedContexts.application.keys()].sort(), [...operationIds].sort(), 'Application context assignment coverage drift');
   assert(Array.isArray(acceptance.operations));
   assert.deepEqual(acceptance.operations.map(row => row.id).sort(), [...operationIds].sort(), 'Missing or duplicate functional operation receipts');
   const files = new Map();
@@ -77,6 +81,7 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
     assert.equal(row.result, 'PASS', `${row.id} is not functionally accepted; exclusions belong in reviewed candidate mappings`);
     assert(Array.isArray(row.files) && row.files.length > 0, 'Functional receipt is absent');
     const receipts = [];
+    const observedContexts = new Set();
     for (const file of row.files) {
       assert(text(file.path) && hash(file.sha256));
       assert(file.path.startsWith('docs/') && !file.path.includes('\\') && !file.path.split('/').includes('..'),
@@ -86,7 +91,7 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
       assert(!files.has(file.path) || files.get(file.path) === file.sha256, 'Conflicting functional evidence identity');
       files.set(file.path, file.sha256);
       const receipt = JSON.parse(bytes.toString('utf8'));
-      assert.equal(receipt.schemaVersion, 'universe-functional-operation-receipt-v1', 'Source/component evidence cannot qualify an operation');
+      assert.equal(receipt.schemaVersion, mixed ? 'universe-functional-operation-receipt-v2' : 'universe-functional-operation-receipt-v1', 'Source/component evidence cannot qualify an operation');
       assert.equal(receipt.operationId, row.id);
       assert.equal(receipt.candidateIdentitySha256, identityDigest, 'Functional candidate identity drift');
       assert.equal(receipt.componentBindingsSha256, componentDigest, 'Functional component identity drift');
@@ -97,6 +102,14 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
       assert.equal(receipt.qualificationScope, 'functional');
       assert.equal(receipt.mainnetFunctionalTest, false, 'Mainnet functional testing is not release qualification');
       assert(text(receipt.testContext.chain) && text(receipt.testContext.network));
+      if (mixed) {
+        const assigned = qualifiedContexts.application.get(row.id);
+        assert(assigned.includes(receipt.testContext.contextId), 'Unassigned application receipt context');
+        const context = qualifiedContexts.contexts.get(receipt.testContext.contextId);
+        assert.equal(receipt.testContext.chain, context.chain); assert.equal(receipt.testContext.network, context.acceptanceNetwork);
+        assert.equal(receipt.testContext.acceptanceProfileDigest, context.acceptanceProfileDigest, 'Application profile drift');
+        observedContexts.add(context.id);
+      }
       assert(contexts[receipt.testContext.chain]?.includes(receipt.testContext.network), 'Unsupported functional test context');
       const operationChain = operation.chain.toLowerCase();
       if (Object.hasOwn(contexts, operationChain)) assert.equal(receipt.testContext.chain, operationChain, 'Functional chain drift');
@@ -111,9 +124,13 @@ export function qualifyApplication(rosterBytes, acceptance, protocolBytes, candi
       }
       receipts.push(receipt);
     }
+    if (mixed) assert.deepEqual([...observedContexts].sort(), [...qualifiedContexts.application.get(row.id)].sort(), 'Missing assigned application receipt context');
     for (const assertion of operation.assertions) {
       assert(receipts.some(receipt => receipt.assertions.some(observation => observation.assertion === assertion &&
         observation.result === 'PASS' && text(observation.observation))), `Unproved functional assertion: ${assertion}`);
+    }
+    if (mixed) for (const contextId of qualifiedContexts.application.get(row.id)) for (const assertion of operation.assertions) {
+      assert(receipts.some(receipt => receipt.testContext.contextId === contextId && receipt.assertions.some(observation => observation.assertion === assertion && observation.result === 'PASS' && text(observation.observation))), 'Assigned context lacks functional assertion proof');
     }
   }
   return { qualified: true, operationCount: operationIds.size, files: [...files].map(([path, sha256]) => ({ path, sha256 })) };

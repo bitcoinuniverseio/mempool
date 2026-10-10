@@ -1,0 +1,715 @@
+{
+  "sourceRelease": "f77c1f1cc42878eff87f4f8d5c6a775abcd897ba",
+  "sourceReceipt": "signet-ordinary-reconstruction-native-v1-v4.json",
+  "observedAt": "2026-10-09T11:30:01.448759+00:00",
+  "scope": "Actual ordinary2confirmedtx spent address on ownedpublicSignet; globalpool exceeds100rawproofcapacity; no signingmaterial",
+  "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+  "views": [
+    {
+      "schema": "universe-address-utxo-reconstruction-v4",
+      "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+      "cursor": 0,
+      "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+      "network": "signet",
+      "status": "PARTIAL",
+      "confirmedAnchor": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z",
+        "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+        "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "latestObservedTip": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z"
+      },
+      "confirmedTailAnchor": null,
+      "mempoolAnchor": null,
+      "observedAt": "2026-10-09T11:29:59.802Z",
+      "expiresAt": "2026-10-09T12:29:59.801Z",
+      "globalMempoolProof": {
+        "mode": "uninitialized",
+        "fallbackReason": null,
+        "maximumTransactions": 100,
+        "maximumRetainedBytes": 524288,
+        "retainedBytes": 0,
+        "transactionCount": null,
+        "sequenceAtomic": null,
+        "initialIdentity": null,
+        "transitionCount": 0,
+        "maximumTransitions": 128,
+        "maximumRetainedTransitions": 8,
+        "transitions": [],
+        "verifiedOutputContext": null
+      },
+      "progress": {
+        "phase": "confirmed",
+        "pageLimit": 100,
+        "mempoolEpoch": 0,
+        "confirmedEpoch": 0,
+        "confirmedTransactionsProcessed": 0,
+        "confirmedTransactionsExpected": 2,
+        "confirmedTailTransactionsProcessed": 0,
+        "confirmedTailTransactionsExpected": null,
+        "mempoolTransactionsProcessed": 0,
+        "mempoolTransactionsExpected": null,
+        "candidateOutputs": 0,
+        "verifiedOutputs": 0,
+        "retainedBytes": 0
+      }
+    },
+    {
+      "schema": "universe-address-utxo-reconstruction-v4",
+      "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+      "cursor": 1,
+      "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+      "network": "signet",
+      "status": "PARTIAL",
+      "confirmedAnchor": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z",
+        "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+        "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "latestObservedTip": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.878Z"
+      },
+      "confirmedTailAnchor": null,
+      "mempoolAnchor": null,
+      "observedAt": "2026-10-09T11:29:59.885Z",
+      "expiresAt": "2026-10-09T12:29:59.801Z",
+      "globalMempoolProof": {
+        "mode": "uninitialized",
+        "fallbackReason": null,
+        "maximumTransactions": 100,
+        "maximumRetainedBytes": 524288,
+        "retainedBytes": 0,
+        "transactionCount": null,
+        "sequenceAtomic": null,
+        "initialIdentity": null,
+        "transitionCount": 0,
+        "maximumTransitions": 128,
+        "maximumRetainedTransitions": 8,
+        "transitions": [],
+        "verifiedOutputContext": null
+      },
+      "progress": {
+        "phase": "confirmed",
+        "pageLimit": 100,
+        "mempoolEpoch": 0,
+        "confirmedEpoch": 0,
+        "confirmedTransactionsProcessed": 2,
+        "confirmedTransactionsExpected": 2,
+        "confirmedTailTransactionsProcessed": 0,
+        "confirmedTailTransactionsExpected": null,
+        "mempoolTransactionsProcessed": 0,
+        "mempoolTransactionsExpected": null,
+        "candidateOutputs": 0,
+        "verifiedOutputs": 0,
+        "retainedBytes": 2292
+      }
+    },
+    {
+      "schema": "universe-address-utxo-reconstruction-v4",
+      "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+      "cursor": 2,
+      "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+      "network": "signet",
+      "status": "PARTIAL",
+      "confirmedAnchor": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z",
+        "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+        "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "latestObservedTip": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.973Z"
+      },
+      "confirmedTailAnchor": null,
+      "mempoolAnchor": null,
+      "observedAt": "2026-10-09T11:29:59.983Z",
+      "expiresAt": "2026-10-09T12:29:59.801Z",
+      "globalMempoolProof": {
+        "mode": "uninitialized",
+        "fallbackReason": null,
+        "maximumTransactions": 100,
+        "maximumRetainedBytes": 524288,
+        "retainedBytes": 0,
+        "transactionCount": null,
+        "sequenceAtomic": null,
+        "initialIdentity": null,
+        "transitionCount": 0,
+        "maximumTransitions": 128,
+        "maximumRetainedTransitions": 8,
+        "transitions": [],
+        "verifiedOutputContext": null
+      },
+      "progress": {
+        "phase": "reconcile-confirmed",
+        "pageLimit": 100,
+        "mempoolEpoch": 0,
+        "confirmedEpoch": 0,
+        "confirmedTransactionsProcessed": 2,
+        "confirmedTransactionsExpected": 2,
+        "confirmedTailTransactionsProcessed": 0,
+        "confirmedTailTransactionsExpected": null,
+        "mempoolTransactionsProcessed": 0,
+        "mempoolTransactionsExpected": null,
+        "candidateOutputs": 0,
+        "verifiedOutputs": 0,
+        "retainedBytes": 2292
+      }
+    },
+    {
+      "schema": "universe-address-utxo-reconstruction-v4",
+      "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+      "cursor": 3,
+      "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+      "network": "signet",
+      "status": "PARTIAL",
+      "confirmedAnchor": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z",
+        "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+        "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "latestObservedTip": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:30:00.109Z"
+      },
+      "confirmedTailAnchor": {
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 325621,
+          "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-09T11:30:00.040Z"
+        },
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "mempoolAnchor": null,
+      "observedAt": "2026-10-09T11:30:00.116Z",
+      "expiresAt": "2026-10-09T12:29:59.801Z",
+      "globalMempoolProof": {
+        "mode": "uninitialized",
+        "fallbackReason": null,
+        "maximumTransactions": 100,
+        "maximumRetainedBytes": 524288,
+        "retainedBytes": 0,
+        "transactionCount": null,
+        "sequenceAtomic": null,
+        "initialIdentity": null,
+        "transitionCount": 0,
+        "maximumTransitions": 128,
+        "maximumRetainedTransitions": 8,
+        "transitions": [],
+        "verifiedOutputContext": null
+      },
+      "progress": {
+        "phase": "acquire-mempool",
+        "pageLimit": 100,
+        "mempoolEpoch": 0,
+        "confirmedEpoch": 0,
+        "confirmedTransactionsProcessed": 2,
+        "confirmedTransactionsExpected": 2,
+        "confirmedTailTransactionsProcessed": 0,
+        "confirmedTailTransactionsExpected": 0,
+        "mempoolTransactionsProcessed": 0,
+        "mempoolTransactionsExpected": null,
+        "candidateOutputs": 0,
+        "verifiedOutputs": 0,
+        "retainedBytes": 2292
+      }
+    },
+    {
+      "schema": "universe-address-utxo-reconstruction-v4",
+      "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+      "cursor": 4,
+      "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+      "network": "signet",
+      "status": "PARTIAL",
+      "confirmedAnchor": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z",
+        "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+        "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "latestObservedTip": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:30:00.290Z"
+      },
+      "confirmedTailAnchor": {
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 325621,
+          "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-09T11:30:00.040Z"
+        },
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "mempoolAnchor": {
+        "identity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+        "observedAt": "2026-10-09T11:30:00.355Z",
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 325621,
+          "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-09T11:30:00.290Z"
+        },
+        "addressMempoolStats": {
+          "funded_txo_count": 0,
+          "funded_txo_sum": 0,
+          "spent_txo_count": 0,
+          "spent_txo_sum": 0,
+          "tx_count": 0
+        }
+      },
+      "observedAt": "2026-10-09T11:30:00.355Z",
+      "expiresAt": "2026-10-09T12:29:59.801Z",
+      "globalMempoolProof": {
+        "mode": "strict-global-fallback",
+        "fallbackReason": "GLOBAL_POOL_EXCEEDS_PROOF_CAPACITY",
+        "maximumTransactions": 100,
+        "maximumRetainedBytes": 524288,
+        "retainedBytes": 512,
+        "transactionCount": 2429,
+        "sequenceAtomic": "64364",
+        "initialIdentity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+        "transitionCount": 0,
+        "maximumTransitions": 128,
+        "maximumRetainedTransitions": 8,
+        "transitions": [],
+        "verifiedOutputContext": null
+      },
+      "progress": {
+        "phase": "mempool",
+        "pageLimit": 100,
+        "mempoolEpoch": 0,
+        "confirmedEpoch": 0,
+        "confirmedTransactionsProcessed": 2,
+        "confirmedTransactionsExpected": 2,
+        "confirmedTailTransactionsProcessed": 0,
+        "confirmedTailTransactionsExpected": 0,
+        "mempoolTransactionsProcessed": 0,
+        "mempoolTransactionsExpected": 0,
+        "candidateOutputs": 0,
+        "verifiedOutputs": 0,
+        "retainedBytes": 2804
+      }
+    },
+    {
+      "schema": "universe-address-utxo-reconstruction-v4",
+      "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+      "cursor": 5,
+      "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+      "network": "signet",
+      "status": "PARTIAL",
+      "confirmedAnchor": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z",
+        "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+        "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "latestObservedTip": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:30:00.501Z"
+      },
+      "confirmedTailAnchor": {
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 325621,
+          "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-09T11:30:00.040Z"
+        },
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "mempoolAnchor": {
+        "identity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+        "observedAt": "2026-10-09T11:30:00.355Z",
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 325621,
+          "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-09T11:30:00.290Z"
+        },
+        "addressMempoolStats": {
+          "funded_txo_count": 0,
+          "funded_txo_sum": 0,
+          "spent_txo_count": 0,
+          "spent_txo_sum": 0,
+          "tx_count": 0
+        }
+      },
+      "observedAt": "2026-10-09T11:30:00.546Z",
+      "expiresAt": "2026-10-09T12:29:59.801Z",
+      "globalMempoolProof": {
+        "mode": "strict-global-fallback",
+        "fallbackReason": "GLOBAL_POOL_EXCEEDS_PROOF_CAPACITY",
+        "maximumTransactions": 100,
+        "maximumRetainedBytes": 524288,
+        "retainedBytes": 512,
+        "transactionCount": 2429,
+        "sequenceAtomic": "64364",
+        "initialIdentity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+        "transitionCount": 0,
+        "maximumTransitions": 128,
+        "maximumRetainedTransitions": 8,
+        "transitions": [],
+        "verifiedOutputContext": null
+      },
+      "progress": {
+        "phase": "outspends",
+        "pageLimit": 100,
+        "mempoolEpoch": 0,
+        "confirmedEpoch": 0,
+        "confirmedTransactionsProcessed": 2,
+        "confirmedTransactionsExpected": 2,
+        "confirmedTailTransactionsProcessed": 0,
+        "confirmedTailTransactionsExpected": 0,
+        "mempoolTransactionsProcessed": 0,
+        "mempoolTransactionsExpected": 0,
+        "candidateOutputs": 0,
+        "verifiedOutputs": 0,
+        "retainedBytes": 2804
+      }
+    },
+    {
+      "schema": "universe-address-utxo-reconstruction-v4",
+      "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+      "cursor": 6,
+      "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+      "network": "signet",
+      "status": "COMPLETE_AT_OBSERVED_TIP",
+      "confirmedAnchor": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:29:59.697Z",
+        "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+        "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "latestObservedTip": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:30:00.790Z"
+      },
+      "confirmedTailAnchor": {
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 325621,
+          "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-09T11:30:00.040Z"
+        },
+        "chainStats": {
+          "funded_txo_count": 1,
+          "funded_txo_sum": 288767,
+          "spent_txo_count": 1,
+          "spent_txo_sum": 288767,
+          "tx_count": 2
+        }
+      },
+      "mempoolAnchor": {
+        "identity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+        "observedAt": "2026-10-09T11:30:00.355Z",
+        "checkpoint": {
+          "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+          "blockHeight": 325621,
+          "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+          "network": "signet",
+          "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+          "verifiedAt": "2026-10-09T11:30:00.290Z"
+        },
+        "addressMempoolStats": {
+          "funded_txo_count": 0,
+          "funded_txo_sum": 0,
+          "spent_txo_count": 0,
+          "spent_txo_sum": 0,
+          "tx_count": 0
+        }
+      },
+      "observedAt": "2026-10-09T11:30:01.276Z",
+      "expiresAt": "2026-10-09T12:29:59.801Z",
+      "globalMempoolProof": {
+        "mode": "strict-global-fallback",
+        "fallbackReason": "GLOBAL_POOL_EXCEEDS_PROOF_CAPACITY",
+        "maximumTransactions": 100,
+        "maximumRetainedBytes": 524288,
+        "retainedBytes": 512,
+        "transactionCount": 2429,
+        "sequenceAtomic": "64364",
+        "initialIdentity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+        "transitionCount": 0,
+        "maximumTransitions": 128,
+        "maximumRetainedTransitions": 8,
+        "transitions": [],
+        "verifiedOutputContext": {
+          "identity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+          "checkpoint": {
+            "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+            "blockHeight": 325621,
+            "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+            "network": "signet",
+            "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+            "verifiedAt": "2026-10-09T11:30:00.290Z"
+          },
+          "outpointsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "outputCount": 0
+        }
+      },
+      "progress": {
+        "phase": "complete",
+        "pageLimit": 100,
+        "mempoolEpoch": 0,
+        "confirmedEpoch": 0,
+        "confirmedTransactionsProcessed": 2,
+        "confirmedTransactionsExpected": 2,
+        "confirmedTailTransactionsProcessed": 0,
+        "confirmedTailTransactionsExpected": 0,
+        "mempoolTransactionsProcessed": 0,
+        "mempoolTransactionsExpected": 0,
+        "candidateOutputs": 0,
+        "verifiedOutputs": 0,
+        "retainedBytes": 2804
+      },
+      "result": {
+        "outputCount": 0,
+        "balanceAtomic": "0",
+        "items": []
+      }
+    }
+  ],
+  "cancelled": {
+    "schema": "universe-address-utxo-reconstruction-v4",
+    "sessionId": "d6fd6014-ab85-4cbd-90fb-a3f74bc77d83",
+    "cursor": 6,
+    "address": "2N7Tmwf2C7AhSja2c2PKKrajAWhgb8kL4iT",
+    "network": "signet",
+    "status": "CANCELLED",
+    "reason": "Explicitly cancelled",
+    "confirmedAnchor": {
+      "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+      "blockHeight": 325621,
+      "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+      "network": "signet",
+      "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+      "verifiedAt": "2026-10-09T11:29:59.697Z",
+      "sourceId": "7cde393ce7c2ca3dbe64f213b849dcc72ad7294426a2331577613316d6ca07a9",
+      "scriptPubKey": "a9149bf16d4cb31ce2aa1f61ef1416aa47f854a389ac87",
+      "chainStats": {
+        "funded_txo_count": 1,
+        "funded_txo_sum": 288767,
+        "spent_txo_count": 1,
+        "spent_txo_sum": 288767,
+        "tx_count": 2
+      }
+    },
+    "latestObservedTip": {
+      "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+      "blockHeight": 325621,
+      "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+      "network": "signet",
+      "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+      "verifiedAt": "2026-10-09T11:30:00.790Z"
+    },
+    "confirmedTailAnchor": {
+      "checkpoint": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:30:00.040Z"
+      },
+      "chainStats": {
+        "funded_txo_count": 1,
+        "funded_txo_sum": 288767,
+        "spent_txo_count": 1,
+        "spent_txo_sum": 288767,
+        "tx_count": 2
+      }
+    },
+    "mempoolAnchor": {
+      "identity": "bd6688401a590dd2d213f6f976f27d18214fb4726edc193d5425fb0a95fd7eff",
+      "observedAt": "2026-10-09T11:30:00.355Z",
+      "checkpoint": {
+        "genesisHash": "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
+        "blockHeight": 325621,
+        "blockHash": "00000010c928a5802e84882752ea56b467ec548d1ff18d5b654f2110c44f2f25",
+        "network": "signet",
+        "signetChallenge": "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae",
+        "verifiedAt": "2026-10-09T11:30:00.290Z"
+      },
+      "addressMempoolStats": {
+        "funded_txo_count": 0,
+        "funded_txo_sum": 0,
+        "spent_txo_count": 0,
+        "spent_txo_sum": 0,
+        "tx_count": 0
+      }
+    },
+    "observedAt": "2026-10-09T11:30:01.282Z",
+    "expiresAt": "2026-10-09T12:29:59.801Z",
+    "globalMempoolProof": {
+      "mode": "uninitialized",
+      "fallbackReason": null,
+      "maximumTransactions": 100,
+      "maximumRetainedBytes": 524288,
+      "retainedBytes": 0,
+      "transactionCount": 2429,
+      "sequenceAtomic": "64364",
+      "initialIdentity": null,
+      "transitionCount": 0,
+      "maximumTransitions": 128,
+      "maximumRetainedTransitions": 8,
+      "transitions": [],
+      "verifiedOutputContext": null
+    },
+    "progress": {
+      "phase": "complete",
+      "pageLimit": 100,
+      "mempoolEpoch": 0,
+      "confirmedEpoch": 0,
+      "confirmedTransactionsProcessed": 2,
+      "confirmedTransactionsExpected": 2,
+      "confirmedTailTransactionsProcessed": 0,
+      "confirmedTailTransactionsExpected": 0,
+      "mempoolTransactionsProcessed": 0,
+      "mempoolTransactionsExpected": 0,
+      "candidateOutputs": 0,
+      "verifiedOutputs": 0,
+      "retainedBytes": 0
+    }
+  }
+}

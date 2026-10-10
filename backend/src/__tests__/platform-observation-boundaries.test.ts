@@ -2,11 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 import ts from 'typescript';
+import { TaskDrain } from '../api/task-drain';
 // Execute complete production modules with explicit read-only boundary doubles; no copied handlers.
 function load(relative: string, dependencies: Record<string, any>) {
  const file=path.join(__dirname,'..',relative), exports: any={};
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
- vm.runInNewContext(code,{exports,require:(id:string)=>dependencies[id] || {},console,Buffer,setTimeout,clearTimeout});
+ vm.runInNewContext(code,{exports,require:(id:string)=>id==='./task-drain'?{TaskDrain}:dependencies[id] || {},console,Buffer,setTimeout,clearTimeout});
  return exports.default;
 }
 function response() {const r:any={statusCode:200,body:undefined}; r.status=(s:number)=>{r.statusCode=s;return r;}; r.json=r.send=(b:any)=>{r.body=b;return r;}; r.header=r.setHeader=()=>r; return r;}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "universe-actual-clock-history-defect-v1",
+  "observedAt": "2026-10-09T18:06:11.282Z",
+  "sourceCommit": "1501dbc53067ca0e69b440bc15bcee6e18a86b49",
+  "network": "signet",
+  "environment": "Actual existing localhost4200/IAB tab2, native1501 and overlay297",
+  "steps": [
+    "Open /signet/clock/mempool/0 and observe ready values.",
+    "Click the visible latest Block link (/signet/clock/block/0).",
+    "Observe canonical URL /signet/clock/mined/0 with actual mined size/transaction count.",
+    "Refresh and recover same mined view.",
+    "Back navigates to /signet/clock/block/0; forward reports no next page."
+  ],
+  "actualResult": "FAIL",
+  "sourceCause": "ClockComponent normalization calls router.navigate without replaceUrl, adding a fresh entry during history navigation.",
+  "secondarySourceFinding": "Negative index normalizes with index || 0, retaining the negative number. Source-only finding; no actual negative-route acceptance claimed.",
+  "evidence": [
+    "preview-1501-clock-mined-ui.txt",
+    "preview-1501-clock-mined-refresh-ui.txt"
+  ],
+  "repairState": "Frontend agent implementing scoped normalization/meaningful tests; no built repair yet",
+  "wholeFunctionalAcceptance": false
+}

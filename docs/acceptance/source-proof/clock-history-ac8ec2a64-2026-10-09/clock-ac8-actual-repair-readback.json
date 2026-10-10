@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "universe-actual-clock-repair-readback-v1",
+  "observedAt": "2026-10-09T18:28:45.973Z",
+  "frontendSource": "ac8ec2a645520ac58e007f5a974561e12e65928d",
+  "nativeSource": "1501dbc53067ca0e69b440bc15bcee6e18a86b49",
+  "overlaySource": "29728542e903629c78461a5b7e91e84c1dde73f7",
+  "environment": "Existinglocalhost4200/IABtab2; actual owned Signet source",
+  "result": "PASS",
+  "scope": "Clock alias history/index safety and selected positive refresh, not complete fee/Clock acceptance",
+  "observations": [
+    "Cold protocolfooter confirms ac8ec2a64.",
+    "/signet/clock/mined/999 preserves999 and renders explicit outside-window status, no fake block0.",
+    "VisiblelatestBlock andpreviousBlock links normalize to mined0/mined1 without extra history entries.",
+    "Back returns mined0; forward returns mined1 displaying block325663/662.83kB/1114transactions.",
+    "Refresh preserves mined1 and recovers ready values.",
+    "/signet/clock/block/-1?check=clockfix#marker normalizes to/mined/0 preserving query/fragment.",
+    "Captured errors for newmain.6ef32583fd5bf71e.js:0."
+  ],
+  "evidence": [
+    "preview-artifact-swap-ac8.json",
+    "clock-ac8-out-of-window-ui.txt",
+    "clock-ac8-out-of-window-ui.jpg",
+    "clock-ac8-back-forward-ui.txt",
+    "clock-ac8-normalized-ui.txt",
+    "clock-ac8-current-bundle-errors.json",
+    "clock-ac8-fixed-ui.jpg"
+  ],
+  "priorFailurePreserved": "clock-1501-actual-history-defect.json and clock-1501-out-of-window-console.json",
+  "fullRequiredOperationAcceptance": false,
+  "publicRelease": false
+}

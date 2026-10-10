@@ -12,6 +12,7 @@ import statisticsReplicator from './replication/StatisticsReplication';
 import AccelerationRepository from './repositories/AccelerationRepository';
 import BlocksAuditsRepository from './repositories/BlocksAuditsRepository';
 import BlocksRepository from './repositories/BlocksRepository';
+import { TaskDrain } from './api/task-drain';
 
 export interface CoreIndex {
   name: string;
@@ -52,6 +53,24 @@ class Indexer {
   private tasksScheduled: { [key in TaskName]?: NodeJS.Timeout; } = {};
   private reindexTimeout: NodeJS.Timeout | undefined;
   private coreIndexes: CoreIndex[] = [];
+  private stopping = false;
+  private readonly work = new TaskDrain();
+
+  /** Stop future admission without interrupting a mining/backfill operation. */
+  public stop(): void {
+    this.stopping = true;
+    this.runIndexer = false;
+    if (this.reindexTimeout) clearTimeout(this.reindexTimeout);
+    this.reindexTimeout = undefined;
+    for (const task of Object.keys(this.tasksScheduled) as TaskName[]) {
+      clearTimeout(this.tasksScheduled[task]);
+      delete this.tasksScheduled[task];
+    }
+  }
+
+  public drain(): Promise<void> {
+    return this.work.drain();
+  }
 
   public indexerIsRunning(): boolean {
     return this.indexerRunning;
@@ -106,7 +125,7 @@ class Indexer {
    * accepted; it is refused when indexing is disabled in this deployment.
    */
   public reindex(): boolean {
-    if (!Common.indexingEnabled()) {
+    if (this.stopping || !Common.indexingEnabled()) {
       return false;
     }
     if (this.reindexTimeout) {
@@ -118,6 +137,7 @@ class Indexer {
   }
 
   private scheduleNextRun(timeout: number): void {
+    if (this.stopping) return;
     if (!this.reindexTimeout) { // Only one future run should be planned, ignore if already scheduled
       this.reindexTimeout = setTimeout(() => {
         this.reindexTimeout = undefined;
@@ -135,6 +155,7 @@ class Indexer {
    * @param {boolean} replace - `true` replaces any already scheduled task (works like a debounce), `false` ignores subsequent requests (works like a throttle)
    */
   public scheduleSingleTask(task: TaskName, timeout: number = 10000, replace = false): void {
+    if (this.stopping) return;
     if (this.tasksScheduled[task]) {
       if (!replace) { //throttle
         return;
@@ -169,7 +190,15 @@ class Indexer {
    *
    * @asyncSafe
    */
-  public async runSingleTask(task: TaskName): Promise<SingleTaskOutcome> {
+  public runSingleTask(task: TaskName): Promise<SingleTaskOutcome> {
+    if (this.stopping) {
+      return Promise.resolve({ task, status: 'disabled', reason: 'Indexer shutdown has closed task admission.' });
+    }
+    return this.work.track(this.executeSingleTask(task));
+  }
+
+  /** @asyncSafe */
+  private async executeSingleTask(task: TaskName): Promise<SingleTaskOutcome> {
     if (!Common.indexingEnabled()) {
       return { task, status: 'disabled', reason: 'Indexing is disabled in this deployment.' };
     }
@@ -221,7 +250,13 @@ class Indexer {
   }
 
   /** @asyncSafe */
-  public async $run(): Promise<void> {
+  public $run(): Promise<void> {
+    if (this.stopping) return Promise.resolve();
+    return this.work.track(this.executeRun());
+  }
+
+  /** @asyncSafe */
+  private async executeRun(): Promise<void> {
     if (!Common.indexingEnabled() || this.runIndexer === false ||
       this.indexerRunning === true || mempool.hasPriority()
     ) {
@@ -280,7 +315,7 @@ class Indexer {
       await BlocksAuditsRepository.$migrateAuditsV0toV1();
       await BlocksRepository.$migrateBlocks();
       // do not wait for classify blocks to finish
-      void blocks.$classifyBlocks();
+      if (!this.stopping) this.work.track(blocks.$classifyBlocks()).catch(error => logger.err(`Block classification failed: ${error}`));
       runSuccessful = true;
     } catch (e) {
       nextRunDelay = retryDelay;

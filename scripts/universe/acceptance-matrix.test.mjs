@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildCommandMatrix, buildMatrix, describeArtifact, tableIds, uniqueIds, validateMatrix } from './acceptance-matrix.mjs';
+import { buildCommandMatrix, buildMatrix, describeArtifact, tableIds, uniqueIds, validateMatrix, selectedSourceLedgerPath } from './acceptance-matrix.mjs';
 
 test('OP Names successor keeps predecessor authority and cannot promote source transition acceptance', () => {
   const matrix = buildMatrix();
@@ -82,6 +82,14 @@ test('the regeneration command retains every reviewed execution assertion by def
 test('an incomplete evidence option cannot reset the ledger to source-only rows', () => {
   assert.throws(() => buildCommandMatrix(['--evidence']), /requires a file path/);
   assert.throws(() => buildCommandMatrix(['--evidence', '--check']), /requires a file path/);
+});
+
+test('dated current ledger selection preserves historical paths and rejects escape', () => {
+  assert.equal(selectedSourceLedgerPath(), 'docs/acceptance/operation-matrix-source-successor-2026-10-09.json');
+  assert.equal(selectedSourceLedgerPath(['--current', 'docs/acceptance/controlled-ledger.json']), 'docs/acceptance/controlled-ledger.json');
+  for (const path of [undefined, '../outside.json', 'C:/outside.json', 'docs/acceptance/../outside.json', 'docs/acceptance/ledger.txt']) {
+    assert.throws(() => selectedSourceLedgerPath(['--current', path]));
+  }
 });
 
 test('markdown imports retain expanded ranges, compact IDs and separate operation/evidence identities', () => {

@@ -54,7 +54,7 @@ describe('appendEnvelopes', () => {
     const first = envelope({ sequenceAtomic: '18446744073709551616' });
     const next = envelope({ sequenceAtomic: '18446744073709551620' });
     const state = appendEnvelopes(appendEnvelopes(EMPTY, [first]), [next]);
-    expect(state.gaps).toEqual([{ key: 'bitcoin/chain-status', missing: 3 }]);
+    expect(state.gaps).toEqual([{ key: 'bitcoin/mainnet/chain-status/snap-1', missing: 3 }]);
   });
 
   it('tracks gaps per channel, not globally', () => {
@@ -65,15 +65,15 @@ describe('appendEnvelopes', () => {
       envelope({ chain: 'bitcoin', sequenceAtomic: '13' }),
       envelope({ chain: 'dogecoin', sequenceAtomic: '11' }),
     ]);
-    expect(state.gaps.map((gap) => gap.key)).toEqual(['bitcoin/chain-status']);
+    expect(state.gaps.map((gap) => gap.key)).toEqual(['bitcoin/mainnet/chain-status/snap-1']);
   });
 
   it('clears a gap when told the service resynced it', () => {
     const withGap: BufferReport = {
       ...EMPTY,
-      gaps: [{ key: 'bitcoin/chain-status', missing: 5 }],
+      gaps: [{ key: 'bitcoin/mainnet/chain-status/snap-1', missing: 5 }],
     };
-    expect(clearGap(withGap, 'bitcoin/chain-status').gaps).toHaveLength(0);
+    expect(clearGap(withGap, 'bitcoin/mainnet/chain-status/snap-1').gaps).toHaveLength(0);
     expect(clearGap(withGap, 'other').gaps).toHaveLength(1);
   });
 
@@ -143,6 +143,14 @@ describe('ageWords', () => {
 describe('channelKey', () => {
   it('pairs the chain with the channel', () => {
     expect(channelKey(envelope({ chain: 'zcash', channel: 'candidate-buckets' })))
-      .toBe('zcash/candidate-buckets');
+      .toBe('zcash/mainnet/candidate-buckets/snap-1');
   });
+});
+
+
+it('isolates identical sequences across network and producer snapshot generations', () => {
+  const first = envelope({ sequenceAtomic: '1' });
+  const state = appendEnvelopes(appendEnvelopes({ entries: [], gaps: [], duplicates: 0, evicted: 0 }, [first]),
+    [{ ...first, network: 'signet' }, { ...first, snapshotId: 'snap-2' }]);
+  expect(state.entries).toHaveLength(3); expect(state.duplicates).toBe(0); expect(state.gaps).toEqual([]);
 });

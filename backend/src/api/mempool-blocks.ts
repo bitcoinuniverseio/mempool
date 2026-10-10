@@ -12,6 +12,12 @@ import PoolsRepository from '../repositories/PoolsRepository';
 const MAX_UINT32 = Math.pow(2, 32) - 1;
 
 class MempoolBlocks {
+  /** @asyncUnsafe The signal owner calls this only after the main loop drains. */
+  public async closeSelectionWorker(): Promise<void> {
+    const worker = this.txSelectionWorker;
+    this.txSelectionWorker = null;
+    if (worker) await worker.terminate();
+  }
   private mempoolBlocks: MempoolBlockWithTransactions[] = [];
   private mempoolBlockDeltas: MempoolBlockDelta[] = [];
   private txSelectionWorker: Worker | null = null;

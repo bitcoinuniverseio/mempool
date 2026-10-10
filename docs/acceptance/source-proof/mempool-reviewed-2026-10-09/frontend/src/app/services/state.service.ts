@@ -1,0 +1,679 @@
+import { Inject, Injectable, PLATFORM_ID, LOCALE_ID } from '@angular/core';
+import { ReplaySubject, BehaviorSubject, Subject, fromEvent, Observable } from 'rxjs';
+import { Transaction } from '@interfaces/electrs.interface';
+import { AccelerationDelta, HealthCheckHost, IBackendInfo, MempoolBlock, MempoolBlockUpdate, MempoolInfo, Recommendedfees, ReplacedTransaction, ReplacementInfo, StratumJob, isMempoolState } from '@interfaces/websocket.interface';
+import { Acceleration, AccelerationPosition, BlockExtended, CpfpInfo, DifficultyAdjustment, MempoolPosition, OptimizedMempoolStats, RbfTree, TransactionStripped } from '@interfaces/node-api.interface';
+import { Router, NavigationStart } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+import { filter, map, scan, share, shareReplay } from 'rxjs/operators';
+import { FeeEstimateState } from './fee-estimate';
+import { LiveFeedFreshness } from './live-feed-freshness';
+import { LoadState } from '@app/shared/load-state';
+import { StorageService } from '@app/services/storage.service';
+import { hasTouchScreen } from '@app/shared/pipes/bytes-pipe/utils';
+import { ActiveFilter } from '@app/shared/filters.utils';
+
+export interface MarkBlockState {
+  blockHeight?: number;
+  txid?: string;
+  mempoolBlockIndex?: number;
+  txFeePerVSize?: number;
+  mempoolPosition?: MempoolPosition;
+  accelerationPositions?: AccelerationPosition[];
+}
+
+export interface ILoadingIndicators { [name: string]: number; }
+
+export interface Customization {
+  theme: string;
+  enterprise?: string;
+  branding: {
+    name: string;
+    site_id?: number;
+    title: string;
+    img?: string;
+    header_img?: string;
+    footer_img?: string;
+    rounded_corner: boolean;
+    cobranded?: boolean;
+  },
+  dashboard: {
+    widgets: {
+      component: string;
+      mobileOrder?: number;
+      props: { [key: string]: any };
+    }[];
+  };
+}
+
+export type SignaturesMode = 'all' | 'interesting' | 'none' | null;
+
+/**
+ * How long the socket has to say anything before the live feed is treated as
+ * having given up. The first payload normally lands within a second or two,
+ * so five seconds is already generous, and a late arrival still clears the
+ * verdict. It is also deliberately inside the visual gate's failure budget:
+ * at ten seconds, whether the gate saw the panel depended on how slowly the
+ * probes ran, which made the check a machine-speed race.
+ */
+
+
+export interface Env {
+  MAINNET_ENABLED: boolean;
+  TESTNET_ENABLED: boolean;
+  TESTNET4_ENABLED: boolean;
+  SIGNET_ENABLED: boolean;
+  REGTEST_ENABLED: boolean;
+  LIQUID_ENABLED: boolean;
+  LIQUID_TESTNET_ENABLED: boolean;
+  ITEMS_PER_PAGE: number;
+  KEEP_BLOCKS_AMOUNT: number;
+  OFFICIAL_MEMPOOL_SPACE: boolean;
+  BASE_MODULE: string;
+  ROOT_NETWORK: string;
+  NGINX_PROTOCOL?: string;
+  NGINX_HOSTNAME?: string;
+  NGINX_PORT?: string;
+  BLOCK_WEIGHT_UNITS: number;
+  MEMPOOL_BLOCKS_AMOUNT: number;
+  GIT_COMMIT_HASH: string;
+  PACKAGE_JSON_VERSION: string;
+  MEMPOOL_WEBSITE_URL: string;
+  LIQUID_WEBSITE_URL: string;
+  MINING_DASHBOARD: boolean;
+  LIGHTNING: boolean;
+  AUDIT: boolean;
+  MAINNET_BLOCK_AUDIT_START_HEIGHT: number;
+  TESTNET_BLOCK_AUDIT_START_HEIGHT: number;
+  TESTNET4_BLOCK_AUDIT_START_HEIGHT: number;
+  SIGNET_BLOCK_AUDIT_START_HEIGHT: number;
+  REGTEST_BLOCK_AUDIT_START_HEIGHT: number;
+  MAINNET_TX_FIRST_SEEN_START_HEIGHT: number;
+  TESTNET_TX_FIRST_SEEN_START_HEIGHT: number;
+  TESTNET4_TX_FIRST_SEEN_START_HEIGHT: number;
+  SIGNET_TX_FIRST_SEEN_START_HEIGHT: number;
+  REGTEST_TX_FIRST_SEEN_START_HEIGHT: number;
+  HISTORICAL_PRICE: boolean;
+  ACCELERATOR: boolean;
+  ACCELERATOR_BUTTON: boolean;
+  PUBLIC_ACCELERATIONS: boolean;
+  ADDITIONAL_CURRENCIES: boolean;
+  GIT_COMMIT_HASH_MEMPOOL_SPACE?: string;
+  PACKAGE_JSON_VERSION_MEMPOOL_SPACE?: string;
+  STRATUM_ENABLED: boolean;
+  SERVICES_API?: string;
+  ONION_SERVICES_API?: string;
+  /**
+   * Which network each non-Bitcoin chain is read from, as a JSON object such
+   * as {"dogecoin":"testnet"} (or that object as a JSON string). Unlisted
+   * chains read mainnet; Bitcoin always follows the network selector.
+   */
+  UNIVERSE_CHAIN_NETWORKS?: Record<string, string> | string;
+  /** Independent public native Elements/Bitcoin pair expectations. Empty means unavailable. */
+  SV2_SOURCE_PROFILE?: import('@app/universe/stratum-v2/stratum-v2.types').Sv2ConfiguredSource | string | null;
+  LIQUID_SOURCE_PROFILES?: Partial<Record<import('@app/universe/liquid-observatory/liquid-observatory.types').LiquidNetwork, import('@app/universe/liquid-observatory/liquid-observatory.types').LiquidConfiguredPair>> | string;
+  /** Independent public Fractal testnet authority expectation. */
+  FRACTAL_SOURCE_PROFILE?: import('@app/universe/universe.types').FractalSourceProfile | string | null;
+  /** Public operator expectations for explicitly qualified watch-only Bitcoin sources. */
+  WATCH_ONLY_SOURCE_PROFILES?: Record<string, { releaseSha: string; configurationSha256: string; genesisHash: string; signetChallenge: string | null }> | string;
+  customize?: Customization;
+  PROD_DOMAINS: string[];
+}
+
+const defaultEnv: Env = {
+  'MAINNET_ENABLED': true,
+  'TESTNET_ENABLED': false,
+  'TESTNET4_ENABLED': false,
+  'SIGNET_ENABLED': false,
+  'REGTEST_ENABLED': false,
+  'LIQUID_ENABLED': false,
+  'LIQUID_TESTNET_ENABLED': false,
+  'BASE_MODULE': 'mempool',
+  'ROOT_NETWORK': '',
+  'SV2_SOURCE_PROFILE': null,
+  'LIQUID_SOURCE_PROFILES': {},
+  'FRACTAL_SOURCE_PROFILE': null,
+  'WATCH_ONLY_SOURCE_PROFILES': {},
+  'ITEMS_PER_PAGE': 10,
+  'KEEP_BLOCKS_AMOUNT': 8,
+  'OFFICIAL_MEMPOOL_SPACE': false,
+  'NGINX_PROTOCOL': 'http',
+  'NGINX_HOSTNAME': '127.0.0.1',
+  'NGINX_PORT': '80',
+  'BLOCK_WEIGHT_UNITS': 4000000,
+  'MEMPOOL_BLOCKS_AMOUNT': 8,
+  'GIT_COMMIT_HASH': '',
+  'PACKAGE_JSON_VERSION': '',
+  // Cross-network links default to this deployment's own origin. Upstream
+  // points these at its hosted sites; sending a visitor to a third party is
+  // never the default here.
+  'MEMPOOL_WEBSITE_URL': 'https://explorer.bitcoinuniverse.io',
+  'LIQUID_WEBSITE_URL': 'https://explorer.bitcoinuniverse.io',
+  'MINING_DASHBOARD': true,
+  'LIGHTNING': false,
+  'AUDIT': false,
+  'MAINNET_BLOCK_AUDIT_START_HEIGHT': 0,
+  'TESTNET_BLOCK_AUDIT_START_HEIGHT': 0,
+  'TESTNET4_BLOCK_AUDIT_START_HEIGHT': 0,
+  'SIGNET_BLOCK_AUDIT_START_HEIGHT': 0,
+  'REGTEST_BLOCK_AUDIT_START_HEIGHT': 0,
+  'MAINNET_TX_FIRST_SEEN_START_HEIGHT': 0,
+  'TESTNET_TX_FIRST_SEEN_START_HEIGHT': 0,
+  'TESTNET4_TX_FIRST_SEEN_START_HEIGHT': 0,
+  'SIGNET_TX_FIRST_SEEN_START_HEIGHT': 0,
+  'REGTEST_TX_FIRST_SEEN_START_HEIGHT': 0,
+  'HISTORICAL_PRICE': true,
+  'ACCELERATOR': false,
+  'ACCELERATOR_BUTTON': true,
+  'PUBLIC_ACCELERATIONS': false,
+  'ADDITIONAL_CURRENCIES': false,
+  'STRATUM_ENABLED': false,
+  // The hosted services API is an upstream product. It is unset here, so the
+  // account and acceleration calls that use it never leave this origin.
+  'SERVICES_API': '',
+  // The onion services endpoint a Tor-served deployment names for itself.
+  'ONION_SERVICES_API': '',
+  'UNIVERSE_CHAIN_NETWORKS': {},
+  'PROD_DOMAINS': [],
+};
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StateService {
+  referrer: string = '';
+  isBrowser: boolean = isPlatformBrowser(this.platformId);
+  isMempoolSpaceBuild = window['isMempoolSpaceBuild'] ?? false;
+  isProdDomain: boolean;
+  backend: 'esplora' | 'electrum' | 'none' | null = null;
+  network = '';
+  lightningNetworks = ['', 'mainnet', 'bitcoin', 'testnet', 'signet'];
+  lightning = false;
+  blockVSize: number;
+  env: Env;
+  latestBlockHeight = -1;
+  blocks: BlockExtended[] = [];
+  mempoolSequence: number;
+  mempoolBlockState: { block: number, transactions: { [txid: string]: TransactionStripped} };
+
+  backend$ = new BehaviorSubject<'esplora' | 'electrum' | 'none' | null>(null);
+  networkChanged$ = new ReplaySubject<string>(1);
+  lightningChanged$ = new ReplaySubject<boolean>(1);
+  signaturesMode$: BehaviorSubject<SignaturesMode>;
+  blocksSubject$ = new BehaviorSubject<BlockExtended[]>([]);
+  blocks$: Observable<BlockExtended[]>;
+  transactions$ = new BehaviorSubject<TransactionStripped[]>(null);
+  conversions$ = new ReplaySubject<Record<string, number>>(1);
+  bsqPrice$ = new ReplaySubject<number>(1);
+  mempoolInfo$ = new ReplaySubject<MempoolInfo>(1);
+  mempoolBlocks$ = new ReplaySubject<MempoolBlock[]>(1);
+  mempoolBlockUpdate$ = new Subject<MempoolBlockUpdate>();
+  liveMempoolBlockTransactions$: Observable<{ block: number, transactions: { [txid: string]: TransactionStripped} }>;
+  accelerations$ = new Subject<AccelerationDelta>();
+  liveAccelerations$: Observable<Acceleration[]>;
+  stratumJobUpdate$ = new Subject<{ state: Record<string, StratumJob> } | { job: StratumJob }>();
+  stratumJobs$ = new BehaviorSubject<Record<string, StratumJob>>({});
+  txConfirmed$ = new Subject<[string, BlockExtended]>();
+  txReplaced$ = new Subject<ReplacedTransaction>();
+  txRbfInfo$ = new Subject<RbfTree>();
+  rbfLatest$ = new Subject<RbfTree[]>();
+  rbfLatestSummary$ = new Subject<ReplacementInfo[]>();
+  utxoSpent$ = new Subject<object>();
+  difficultyAdjustment$ = new ReplaySubject<DifficultyAdjustment>(1);
+  mempoolTransactions$ = new Subject<Transaction>();
+  mempoolTxPosition$ = new BehaviorSubject<{ txid: string, position: MempoolPosition, cpfp: CpfpInfo | null, accelerationPositions?: AccelerationPosition[] }>(null);
+  mempoolRemovedTransactions$ = new Subject<Transaction>();
+  multiAddressTransactions$ = new Subject<{ [address: string]: { mempool: Transaction[], confirmed: Transaction[], removed: Transaction[] }}>();
+  blockTransactions$ = new Subject<Transaction>();
+  walletTransactions$ = new Subject<Transaction[]>();
+  isLoadingWebSocket$ = new ReplaySubject<boolean>(1);
+  /**
+   * Whether live chain data ever arrived.
+   *
+   * The panels on the dashboards are fed by the socket and none of them can
+   * fail: when the chain backend is down the socket connects and then says
+   * nothing at all, so a component waiting on `blocks$` waits forever and holds
+   * its placeholder forever with it. This is the one place that decides the
+   * feed has given up, so the banner that says so and the panels that stop
+   * pulsing are reading the same answer instead of racing a copy of the same
+   * timer each.
+   */
+  liveFeed$: Observable<LoadState<boolean>>;
+  private readonly liveFreshness = new LiveFeedFreshness();
+  isLoadingMempool$ = new BehaviorSubject<boolean>(true);
+  vbytesPerSecond$ = new ReplaySubject<number>(1);
+  previousRetarget$ = new ReplaySubject<number>(1);
+  backendInfo$ = new ReplaySubject<IBackendInfo>(1);
+  servicesBackendInfo$ = new ReplaySubject<IBackendInfo>(1);
+  loadingIndicators$ = new ReplaySubject<ILoadingIndicators>(1);
+  /**
+   * IMPLEMENTATION-HANDOFF [API-05] API-05-FEES-STATE | F-FE-001 | FAIL.
+   * This bare replay retains fee numbers without source age/readiness and the
+   * networkChanged handler below does not clear it. Evidence and the exact
+   * versioned feeEstimate contract are beside WebsocketResponse.fees.
+   * 1. Introduce feeEstimate$ (PROPOSED NEW), shared by fees-box and clock, using
+   *    the validated producer envelope and selected network, not receipt time.
+   * 2. On network change discard the previous network's snapshot synchronously;
+   *    on timeout/disconnect mark same-network last-good values stale with their
+   *    original observedAt, or unavailable if absent. Never invent zeros.
+   * 3. Keep one bounded source-expiry/recovery stream and cancel timers on
+   *    teardown; do not add a timer or HTTP poll per widget. Migrate both current
+   *    recommendedFees$ consumers so an old replay cannot bypass this state.
+   * 4. Coordinate WebsocketService.handleResponse and API-05 producer comments.
+   *    Extend PROPOSED NEW services/fee-estimate.spec.ts with network switch,
+   *    disconnect, old replay on retry, malformed context and fresh recovery.
+   *    Run targeted npm test, frontend lint/build and the actual Signet UI.
+   * Dependencies: API-01, API-02, API-03, API-04. Source contract:
+   *    interfaces/websocket.interface.ts#API-05-FEES-CONTRACT.
+   * Rollback keeps producer/consumer versions aligned; cached data is not proof.
+   * ANNOTATED does not resolve the failure.
+   */
+  private readonly feeState = new FeeEstimateState();
+  readonly feeEstimate$ = this.feeState.snapshot$;
+  recommendedFees$ = new BehaviorSubject<Recommendedfees | null>(null);
+  chainTip$ = new ReplaySubject<number>(-1);
+  serverHealth$ = new Subject<HealthCheckHost[]>();
+
+  live2Chart$ = new Subject<OptimizedMempoolStats>();
+
+  viewAmountMode$: BehaviorSubject<'btc' | 'sats' | 'fiat'>;
+  timezone$: BehaviorSubject<string>;
+  connectionState$ = new BehaviorSubject<0 | 1 | 2>(2);
+  isTabHidden$: Observable<boolean>;
+
+  markBlock$ = new BehaviorSubject<MarkBlockState>({});
+  keyNavigation$ = new Subject<KeyboardEvent>();
+  searchText$ = new BehaviorSubject<string>('');
+
+  blockScrolling$: Subject<boolean> = new Subject<boolean>();
+  resetScroll$: Subject<boolean> = new Subject<boolean>();
+  timeLtr: BehaviorSubject<boolean>;
+  hideFlow: BehaviorSubject<boolean>;
+  hideAudit: BehaviorSubject<boolean>;
+  fiatCurrency$: BehaviorSubject<string>;
+  rateUnits$: BehaviorSubject<string>;
+  blockDisplayMode$: BehaviorSubject<string>;
+
+  searchFocus$: Subject<boolean> = new Subject<boolean>();
+  menuOpen$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+
+  activeLens$: BehaviorSubject<ActiveFilter> = new BehaviorSubject({ mode: 'and', filters: [], gradient: 'age' });
+
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: any,
+    @Inject(LOCALE_ID) private locale: string,
+    private router: Router,
+    private storageService: StorageService,
+  ) {
+    this.referrer = window.document.referrer;
+
+    const browserWindow = window || {};
+    // @ts-ignore
+    const browserWindowEnv = browserWindow.__env || {};
+    if (browserWindowEnv.PROD_DOMAINS && typeof(browserWindowEnv.PROD_DOMAINS) === 'string') {
+      browserWindowEnv.PROD_DOMAINS = browserWindowEnv.PROD_DOMAINS.split(',');
+    }
+
+    this.env = Object.assign(defaultEnv, browserWindowEnv);
+
+    if (defaultEnv.BASE_MODULE !== 'mempool') {
+      this.env.MINING_DASHBOARD = false;
+    }
+
+    // Onion transport is explicit configuration: a deployment served over Tor
+    // names its own onion services endpoint. The page hostname alone never
+    // switches providers.
+    if (document.location.hostname.endsWith('.onion') && this.env.ONION_SERVICES_API) {
+      this.env.SERVICES_API = this.env.ONION_SERVICES_API;
+    }
+
+    if (this.isBrowser) {
+      this.setNetworkBasedonUrl(window.location.pathname);
+      this.setLightningBasedonUrl(window.location.pathname);
+      this.isTabHidden$ = fromEvent(document, 'visibilitychange').pipe(map(() => this.isHidden()), shareReplay());
+    } else {
+      this.setNetworkBasedonUrl('/');
+      this.setLightningBasedonUrl('/');
+      this.isTabHidden$ = new BehaviorSubject(false);
+    }
+
+    this.isProdDomain = this.testIsProdDomain(this.env.PROD_DOMAINS);
+
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.setNetworkBasedonUrl(event.url);
+        this.setLightningBasedonUrl(event.url);
+      }
+    });
+
+    this.liveMempoolBlockTransactions$ = this.mempoolBlockUpdate$.pipe(scan((acc: { block: number, transactions: { [txid: string]: TransactionStripped } }, change: MempoolBlockUpdate): { block: number, transactions: { [txid: string]: TransactionStripped } } => {
+      if (isMempoolState(change)) {
+        const txMap = {};
+        change.transactions.forEach(tx => {
+          txMap[tx.txid] = tx;
+        });
+        this.mempoolBlockState = {
+          block: change.block,
+          transactions: txMap
+        };
+        return this.mempoolBlockState;
+      } else {
+        change.added.forEach(tx => {
+          acc.transactions[tx.txid] = tx;
+        });
+        change.removed.forEach(txid => {
+          delete acc.transactions[txid];
+        });
+        change.changed.forEach(tx => {
+          if (acc.transactions[tx.txid]) {
+            acc.transactions[tx.txid].rate = tx.rate;
+            acc.transactions[tx.txid].acc = tx.acc;
+          }
+        });
+        this.mempoolBlockState = {
+          block: change.block,
+          transactions: acc.transactions
+        };
+        return this.mempoolBlockState;
+      }
+    }, {}),
+    share()
+    );
+    this.liveMempoolBlockTransactions$.subscribe();
+
+    // Emits the full list of pending accelerations each time it changes
+    this.liveAccelerations$ = this.accelerations$.pipe(
+      scan((accelerations: { [txid: string]: Acceleration }, delta: AccelerationDelta) => {
+        if (delta.reset) {
+          accelerations = {};
+        } else {
+          for (const txid of delta.removed) {
+            delete accelerations[txid];
+          }
+        }
+        for (const acc of delta.added) {
+          accelerations[acc.txid] = acc;
+        }
+        return accelerations;
+      }, {}),
+      map((accMap) => Object.values(accMap).sort((a,b) => b.added - a.added))
+    );
+
+    this.stratumJobUpdate$.pipe(
+      scan((acc: Record<string, StratumJob>, update: { state: Record<string, StratumJob> } | { job: StratumJob }) => {
+        if ('state' in update) {
+          // Replace the entire state
+          return update.state;
+        } else {
+          // Update or create a single job entry
+          return {
+            ...acc,
+            [update.job.pool]: update.job
+          };
+        }
+      }, {}),
+      shareReplay(1)
+    ).subscribe(val => {
+      this.stratumJobs$.next(val);
+    });
+
+    this.networkChanged$.subscribe((network) => {
+      this.feeState.reset(network);
+      this.liveFreshness.reset();
+      this.transactions$ = new BehaviorSubject<TransactionStripped[]>(null);
+      this.stratumJobs$ = new BehaviorSubject<Record<string, StratumJob>>({});
+      this.stratumJobUpdate$.next({ state: {} });
+      this.blocksSubject$.next([]);
+    });
+
+    this.signaturesMode$ = new BehaviorSubject<SignaturesMode>(this.storageService.getValue('signatures-mode') as SignaturesMode || null);
+
+    this.blockVSize = this.env.BLOCK_WEIGHT_UNITS / 4;
+
+    this.blocks$ = this.blocksSubject$.pipe(filter(blocks => blocks != null && blocks.length > 0));
+
+    // A late arrival still clears this, so the deadline costs nothing when the
+    // feed is merely slow. Shared and reference counted: one timer runs however
+    // many panels are watching, and it starts again when a dashboard is next
+    // opened rather than holding a verdict from an earlier visit.
+    /**
+     * IMPLEMENTATION-HANDOFF [API-05] API-05-RECOVERY | F-FE-003 | FAIL.
+     * The firstChainData$ take(1) accepts cached replay, cancels the only
+     * deadline, and never ages to error. Retry consumes the same replay and
+     * immediately claims data again with zero fresh arrivals. Reproduced with
+     * the exact source expression and real RxJS TestScheduler in
+     * frontend-source-reproductions.json; no live fault injection was used.
+     * 1. Separate initial-data-arrived state from continuing source freshness.
+     *    Derive live readiness from validated source observation metadata,
+     *    selected network, connection state and a bounded freshness deadline.
+     *    A block/mempoolInfo replay or socket ping alone is not current proof.
+     * 2. Invalidate on disconnect/context switch; retain same-network last-good
+     *    data only with stale status and its original source observation.
+     *    Re-arm a single shared deadline on actual valid producer observations,
+     *    and require fresh proof after retry instead of reusing old replay.
+     * 3. Coordinate producer observation/readiness via API-03, API-04 and the
+     *    API-05 feeEstimate contract. Dashboard, fees and clock must each read
+     *    the appropriate source state; fee readiness must not prove unrelated
+     *    panels. Preserve explicit empty-success versus no authoritative data.
+     * 4. Add PROPOSED NEW services/live-feed-freshness.spec.ts and
+     *    src/app/services/dashboard-live-state.spec.ts for stale replay,
+     *    silence after first data, network switching, cancellation and
+     *    bounded retry recovery.
+     *    Run targeted npm test then lint/build and actual Signet dashboard.
+     * Dependencies API-01..API-04. Rollback never reinstates cached replay as
+     *    freshness evidence. ANNOTATED is not repaired or accepted functionality.
+     */
+    this.liveFeed$ = this.liveFreshness.state$;
+    this.feeEstimate$.subscribe(snapshot => this.recommendedFees$.next(snapshot.status === 'ready' ? snapshot.values : null));
+    this.connectionState$.subscribe(state => {
+      if (state !== 2) {
+        this.feeState.offline();
+        this.liveFreshness.offline();
+      }
+    });
+
+    const savedTimePreference = this.storageService.getValue('time-preference-ltr');
+    const rtlLanguage = (this.locale.startsWith('ar') || this.locale.startsWith('fa') || this.locale.startsWith('he'));
+    // default time direction is right-to-left, unless locale is a RTL language
+    this.timeLtr = new BehaviorSubject<boolean>(savedTimePreference === 'true' || (savedTimePreference == null && rtlLanguage));
+    this.timeLtr.subscribe((ltr) => {
+      this.storageService.setValue('time-preference-ltr', ltr ? 'true' : 'false');
+    });
+
+    const savedFlowPreference = this.storageService.getValue('flow-preference');
+    this.hideFlow = new BehaviorSubject<boolean>(savedFlowPreference === 'hide');
+    this.hideFlow.subscribe((hide) => {
+      if (hide) {
+        this.storageService.setValue('flow-preference', hide ? 'hide' : 'show');
+      } else {
+        this.storageService.removeItem('flow-preference');
+      }
+    });
+
+    const savedAuditPreference = this.storageService.getValue('audit-preference');
+    this.hideAudit = new BehaviorSubject<boolean>(savedAuditPreference === 'hide');
+    this.hideAudit.subscribe((hide) => {
+      this.storageService.setValue('audit-preference', hide ? 'hide' : 'show');
+    });
+
+    const fiatPreference = this.storageService.getValue('fiat-preference');
+    this.fiatCurrency$ = new BehaviorSubject<string>(fiatPreference || 'USD');
+
+    const rateUnitPreference = this.storageService.getValue('rate-unit-preference');
+    this.rateUnits$ = new BehaviorSubject<string>(rateUnitPreference || 'vb');
+
+    const blockDisplayModePreference = this.storageService.getValue('block-display-mode-preference');
+    this.blockDisplayMode$ = new BehaviorSubject<string>(blockDisplayModePreference || 'fees');
+
+    const viewAmountModePreference = this.storageService.getValue('view-amount-mode') as 'btc' | 'sats' | 'fiat';
+    this.viewAmountMode$ = new BehaviorSubject<'btc' | 'sats' | 'fiat'>(viewAmountModePreference || 'btc');
+
+    const timezonePreference = this.storageService.getValue('timezone-preference');
+    this.timezone$ = new BehaviorSubject<string>(timezonePreference || 'local');
+
+    this.backend$.subscribe(backend => {
+      this.backend = backend;
+    });
+  }
+
+  setNetworkBasedonUrl(url: string) {
+    if (this.env.BASE_MODULE !== 'mempool' && this.env.BASE_MODULE !== 'liquid') {
+      return;
+    }
+    // horrible network regex breakdown:
+    // /^\/                                         starts with a forward slash...
+    // (?:[a-z]{2}(?:-[A-Z]{2})?\/)?                optional locale prefix (non-capturing)
+    // (?:preview\/)?                               optional "preview" prefix (non-capturing)
+    // (testnet|signet)/                            network string (captured as networkMatches[1])
+    // ($|\/)                                       network string must end or end with a slash
+    let networkMatches: object = url.match(/^\/(?:[a-z]{2}(?:-[A-Z]{2})?\/)?(?:preview\/)?(testnet4?|signet|regtest)($|\/)/);
+
+    if (!networkMatches && this.env.ROOT_NETWORK) {
+      networkMatches = { 1: this.env.ROOT_NETWORK };
+    }
+
+    switch (networkMatches && networkMatches[1]) {
+      case 'signet':
+        if (this.network !== 'signet') {
+          this.network = 'signet';
+          this.networkChanged$.next('signet');
+        }
+        return;
+      case 'testnet':
+        if (this.network !== 'testnet' && this.network !== 'liquidtestnet') {
+          if (this.env.BASE_MODULE === 'liquid') {
+            this.network = 'liquidtestnet';
+            this.networkChanged$.next('liquidtestnet');
+          } else {
+            this.network = 'testnet';
+            this.networkChanged$.next('testnet');
+          }
+        }
+        return;
+      case 'testnet4':
+        if (this.network !== 'testnet4') {
+          this.network = 'testnet4';
+          this.networkChanged$.next('testnet4');
+        }
+        return;
+      case 'regtest':
+        if (this.network !== 'regtest') {
+          this.network = 'regtest';
+          this.networkChanged$.next('regtest');
+        }
+        return;
+      default:
+        if (this.env.BASE_MODULE !== 'mempool') {
+          if (this.network !== this.env.BASE_MODULE) {
+            this.network = this.env.BASE_MODULE;
+            this.networkChanged$.next(this.env.BASE_MODULE);
+          }
+        } else if (this.network !== '') {
+          this.network = '';
+          this.networkChanged$.next('');
+        }
+    }
+  }
+
+  setLightningBasedonUrl(url: string) {
+    if (this.env.BASE_MODULE !== 'mempool') {
+      return;
+    }
+    const networkMatches = url.match(/\/lightning\//);
+    this.lightning = !!networkMatches;
+    this.lightningChanged$.next(this.lightning);
+  }
+
+  networkSupportsLightning() {
+    return this.env.LIGHTNING && this.lightningNetworks.includes(this.network);
+  }
+
+  getHiddenProp(){
+    const prefixes = ['webkit', 'moz', 'ms', 'o'];
+    if ('hidden' in document) { return 'hidden'; }
+    for (const prefix of prefixes) {
+      if ((prefix + 'Hidden') in document) {
+        return prefix + 'Hidden';
+      }
+    }
+    return null;
+  }
+
+  isHidden() {
+    const prop = this.getHiddenProp();
+    if (!prop) { return false; }
+    return document[prop];
+  }
+
+  setBlockScrollingInProgress(value: boolean) {
+    this.blockScrolling$.next(value);
+  }
+
+  /**
+   * Gives the live feed a fresh deadline. Reconnecting the socket is the
+   * caller's job: this service does not own the connection.
+   */
+  retryLiveFeed(): void {
+    this.liveFreshness.retry();
+    this.feeState.retry();
+  }
+
+  acceptFeeEstimate(input: unknown): void { this.feeState.accept(input); }
+
+  acceptLiveObservation(observedAt: string): void { this.liveFreshness.accept(observedAt); }
+
+  invalidateLiveObservation(): void { this.liveFreshness.offline(); }
+
+  ngOnDestroy(): void {
+    this.feeState.destroy();
+    this.liveFreshness.destroy();
+  }
+
+  isLiquid() {
+    return this.network === 'liquid' || this.network === 'liquidtestnet';
+  }
+
+  isMainnet(): boolean {
+    return this.env.ROOT_NETWORK === '' && this.network === '';
+  }
+
+  isAnyTestnet(): boolean {
+    return ['testnet', 'testnet4', 'signet', 'regtest', 'liquidtestnet'].includes(this.network);
+  }
+
+  resetChainTip() {
+    this.latestBlockHeight = -1;
+    this.chainTip$.next(-1);
+  }
+
+  updateChainTip(height) {
+    if (height > this.latestBlockHeight) {
+      this.latestBlockHeight = height;
+      this.chainTip$.next(height);
+    }
+  }
+
+  resetBlocks(blocks: BlockExtended[]): void {
+    this.blocks = blocks.reverse();
+    this.blocksSubject$.next(blocks);
+  }
+
+  addBlock(block: BlockExtended): void {
+    this.blocks.unshift(block);
+    this.blocks = this.blocks.slice(0, this.env.KEEP_BLOCKS_AMOUNT);
+    this.blocksSubject$.next(this.blocks);
+  }
+
+  focusSearchInputDesktop() {
+    if (!hasTouchScreen()) {
+      this.searchFocus$.next(true);
+    }
+  }
+
+  private testIsProdDomain(prodDomains: string[]): boolean {
+    const hostname = document.location.hostname;
+    return prodDomains.some(domain =>
+      hostname === domain || hostname.endsWith('.' + domain)
+    );
+  }
+}

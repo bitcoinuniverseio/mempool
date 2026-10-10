@@ -7,8 +7,16 @@ interface ICache {
 
 class MemoryCache {
   private cache: ICache[] = [];
+  private cleanupTimer: NodeJS.Timeout | null;
   constructor() {
-    setInterval(this.cleanup.bind(this), 1000);
+    this.cleanupTimer = setInterval(this.cleanup.bind(this), 1000);
+  }
+
+  public destroy(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
   }
 
   public set(type: string, id: string, data: any, secondsExpiry: number) {

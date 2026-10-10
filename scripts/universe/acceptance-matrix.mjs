@@ -11,7 +11,8 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const require = createRequire(resolve(root, 'frontend/package.json'));
 const ts = require('typescript');
-const output = 'docs/acceptance/operation-matrix-source-successor-2026-10-03.json';
+export const CURRENT_SOURCE_LEDGER_PATH = 'docs/acceptance/operation-matrix-source-successor-2026-10-09.json';
+const output = CURRENT_SOURCE_LEDGER_PATH;
 const inventories = ['docs/acceptance/2026-09-05-inventory.json', 'docs/acceptance/2026-09-05-controls.json'];
 const protocolFile = 'docs/protocols/PROTOCOL-COVERAGE.json';
 const healthHandoffFile = 'docs/acceptance/explorer-health-handoff-2026-09-06.json';
@@ -781,7 +782,10 @@ export function validateMatrix(matrix) {
 
 export function buildCommandMatrix(args = []) {
   const evidenceIndex = args.indexOf('--evidence');
-  assert(args.every((arg, i) => arg === '--check' || arg === '--evidence' || i === evidenceIndex + 1 && evidenceIndex >= 0), 'Usage: acceptance-matrix.mjs [--check] [--evidence path.json]');
+  const currentIndex = args.indexOf('--current');
+  assert(args.filter(arg => arg === '--current').length <= 1 && args.filter(arg => arg === '--evidence').length <= 1, 'Duplicate ledger/evidence option');
+  assert(args.every((arg, i) => arg === '--check' || arg === '--evidence' || arg === '--current' || i === evidenceIndex + 1 && evidenceIndex >= 0 || i === currentIndex + 1 && currentIndex >= 0), 'Usage: acceptance-matrix.mjs [--check] [--evidence path.json] [--current docs/acceptance/ledger.json]');
+  selectedSourceLedgerPath(args);
   if (evidenceIndex >= 0) assert(args[evidenceIndex + 1] && !args[evidenceIndex + 1].startsWith('--'), '--evidence requires a file path');
   // Regenerating the committed ledger must retain reviewed execution evidence.
   // Source-only exploration remains available through buildMatrix(), without
@@ -789,16 +793,25 @@ export function buildCommandMatrix(args = []) {
   return buildMatrix({ evidencePath: evidenceIndex >= 0 ? args[evidenceIndex + 1] : 'docs/acceptance/current-execution-evidence.json' });
 }
 
+export function selectedSourceLedgerPath(args = []) {
+  const index = args.indexOf('--current');
+  if (index < 0) return output;
+  const path = args[index + 1];
+  assert(typeof path === 'string' && path.startsWith('docs/acceptance/') && path.endsWith('.json') && !path.includes('\\') && !path.split('/').includes('..'), '--current requires a plain acceptance JSON path');
+  return path;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
+  const selectedOutput = selectedSourceLedgerPath(args);
   const matrix = buildCommandMatrix(args);
   if (args.includes('--check')) {
-    const stored = JSON.parse(readFileSync(resolve(root, output), 'utf8'));
+    const stored = JSON.parse(readFileSync(resolve(root, selectedOutput), 'utf8'));
     validateMatrix(stored);
     const changedSources = matrix.sources.filter(source => stored.sources.find(previous => previous.path === source.path)?.sha256 !== source.sha256).map(source => source.path);
     assert.equal(hash(JSON.stringify(stored)), hash(JSON.stringify(matrix)), `Generated matrix is stale; regenerate from current source/evidence. Changed sources: ${changedSources.join(', ')}`);
-  } else writeFileSync(resolve(root, output), JSON.stringify(matrix, null, 2) + '\n');
-  console.log(JSON.stringify({ artifact: output, sourceCounts: matrix.sourceCounts,
+  } else writeFileSync(resolve(root, selectedOutput), JSON.stringify(matrix, null, 2) + '\n');
+  console.log(JSON.stringify({ artifact: selectedOutput, sourceCounts: matrix.sourceCounts,
     expandedGroups: Object.fromEntries(Object.entries(matrix.sourceGroups).map(([name, ids]) => [name, ids.length])),
     operationDenominatorReconciled: false, realNetworkE2ePasses: matrix.realNetworkE2ePasses, unresolved: matrix.gaps.length }, null, 2));
 }

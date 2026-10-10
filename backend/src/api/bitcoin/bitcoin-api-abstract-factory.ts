@@ -2,6 +2,8 @@ import { IBitcoinApi, SubmitPackageResult, TestMempoolAcceptResult } from './bit
 import { IEsploraApi } from './esplora-api.interface';
 
 export interface AbstractBitcoinApi {
+  /** Close a read-only transport only after producer and HTTP completion. */
+  closeTransport?(): void;
   $getRawMempool(): Promise<IEsploraApi.Transaction['txid'][]>;
   $getRawTransaction(txId: string, skipConversion?: boolean, addPrevout?: boolean, lazyPrevouts?: boolean): Promise<IEsploraApi.Transaction>;
   $getRawTransactions(txids: string[]): Promise<IEsploraApi.Transaction[]>;
@@ -19,8 +21,8 @@ export interface AbstractBitcoinApi {
   $getBlockHeader(hash: string): Promise<string>;
   $getBlock(hash: string): Promise<IEsploraApi.Block>;
   $getRawBlock(hash: string): Promise<Buffer>;
-  $getAddress(address: string): Promise<IEsploraApi.Address>;
-  $getAddressTransactions(address: string, lastSeenTxId: string): Promise<IEsploraApi.Transaction[]>;
+  $getAddress(address: string, signal?: AbortSignal): Promise<IEsploraApi.Address>;
+  $getAddressTransactions(address: string, lastSeenTxId: string, signal?: AbortSignal): Promise<IEsploraApi.Transaction[]>;
   $getAddressUtxos(address: string): Promise<IEsploraApi.UTXO[]>;
   $getAddressPrefix(prefix: string): string[];
   $getScriptHash(scripthash: string): Promise<IEsploraApi.ScriptHash>;
@@ -48,6 +50,7 @@ export interface BitcoinRpcCredentials {
   pass: string;
   timeout: number;
   cookie?: string;
+  maxSockets?: number;
 }
 
 export interface HealthCheckHost {

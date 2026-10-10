@@ -1,4 +1,5 @@
 import axios from 'axios';
+import http from 'http';
 import { createHash } from 'crypto';
 import config from '../../config';
 import bitcoinClient from './bitcoin-client';
@@ -32,14 +33,24 @@ export class EsploraReconstructionSource implements ReconstructionSource {
   private socketPath: string | undefined;
   private http = axios.create({ timeout: 10000, maxContentLength: 16 * 1024 * 1024, maxBodyLength: 1024 * 1024 });
   constructor() {
-    if (config.MEMPOOL.BACKEND !== 'esplora' || !['mainnet', 'signet', 'testnet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK)) {
-      throw new ReconstructionError(503, 'Bounded reconstruction requires a configured Bitcoin Esplora history source');
+    const nativeHttp = config.MEMPOOL.BACKEND === 'electrum' ? config.ELECTRUM.ADDRESS_HTTP_URL : undefined;
+    if ((config.MEMPOOL.BACKEND !== 'esplora' && !nativeHttp) || !['mainnet', 'signet', 'testnet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK)) {
+      throw new ReconstructionError(503, 'Bounded reconstruction requires an explicitly configured Bitcoin history source');
     }
-    this.socketPath = config.ESPLORA.UNIX_SOCKET_PATH || undefined;
-    this.origin = this.socketPath ? 'http://api' : config.ESPLORA.REST_API_URL.replace(/\/$/, '');
+    this.socketPath = nativeHttp ? undefined : config.ESPLORA.UNIX_SOCKET_PATH || undefined;
+    this.origin = nativeHttp || (this.socketPath ? 'http://api' : config.ESPLORA.REST_API_URL.replace(/\/$/, ''));
     const url = new URL(this.origin);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new ReconstructionError(503, 'Invalid configured reconstruction origin');
-    this.sourceId = hash(JSON.stringify({ origin: this.origin, socket: this.socketPath || null, network: config.MEMPOOL.NETWORK }));
+    if (nativeHttp) {
+      if (url.protocol !== 'http:' || !['127.0.0.1', '[::1]', 'localhost'].includes(url.hostname) || url.pathname !== '/') {
+        throw new ReconstructionError(503, 'Native reconstruction requires the explicitly qualified loopback HTTP reader');
+      }
+      this.origin = url.origin;
+      this.http = axios.create({ timeout: 10000, maxContentLength: 16 * 1024 * 1024, maxBodyLength: 1024 * 1024,
+        httpAgent: new http.Agent({ keepAlive: true, maxSockets: 1, maxTotalSockets: 1 }), proxy: false, maxRedirects: 0 });
+    }
+    this.sourceId = hash(JSON.stringify({ origin: this.origin, socket: this.socketPath || null, network: config.MEMPOOL.NETWORK,
+      ...(nativeHttp ? { backend: 'electrum' } : {}) }));
   }
   /** @asyncUnsafe */
   private async get<T>(path: string, signal: AbortSignal): Promise<T> {
@@ -112,7 +123,7 @@ export class EsploraReconstructionSource implements ReconstructionSource {
     let checkpoint: AddressSourceCheckpoint;
     try {
       checkpoint = await verifyAddressSource(tip, height => this.get('/block-height/' + height, signal),
-        { rpc: { call: (method: string, params: unknown[]) => this.rpc(method, params, signal) } }, 15000);
+        { rpc: { call: (method: string, params: unknown[]) => this.rpc(method, params, signal) } }, 15000, signal);
     } catch (error) {
       active(signal);
       // These are the helper's explicit identity failures, not transport/deadline errors.
