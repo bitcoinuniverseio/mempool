@@ -282,6 +282,8 @@ class Mempool {
     this.updateTimerProgress(timer, 'got raw mempool');
     const diff = transactions.length - currentMempoolSize;
     let newTransactions: MempoolTransactionExtended[] = [];
+    // Snapshot txids the node confirmed it no longer holds by the time they were fetched.
+    let departed = 0;
 
     this.mempoolCacheDelta = Math.abs(diff);
 
@@ -353,6 +355,7 @@ class Mempool {
             this.missingTxCount += missing;
           }
           logger.debug(`Error finding ${missing} transactions in the mempool: `);
+          departed += await this.$countDeparted(slice.filter(txid => !this.mempoolCache[txid]));
         }
 
         if (Date.now() - intervalTimer > Math.max(pollRate * 2, 5_000)) {
@@ -444,7 +447,9 @@ class Mempool {
       this.updateTimerProgress(timer, 'completed async mempool callback');
     }
 
-    if (!this.inSync && transactions.length === newMempoolSize) {
+    // Every snapshot txid is either cached or confirmed gone from the node's mempool.
+    const complete = transactions.length - departed === newMempoolSize;
+    if (!this.inSync && complete) {
       this.inSync = true;
       logger.notice('The mempool is now in sync!');
       loadingIndicators.setProgress('mempool', 100);
@@ -458,7 +463,7 @@ class Mempool {
     // Complete body segments use the same owner even when Redis is disabled.
     await rbfCache.updateCache();
 
-    this.observedPollCallback?.(newTransactions, deletedTransactions, this.mempoolProtection !== 1 && transactions.length === newMempoolSize);
+    this.observedPollCallback?.(newTransactions, deletedTransactions, this.mempoolProtection !== 1 && complete);
     this.lastMempoolUpdateAt = Date.now();
 
     const end = new Date().getTime();
@@ -545,6 +550,16 @@ class Mempool {
 
   getAccelerationPositions(txid: string): { [pool: number]: { poolId: number, pool: string, block: number, vsize: number } } | undefined {
     return this.accelerationPositions[txid];
+  }
+
+  /**
+   * How many of these unfetched snapshot txids the node itself reports as no
+   * longer in its mempool (-5): replaced, evicted or mined after the snapshot.
+   * Any other answer leaves the txid unaccounted for, so the poll stays incomplete.
+   */
+  private async $countDeparted(txids: string[]): Promise<number> {
+    const answers = await Promise.allSettled(txids.slice(0, 100).map(txid => bitcoinClient.getMempoolEntry(txid)));
+    return answers.filter(answer => answer.status === 'rejected' && answer.reason?.code === -5).length;
   }
 
   private startTimer() {
