@@ -215,6 +215,12 @@ td.amount {
 	@media (max-width: 576px) {
 		width: 50%;
 	}
+	// At the narrowest phones the touch-sized arrow column and the signature
+	// column leave the address link under 44px when the amount keeps half the
+	// row. Three points of the row put the link back over the floor at 320px.
+	@media (max-width: 359.98px) {
+		width: 47%;
+	}
 }
 td.amount.large {
 	width: 45%;
