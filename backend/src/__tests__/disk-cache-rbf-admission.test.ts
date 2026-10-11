@@ -66,18 +66,22 @@ describe('nonfatal RBF snapshot rejection preserves existing historical bytes', 
   });
   it('keeps partially imported maps quarantined until the actual load settles', async () => {
     main(); fs.writeFileSync(join(directory, 'rbfcache.json'), JSON.stringify(rbf)); const loaded = modules();
-    let release!: (success: boolean) => void; loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    let release!: (success: boolean) => void, entered!: () => void;
+    const admission = new Promise<void>(resolve => { entered = resolve; });
+    loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; entered(); }));
     const restoring = loaded.disk.$loadMempoolCache();
-    for (let n = 0; n < 200 && !release; n++) { await new Promise(resolve => setTimeout(resolve, 2)); }
+    await Promise.race([admission, restoring.then(() => { throw new Error('Load completed without controlled admission'); })]);
     expect(loaded.state.diagnostic()).toEqual({schemaVersion:'universe-rbf-history-availability-v1',status:'unavailable',reason:'rbf_restore_pending'});
     await loaded.disk.$loadMempoolCache(); expect(loaded.rbf.load).toHaveBeenCalledTimes(1);
     release(true); await restoring; expect(loaded.state.unavailable).toBe(false);
   });
   it('cannot clear failure through a late successful completion', async () => {
     main(); fs.writeFileSync(join(directory, 'rbfcache.json'), JSON.stringify(rbf)); const loaded = modules();
-    let release!: (success: boolean) => void; loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    let release!: (success: boolean) => void, entered!: () => void;
+    const admission = new Promise<void>(resolve => { entered = resolve; });
+    loaded.rbf.load.mockImplementationOnce(() => new Promise(resolve => { release = resolve; entered(); }));
     const restoring = loaded.disk.$loadMempoolCache();
-    for (let n = 0; n < 200 && !release; n++) { await new Promise(resolve => setTimeout(resolve, 2)); }
+    await Promise.race([admission, restoring.then(() => { throw new Error('Load completed without controlled admission'); })]);
     loaded.state.fail('snapshot-read-failed'); release(true); await restoring;
     expect(loaded.state.unavailable).toBe(true); expect(loaded.state.diagnostic().reason).toBe('snapshot-read-failed');
   });
