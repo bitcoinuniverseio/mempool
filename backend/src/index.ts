@@ -99,6 +99,7 @@ import { eventBus } from './api/intelligence/events/intelligence-event-bus';
 import { orderingEvidenceService } from './api/intelligence/private-submission/ordering-evidence.service';
 import { globalNetworkService } from './api/intelligence/global-network/global-network.service';
 import { developerIdentity } from './api/intelligence/identity/developer-identity';
+import bootstrapService from './api/intelligence/bootstrap/bootstrap.service';
 import { startPrivateRelayWorker, stopPrivateRelayWorker, drainPrivateRelayWorker } from './api/intelligence/private-submission/private-relay.runtime';
 import rbfCache from './api/rbf-cache';
 import { rbfRestoreState } from './api/rbf-snapshot';
@@ -766,6 +767,8 @@ class Server {
         poolsUpdater.stop();
         templateCollectorService.stopPolling();
         stopPrivateRelayWorker();
+        developerIdentity.stopOutboxWorker();
+        bootstrapService.stopWorker();
         backendInfo.stopPolling();
         runtimeMetrics.stop();
         // Upgraded sockets are independent of HTTP request completion. Close
@@ -787,7 +790,7 @@ class Server {
       drainProducers: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
         await this.work.drain();
         await Promise.all(httpDrain);
-        await Promise.all([indexer.drain(), statistics.drain(), blocks.drain(), diskCache.drain(), templateCollectorService.drain(), drainPrivateRelayWorker()]);
+        await Promise.all([indexer.drain(), statistics.drain(), blocks.drain(), diskCache.drain(), templateCollectorService.drain(), drainPrivateRelayWorker(), developerIdentity.drainOutboxWorker(), bootstrapService.drainWorker()]);
         // These independent recurrent owners still require their own source
         // completion contracts. Refuse to release resources in those profiles.
         if (config.LIGHTNING.ENABLED || config.REDIS.ENABLED || config.MEMPOOL.SPAWN_CLUSTER_PROCS || Common.isLiquid()) {

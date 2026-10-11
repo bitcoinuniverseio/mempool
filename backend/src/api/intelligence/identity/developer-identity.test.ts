@@ -17,6 +17,23 @@ describe('developer identity: owners, keys and scopes', () => {
     delete process.env.UNIVERSE_INTELLIGENCE_LEGACY_MASTER_KEY;
   });
 
+  it('fences new claims and waits for an already admitted claim during shutdown', async () => {
+    const store = new MemoryOwnerStore(); useOwnerStore(store);
+    let finish!: (value: []) => void;
+    const claim = jest.spyOn(store, 'claimOutbox').mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const admitted = developerIdentity.processOutbox();
+    developerIdentity.stopOutboxWorker();
+    let drained = false;
+    const closing = developerIdentity.drainOutboxWorker().then(() => { drained = true; });
+    await Promise.resolve();
+    expect(drained).toBe(false);
+    await expect(developerIdentity.processOutbox()).resolves.toEqual([]);
+    expect(claim).toHaveBeenCalledTimes(1);
+    finish([]); await admitted; await closing;
+    expect(drained).toBe(true);
+    claim.mockRestore();
+  });
+
   it('bootstraps an owner with a server-generated id and the fixed bootstrap scopes', async () => {
     const key = await developerIdentity.bootstrapOwner('first key', '93.184.216.5');
     expect(key.secret_key.startsWith('uip_live_')).toBe(true);
@@ -205,6 +222,32 @@ describe('webhooks: registration, secrecy and real delivery', () => {
     expect(await developerIdentity.processOutbox()).toEqual([]);
     const history = await developerIdentity.listAttempts(owner, webhook.webhook_id);
     expect(history?.map(a => a.success)).toEqual([true]);
+  });
+
+  it('drains an admitted lease renewal even after the delivery finishes', async () => {
+    const { ownerStore } = await import('./owner-store');
+    let finishDelivery!: (value: DeliveryOutcome) => void, finishRenewal!: (value: boolean) => void;
+    let deliveryStarted = false;
+    const store = ownerStore(), original = store.renewOutbox.bind(store);
+    const renewal = jest.spyOn(store, 'renewOutbox').mockImplementation((...args) => deliveryStarted
+      ? new Promise(resolve => { finishRenewal = resolve; }) : original(...args));
+    try {
+      const { owner, webhook } = await ownerWithWebhook();
+      await developerIdentity.enqueueDelivery(await notificationFor(owner), webhook.webhook_id);
+      jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask', 'setImmediate'] });
+      developerIdentity.transport = () => new Promise(resolve => { deliveryStarted = true; finishDelivery = resolve; });
+      const running = developerIdentity.processOutbox();
+      for (let i = 0; i < 80 && !finishDelivery; i++) await Promise.resolve();
+      expect(finishDelivery).toBeDefined();
+      await jest.advanceTimersByTimeAsync(3000);
+      expect(finishRenewal).toBeDefined();
+      developerIdentity.stopOutboxWorker();
+      finishDelivery(answer); await running;
+      let drained = false;
+      const closing = developerIdentity.drainOutboxWorker().then(() => { drained = true; });
+      await Promise.resolve(); expect(drained).toBe(false);
+      finishRenewal(true); await closing; expect(drained).toBe(true);
+    } finally { renewal.mockRestore(); jest.useRealTimers(); }
   });
 
   it.each([

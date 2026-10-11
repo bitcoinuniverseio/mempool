@@ -8,6 +8,7 @@ import { BootstrapCatalogue, NodeBootstrapJob, NodeBootstrapJobState } from './b
 import { BootstrapNodeReader } from './node-reader';
 import { measureCapacity, StatfsReader } from './bootstrap-capacity';
 import { classifySource } from './snapshot-catalogue';
+import { TaskDrain } from '../../task-drain';
 
 /** The owned Core, reached with a timeout long enough for a snapshot RPC. */
 export interface OperatorCore {
@@ -44,6 +45,8 @@ const integer = (n: unknown): n is number => Number.isSafeInteger(n) && Number(n
 export class BootstrapJobExecutor {
   private timer?: NodeJS.Timeout;
   private busy = false;
+  private stopping = false;
+  private readonly work = new TaskDrain();
   private readonly clock: () => number;
   private readonly sleep: (ms: number) => Promise<void>;
 
@@ -53,7 +56,7 @@ export class BootstrapJobExecutor {
   }
 
   public start(): void {
-    if (this.timer) {
+    if (this.timer || this.stopping) {
       return;
     }
     this.timer = setInterval(() => {
@@ -63,6 +66,7 @@ export class BootstrapJobExecutor {
   }
 
   public stop(): void {
+    this.stopping = true;
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = undefined;
@@ -72,6 +76,14 @@ export class BootstrapJobExecutor {
   /** Claims and executes at most one job; returns it, or null when nothing was claimable. */
   /** @asyncUnsafe The caller logs a rejection; the job itself is written before rethrowing. */
   public async runOnce(): Promise<NodeBootstrapJob | null> {
+    if (this.stopping) { return null; }
+    return this.work.track(this.runOwnedJob());
+  }
+
+  /** @asyncSafe TaskDrain observes all admitted job outcomes before returning. */
+  public drain(): Promise<void> { return this.work.drain(); }
+
+  private async runOwnedJob(): Promise<NodeBootstrapJob | null> {
     if (this.busy) {
       return null;
     }
@@ -123,7 +135,7 @@ export class BootstrapJobExecutor {
         return;
       }
       job.lease = { owner, expires_at: new Date(this.clock() + this.deps.env.jobLeaseMs).toISOString() };
-      write().catch((e) => logger.warn('[bootstrap-executor] lease renewal failed: ' + (e instanceof Error ? e.message : e)));
+      this.work.track(write()).catch((e) => logger.warn('[bootstrap-executor] lease renewal failed: ' + (e instanceof Error ? e.message : e)));
     }, Math.max(1000, Math.floor(this.deps.env.jobLeaseMs / 3)));
     heartbeat.unref();
 
