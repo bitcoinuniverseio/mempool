@@ -10,6 +10,8 @@ import { Common } from '../common';
 
 class BitcoinApi implements AbstractBitcoinApi {
   private rawMempoolCache: IBitcoinApi.RawMempool | null = null;
+  private rawMempoolCacheFetch: Promise<IBitcoinApi.RawMempool> | null = null;
+  private rawMempoolCacheRetryAt = 0;
   protected bitcoindClient: any;
 
   constructor(bitcoinClient: any) {
@@ -426,8 +428,18 @@ class BitcoinApi implements AbstractBitcoinApi {
       return transaction;
     }
     let mempoolEntry: IBitcoinApi.MempoolEntry;
-    if (!mempool.isInSync() && !this.rawMempoolCache) {
-      this.rawMempoolCache = await this.$getRawMempoolVerbose();
+    if (!mempool.isInSync() && !this.rawMempoolCache && Date.now() >= this.rawMempoolCacheRetryAt) {
+      if (!this.rawMempoolCacheFetch) {
+        this.rawMempoolCacheFetch = this.$getRawMempoolVerbose().then(value => {
+          this.rawMempoolCache = value;
+          return value;
+        }).catch(error => {
+          this.rawMempoolCacheRetryAt = Date.now() + 30_000;
+          throw error;
+        }).finally(() => { this.rawMempoolCacheFetch = null; });
+      }
+      try { await this.rawMempoolCacheFetch; }
+      catch { /* The exact per-transaction read below must still succeed. */ }
     }
     if (this.rawMempoolCache && this.rawMempoolCache[transaction.txid]) {
       mempoolEntry = this.rawMempoolCache[transaction.txid];
