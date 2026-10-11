@@ -4,6 +4,7 @@ import cluster from 'cluster';
 import { HistoryStore, historyPathForRole } from './history-store';
 import { HistoryJsonArray } from './history-json';
 import { validateHistorySnapshot, validUtc } from './history-validation';
+import { canonicalObservedFee } from './history-fee-migration';
 import config from '../../../config';
 import mempool from '../../mempool';
 import { BlockExtended, MempoolTransactionExtended, TransactionExtended } from '../../../mempool.interfaces';
@@ -261,10 +262,11 @@ export class TimeMachineService {
 
   private static eventFor(tx: MempoolTransactionExtended | TransactionExtended, type: HistoricalMempoolEvent['event_type'], at: number, blockHeight?: number, replacedBy?: string): HistoricalMempoolEvent {
     const vsize = tx.vsize == null ? Math.ceil((tx.weight ?? 0) / 4) : Number.isFinite(tx.vsize) && tx.vsize >= 0 ? Math.ceil(tx.vsize) : tx.vsize;
+    const fee = canonicalObservedFee(tx.fee ?? 0);
     return {
       event_id: crypto.createHash('sha256').update(`${tx.txid}:${type}:${blockHeight ?? ''}:${replacedBy ?? ''}`).digest('hex').slice(0, 32),
-      txid: tx.txid, timestamp_utc: new Date(at).toISOString(), event_type: type, vsize, weight: tx.weight, fee_sats: tx.fee ?? 0,
-      fee_rate: vsize > 0 ? Math.round(((tx.fee ?? 0) / vsize) * 100) / 100 : 0, block_height: blockHeight, replaced_by_txid: replacedBy,
+      txid: tx.txid, timestamp_utc: new Date(at).toISOString(), event_type: type, vsize, weight: tx.weight, fee_sats: fee,
+      fee_rate: vsize > 0 ? Math.round((fee / vsize) * 100) / 100 : 0, block_height: blockHeight, replaced_by_txid: replacedBy,
     };
   }
 
