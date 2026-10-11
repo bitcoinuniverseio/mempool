@@ -1,4 +1,5 @@
 import { BootstrapJobExecutor } from './bootstrap-executor';
+import { SnapshotVerifier } from './snapshot-verifier';
 import { MemoryBootstrapStore } from './bootstrap-store';
 import { BootstrapService } from './bootstrap.service';
 import { BootstrapNodeReader } from './node-reader';
@@ -10,6 +11,24 @@ const catalogue = catalogueFor(keys.privateKey, keys.publicKeyHex);
 const statfsPlenty = async (): Promise<{ bsize: number; bavail: number; blocks: number }> => ({ bsize: 4096, bavail: 1 << 20, blocks: 1 << 21 });
 const auth = { keyId: 'control-plane', elevated: true };
 const key = (suffix: string): string => 'idem-' + suffix + '-' + Math.random().toString(16).slice(2, 10);
+
+it('retains a stopped worker until an already admitted job claim completes', async () => {
+  const built = build();
+  let finish!: (value: null) => void;
+  const claim = jest.spyOn(built.store, 'claimJob').mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const worker = built.service.startWorker()!;
+  const running = worker.runOnce();
+  built.service.stopWorker();
+  let drained = false;
+  const closing = built.service.drainWorker().then(() => { drained = true; });
+  await Promise.resolve();
+  expect(drained).toBe(false);
+  expect(built.service.startWorker()).toBeUndefined();
+  await expect(worker.runOnce()).resolves.toBeNull();
+  expect(claim).toHaveBeenCalledTimes(1);
+  finish(null); await running; await closing;
+  expect(drained).toBe(true);
+});
 
 /** A Core whose chainstates can be swapped after loadtxoutset, as the real node does. */
 function switchableCore(): { current: ReturnType<typeof fakeCore>; reader: BootstrapNodeReader; calls: string[]; swap: (next: ReturnType<typeof fakeCore>) => void } {
@@ -60,6 +79,53 @@ const loadedCore = (): ReturnType<typeof fakeCore> => fakeCore({
 });
 
 describe('Bootstrap operator jobs', () => {
+  it('drains accepted verification through its final durable record and fences later admission', async () => {
+    const built = build();
+    const verifier = (built.service as unknown as { verifier: SnapshotVerifier }).verifier;
+    const original = verifier.run.bind(verifier);
+    let finish!: () => void;
+    const gate = new Promise<void>(resolve => { finish = resolve; });
+    const run = jest.spyOn(verifier, 'run').mockImplementationOnce(async (...args) => { await gate; return original(...args); });
+    try {
+      const record = await built.service.verifySnapshot({ snapshot_id: 'regtest-105' });
+      built.service.stopWorker();
+      let drained = false;
+      const closing = built.service.drainWorker().then(() => { drained = true; });
+      await Promise.resolve(); expect(drained).toBe(false);
+      await expect(built.service.verifySnapshot({ snapshot_id: 'regtest-105' })).rejects.toMatchObject({ code: 'backend-draining' });
+      finish(); await closing; expect(drained).toBe(true);
+      expect((await built.service.getVerification(record.verification_id))?.state).not.toBe(record.state);
+    } finally { run.mockRestore(); }
+  });
+  it('drains an admitted heartbeat write after the operator job finishes', async () => {
+    const core = switchableCore(); core.swap(fakeCore({ calls: core.calls }));
+    let finishRpc!: (value: unknown) => void, finishHeartbeat!: (value: boolean) => void;
+    const built = build({ core, env: { jobTimeoutMs: 60000 }, handler: () => new Promise(resolve => { finishRpc = resolve; }) });
+    const original = built.store.updateJob.bind(built.store);
+    let holdHeartbeat = false;
+    const update = jest.spyOn(built.store, 'updateJob').mockImplementation((...args) => {
+      if (holdHeartbeat) { holdHeartbeat = false; return new Promise(resolve => { finishHeartbeat = resolve; }); }
+      return original(...args);
+    });
+    let worker: BootstrapJobExecutor | undefined;
+    try {
+      await built.service.createOperatorJob({ job_type: 'generate_snapshot', node_id: 'owned-core-regtest', idempotency_key: key('heartbeat') }, auth);
+      built.service.stopWorker();
+      jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask', 'setImmediate'] });
+      worker = executor(built);
+      const running = worker.runOnce();
+      for (let i = 0; i < 100 && !finishRpc; i++) await Promise.resolve();
+      expect(finishRpc).toBeDefined(); holdHeartbeat = true;
+      await jest.advanceTimersByTimeAsync(20000);
+      expect(finishHeartbeat).toBeDefined(); worker.stop();
+      finishRpc({ coins_written: 107, base_hash: FIXTURE.baseHash, base_height: FIXTURE.height, txoutset_hash: FIXTURE.hashSerialized3 });
+      await running;
+      let drained = false;
+      const closing = worker.drain().then(() => { drained = true; });
+      await Promise.resolve(); expect(drained).toBe(false);
+      finishHeartbeat(true); await closing; expect(drained).toBe(true);
+    } finally { worker?.stop(); update.mockRestore(); jest.useRealTimers(); }
+  });
   it('rejects unauthorized and unelevated requests before observing the node or touching the store', async () => {
     const built = build();
     await expect(built.service.createOperatorJob({ job_type: 'generate_snapshot', idempotency_key: key('a') }, undefined)).rejects.toThrow(expect.objectContaining({ code: 'UNAUTHORIZED', status: 401 }));

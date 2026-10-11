@@ -25,7 +25,8 @@ describe('nonfatal RBF snapshot rejection preserves existing historical bytes', 
       const config = require('../config').default; config.MEMPOOL.CACHE_ENABLED = true;
       config.MEMPOOL.CACHE_DIR = directory; config.MEMPOOL.NETWORK = 'signet';
       result = { disk: jest.requireActual('../api/disk-cache').default,
-        rbf: require('../api/rbf-cache').default, state: require('../api/rbf-snapshot').rbfRestoreState };
+        rbf: require('../api/rbf-cache').default, state: require('../api/rbf-snapshot').rbfRestoreState,
+        mempool: require('../api/mempool').default };
     });
     return result;
   }
@@ -83,5 +84,21 @@ describe('nonfatal RBF snapshot rejection preserves existing historical bytes', 
   it('completes an actual absent optional file explicitly instead of publishing pending forever', async () => {
     main(); const loaded = modules(); await loaded.disk.$loadMempoolCache();
     expect(loaded.rbf.load).not.toHaveBeenCalled(); expect(loaded.state.unavailable).toBe(false);
+  });
+
+  it.each([1, 24, 26, 51])('persists every transaction across the 25 cache files for %i entries', async count => {
+    const loaded = modules();
+    const transactions = Object.fromEntries(Array.from({ length: count }, (_, i) => ['tx' + i, { txid: 'tx' + i }]));
+    loaded.mempool.getMempool.mockReturnValueOnce(transactions);
+    await loaded.disk.$saveCacheToDisk(true);
+    const restored = Array.from({ length: 25 }, (_, i) => JSON.parse(fs.readFileSync(join(directory, i ? `cache${i}.json` : 'cache.json'), 'utf8')).mempoolArray).flat();
+    expect(restored.map(tx => tx.txid).sort()).toEqual(Object.keys(transactions).sort());
+  });
+
+  it('rejects failed persistence so shutdown cannot release resources on a logged error', async () => {
+    const loaded = modules();
+    const write = jest.spyOn(fs.promises, 'writeFile').mockRejectedValueOnce(new Error('controlled disk failure'));
+    try { await expect(loaded.disk.$saveCacheToDisk()).rejects.toThrow('controlled disk failure'); }
+    finally { write.mockRestore(); }
   });
 });
