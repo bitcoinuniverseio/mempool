@@ -14,7 +14,7 @@
           <div class="block-body">
             <ng-container *ngIf="!minimal">
               <div [attr.data-cy]="'mempool-block-' + i + '-fees'" class="fees">
-                ~<app-fee-rate [fee]="projectedBlock.medianFee" unitClass="" rounding="1.0-0"></app-fee-rate>
+                ~<app-fee-rate [fee]="projectedBlock.medianFee" unitClass="" rounding="1.0-2"></app-fee-rate>
               </div>
               <div [attr.data-cy]="'mempool-block-' + i + '-fee-span'" class="fee-span">
                 <app-fee-rate [fee]="projectedBlock.feeRange[0]" [showUnit]="false" unitClass=""></app-fee-rate>
@@ -61,7 +61,9 @@
   <div class="mempool-blocks-container" [class.time-ltr]="timeLtr" [style.--block-size]="blockWidth+'px'">
     <div class="flashing">
       <ng-template ngFor let-projectedBlock [ngForOf]="mempoolEmptyBlocks" let-i="index" [ngForTrackBy]="trackByFn">
-        <div class="bitcoin-block text-center mempool-block" [class.hide-block]="count && i >= count" id="mempool-block-{{ i }}" [ngStyle]="mempoolEmptyBlockStyles[i]"></div>
+        <div class="bitcoin-block text-center mempool-block" [class.hide-block]="count && i >= count" id="mempool-block-{{ i }}" [ngStyle]="mempoolEmptyBlockStyles[i]">
+          <div *ngIf="i === 0 && !minimal" class="loading-label" role="status" i18n="mempool-blocks.loading">Updating…</div>
+        </div>
       </ng-template>
     </div>
   </div>
