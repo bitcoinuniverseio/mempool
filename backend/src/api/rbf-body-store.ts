@@ -37,7 +37,6 @@ export class RbfBodyStore {
   private owners = new Set<Promise<void>>();
   private backings = new Set<RbfRawBackingCandidate>();
   private ownedSegments = new Map<string, fs.BigIntStats>();
-  private maintenanceCursor?: Iterator<string>;
   get count(): number { return this.records.size; }
   get activeReads(): number { return this.owners.size; }
   get retainedEncodedBytes(): number { return this.pendingBytes; }
@@ -95,17 +94,14 @@ export class RbfBodyStore {
   }
 
   /** Only this owner-created segments are eligible. No directory scan or legacy-source deletion.
-   * A fixed 128-reference slice runs without await, so admission cannot race the idle check.
+   * One complete pass runs without await, so admission cannot race the idle check. A fixed
+   * slice reclaimed slower than segments were written and exhausted the owned-segment bound.
    * Crash-orphan files are preserved for separate, independently qualified offline maintenance.
    */
   maintainSegments(protectedFiles: ReadonlySet<string>): void {
     if (!this.root || this.writing || this.owners.size || this.failure) { return; }
     const active = new Set([...this.records.values()].flatMap(record => record.file ? [record.file] : []));
-    this.maintenanceCursor ??= this.ownedSegments.keys();
-    for (let i = 0; i < 128; i++) {
-      const next = this.maintenanceCursor.next();
-      if (next.done) { this.maintenanceCursor = undefined; break; }
-      const file = next.value;
+    for (const file of this.ownedSegments.keys()) {
       if (active.has(file) || protectedFiles.has(file)) { continue; }
       const path = join(this.root, file), stat = fs.lstatSync(path, { bigint: true });
       if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1n || !same(stat, this.ownedSegments.get(file)!)) {
