@@ -323,8 +323,11 @@ class Mempool {
     if (!loaded) {
       const remainingTxids = transactions.filter(txid => !this.mempoolCache[txid]);
       const sliceLength = config.ESPLORA.BATCH_QUERY_BASE_SIZE;
-      for (let i = 0; i < Math.ceil(remainingTxids.length / sliceLength); i++) {
-        const slice = remainingTxids.slice(i * sliceLength, (i + 1) * sliceLength);
+      const retried = new Set<string>();
+      // A cursor rather than a slice count: txids queued for a second read extend the list.
+      for (let cursor = 0; cursor < remainingTxids.length;) {
+        const slice = remainingTxids.slice(cursor, cursor + sliceLength);
+        cursor += slice.length;
         const txs = await transactionUtils.$getMempoolTransactionsExtended(slice, false, false, false);
         logger.debug(`fetched ${txs.length} transactions`);
         this.updateTimerProgress(timer, 'fetched new transactions');
@@ -355,7 +358,15 @@ class Mempool {
             this.missingTxCount += missing;
           }
           logger.debug(`Error finding ${missing} transactions in the mempool: `);
-          departed += await this.$countDeparted(slice.filter(txid => !this.mempoolCache[txid]));
+          const unfetched = await this.$classifyUnfetched(slice.filter(txid => !this.mempoolCache[txid]));
+          departed += unfetched.departed;
+          // The node still holds these, so the read failed for a passing reason: read them once more in this poll.
+          for (const txid of unfetched.held) {
+            if (!retried.has(txid)) {
+              retried.add(txid);
+              remainingTxids.push(txid);
+            }
+          }
         }
 
         if (Date.now() - intervalTimer > Math.max(pollRate * 2, 5_000)) {
@@ -449,6 +460,9 @@ class Mempool {
 
     // Every snapshot txid is either cached or confirmed gone from the node's mempool.
     const complete = transactions.length - departed === newMempoolSize;
+    if (this.inSync && !complete) {
+      logger.info(`Mempool poll incomplete: ${transactions.length - departed - newMempoolSize} of ${transactions.length} snapshot transactions unaccounted for (${departed} departed)`);
+    }
     if (!this.inSync && complete) {
       this.inSync = true;
       logger.notice('The mempool is now in sync!');
@@ -553,13 +567,18 @@ class Mempool {
   }
 
   /**
-   * How many of these unfetched snapshot txids the node itself reports as no
-   * longer in its mempool (-5): replaced, evicted or mined after the snapshot.
+   * Sorts unfetched snapshot txids by what the node says about them now.
+   * departed: no longer in its mempool (-5) - replaced, evicted or mined after the snapshot.
+   * held: still in its mempool, so the failed read is worth one more attempt.
    * Any other answer leaves the txid unaccounted for, so the poll stays incomplete.
    */
-  private async $countDeparted(txids: string[]): Promise<number> {
-    const answers = await Promise.allSettled(txids.slice(0, 100).map(txid => bitcoinClient.getMempoolEntry(txid)));
-    return answers.filter(answer => answer.status === 'rejected' && answer.reason?.code === -5).length;
+  private async $classifyUnfetched(txids: string[]): Promise<{ departed: number; held: string[] }> {
+    const checked = txids.slice(0, 500);
+    const answers = await Promise.allSettled(checked.map(txid => bitcoinClient.getMempoolEntry(txid)));
+    return {
+      departed: answers.filter(answer => answer.status === 'rejected' && answer.reason?.code === -5).length,
+      held: checked.filter((_txid, index) => answers[index].status === 'fulfilled'),
+    };
   }
 
   private startTimer() {
