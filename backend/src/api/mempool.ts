@@ -328,7 +328,7 @@ class Mempool {
       for (let cursor = 0; cursor < remainingTxids.length;) {
         const slice = remainingTxids.slice(cursor, cursor + sliceLength);
         cursor += slice.length;
-        const txs = await transactionUtils.$getMempoolTransactionsExtended(slice, false, false, false);
+        const txs = await this.$readSnapshotTransactions(slice);
         logger.debug(`fetched ${txs.length} transactions`);
         this.updateTimerProgress(timer, 'fetched new transactions');
         if (!this.inSync && txs.length) {
@@ -564,6 +564,21 @@ class Mempool {
 
   getAccelerationPositions(txid: string): { [pool: number]: { poolId: number, pool: string, block: number, vsize: number } } | undefined {
     return this.accelerationPositions[txid];
+  }
+
+  /**
+   * Against Core, reads the snapshot's new transactions in batches and then
+   * one by one for whatever a batch did not return. A block is followed by
+   * thousands of new transactions; two round trips each cannot keep up.
+   */
+  private async $readSnapshotTransactions(txids: string[]): Promise<MempoolTransactionExtended[]> {
+    if (config.MEMPOOL.BACKEND === 'esplora' || !bitcoinApi.$getMempoolTransactionsBatched || txids.length < 8) {
+      return transactionUtils.$getMempoolTransactionsExtended(txids, false, false, false);
+    }
+    const batched = (await bitcoinApi.$getMempoolTransactionsBatched(txids)).map(tx => transactionUtils.extendMempoolTransaction(tx));
+    const read = new Set(batched.map(tx => tx.txid));
+    const rest = txids.filter(txid => !read.has(txid));
+    return rest.length ? batched.concat(await transactionUtils.$getMempoolTransactionsExtended(rest, false, false, false)) : batched;
   }
 
   /**
