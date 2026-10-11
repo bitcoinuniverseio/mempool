@@ -1,15 +1,11 @@
 <span [class]="colorClass" *ngIf="blockConversion; else noblockconversion">
-  <ng-container *ngIf="blockRate() as rate; else norate">{{ converted(rate) | fiatCurrency : digitsInfo : currency }}</ng-container>
+  <ng-container *ngIf="blockRate() as rate; else norate">{{ addPlus && value >= 0 ? '+' : '' }}{{ converted(rate) | fiatCurrency : digitsInfo : currency }}</ng-container>
 </span>
 
 <ng-template #noblockconversion>
   <span [class]="colorClass">
-    <ng-container *ngIf="rateFrom(conversions$ | async) as rate; else norate">{{ converted(rate) | fiatCurrency : digitsInfo : currency }}</ng-container>
+    <ng-container *ngIf="rateFrom(conversions$ | async) as rate; else norate">{{ addPlus && value >= 0 ? '+' : '' }}{{ converted(rate) | fiatCurrency : digitsInfo : currency }}</ng-container>
   </span>
 </ng-template>
 
-<!--
-  No price is not a price of zero. With no rate to convert with, the amount is
-  left blank rather than rendered as a confident nothing.
--->
-<ng-template #norate><span class="fiat-unavailable" title="No price is available in this deployment" i18n-title="fiat.unavailable"><ng-container *ngIf="unavailableLabel; else blankLabel">{{ unavailableLabel }}</ng-container><ng-template #blankLabel>&nbsp;</ng-template></span></ng-template>
+<ng-template #norate><span class="fiat-unavailable" role="img" aria-label="Price unavailable" title="Price unavailable" i18n-aria-label="fiat.unavailable" i18n-title="fiat.unavailable">{{ unavailableLabel || '—' }}</span></ng-template>

@@ -2,8 +2,7 @@
   <header class="page-head">
     <h1>Universe Data Studio</h1>
     <p class="summary">
-      Immutable owned-node snapshots, typed bounded queries, exact JSON/NDJSON/CSV exports, persisted snapshot events
-      and executable read-only MCP tools.
+      Explore verified Bitcoin datasets, filter results, and download the data.
     </p>
   </header>
   <nav class="nav-tabs">
@@ -11,18 +10,18 @@
     ><a [routerLink]="'/data/live' | relativeUrl">Live Streams</a>
   </nav>
   <ng-container *ngIf="vm$ | async as vm"
-    ><section class="panel" *ngIf="vm.kind === 'loading'">Reading owned snapshot…</section>
+    ><section class="panel" role="status" *ngIf="vm.kind === 'loading'">Loading datasets…</section>
     <section class="panel" role="alert" *ngIf="vm.kind === 'error'">{{ vm.message }}</section>
     <ng-container *ngIf="vm.kind === 'ready'"
       ><section class="panel">
-        <h2>Snapshot authority</h2>
+        <h2>Data source</h2>
         <p>{{ vm.scope }}</p>
         <p class="mono text-break">Snapshot: {{ vm.snapshotId }}</p>
         <p>{{ vm.source.network }} · height {{ vm.source.tipHeight }} · observed {{ vm.source.observedAt }}</p>
         <p *ngFor="let item of vm.unavailable | keyvalue">{{ item.key }} unavailable: {{ item.value }}</p>
       </section>
       <section class="panel">
-        <h2>Dataset query workspace</h2>
+        <h2>Explore a dataset</h2>
         <label for="datasetSelect">Dataset</label
         ><select id="datasetSelect" [ngModel]="selectedDatasetId" (ngModelChange)="onDatasetChange($event)">
           <option *ngFor="let d of vm.datasets" [value]="d.id">{{ d.name }}, {{ d.rowCount }} exact rows</option>

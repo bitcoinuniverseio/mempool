@@ -231,3 +231,13 @@
   border-radius: var(--u-radius-sm);
   padding: 0.25em 0.15em;
 }
+
+.loading-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0.5rem;
+  color: var(--u-block-ink);
+  font-size: 12px;
+}
