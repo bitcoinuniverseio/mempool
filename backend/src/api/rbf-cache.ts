@@ -165,10 +165,12 @@ export class RbfCache {
 
     newTxExtended.replacement = true;
     try {
-      const incoming = [newTxExtended, ...replaced.filter(tx => !this.txs.has(tx.txid))];
-      const metadata = incoming.map(tx => tx instanceof RbfTxMetadata ? tx : new RbfTxMetadata(tx));
-      if (this.metadataBytes + metadata.reduce((bytes, tx) => bytes + tx.budgetBytes, 0) > 16 * 1024 * 1024) { throw new Error('RBF metadata budget exceeded'); }
-      this.bodies.captureBatch(incoming.filter((tx): tx is MempoolTransactionExtended => !(tx instanceof RbfTxMetadata)));
+      this.admit(() => {
+        const incoming = [newTxExtended, ...replaced.filter(tx => !this.txs.has(tx.txid))];
+        const metadata = incoming.map(tx => tx instanceof RbfTxMetadata ? tx : new RbfTxMetadata(tx));
+        if (this.metadataBytes + metadata.reduce((bytes, tx) => bytes + tx.budgetBytes, 0) > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
+        this.bodies.captureBatch(incoming.filter((tx): tx is MempoolTransactionExtended => !(tx instanceof RbfTxMetadata)));
+      });
     } catch { rbfRestoreState.fail('snapshot-oversize'); return; }
     const newTx = { ...new RbfTxMetadata(newTxExtended).stripped } as RbfTransaction;
     const newTime = newTxExtended.firstSeen || (Date.now() / 1000);
@@ -304,12 +306,15 @@ export class RbfCache {
   public freezeLiveBody(tx: MempoolTransactionExtended): void {
     if (!this.txs.has(tx.txid)) { return; }
     try {
-      const previous = this.txs.get(tx.txid), current = new RbfTxMetadata(tx);
-      const proposed = this.metadataBytes + current.budgetBytes - (previous?.budgetBytes || 0);
-      if (proposed > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
-      if (this.bodies.freezeLive(tx)) {
-        this.metadataBytes = proposed; this.txs.set(tx.txid, current);
-      }
+      this.admit(() => {
+        const previous = this.txs.get(tx.txid); if (!previous) { return; }
+        const current = new RbfTxMetadata(tx);
+        const proposed = this.metadataBytes + current.budgetBytes - previous.budgetBytes;
+        if (proposed > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
+        if (this.bodies.freezeLive(tx)) {
+          this.metadataBytes = proposed; this.txs.set(tx.txid, current);
+        }
+      });
     }
     catch { rbfRestoreState.fail('snapshot-oversize'); }
     this.version++;
@@ -433,6 +438,33 @@ export class RbfCache {
     }
     logger.debug(`rbf cache contains ${this.txs.size} txs, ${this.rbfTrees.size} trees, ${this.expiring.size} due to expire (${this.evictionCount} newly expired)`);
     this.evictionCount = 0;
+  }
+
+  // the size bounds limit retention: when one is reached, release the oldest history
+  // that already left the mempool and retry, instead of refusing every later replacement
+  private admit(work: () => void): void {
+    for (;;) {
+      try { return work(); }
+      catch (e) {
+        if (!(e instanceof RbfSnapshotError) || e.code !== 'snapshot-oversize' || !this.releaseOldest()) { throw e; }
+      }
+    }
+  }
+
+  private releaseOldest(): boolean {
+    let oldest: string | undefined;
+    let expiry = Infinity;
+    for (const [txid, time] of this.expiring) {
+      if (time < expiry && !this.replacedBy.has(txid)) {
+        oldest = txid;
+        expiry = time;
+      }
+    }
+    if (oldest === undefined) {
+      return false;
+    }
+    this.remove(oldest);
+    return true;
   }
 
   // remove a transaction & all previous versions from the cache
