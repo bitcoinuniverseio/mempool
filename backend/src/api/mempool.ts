@@ -322,7 +322,9 @@ class Mempool {
 
     if (!loaded) {
       const remainingTxids = transactions.filter(txid => !this.mempoolCache[txid]);
-      const sliceLength = config.ESPLORA.BATCH_QUERY_BASE_SIZE;
+      // The esplora bound is a query size. Against Core the batched read takes a
+      // post-block backlog in one pass instead of one time-limited slice per poll.
+      const sliceLength = config.MEMPOOL.BACKEND === 'esplora' ? config.ESPLORA.BATCH_QUERY_BASE_SIZE : 5000;
       const retried = new Set<string>();
       // A cursor rather than a slice count: txids queued for a second read extend the list.
       for (let cursor = 0; cursor < remainingTxids.length;) {
@@ -431,6 +433,7 @@ class Mempool {
       }
     }
 
+    const readDone = Date.now();
     const candidates = await this.getNextCandidates(minFeeMempool, minFeeTip, deletedTransactions);
 
     const newMempoolSize = currentMempoolSize + newTransactions.length - deletedTransactions.length;
@@ -482,6 +485,9 @@ class Mempool {
 
     const end = new Date().getTime();
     const time = end - start;
+    if (this.inSync && time > 10_000) {
+      logger.info(`Mempool poll took ${time} ms: ${readDone - start} ms reading ${newTransactions.length} new and removing ${deletedTransactions.length}, ${end - readDone} ms publishing`);
+    }
     logger.debug(`Mempool updated in ${time / 1000} seconds. New size: ${Object.keys(this.mempoolCache).length} (${diff > 0 ? '+' + diff : diff})`);
   }
 
