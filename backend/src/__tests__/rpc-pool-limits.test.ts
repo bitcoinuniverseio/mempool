@@ -11,7 +11,8 @@ describe('owned node existing RPC pool configuration', () => {
       expect(() => rpcPoolLimits({ MAX_SOCKETS: value as number })).toThrow('CORE_RPC.MAX_SOCKETS');
       expect(() => rpcPoolLimits({ ADDRESS_MAX_SOCKETS: value as number })).toThrow('CORE_RPC.ADDRESS_MAX_SOCKETS');
     }
-    expect(() => rpcPoolLimits({ MAX_SOCKETS: 9 })).toThrow('between 1 and 8');
+    expect(rpcPoolLimits({ MAX_SOCKETS: 32 }).bulk).toBe(32);
+    expect(() => rpcPoolLimits({ MAX_SOCKETS: 33 })).toThrow('between 1 and 32');
     expect(() => rpcPoolLimits({ ADDRESS_MAX_SOCKETS: 5 })).toThrow('between 1 and 4');
   });
 
