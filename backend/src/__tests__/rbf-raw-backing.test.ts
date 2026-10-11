@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { RbfRawBackingCandidate } from '../api/rbf-raw-backing';
+import { scanRbfCompactClosure } from '../api/rbf-compact-closure';
+import { RBF_SNAPSHOT_MAX_BYTES } from '../api/rbf-snapshot';
 const id = 'a'.repeat(64);
 const value = (): any => ({ network: 'signet', rbfCacheSchemaVersion: 1, rbf: {
   txs: [[id, { txid: id, weight: 400, vin: [{ sequence: 1 }], vout: [{ value: 3 }],
@@ -11,6 +13,31 @@ describe('fixed raw RBF backing ownership candidate', () => {
   let directory: string, file: string;
   const owned: RbfRawBackingCandidate[] = [];
   beforeEach(() => { directory = fs.mkdtempSync(join(tmpdir(), 'rbf-raw-backing-')); file = join(directory, 'raw.json'); fs.writeFileSync(file, JSON.stringify(value())); });
+
+  it('retains a valid dense legacy snapshot within the unchanged small-file bound', async () => {
+    const ids = Array.from({ length: 9000 }, (_, n) => n.toString(16).padStart(64, '0'));
+    const dense = { network: 'signet', rbfCacheSchemaVersion: 1, rbf: {
+      txs: ids.map(txid => [txid, { txid, weight: 400, fee: 2, firstSeen: 123,
+        vin: [{ sequence: 1, txid: id, vout: 0 }], vout: [{ value: 1 }, { value: 2 }], retainedExtra: 'complete body' }]),
+      trees: ids.map(txid => ({ root: txid, [txid]: { tx: txid, time: 123, fullRbf: true, replaces: [] } })),
+      expiring: ids.map(txid => [txid, 1000000]),
+    } };
+    const bytes = Buffer.from(JSON.stringify(dense));
+    expect(bytes.length).toBeLessThanOrEqual(RBF_SNAPSHOT_MAX_BYTES);
+    async function* source(): AsyncIterable<Buffer> {
+      for (let offset = 0; offset < bytes.length; offset += 65536) yield bytes.subarray(offset, offset + 65536);
+    }
+    await expect(scanRbfCompactClosure(source(), 'signet')).rejects.toThrow('descriptor budget exceeded');
+    fs.writeFileSync(file, bytes);
+    const reader = await RbfRawBackingCandidate.open(file, 'signet', 512 * 1024 * 1024); owned.push(reader);
+    const closure = reader.takeClosure();
+    expect(closure.internalProjection.txs).toHaveLength(9000);
+    expect(closure.internalProjection.trees).toHaveLength(9000);
+    expect(closure.internalProjection.expiring).toHaveLength(9000);
+    const full: Buffer[] = []; for await (const chunk of reader.body(ids[0])) full.push(chunk);
+    expect(JSON.parse(Buffer.concat(full).toString())).toEqual(dense.rbf.txs[0][1]);
+    expect(reader.qualified).toBe(false);
+  }, 30000);
   afterEach(async () => { for (const reader of owned.splice(0)) { await reader.close(); } jest.restoreAllMocks(); fs.rmSync(directory, { recursive: true, force: true }); });
   async function open(): Promise<RbfRawBackingCandidate> { const reader = await RbfRawBackingCandidate.open(file, 'signet', 1_000_000); owned.push(reader); return reader; }
   it('returns every original body field in exact raw JSON chunks, never the compact projection', async () => {

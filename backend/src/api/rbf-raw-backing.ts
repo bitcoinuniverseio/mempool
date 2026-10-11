@@ -2,8 +2,8 @@ import * as fs from 'fs';
 import { FileHandle } from 'fs/promises';
 import { createHash } from 'crypto';
 import { scanRbfCompactClosure, RbfCompactClosureCandidate } from './rbf-compact-closure';
-import { RbfBodyRange } from './rbf-body-ranges';
-import { RbfSnapshotError } from './rbf-snapshot';
+import { RbfBodyRange, scanRbfBodyRanges } from './rbf-body-ranges';
+import { RBF_SNAPSHOT_MAX_BYTES, RbfSnapshotError, validateRbfSnapshot } from './rbf-snapshot';
 
 const changed = (): never => { throw new RbfSnapshotError('snapshot-changed'); };
 const invalid = (): never => { throw new RbfSnapshotError('snapshot-invalid'); };
@@ -30,7 +30,8 @@ export class RbfRawBackingCandidate {
     this.descriptor = { network: closure.raw.network, sourceSha256: closure.raw.sourceSha256, sourceBytes: closure.raw.sourceBytes };
   }
 
-  /** Full input is scanned using one verified descriptor, never allocated as a whole string.
+  /** The original 32MiB decoder remains bounded; larger files use streaming projection.
+   * Both paths use one verified descriptor and preserve complete immutable body ranges.
    * @asyncUnsafe Rejects file/scope/grammar/closure/change/cancellation/resource failures.
    */
   static async open(path: string, network: string, maximumSourceBytes: number, signal?: AbortSignal): Promise<RbfRawBackingCandidate> {
@@ -61,7 +62,44 @@ export class RbfRawBackingCandidate {
         cancelled(signal);
       };
       let closure: RbfCompactClosureCandidate;
-      try { closure = await scanRbfCompactClosure(chunks(), network, signal); }
+      try {
+        if (stamp.size <= BigInt(RBF_SNAPSHOT_MAX_BYTES)) {
+          // Keep the established small-file admission bound. A streaming
+          // descriptor budget is a separate large-file path, not grounds to
+          // reject a legacy snapshot already accepted by this bounded decoder.
+          const raw = await scanRbfBodyRanges(chunks(), network, signal);
+          const bytes = Buffer.alloc(Number(stamp.size));
+          let offset = 0;
+          while (offset < bytes.length) {
+            cancelled(signal);
+            const read = await reader.read(bytes, offset, Math.min(65536, bytes.length - offset), offset);
+            if (!read.bytesRead) { return changed(); }
+            offset += read.bytesRead;
+          }
+          if (createHash('sha256').update(bytes).digest('hex') !== raw.sourceSha256) { return changed(); }
+          const original = validateRbfSnapshot(JSON.parse(bytes.toString('utf8')), network);
+          const fields = ['txid', 'weight', 'fee', 'firstSeen', 'acceleration', 'effectiveFeePerVsize'];
+          const txs = original.txs.map(([id, tx]): [string, typeof tx] => {
+            const value: typeof tx = {};
+            for (const field of fields) {
+              if (Object.prototype.hasOwnProperty.call(tx, field)) { value[field] = tx[field]; }
+            }
+            value.vin = tx.vin.map(input => {
+              const retained = { sequence: input.sequence };
+              for (const field of ['txid', 'vout']) {
+                if (Object.prototype.hasOwnProperty.call(input, field)) { retained[field] = input[field]; }
+              }
+              return retained;
+            });
+            value.vout = tx.vout.map(output => ({ value: output.value }));
+            return [id, value];
+          });
+          closure = { qualified: false, metadataValidated: true, raw,
+            internalProjection: { txs, trees: original.trees, expiring: original.expiring } };
+        } else {
+          closure = await scanRbfCompactClosure(chunks(), network, signal);
+        }
+      }
       catch (e) {
         if (e instanceof RbfSnapshotError) { throw e; }
         throw new RbfSnapshotError('snapshot-invalid');
