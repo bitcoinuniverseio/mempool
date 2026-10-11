@@ -31,6 +31,8 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
     './api/capabilities': { default: { preflight: () => [] } },
     './api/admin-adapter/admin-adapter.runtime': { runtimeMetrics: { stop: noop } },
     './api/intelligence/private-submission/private-relay.runtime': { stopPrivateRelayWorker: noop, drainPrivateRelayWorker: done },
+    './api/intelligence/identity/developer-identity': { developerIdentity: { stopOutboxWorker: noop, drainOutboxWorker: done } },
+    './api/intelligence/bootstrap/bootstrap.service': { default: { stopWorker: noop, drainWorker: done } },
     './api/intelligence/time-machine/time-machine.service': { timeMachineService: { closeHistory: async () => { events.push('history-flushed'); } } },
     './api/intelligence/events/intelligence-event-bus': { eventBus: { drain: done } },
     './api/fractal/fractal.runtime': { closeFractalRuntime: done },

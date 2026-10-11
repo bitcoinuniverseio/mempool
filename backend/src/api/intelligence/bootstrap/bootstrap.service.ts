@@ -86,6 +86,7 @@ export class BootstrapService {
   private operatorCore?: OperatorCore;
   private readonly workerOwner: string;
   private executor?: BootstrapJobExecutor;
+  private workerStopping = false;
   private readonly inflight = new Map<string, Promise<NodeBootstrapVerification>>();
 
   constructor(deps: BootstrapServiceDependencies = {}) {
@@ -316,6 +317,7 @@ export class BootstrapService {
     sha256?: string;
     utxo_hash?: string;
   }): Promise<NodeBootstrapVerification> {
+    if (this.workerStopping) { throw new BootstrapEvidenceError('backend-draining', 'The backend is stopping.', 503); }
     const height = data?.base_height ?? data?.height;
     const sha256 = data?.file_sha256 ?? data?.sha256;
     const utxoHash = data?.expected_txoutset_hash ?? data?.utxo_hash;
@@ -625,7 +627,7 @@ export class BootstrapService {
 
   /** Starts the bounded worker once the durable store and output directory exist; idle otherwise. */
   public startWorker(): BootstrapJobExecutor | undefined {
-    if (!this.store || !this.env.snapshotDir) {
+    if (this.workerStopping || !this.store || !this.env.snapshotDir) {
       return undefined;
     }
     if (!this.executor) {
@@ -647,7 +649,14 @@ export class BootstrapService {
   }
 
   public stopWorker(): void {
+    this.workerStopping = true;
     this.executor?.stop();
+  }
+
+  /** @asyncUnsafe Shutdown retains ownership if a worker cannot finish. */
+  public async drainWorker(): Promise<void> {
+    await this.executor?.drain();
+    while (this.inflight.size) { await Promise.all([...this.inflight.values()]); }
     this.executor = undefined;
   }
 }

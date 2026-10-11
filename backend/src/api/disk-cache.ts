@@ -28,6 +28,7 @@ class DiskCache {
   private static RBF_FILE_NAME = config.MEMPOOL.CACHE_DIR + '/rbfcache.json';
   private static CHUNK_FILES = 25;
   private isWritingCache = false;
+  private savingCache: Promise<void> | null = null;
   private ignoreBlocksCache = false;
 
   private semaphore: { resume: (() => void)[], locks: number } = {
@@ -44,7 +45,10 @@ class DiskCache {
 
   /** @asyncSafe */
   $saveCacheToDisk(sync: boolean = false): Promise<void> {
-    return this.work.track(this.saveCacheToDisk(sync));
+    if (!this.savingCache) {
+      this.savingCache = this.work.track(this.saveCacheToDisk(sync)).finally(() => { this.savingCache = null; });
+    }
+    return this.savingCache;
   }
 
   /** @asyncSafe */
@@ -70,7 +74,7 @@ class DiskCache {
 
       Common.shuffleArray(mempoolArray);
 
-      const chunkSize = Math.floor(mempoolArray.length / DiskCache.CHUNK_FILES);
+      const chunkSize = Math.ceil(mempoolArray.length / DiskCache.CHUNK_FILES);
 
       if (sync) {
         fs.writeFileSync(DiskCache.TMP_FILE_NAME, JSON.stringify({
@@ -121,6 +125,7 @@ class DiskCache {
     } catch (e) {
       logger.warn('Error writing to cache file: ' + (e instanceof Error ? e.message : e));
       this.isWritingCache = false;
+      throw e;
     }
 
     // Preserve a rejected/partially restored file. New observations cannot replace retained history.
@@ -134,6 +139,7 @@ class DiskCache {
     } catch (e) {
       logger.warn('Error writing rbf data to cache file: ' + (e instanceof Error ? e.message : e));
       this.isWritingCache = false;
+      throw e;
     }
   }
 
