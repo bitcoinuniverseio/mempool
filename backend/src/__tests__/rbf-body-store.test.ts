@@ -30,6 +30,14 @@ describe('complete body store with bounded immutable segment ownership', () => {
     expect(fs.readFileSync(unrelated, 'utf8')).toBe('unowned');
     expect(fs.readFileSync(join(directory, 'rbfcache.json'), 'utf8')).toBe('legacy');
   });
+  it('reclaims every obsolete segment in one pass so retained history cannot starve reclamation', async () => {
+    const small = (n: number): any => ({ txid: id(n), weight: 400, vin: [{ sequence: 1 }], vout: [{ value: 3 }] });
+    store.captureBatch(Array.from({ length: 400 }, (_, n) => small(n)), false); await store.configure(directory); await store.flush();
+    for (let n = 200; n < 400; n++) { store.remove(id(n)); }
+    store.maintainSegments(new Set());
+    expect(fs.readdirSync(directory)).toHaveLength(200);
+    expect(await read(store, id(0))).toBe(JSON.stringify(small(0)));
+  });
   it('requalifies manifest segment ownership after restart before reclaiming expired membership', async () => {
     const full = { ...body(0), fee: 1, time: 1, vin: [{ sequence: 1, txid: id(99), vout: 0 }] };
     store.captureBatch([full], false); await store.configure(directory); await store.flush();
