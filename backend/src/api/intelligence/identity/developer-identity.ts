@@ -8,6 +8,7 @@ import config from '../../../config';
 import logger from '../../../logger';
 import { EventEnvelopeValidator } from '../events/event-envelope';
 import { ApiKeyRow, OutboxRow, OwnerStore, ownerStore, WebhookAttemptRow, WebhookRow } from './owner-store';
+import { TaskDrain } from '../../task-drain';
 
 /**
  * Developer identity: API keys are the product's owner identity, and webhooks
@@ -286,6 +287,8 @@ export class DeveloperIdentityService {
   private encryptionKey: Buffer | null = null;
   private outboxTimer: NodeJS.Timeout | null = null;
   private outboxRunning = false;
+  private outboxStopping = false;
+  private readonly outboxWork = new TaskDrain();
   private bootstrapWindow = new Map<string, number[]>();
 
   public transport: DeliveryTransport = httpsTransport;
@@ -313,6 +316,7 @@ export class DeveloperIdentityService {
     this.pepper = null;
     this.encryptionKey = null;
     this.bootstrapWindow.clear();
+    this.outboxStopping = false;
   }
 
   /**
@@ -588,7 +592,7 @@ export class DeveloperIdentityService {
       if (renewing || controller.signal.aborted) return;
       if (Date.now() >= expires) { controller.abort(); return; }
       renewing = true;
-      this.store.renewOutbox(outbox.outbox_id, this.network, outbox.lease_token!, new Date().toISOString(), new Date(Math.min(expires,Date.now()+30000)).toISOString())
+      this.outboxWork.track(this.store.renewOutbox(outbox.outbox_id, this.network, outbox.lease_token!, new Date().toISOString(), new Date(Math.min(expires,Date.now()+30000)).toISOString()))
         .then(owned => { if (!owned) controller.abort(); })
         .catch(() => controller.abort()).finally(() => { renewing = false; });
     }, 3000);
@@ -638,6 +642,11 @@ export class DeveloperIdentityService {
 
   /** @asyncUnsafe Claims due outbox rows under a lease and delivers them. Returns the attempts made. */
   public async processOutbox(limit = 20, now = Date.now()): Promise<WebhookAttemptRow[]> {
+    if (this.outboxStopping) { return []; }
+    return this.outboxWork.track(this.runOutbox(limit, now));
+  }
+
+  private async runOutbox(limit: number, now: number): Promise<WebhookAttemptRow[]> {
     /* IMPLEMENTATION-HANDOFF [WP-BI-003] DEF-BI-003; COV-BI-003A/B/C/D.
      * Verified: 20 rows receive one 30-second lease before sequential delivery.
      * With 10-second attempts, 16 rows start after expiry in the controlled repro;
@@ -668,6 +677,7 @@ export class DeveloperIdentityService {
     try {
       const attempts: WebhookAttemptRow[] = [];
       for (let i = 0; i < Math.min(100, Math.max(0, limit)); i++) {
+        if (this.outboxStopping) { break; }
         const current = i === 0 ? now : Date.now();
         const [row] = await this.store.claimOutbox(this.network, new Date(current).toISOString(), new Date(current + 30000).toISOString(), 1);
         if (!row) break;
@@ -680,7 +690,7 @@ export class DeveloperIdentityService {
   }
 
   public startOutboxWorker(intervalMs = 15_000): void {
-    if (this.outboxTimer) { return; }
+    if (this.outboxTimer || this.outboxStopping) { return; }
     this.outboxTimer = setInterval(() => {
       this.processOutbox().catch(error => logger.warn(`webhook outbox: ${error instanceof Error ? error.message : error}`));
     }, intervalMs);
@@ -688,8 +698,11 @@ export class DeveloperIdentityService {
   }
 
   public stopOutboxWorker(): void {
+    this.outboxStopping = true;
     if (this.outboxTimer) { clearInterval(this.outboxTimer); this.outboxTimer = null; }
   }
+
+  public drainOutboxWorker(): Promise<void> { return this.outboxWork.drain(); }
 }
 
 export const developerIdentity = DeveloperIdentityService.getInstance();
