@@ -251,6 +251,16 @@ export class HashrateChartPoolsComponent implements OnInit {
         }
       },
       legend: (this.isMobile() || data.series.length === 0) ? undefined : {
+        // One paged row: a wrapping legend grows with the pool count and
+        // spills over the plot, the date axis and the zoom slider.
+        type: 'scroll',
+        left: 20,
+        right: 15,
+        pageIconColor: chartChrome().label,
+        pageIconInactiveColor: chartChrome().grid,
+        pageTextStyle: {
+          color: chartChrome().label,
+        },
         data: data.legends
       },
       yAxis: data.series.length === 0 ? undefined : {
