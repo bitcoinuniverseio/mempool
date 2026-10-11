@@ -153,4 +153,19 @@ describe('confirmed fractional weight-derived virtual size persistence', () => {
       removeOwnedFixture(directory);
     }
   });
+  it('persists integer fees from legacy floating conversion noise', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'history-confirmed-weight-'));
+    const file = join(directory, 'state.gz');
+    const service = new TimeMachineService({ store: new HistoryStore(file, 'signet'), network: 'signet', now: 1000, feed: () => ({}) });
+    let reopened: TimeMachineService | undefined;
+    try {
+      service.observeBlock(block(1), [{ ...tx('c'), fee: 419.99999999999994 } as any], 1000);
+      await service.closeHistory();
+      reopened = new TimeMachineService({ store: new HistoryStore(file, 'signet'), network: 'signet', now: 2000, feed: () => ({}) });
+      expect(reopened.getCoverage().persistence.error).toBeNull();
+      expect(reopened.getTransactionLifecycle('c'.repeat(64))[0]).toMatchObject({ fee_sats: 420, fee_rate: 4.2 });
+    } finally {
+      await reopened?.closeHistory(); await service.closeHistory(); removeOwnedFixture(directory);
+    }
+  });
 });
