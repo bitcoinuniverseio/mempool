@@ -18,6 +18,16 @@ describe('complete body store with bounded immutable segment ownership', () => {
     expect(await read(store, id(0))).toBe(JSON.stringify(body(0))); expect(await store.json(id(1))).toBe(JSON.stringify(body(1)));
     store.remove(id(0)); expect(store.has(id(0))).toBe(false); expect(fs.readdirSync(directory)).toHaveLength(2);
   });
+  it('persists bodies captured while an earlier flush is still writing before a later flush resolves', async () => {
+    store.captureBatch(Array.from({ length: 20 }, (_, n) => body(n)), false); await store.configure(directory);
+    const first = store.flush();
+    store.captureBatch([body(40), body(41)], false);
+    await store.flush(); await first;
+    const refs = store.references([...Array.from({ length: 20 }, (_, n) => id(n)), id(40), id(41)]);
+    expect(refs.every(ref => ref.file?.startsWith('rbf-body-'))).toBe(true);
+    expect(new Set(refs.map(ref => ref.file)).size).toBe(22); expect(store.retainedEncodedBytes).toBe(0);
+    expect(await read(store, id(41))).toBe(JSON.stringify(body(41)));
+  });
   it('reclaims only owner-created obsolete segments after readers exit and rollback references release', async () => {
     store.captureBatch([body(0)], false); await store.configure(directory); await store.flush();
     const file = store.references([id(0)])[0].file!, path = join(directory, file);
