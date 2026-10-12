@@ -87,12 +87,15 @@ class BitcoinApi implements AbstractBitcoinApi {
    * instead of two requests per transaction. The transport fails a whole batch
    * on any error, so a batch holding a transaction that has just left the
    * mempool yields nothing here; the caller reads what is missing one by one.
+   *
+   * @asyncUnsafe
    */
   async $getMempoolTransactionsBatched(txids: string[]): Promise<IEsploraApi.Transaction[]> {
     const batches: string[][] = [];
     for (let i = 0; i < txids.length; i += 25) {
       batches.push(txids.slice(i, i + 25));
     }
+    /** @asyncUnsafe */
     const read = async (batch: string[]): Promise<IEsploraApi.Transaction[]> => {
       const answers = await this.bitcoindClient.rpc.call(batch.flatMap(txid => [
         { method: 'getrawtransaction', params: [txid, true] },

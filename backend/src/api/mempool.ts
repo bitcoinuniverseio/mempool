@@ -576,6 +576,8 @@ class Mempool {
    * Against Core, reads the snapshot's new transactions in batches and then
    * one by one for whatever a batch did not return. A block is followed by
    * thousands of new transactions; two round trips each cannot keep up.
+   *
+   * @asyncUnsafe
    */
   private async $readSnapshotTransactions(txids: string[]): Promise<MempoolTransactionExtended[]> {
     if (config.MEMPOOL.BACKEND === 'esplora' || !bitcoinApi.$getMempoolTransactionsBatched || txids.length < 8) {
