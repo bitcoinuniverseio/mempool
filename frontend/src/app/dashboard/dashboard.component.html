@@ -90,19 +90,14 @@
     </section>
 
     <!-- Replacements: the clearest sign that someone is competing for space. -->
-    <section class="panel panel-replacements" *ngIf="(network$ | async) !== 'liquidtestnet'; else latestBlocks" aria-labelledby="panel-rbf-title">
+    <!-- A backend that cannot serve replacement history is logged there, never reported here: the panel falls back to recent blocks. -->
+    <section class="panel panel-replacements" *ngIf="(network$ | async) !== 'liquidtestnet' && (stateService.rbfSummaryState$ | async)?.status !== 'unavailable'; else latestBlocks" aria-labelledby="panel-rbf-title">
       <div class="panel-head">
         <h2 class="panel-title" id="panel-rbf-title" i18n="dashboard.recent-rbf-replacements">Recent replacements</h2>
         <a class="panel-link" [routerLink]="['/rbf' | relativeUrl]" i18n="dashboard.see-all-replacements">See all</a>
         <p class="panel-note" i18n="dashboard.rbf-note">Transactions resent at a higher fee to move ahead of the queue.</p>
       </div>
       <div class="table-scroll" tabindex="0" role="region" aria-labelledby="panel-rbf-title">
-        @if (stateService.rbfSummaryState$ | async; as history) {
-          @if (history.status === 'unavailable') {
-            <p role="alert">Replacement history is unavailable.</p>
-            <button type="button" class="btn btn-primary" (click)="retryRbfSummary()">Retry</button>
-          }
-        }
         <table class="table lastest-replacements-table">
           <thead>
             <tr>
