@@ -282,6 +282,8 @@ class Mempool {
     this.updateTimerProgress(timer, 'got raw mempool');
     const diff = transactions.length - currentMempoolSize;
     let newTransactions: MempoolTransactionExtended[] = [];
+    // Snapshot txids the node confirmed it no longer holds by the time they were fetched.
+    let departed = 0;
 
     this.mempoolCacheDelta = Math.abs(diff);
 
@@ -320,10 +322,15 @@ class Mempool {
 
     if (!loaded) {
       const remainingTxids = transactions.filter(txid => !this.mempoolCache[txid]);
-      const sliceLength = config.ESPLORA.BATCH_QUERY_BASE_SIZE;
-      for (let i = 0; i < Math.ceil(remainingTxids.length / sliceLength); i++) {
-        const slice = remainingTxids.slice(i * sliceLength, (i + 1) * sliceLength);
-        const txs = await transactionUtils.$getMempoolTransactionsExtended(slice, false, false, false);
+      // The esplora bound is a query size. Against Core the batched read takes a
+      // post-block backlog in one pass instead of one time-limited slice per poll.
+      const sliceLength = config.MEMPOOL.BACKEND === 'esplora' ? config.ESPLORA.BATCH_QUERY_BASE_SIZE : 5000;
+      const retried = new Set<string>();
+      // A cursor rather than a slice count: txids queued for a second read extend the list.
+      for (let cursor = 0; cursor < remainingTxids.length;) {
+        const slice = remainingTxids.slice(cursor, cursor + sliceLength);
+        cursor += slice.length;
+        const txs = await this.$readSnapshotTransactions(slice);
         logger.debug(`fetched ${txs.length} transactions`);
         this.updateTimerProgress(timer, 'fetched new transactions');
         if (!this.inSync && txs.length) {
@@ -353,6 +360,15 @@ class Mempool {
             this.missingTxCount += missing;
           }
           logger.debug(`Error finding ${missing} transactions in the mempool: `);
+          const unfetched = await this.$classifyUnfetched(slice.filter(txid => !this.mempoolCache[txid]));
+          departed += unfetched.departed;
+          // The node still holds these, so the read failed for a passing reason: read them once more in this poll.
+          for (const txid of unfetched.held) {
+            if (!retried.has(txid)) {
+              retried.add(txid);
+              remainingTxids.push(txid);
+            }
+          }
         }
 
         if (Date.now() - intervalTimer > Math.max(pollRate * 2, 5_000)) {
@@ -417,6 +433,7 @@ class Mempool {
       }
     }
 
+    const readDone = Date.now();
     const candidates = await this.getNextCandidates(minFeeMempool, minFeeTip, deletedTransactions);
 
     const newMempoolSize = currentMempoolSize + newTransactions.length - deletedTransactions.length;
@@ -444,7 +461,12 @@ class Mempool {
       this.updateTimerProgress(timer, 'completed async mempool callback');
     }
 
-    if (!this.inSync && transactions.length === newMempoolSize) {
+    // Every snapshot txid is either cached or confirmed gone from the node's mempool.
+    const complete = transactions.length - departed === newMempoolSize;
+    if (this.inSync && !complete) {
+      logger.info(`Mempool poll incomplete: ${transactions.length - departed - newMempoolSize} of ${transactions.length} snapshot transactions unaccounted for (${departed} departed)`);
+    }
+    if (!this.inSync && complete) {
       this.inSync = true;
       logger.notice('The mempool is now in sync!');
       loadingIndicators.setProgress('mempool', 100);
@@ -458,11 +480,14 @@ class Mempool {
     // Complete body segments use the same owner even when Redis is disabled.
     await rbfCache.updateCache();
 
-    this.observedPollCallback?.(newTransactions, deletedTransactions, this.mempoolProtection !== 1 && transactions.length === newMempoolSize);
+    this.observedPollCallback?.(newTransactions, deletedTransactions, this.mempoolProtection !== 1 && complete);
     this.lastMempoolUpdateAt = Date.now();
 
     const end = new Date().getTime();
     const time = end - start;
+    if (this.inSync && time > 10_000) {
+      logger.info(`Mempool poll took ${time} ms: ${readDone - start} ms reading ${newTransactions.length} new and removing ${deletedTransactions.length}, ${end - readDone} ms publishing`);
+    }
     logger.debug(`Mempool updated in ${time / 1000} seconds. New size: ${Object.keys(this.mempoolCache).length} (${diff > 0 ? '+' + diff : diff})`);
   }
 
@@ -545,6 +570,38 @@ class Mempool {
 
   getAccelerationPositions(txid: string): { [pool: number]: { poolId: number, pool: string, block: number, vsize: number } } | undefined {
     return this.accelerationPositions[txid];
+  }
+
+  /**
+   * Against Core, reads the snapshot's new transactions in batches and then
+   * one by one for whatever a batch did not return. A block is followed by
+   * thousands of new transactions; two round trips each cannot keep up.
+   *
+   * @asyncUnsafe
+   */
+  private async $readSnapshotTransactions(txids: string[]): Promise<MempoolTransactionExtended[]> {
+    if (config.MEMPOOL.BACKEND === 'esplora' || !bitcoinApi.$getMempoolTransactionsBatched || txids.length < 8) {
+      return transactionUtils.$getMempoolTransactionsExtended(txids, false, false, false);
+    }
+    const batched = (await bitcoinApi.$getMempoolTransactionsBatched(txids)).map(tx => transactionUtils.extendMempoolTransaction(tx));
+    const read = new Set(batched.map(tx => tx.txid));
+    const rest = txids.filter(txid => !read.has(txid));
+    return rest.length ? batched.concat(await transactionUtils.$getMempoolTransactionsExtended(rest, false, false, false)) : batched;
+  }
+
+  /**
+   * Sorts unfetched snapshot txids by what the node says about them now.
+   * departed: no longer in its mempool (-5) - replaced, evicted or mined after the snapshot.
+   * held: still in its mempool, so the failed read is worth one more attempt.
+   * Any other answer leaves the txid unaccounted for, so the poll stays incomplete.
+   */
+  private async $classifyUnfetched(txids: string[]): Promise<{ departed: number; held: string[] }> {
+    const checked = txids.slice(0, 500);
+    const answers = await Promise.allSettled(checked.map(txid => bitcoinClient.getMempoolEntry(txid)));
+    return {
+      departed: answers.filter(answer => answer.status === 'rejected' && answer.reason?.code === -5).length,
+      held: checked.filter((_txid, index) => answers[index].status === 'fulfilled'),
+    };
   }
 
   private startTimer() {

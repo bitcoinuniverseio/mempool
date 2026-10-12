@@ -5,6 +5,8 @@ const config: Config.InitialOptions = {
   testEnvironment: 'node',
   verbose: true,
   automock: false,
+  // Loaded runners take several times longer on the filesystem and socket suites.
+  testTimeout: 30_000,
   collectCoverage: true,
   collectCoverageFrom: ['./src/**/**.ts'],
   coverageProvider: 'v8',

@@ -77,7 +77,7 @@ export class BackendInfo {
    *
    * @asyncSafe
    */
-  private async $updateChainSync(): Promise<void> {
+  public async $updateChainSync(): Promise<void> {
     try {
       const info = await bitcoinClient.getBlockchainInfo();
       this.backendInfo.chainSync = {
