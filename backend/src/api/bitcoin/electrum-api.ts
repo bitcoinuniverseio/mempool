@@ -1,6 +1,7 @@
 import config from '../../config';
 import { createHash } from 'crypto';
-import { verifyAddressSource } from './address-source-checkpoint';
+import { AddressSourceCheckpoint, verifyAddressSource } from './address-source-checkpoint';
+import { SharedAddressSource, ValidatedAddresses } from './shared-address-source';
 import Client from '@mempool/electrum-client';
 import { withElectrumDeadline } from './electrum-deadline';
 import { AbstractBitcoinApi } from './bitcoin-api-abstract-factory';
@@ -21,6 +22,8 @@ import { addressReadAdmission } from './address-read-admission';
 
 class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   private electrumClient: any;
+  private readonly sharedSource = new SharedAddressSource();
+  private readonly validatedAddresses = new ValidatedAddresses<{ isvalid?: boolean; scriptPubKey: string }>();
   private readonly addressApi = new BitcoinApi(addressBitcoinClient);
   private readonly addressHttp = config.ELECTRUM.ADDRESS_HTTP_URL === undefined ? null : new AddressHttpReader(
     config.ELECTRUM.ADDRESS_HTTP_URL,
@@ -114,8 +117,8 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
       const info = await addressBitcoinClient.rpc.call('validateaddress', [address], { signal: active });
       if (!info?.isvalid) throw new Error('Invalid Bitcoin address');
     });
-    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
-    const addressInfo = await addressBitcoinClient.validateAddress(address);
+    await this.$verifySource(await this.$getIndexedTip());
+    const addressInfo = await this.$validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
       throw new Error('Invalid Bitcoin address');
     }
@@ -179,7 +182,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   async $getAddressUtxos(address: string): Promise<IEsploraApi.UTXO[]> {
     // Script UTXO acquisition verifies the source before and after the read.
     // A preliminary third checkpoint adds latency without covering new data.
-    const addressInfo = await addressBitcoinClient.validateAddress(address);
+    const addressInfo = await this.$validateAddress(address);
     if (!addressInfo || !addressInfo.isvalid) {
       throw new Error('Invalid Bitcoin address');
     }
@@ -189,7 +192,7 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
 
   /** @asyncUnsafe */
   async $getScriptHashTransactions(scripthash: string, lastSeenTxId?: string): Promise<IEsploraApi.Transaction[]> {
-    await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
+    await this.$verifySource(await this.$getIndexedTip());
     try {
       loadingIndicators.setProgress('address-' + scripthash, 0);
 
@@ -227,13 +230,22 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
   /** @asyncUnsafe */
   /** @asyncUnsafe */
   async $getScriptHashUtxos(scripthash: string): Promise<IEsploraApi.UTXO[]> {
-    const checkpoint = await verifyAddressSource(await this.$getIndexedTip(), height => this.$getIndexBlockHash(height));
+    const checkpoint = await this.$verifySource(await this.$getIndexedTip());
     const utxos = await this.$getScriptHashUnspent(scripthash);
     if (utxos.some(row => row.height > checkpoint.blockHeight)) throw new Error('UTXO block exceeds the verified address checkpoint');
     const result = await readElectrumUtxoMetadata(utxos, (method, params, signal) => addressBitcoinClient.rpc.call(method, params, { signal }));
-    const after = await verifyAddressSource(checkpoint.blockHeight, height => this.$getIndexBlockHash(height));
+    const after = await this.$verifySource(checkpoint.blockHeight, Date.now());
     if (after.blockHash !== checkpoint.blockHash || after.genesisHash !== checkpoint.genesisHash || after.network !== checkpoint.network) throw new Error('Address source changed during UTXO acquisition');
     return result;
+  }
+
+  /** Concurrent address reads share one owned-node verification; see SharedAddressSource. */
+  private $verifySource(indexedTip: number | null, notBefore?: number): Promise<AddressSourceCheckpoint> {
+    return this.sharedSource.verify(indexedTip, tip => verifyAddressSource(tip, height => this.$getIndexBlockHash(height)), notBefore);
+  }
+
+  private $validateAddress(address: string): Promise<{ isvalid?: boolean; scriptPubKey: string }> {
+    return this.validatedAddresses.read(address, value => addressBitcoinClient.validateAddress(value));
   }
 
   private $getScriptHashUnspent(scriptHash: string): Promise<IElectrumApi.ScriptHashUtxos[]> {

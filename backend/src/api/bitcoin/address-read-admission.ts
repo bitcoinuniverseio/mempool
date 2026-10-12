@@ -35,7 +35,11 @@ class AddressReadOwner {
 export class AddressReadAdmission {
   private active = 0;
   private readonly context = new AsyncLocalStorage<AddressReadOwner>();
-  constructor(private readonly maximum = 2) {}
+  // Source verification is shared between readers, so a waiting read costs the
+  // owned node nothing; its RPC work is bounded by the address socket pool. A
+  // payment watcher sends its whole address list at once, and a small limit
+  // refused nearly all of it.
+  constructor(private readonly maximum = 128) {}
   async run<T>(read: () => Promise<T>): Promise<T> {
     if (this.active >= this.maximum) { throw busy(); }
     this.active++;
