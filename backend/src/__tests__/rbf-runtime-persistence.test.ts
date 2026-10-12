@@ -70,6 +70,21 @@ describe('real compact cache and complete body persistence', () => {
     expect(fs.readdirSync(directory).filter(file => file.startsWith('rbf-body-'))).toHaveLength(2);
     expect(await read(first, id(1))).toEqual(replacement);
   });
+  it('releases the oldest departed history at the memory-only retention bound and stays available', async () => {
+    const state = require('../api/rbf-snapshot').rbfRestoreState;
+    state.beginRestore(); state.completeRestore('no-file');
+    const first = cache(), pairs = 120; // 240 retained 200KB bodies exceed the 32MiB encoded bound
+    let old: any, replacement: any;
+    for (let n = 0; n < pairs; n++) {
+      old = tx(1000 + 2 * n); replacement = tx(1001 + 2 * n);
+      first.add([old], replacement); first.mined(replacement.txid);
+    }
+    expect(state.diagnostic()).toMatchObject({ status: 'available', reason: null });
+    expect(first.bodies.retainedEncodedBytes).toBeLessThanOrEqual(32 * 1024 * 1024);
+    expect(first.has(id(1001))).toBe(false); expect(first.has(id(1000))).toBe(false);
+    expect(first.getRbfTree(replacement.txid).replaces[0].tx.txid).toBe(old.txid);
+    expect(await read(first, replacement.txid)).toEqual(replacement); expect(await read(first, old.txid)).toEqual(old);
+  });
   it('rejects oversized dynamic metadata before installing or detaching a changed body', async () => {
     const first = cache(), replacement = tx(1); first.add([tx(0)], replacement);
     const old = first.txs.get(id(1)), before = first.bodies.references([id(1)])[0];
