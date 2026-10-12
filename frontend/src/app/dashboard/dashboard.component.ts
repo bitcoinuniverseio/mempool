@@ -115,8 +115,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.stateService.retryLiveFeed();
   }
 
-  retryRbfSummary(): void { this.websocketService.startTrackRbfSummary(); }
-
   ngOnDestroy(): void {
     this.filterSubscription.unsubscribe();
     this.mempoolInfoSubscription.unsubscribe();
