@@ -58,6 +58,18 @@ describe('independent chain health presentation', () => {
     expect(healthDiagnostics(row, NOW)[0].observation).not.toMatch(/^Checked/);
     expect(healthDiagnostics(row, NOW)[0].checkpoint).toContain('9007199254740993');
   });
+  it('raises the page notice only on current evidence that the node is behind or down', () => {
+    expect(chainHealthNotice(null, 'bitcoin', false, NOW).show).toBe(false);
+    const aged = healthCapability();
+    aged.health!.node.observedAt = new Date(NOW - 600_000).toISOString();
+    expect(chainHealthNotice(aged, 'zcash', false, NOW).show).toBe(false);
+    const syncing = healthCapability();
+    Object.assign(syncing.health!.node, { synced: false, state: 'syncing' });
+    expect(chainHealthNotice(syncing, 'zcash', false, NOW).show).toBe(true);
+    const down = healthCapability();
+    Object.assign(down.health!.node, { reachability: 'unreachable', synced: null, state: 'unavailable' });
+    expect(chainHealthNotice(down, 'zcash', false, NOW).show).toBe(true);
+  });
   it('does not use a summary sync flag in place of node evidence', () => {
     const row = healthCapability();
     row.health!.node.synced = null;
