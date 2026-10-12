@@ -23,6 +23,8 @@ interface DifficultyBlock {
 }
 
 class Mining {
+  private static readonly POOLS_HASHRATE_BUDGET_MS = 5000;
+
   private blocksPriceIndexingRunning = false;
   public lastHashrateIndexingDate: number | null = null;
   public lastWeeklyHashrateIndexingDate: number | null = null;
@@ -145,13 +147,32 @@ class Mining {
     const totalBlock3d: number = await BlocksRepository.$blockCount(null, '3d');
     const totalBlock1w: number = await BlocksRepository.$blockCount(null, '1w');
 
+    // The ranking is complete from the database alone. The node only adds the
+    // hashrate estimates, so they share one short budget: a node that is busy
+    // indexing must not hold the answer past what the page waits for.
+    let expired = false;
+    let timer: NodeJS.Timeout | undefined;
     try {
-      poolsStatistics['lastEstimatedHashrate'] = await bitcoinClient.getNetworkHashPs(totalBlock24h);
-      poolsStatistics['lastEstimatedHashrate3d'] = await bitcoinClient.getNetworkHashPs(totalBlock3d);
-      poolsStatistics['lastEstimatedHashrate1w'] = await bitcoinClient.getNetworkHashPs(totalBlock1w);
+      await Promise.race([
+        (/** @asyncUnsafe $getPoolsStats owns rejection through Promise.race. */ async (): Promise<void> => {
+          poolsStatistics['lastEstimatedHashrate'] = await bitcoinClient.getNetworkHashPs(totalBlock24h);
+          if (expired) { return; }
+          poolsStatistics['lastEstimatedHashrate3d'] = await bitcoinClient.getNetworkHashPs(totalBlock3d);
+          if (expired) { return; }
+          poolsStatistics['lastEstimatedHashrate1w'] = await bitcoinClient.getNetworkHashPs(totalBlock1w);
+        })(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            expired = true;
+            reject(new Error('Hashrate estimate exceeded its budget'));
+          }, Mining.POOLS_HASHRATE_BUDGET_MS);
+        }),
+      ]);
     } catch (e) {
-      poolsStatistics['lastEstimatedHashrate'] = 0;
+      poolsStatistics['lastEstimatedHashrate'] = poolsStatistics['lastEstimatedHashrate'] ?? 0;
       logger.debug('Bitcoin Core is not available, using zeroed value for current hashrate', logger.tags.mining);
+    } finally {
+      clearTimeout(timer);
     }
 
     return poolsStatistics;
