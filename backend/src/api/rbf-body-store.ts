@@ -212,7 +212,8 @@ export class RbfBodyStore {
   flush(): Promise<void> {
     if (this.failure) { return Promise.reject(this.failure); }
     if (!this.root) { return Promise.resolve(); }
-    if (this.writing) { return this.writing; }
+    // A job already running took its batch earlier; write what was captured since before resolving.
+    if (this.writing) { return this.writing.then(() => this.flush()); }
     const job = this.writePending();
     this.writing = job.catch(e => { this.failure = e; this.accepting = false; throw e; })
       .finally(() => { this.writing = undefined; });
