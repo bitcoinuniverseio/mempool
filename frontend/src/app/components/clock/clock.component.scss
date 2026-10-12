@@ -102,10 +102,10 @@
     margin: 0;
     // This heading overlays the transaction map in every theme. Fixed light
     // text over a dark scrim preserves contrast even on the brightest cells.
-    color: var(--u-text-on-media);
-    background: var(--u-media-scrim);
+    color: #fff;
+    background: rgba(0, 0, 0, 0.82);
     border-radius: var(--u-radius-sm, 0.25rem);
-    text-shadow: 0 1px 2px var(--u-media-scrim);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
     padding: calc(0.025 * var(--clock-width)) calc(0.035 * var(--clock-width));
   }
 }
