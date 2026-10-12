@@ -12,6 +12,8 @@ class BitcoinApi implements AbstractBitcoinApi {
   private rawMempoolCache: IBitcoinApi.RawMempool | null = null;
   private rawMempoolCacheFetch: Promise<IBitcoinApi.RawMempool> | null = null;
   private rawMempoolCacheRetryAt = 0;
+  // Fee entries that arrived in the same batch as the transaction being converted.
+  private batchedMempoolEntries = new Map<string, IBitcoinApi.MempoolEntry>();
   protected bitcoindClient: any;
 
   constructor(bitcoinClient: any) {
@@ -78,6 +80,48 @@ class BitcoinApi implements AbstractBitcoinApi {
 
   $getMempoolTransactions(txids: string[]): Promise<IEsploraApi.Transaction[]> {
     throw new Error('Method getMempoolTransactions not supported by the Bitcoin RPC API.');
+  }
+
+  /**
+   * Unconfirmed transactions with their fee, one request per 25 transactions
+   * instead of two requests per transaction. The transport fails a whole batch
+   * on any error, so a batch holding a transaction that has just left the
+   * mempool yields nothing here; the caller reads what is missing one by one.
+   *
+   * @asyncUnsafe
+   */
+  async $getMempoolTransactionsBatched(txids: string[]): Promise<IEsploraApi.Transaction[]> {
+    const batches: string[][] = [];
+    for (let i = 0; i < txids.length; i += 25) {
+      batches.push(txids.slice(i, i + 25));
+    }
+    /** @asyncUnsafe */
+    const read = async (batch: string[]): Promise<IEsploraApi.Transaction[]> => {
+      const answers = await this.bitcoindClient.rpc.call(batch.flatMap(txid => [
+        { method: 'getrawtransaction', params: [txid, true] },
+        { method: 'getmempoolentry', params: [txid] },
+      ]), []);
+      const transactions: IEsploraApi.Transaction[] = [];
+      for (const [index, txid] of batch.entries()) {
+        this.batchedMempoolEntries.set(txid, answers[index * 2 + 1]);
+        try {
+          transactions.push(await this.$convertTransaction(answers[index * 2], false));
+        } finally {
+          this.batchedMempoolEntries.delete(txid);
+        }
+      }
+      return transactions;
+    };
+    const transactions: IEsploraApi.Transaction[] = [];
+    // Twelve batches at a time stays inside the bulk RPC socket pool.
+    for (let i = 0; i < batches.length; i += 12) {
+      for (const result of await Promise.allSettled(batches.slice(i, i + 12).map(read))) {
+        if (result.status === 'fulfilled') {
+          transactions.push(...result.value);
+        }
+      }
+    }
+    return transactions;
   }
 
   $getAllMempoolTransactions(lastTxid?: string, max_txs?: number): Promise<IEsploraApi.Transaction[]> {
@@ -425,6 +469,11 @@ class BitcoinApi implements AbstractBitcoinApi {
   /** @asyncUnsafe */
   private async $appendMempoolFeeData(transaction: IEsploraApi.Transaction): Promise<IEsploraApi.Transaction> {
     if (transaction.fee) {
+      return transaction;
+    }
+    const batchedEntry = this.batchedMempoolEntries.get(transaction.txid);
+    if (batchedEntry) {
+      transaction.fee = Math.round(batchedEntry.fees.base * 100000000);
       return transaction;
     }
     let mempoolEntry: IBitcoinApi.MempoolEntry;

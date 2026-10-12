@@ -114,6 +114,17 @@ const ALLOWLIST = [
     owner: 'Universe Explorer frontend',
   },
   {
+    paths: ['frontend/src/app/components/clock/clock.component.scss'],
+    values: ['#fff', 'rgba(0'],
+    reason:
+      'The Clock block height is printed over the transaction map, whose cells ' +
+      'take any fee colour in every theme, so it keeps fixed white ink on a fixed ' +
+      'black scrim instead of themed tokens. clock-contrast.spec.ts reads these ' +
+      'exact literals from the stylesheet and holds them to 4.5:1 over every ' +
+      'possible map colour.',
+    owner: 'Universe Explorer frontend',
+  },
+  {
     paths: ['scripts/universe/'],
     reason:
       'The gates and the visual QA harness. These exist to measure colour, so they ' +

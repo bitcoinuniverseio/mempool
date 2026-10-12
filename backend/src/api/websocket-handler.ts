@@ -1337,6 +1337,9 @@ class WebsocketHandler {
     const mBlockDeltas = mempoolBlocks.getMempoolBlockDeltas();
 
     const da = difficultyAdjustment.getDifficultyAdjustment();
+    // The node reading is otherwise up to 30 s old; without the new tip in it the
+    // estimate for this block is refused until the next timed refresh.
+    await backendInfo.$updateChainSync();
     const feeEstimate = feeApi.observeBlock(block);
     const fees = feeEstimate.values;
     const mempoolInfo = memPool.getMempoolInfo();
