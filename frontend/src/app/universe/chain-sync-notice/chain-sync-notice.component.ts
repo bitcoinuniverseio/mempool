@@ -86,7 +86,10 @@ export function chainHealthNotice(capability: ChainCapabilityEnvelope | null, ch
   const node = readHealth(capability)?.node;
   const label = nodeHealthLabel(capability, now);
   return {
-    show: !loading && label !== 'Synced',
+    // Only a current reading of a node that is behind or down is a warning.
+    // A missing, failed or stale status read is no evidence about the chain,
+    // so it stays on the status rail and off every page.
+    show: !loading && (label === 'Syncing' || label === 'Node unavailable'),
     title: explorerChainName(chain) + ' · ' + label,
     detail: label === 'Syncing'
       ? 'The node is catching up.' + (node?.heightAtomic ? ' Node block ' + node.heightAtomic + '.' : '') + (node?.blocksBehindNetworkAtomic !== null && node?.blocksBehindNetworkAtomic !== undefined ? ' Reported gap: ' + node.blocksBehindNetworkAtomic + ' blocks.' : ' The remaining gap is unknown.')
