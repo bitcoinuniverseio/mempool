@@ -96,14 +96,6 @@ const ALLOWLIST = [
     owner: 'Universe Explorer frontend',
   },
   {
-    paths: ['frontend/src/app/components/clock/clock.component.scss'],
-    reason:
-      'The block height printed over the transaction map. The map shows every fee ' +
-      'colour in every theme, so the heading keeps fixed light text on a fixed dark ' +
-      'plate. clock-contrast.spec.ts reads these literals and holds them above 4.5.',
-    owner: 'Universe Explorer chain surfaces',
-  },
-  {
     paths: ['frontend/src/app/components/start/start.component.scss'],
     reason:
       'The firework spray shown when the chain reaches a named event height. Pure ' +
