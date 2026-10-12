@@ -6,6 +6,8 @@ const id = (n: number): string => n.toString(16).padStart(64, '0');
 const body = (n: number): any => ({ txid: id(n), weight: 400, vin: [{ sequence: 1 }], vout: [{ value: 3 }],
   witness: 'x'.repeat(200_000), extra: { preserve: true } });
 async function read(store: RbfBodyStore, txid: string): Promise<string> { const bytes: Buffer[] = []; for await (const chunk of store.body(txid)) { bytes.push(chunk); } return Buffer.concat(bytes).toString(); }
+// Hundreds of durable segment writes and their cleanup outlast the suite limit on a loaded runner disk.
+jest.setTimeout(120_000);
 describe('complete body store with bounded immutable segment ownership', () => {
   let directory: string, store: RbfBodyStore;
   beforeEach(async () => { directory = fs.mkdtempSync(join(await fs.promises.realpath(tmpdir()), 'rbf-body-store-')); store = new RbfBodyStore(); });
