@@ -70,6 +70,17 @@ describe('real compact cache and complete body persistence', () => {
     expect(fs.readdirSync(directory).filter(file => file.startsWith('rbf-body-'))).toHaveLength(2);
     expect(await read(first, id(1))).toEqual(replacement);
   });
+  it('saves history while an ordinary update is still writing segments and stays available', async () => {
+    const state = require('../api/rbf-snapshot').rbfRestoreState;
+    state.beginRestore(); state.completeRestore('no-file');
+    const first = cache(), replacement = tx(1); await first.configureBodyPersistence(directory); first.add([tx(0)], replacement);
+    const update = first.updateCache(); await Promise.resolve();
+    replacement.newAnnotation = { dynamic: true };
+    await first.saveHistory(directory, 'signet'); await update;
+    expect(state.diagnostic()).toMatchObject({ status: 'available', reason: null });
+    expect(readRbfHistoryManifest(directory, 'signet')!.bodies.every(ref => ref.file)).toBe(true);
+    expect(await read(first, id(1))).toEqual(replacement);
+  });
   it('releases the oldest departed history at the memory-only retention bound and stays available', async () => {
     const state = require('../api/rbf-snapshot').rbfRestoreState;
     state.beginRestore(); state.completeRestore('no-file');
