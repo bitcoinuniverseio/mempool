@@ -20,11 +20,23 @@ describe('history larger than the store', () => {
     const written = store.write.mock.calls.at(-1)[0].checkpoints.map((entry: { checkpoint: { block_height: number } }) => entry.checkpoint.block_height);
     expect(written).toEqual([6, 7, 8]);
     expect(history.getCoverage().total_checkpoints).toBe(8);
+    const attempts = store.write.mock.calls.length;
+    history.observeBlock(block(9), [], 10_000);
+    await history.flushHistory();
+    expect(store.write).toHaveBeenCalledTimes(attempts + 1);
   });
 
-  it('still reports a write that fails for any other reason', async () => {
-    const { history, store } = service(async () => { throw new Error('disk unavailable'); });
-    await expect(history.flushHistory()).rejects.toMatchObject({ code: 'history-storage-write-failed' });
+  it('writes once per timer and leaves later observations for the next one', async () => {
+    let release!: () => void;
+    const { history, store } = service(() => new Promise<void>(resolve => { release = resolve; }));
+    const timed = history.flushHistory(false);
+    history.observeBlock(block(9), [], 10_000);
+    release();
+    await timed;
     expect(store.write).toHaveBeenCalledTimes(1);
+    const drained = history.flushHistory();
+    release();
+    await drained;
+    expect(store.write).toHaveBeenCalledTimes(2);
   });
 });
