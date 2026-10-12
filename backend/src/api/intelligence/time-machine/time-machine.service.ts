@@ -202,12 +202,21 @@ export class TimeMachineService {
       while (this.dirty && this.store) {
         this.dirty = false;
         try {
-          await this.store.write({ schema: 'observed-history-v1', network: this.network, startedAt: this.startedAt,
-            eventSequence: this.eventSequence, evictedSequence: this.evictedSequence, evictedThrough: this.evictedThrough,
-            observedThrough: this.observedThrough, gaps: this.gaps, events: this.eventLog,
-            orphanConfirmations: [...this.orphanConfirmations.values()],
-            canonicalRestorationTarget: this.canonicalRestorationTarget ?? undefined,
-            checkpoints: this.checkpoints.map(checkpoint => ({ checkpoint, transactions: new HistoryJsonArray(this.stateCache.get(checkpoint.state_hash)!.transactions) })) });
+          // Each checkpoint carries a whole mempool, so a large mempool outgrows
+          // the store long before the checkpoint limit. Persist the newest that fit.
+          for (let persisted = this.checkpoints; ; persisted = persisted.slice(Math.ceil(persisted.length / 4))) {
+            try {
+              await this.store.write({ schema: 'observed-history-v1', network: this.network, startedAt: this.startedAt,
+                eventSequence: this.eventSequence, evictedSequence: this.evictedSequence, evictedThrough: this.evictedThrough,
+                observedThrough: this.observedThrough, gaps: this.gaps, events: this.eventLog,
+                orphanConfirmations: [...this.orphanConfirmations.values()],
+                canonicalRestorationTarget: this.canonicalRestorationTarget ?? undefined,
+                checkpoints: persisted.map(checkpoint => ({ checkpoint, transactions: new HistoryJsonArray(this.stateCache.get(checkpoint.state_hash)!.transactions) })) });
+              break;
+            } catch (error) {
+              if (persisted.length <= 1 || !(error instanceof Error) || !error.message.includes('exceeds the storage limit')) throw error;
+            }
+          }
           this.storageError = null;
         } catch {
           this.dirty = true;
