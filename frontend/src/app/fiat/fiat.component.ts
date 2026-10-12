@@ -17,7 +17,7 @@ export class FiatComponent implements OnInit, OnDestroy {
 
   @Input() value: number;
   @Input() digitsInfo = '1.2-2';
-  @Input() unavailableLabel = '—';
+  @Input() unavailableLabel = '-';
   @Input() addPlus = false;
   @Input() blockConversion: Price;
   /**
