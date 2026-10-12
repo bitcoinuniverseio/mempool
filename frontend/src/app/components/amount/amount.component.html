@@ -1,6 +1,6 @@
 <ng-container *ngIf="!noFiat && ignoreViewMode === false && (viewAmountMode$ | async) === 'fiat'; else viewFiatVin">
   <app-fiat *ngIf="blockConversion || !forceBlockConversion; else unavailablePrice" [value]="satoshis" [blockConversion]="blockConversion" [digitsInfo]="digitsInfo" [addPlus]="addPlus"></app-fiat>
-  <ng-template #unavailablePrice><span role="img" aria-label="Price unavailable" title="Price unavailable" i18n-aria-label="fiat.unavailable" i18n-title="fiat.unavailable">—</span></ng-template>
+  <ng-template #unavailablePrice><span role="img" aria-label="Price unavailable" title="Price unavailable" i18n-aria-label="fiat.unavailable" i18n-title="fiat.unavailable">-</span></ng-template>
 </ng-container>
 
   <ng-template #viewFiatVin>

@@ -254,6 +254,9 @@ export class HashrateChartPoolsComponent implements OnInit {
         // One paged row: a wrapping legend grows with the pool count and
         // spills over the plot, the date axis and the zoom slider.
         type: 'scroll',
+        // ECharts 6 anchors a legend to the bottom unless told otherwise,
+        // which is where the date labels are.
+        top: 0,
         left: 20,
         right: 15,
         pageIconColor: chartChrome().label,

@@ -7,7 +7,7 @@ function fixture(rbfState?: typeof rbfRestoreState) {
   const state = { synced: true, network: 'main', tip: { height: 123, id: HASH }, poll: Date.now(), minimum: 0.000001,
     nodeHash: HASH, nodeHeight: 123, nodeObserved: Date.now(), nodeIbd: false };
   const config = { MEMPOOL: { NETWORK: 'mainnet', INITIAL_BLOCKS_AMOUNT: 8 }, FIAT_PRICE: {}, STATISTICS: {}, DATABASE: {}, WALLETS: {} };
-  const info = { getBackendInfo: () => ({ chainSync: { chain: state.network, blocks: state.nodeHeight, headers: state.nodeHeight,
+  const info = { $updateChainSync: async () => {}, getBackendInfo: () => ({ chainSync: { chain: state.network, blocks: state.nodeHeight, headers: state.nodeHeight,
     initialBlockDownload: state.nodeIbd, blockHash: state.nodeHash, checkedAt: new Date(state.nodeObserved).toISOString(), verificationProgress: 1 } }) };
   const mempool = { isInSync: () => state.synced, getLastMempoolUpdateAt: () => state.poll,
     getMempoolInfo: () => ({ mempoolminfee: state.minimum }), getLatestTransactions: () => [], getVBytesPerSecond: () => 0 };

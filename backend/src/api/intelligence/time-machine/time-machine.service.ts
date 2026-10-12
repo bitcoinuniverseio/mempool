@@ -135,6 +135,8 @@ export class TimeMachineService {
   private storageError: string | null = null;
   private loadFailed = false;
   private dirty = false;
+  private persistableCheckpoints: number = TIME_MACHINE_LIMITS.checkpoints;
+  private draining = false;
   private timer?: NodeJS.Timeout;
   private writing: Promise<void> | null = null;
   private eventSequence = 0;
@@ -189,33 +191,51 @@ export class TimeMachineService {
     if (!this.store || this.loadFailed) return;
     this.dirty = true;
     if (this.timer || this.writing) return;
-    this.timer = setTimeout(() => { this.timer = undefined; this.flushHistory().catch(() => undefined); }, 250);
+    this.timer = setTimeout(() => { this.timer = undefined; this.flushHistory(false).catch(() => undefined); }, 250);
     this.timer.unref();
   }
 
-  /** Drain coalesced writes serially. Tests and graceful shutdown can await durability. */
-  public flushHistory(): Promise<void> {
+  /**
+   * Drain coalesced writes serially. Tests and graceful shutdown can await durability.
+   * The timer passes drain=false: it writes once and re-arms, because observations
+   * never stop on a live node and each write serializes the whole history on this thread.
+   */
+  public flushHistory(drain = true): Promise<void> {
     if (this.timer) { clearTimeout(this.timer); this.timer = undefined; }
     if (this.loadFailed) return Promise.reject(new TimeMachineUnavailableError('history-storage-invalid', this.storageError!));
+    // A drain requested while the timer's single write is in flight upgrades that write.
+    if (drain) this.draining = true;
     if (this.writing) return this.writing;
     this.writing = (async () => {
       while (this.dirty && this.store) {
         this.dirty = false;
         try {
-          await this.store.write({ schema: 'observed-history-v1', network: this.network, startedAt: this.startedAt,
-            eventSequence: this.eventSequence, evictedSequence: this.evictedSequence, evictedThrough: this.evictedThrough,
-            observedThrough: this.observedThrough, gaps: this.gaps, events: this.eventLog,
-            orphanConfirmations: [...this.orphanConfirmations.values()],
-            canonicalRestorationTarget: this.canonicalRestorationTarget ?? undefined,
-            checkpoints: this.checkpoints.map(checkpoint => ({ checkpoint, transactions: new HistoryJsonArray(this.stateCache.get(checkpoint.state_hash)!.transactions) })) });
+          // Each checkpoint carries a whole mempool, so a large mempool outgrows
+          // the store long before the checkpoint limit. Persist the newest that fit,
+          // and start the next write from that count instead of failing again first.
+          for (let persisted = this.checkpoints.slice(-this.persistableCheckpoints); ; persisted = persisted.slice(Math.ceil(persisted.length / 4))) {
+            try {
+              await this.store.write({ schema: 'observed-history-v1', network: this.network, startedAt: this.startedAt,
+                eventSequence: this.eventSequence, evictedSequence: this.evictedSequence, evictedThrough: this.evictedThrough,
+                observedThrough: this.observedThrough, gaps: this.gaps, events: this.eventLog,
+                orphanConfirmations: [...this.orphanConfirmations.values()],
+                canonicalRestorationTarget: this.canonicalRestorationTarget ?? undefined,
+                checkpoints: persisted.map(checkpoint => ({ checkpoint, transactions: new HistoryJsonArray(this.stateCache.get(checkpoint.state_hash)!.transactions) })) });
+              break;
+            } catch (error) {
+              if (persisted.length <= 1 || !(error instanceof Error) || !error.message.includes('exceeds the storage limit')) throw error;
+              this.persistableCheckpoints = Math.max(1, persisted.length - Math.ceil(persisted.length / 4));
+            }
+          }
           this.storageError = null;
         } catch {
           this.dirty = true;
           this.storageError = 'History could not be persisted; recent observations may not survive a restart.';
           throw new TimeMachineUnavailableError('history-storage-write-failed', this.storageError);
         }
+        if (!this.draining) break;
       }
-    })().finally(() => { this.writing = null; });
+    })().finally(() => { this.writing = null; this.draining = false; if (this.dirty) this.schedulePersistence(); });
     return this.writing;
   }
 
