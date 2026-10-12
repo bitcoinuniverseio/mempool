@@ -11,6 +11,8 @@ import { RbfMetadataInput } from './rbf-metadata';
 
 export interface RbfBodyReference { txid: string; bytes: number; sha256: string; file?: string; source?: string; sourceFile?: string; sourceBytes?: number }
 type RecordBody = RbfBodyReference & { chunks?: string[]; backing?: RbfRawBackingCandidate; writing?: boolean; memoryReaders?: number; live?: WeakRef<{ txid: string }>; verifiedIdentity?: fs.BigIntStats };
+/** Segments persisted together by one flush. */
+const RBF_BODY_WRITE_GROUP = 16;
 const invalid = (): never => { throw new RbfSnapshotError('snapshot-invalid'); };
 const cancelled = (signal?: AbortSignal): void => { if (signal?.aborted) { throw new RbfSnapshotError('snapshot-read-failed'); } };
 const same = (a: fs.BigIntStats, b: fs.BigIntStats): boolean => a.dev === b.dev && a.ino === b.ino
@@ -216,19 +218,45 @@ export class RbfBodyStore {
   flush(): Promise<void> {
     if (this.failure) { return Promise.reject(this.failure); }
     if (!this.root) { return Promise.resolve(); }
-    if (this.writing) { return this.writing; }
+    if (this.writing) {
+      // The flush in progress wrote only the records it started with; a caller that
+      // publishes references afterwards needs the ones captured since as well.
+      return this.writing.then(() => this.hasUnwritten() ? this.flush() : undefined);
+    }
     const job = this.writePending();
     this.writing = job.catch(e => { this.failure = e; this.accepting = false; throw e; })
       .finally(() => { this.writing = undefined; });
     return this.writing;
   }
 
+  private hasUnwritten(): boolean {
+    for (const record of this.records.values()) { if (record.chunks && !record.file) { return true; } }
+    return false;
+  }
+
   /** @asyncUnsafe Writes only exclusive complete segments; no existing file is replaced. */
   private async writePending(): Promise<void> {
     const batch = [...this.records.values()].filter(record => !!record.chunks);
     for (const record of batch) { record.writing = true; }
-    try { for (const record of batch) {
-      if (!record.chunks) { continue; }
+    // Each segment keeps its own write, sync and read-back. Running a group together
+    // lets the disk commit their syncs at once; one at a time, a busy spinning disk
+    // held the mempool poll for 0.2 s per replacement.
+    try { for (let start = 0; start < batch.length; start += RBF_BODY_WRITE_GROUP) {
+      const results = await Promise.allSettled(batch.slice(start, start + RBF_BODY_WRITE_GROUP).map(record => this.writeSegment(record)));
+      const failed = results.find(result => result.status === 'rejected') as PromiseRejectedResult | undefined;
+      if (failed) { throw failed.reason; }
+    } } finally {
+      for (const record of batch) {
+        record.writing = false;
+        this.releaseEncoded(record);
+      }
+    }
+  }
+
+  /** @asyncUnsafe The caller owns failure and releases the encoded bytes. */
+  private async writeSegment(record: RecordBody): Promise<void> {
+    {
+      if (!record.chunks) { return; }
       if (this.ownedSegments.size >= 100_000) { throw new RbfSnapshotError('snapshot-oversize'); }
       const chunks = record.chunks, file = 'rbf-body-' + record.sha256 + '-' + randomUUID() + '.json';
       let handle: FileHandle | undefined;
@@ -254,11 +282,6 @@ export class RbfBodyStore {
           catch (cleanup) { throw new RbfBodyCleanupError(primary, cleanup); }
         }
         throw primary;
-      }
-    } } finally {
-      for (const record of batch) {
-        record.writing = false;
-        this.releaseEncoded(record);
       }
     }
   }

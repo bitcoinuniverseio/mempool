@@ -139,6 +139,7 @@ export class TimeMachineService {
   private dirty = false;
   private timer?: NodeJS.Timeout;
   private writing: Promise<void> | null = null;
+  private writingDrains = true;
   private eventSequence = 0;
   private startedAt = new Date().toISOString();
   private lifecycleFeed: () => { [txid: string]: MempoolTransactionExtended } = () => mempool.getMempool();
@@ -193,15 +194,20 @@ export class TimeMachineService {
     if (this.timer || this.writing) return;
     // A flush re-encodes the whole retained history on the main thread (seconds at
     // mainnet size), so observations coalesce into one write per interval.
-    this.timer = setTimeout(() => { this.timer = undefined; this.flushHistory().catch(() => undefined); }, HISTORY_PERSIST_DELAY_MS);
+    this.timer = setTimeout(() => { this.timer = undefined; this.flushHistory(false).catch(() => undefined); }, HISTORY_PERSIST_DELAY_MS);
     this.timer.unref();
   }
 
-  /** Drain coalesced writes serially. Tests and graceful shutdown can await durability. */
-  public flushHistory(): Promise<void> {
+  /**
+   * Drain coalesced writes serially. Tests and graceful shutdown can await durability.
+   * The timer writes once and re-arms instead: observations keep arriving during a
+   * write, and draining then repeated the multi-second encode back to back.
+   */
+  public flushHistory(drain = true): Promise<void> {
     if (this.timer) { clearTimeout(this.timer); this.timer = undefined; }
     if (this.loadFailed) return Promise.reject(new TimeMachineUnavailableError('history-storage-invalid', this.storageError!));
-    if (this.writing) return this.writing;
+    if (this.writing) return drain && !this.writingDrains ? this.writing.then(() => this.dirty && this.store ? this.flushHistory() : undefined) : this.writing;
+    this.writingDrains = drain;
     this.writing = (async () => {
       while (this.dirty && this.store) {
         this.dirty = false;
@@ -218,8 +224,9 @@ export class TimeMachineService {
           this.storageError = 'History could not be persisted; recent observations may not survive a restart.';
           throw new TimeMachineUnavailableError('history-storage-write-failed', this.storageError);
         }
+        if (!drain) break;
       }
-    })().finally(() => { this.writing = null; });
+    })().finally(() => { this.writing = null; if (!drain && this.dirty) this.schedulePersistence(); });
     return this.writing;
   }
 
