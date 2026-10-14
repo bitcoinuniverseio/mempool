@@ -96,6 +96,18 @@ describe('real compact cache and complete body persistence', () => {
     expect(first.getRbfTree(replacement.txid).replaces[0].tx.txid).toBe(old.txid);
     expect(await read(first, replacement.txid)).toEqual(replacement); expect(await read(first, old.txid)).toEqual(old);
   });
+  it('releases the oldest departed history when a save reaches the metadata bound and stays available', async () => {
+    const state = require('../api/rbf-snapshot').rbfRestoreState;
+    state.beginRestore(); state.completeRestore('no-file');
+    const vins = (count: number): any[] => Array.from({ length: count }, (_, vout) => ({ sequence: 1, txid: id(100), vout }));
+    const first = cache(), departed = tx(1), live = tx(3);
+    departed.vin = vins(40000); first.add([tx(0)], departed); first.mined(id(1));
+    first.add([tx(2)], live); live.vin = vins(30000);
+    await first.saveHistory(directory, 'signet');
+    expect(state.diagnostic()).toMatchObject({ status: 'available', reason: null });
+    expect(first.has(id(1))).toBe(false); expect(first.has(id(0))).toBe(false);
+    expect(await read(first, id(3))).toEqual(live);
+  });
   it('rejects oversized dynamic metadata before installing or detaching a changed body', async () => {
     const first = cache(), replacement = tx(1); first.add([tx(0)], replacement);
     const old = first.txs.get(id(1)), before = first.bodies.references([id(1)])[0];
