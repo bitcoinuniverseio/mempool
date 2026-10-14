@@ -1522,7 +1522,18 @@ class Blocks {
       };
       summaryVersion = cpfpSummary.version;
     } else {
-      const txs = (await bitcoinApi.$getTxsForBlock(hash, true)).map(tx => transactionUtils.extendTransaction(tx));
+      // Against Core, reading every input's prevout costs two RPC round trips
+      // per input and times the summary request out for a block the caches no
+      // longer hold, so read the block once and keep Core's own fees instead.
+      let rawTransactions: IEsploraApi.Transaction[] | undefined;
+      if (!Common.isLiquid() && bitcoinApi.$getTxsForBlockWithoutPrevouts) {
+        try {
+          rawTransactions = await bitcoinApi.$getTxsForBlockWithoutPrevouts(hash);
+        } catch (e) {
+          logger.debug(`Cannot read block ${hash} summary in one request, falling back to prevout reads. Reason: ` + (e instanceof Error ? e.message : e));
+        }
+      }
+      const txs = (rawTransactions ?? await bitcoinApi.$getTxsForBlock(hash, true)).map(tx => transactionUtils.extendTransaction(tx));
       summary = this.summarizeBlockTransactions(hash, height || 0, txs);
       summaryVersion = 1;
     }
