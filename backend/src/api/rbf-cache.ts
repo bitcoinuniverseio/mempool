@@ -330,12 +330,14 @@ export class RbfCache {
 
   /** @asyncUnsafe The old pointer survives failure; original legacy file is never overwritten. */
   private async persistHistory(root: string, network: string): Promise<void> {
-    const updates = this.bodies.liveInputs().map(input => [input.txid, new RbfTxMetadata(input)] as const);
-    const proposed = updates.reduce((bytes, [id, current]) => bytes + current.budgetBytes - (this.txs.get(id)?.budgetBytes || 0), this.metadataBytes);
-    if (proposed > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
-    this.bodies.refreshLive();
-    for (const [id, current] of updates) { this.txs.set(id, current); }
-    this.metadataBytes = proposed;
+    this.admit(() => {
+      const updates = this.bodies.liveInputs().map(input => [input.txid, new RbfTxMetadata(input)] as const);
+      const proposed = updates.reduce((bytes, [id, current]) => bytes + current.budgetBytes - (this.txs.get(id)?.budgetBytes || 0), this.metadataBytes);
+      if (proposed > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
+      this.bodies.refreshLive();
+      for (const [id, current] of updates) { this.txs.set(id, current); }
+      this.metadataBytes = proposed;
+    });
     const version = this.version, metadata = Array.from(this.txs.entries());
     const trees = Array.from(this.rbfTrees.values(), tree => this.exportTree(tree));
     const expiring = Array.from(this.expiring.entries());
