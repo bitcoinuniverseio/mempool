@@ -76,6 +76,15 @@ function readPointer(root: string, file: string, network: string): { pointer: an
   return { pointer, manifest };
 }
 
+/** Body segments referenced by the published current and rollback manifests. */
+export function readRbfHistoryProtectedFiles(root: string, network: string): ReadonlySet<string> {
+  const protectedFiles = new Set<string>();
+  for (const entry of [readPointer(root, 'rbf-history-current.json', network), readPointer(root, 'rbf-history-rollback.json', network)]) {
+    for (const body of entry?.manifest.bodies || []) { if (body.file) { protectedFiles.add(body.file); } }
+  }
+  return protectedFiles;
+}
+
 /** Capture the small immutable index before asynchronous writes; no whole-body collection.
  * @asyncUnsafe Failure leaves old pointer and immutable bodies intact; no automatic retry.
  */
