@@ -6,7 +6,7 @@ import { IEsploraApi } from './bitcoin/esplora-api.interface';
 import { RbfTxMetadata, RbfMetadataInput } from './rbf-metadata';
 import { RbfBodyStore } from './rbf-body-store';
 import { RbfRawBackingCandidate } from './rbf-raw-backing';
-import { RbfHistoryManifest, writeRbfHistoryManifest } from './rbf-history-manifest';
+import { RbfHistoryManifest, readRbfHistoryProtectedFiles, writeRbfHistoryManifest } from './rbf-history-manifest';
 import { validateRbfSnapshot, RbfSnapshotError } from './rbf-snapshot';
 import redisCache from './redis-cache';
 import { rbfRestoreState } from './rbf-snapshot';
@@ -347,7 +347,9 @@ export class RbfCache {
     const trees = Array.from(this.rbfTrees.values(), tree => this.exportTree(tree));
     const expiring = Array.from(this.expiring.entries());
     await this.bodies.configure(root); await this.bodies.flush();
-    if (this.version !== version) { return; }
+    // A busy mempool changes the cache during almost every save. Reclaim unreferenced segments
+    // anyway, or they accumulate to the owned-segment bound and history becomes unavailable.
+    if (this.version !== version) { this.bodies.maintainSegments(readRbfHistoryProtectedFiles(root, network)); return; }
     const bodies = this.bodies.references(metadata.map(([id]) => id));
     if (bodies.some(body => !body.file && !body.sourceFile)) { throw new Error('RBF complete body persistence unavailable'); }
     const protectedFiles = await writeRbfHistoryManifest(root, { schemaVersion: 'mempool-rbf-history-v2', network, metadata, bodies, trees, expiring });
