@@ -171,7 +171,11 @@ export class RbfCache {
         if (this.metadataBytes + metadata.reduce((bytes, tx) => bytes + tx.budgetBytes, 0) > 16 * 1024 * 1024) { throw new RbfSnapshotError('snapshot-oversize'); }
         this.bodies.captureBatch(incoming.filter((tx): tx is MempoolTransactionExtended => !(tx instanceof RbfTxMetadata)));
       });
-    } catch { rbfRestoreState.fail('snapshot-oversize'); return; }
+    } catch (e) {
+      // Nothing departed is left to release: skip this replacement and keep serving retained history.
+      if (!RbfCache.isOversize(e)) { rbfRestoreState.fail(e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed'); }
+      return;
+    }
     const newTx = { ...new RbfTxMetadata(newTxExtended).stripped } as RbfTransaction;
     const newTime = newTxExtended.firstSeen || (Date.now() / 1000);
     newTx.rbf = newTxExtended.vin.some((v) => v.sequence < 0xfffffffe);
@@ -316,7 +320,7 @@ export class RbfCache {
         }
       });
     }
-    catch { rbfRestoreState.fail('snapshot-oversize'); }
+    catch (e) { if (!RbfCache.isOversize(e)) { rbfRestoreState.fail(e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed'); } }
     this.version++;
   }
 
@@ -324,7 +328,8 @@ export class RbfCache {
   public saveHistory(root: string, network: string): Promise<void> {
     if (this.savingHistory) { return this.savingHistory; }
     const job = this.persistHistory(root, network);
-    this.savingHistory = job.catch(e => { rbfRestoreState.fail(e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed'); throw e; })
+    // The previous manifest stays current on growth; only a non-retention failure marks history unavailable.
+    this.savingHistory = job.catch(e => { if (!RbfCache.isOversize(e)) { rbfRestoreState.fail(e instanceof RbfSnapshotError ? e.code : 'snapshot-restore-failed'); } throw e; })
       .finally(() => { this.savingHistory = null; }); return this.savingHistory;
   }
 
@@ -451,6 +456,10 @@ export class RbfCache {
         if (!(e instanceof RbfSnapshotError) || e.code !== 'snapshot-oversize' || !this.releaseOldest()) { throw e; }
       }
     }
+  }
+
+  private static isOversize(e: unknown): boolean {
+    return e instanceof RbfSnapshotError && e.code === 'snapshot-oversize';
   }
 
   private releaseOldest(): boolean {
