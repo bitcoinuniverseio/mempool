@@ -19,7 +19,10 @@
   };
 }
 
+// The chart is created while hidden, where ngx-echarts cannot apply its
+// default height, so it needs its own or it is drawn into a 0px box.
 .chart {
+  height: 400px;
   max-height: 400px;
   margin-bottom: 20px;
   @media (max-width: 767.98px) {
