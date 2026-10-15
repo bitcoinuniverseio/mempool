@@ -108,6 +108,16 @@ describe('real compact cache and complete body persistence', () => {
     expect(first.has(id(1))).toBe(false); expect(first.has(id(0))).toBe(false);
     expect(await read(first, id(3))).toEqual(live);
   });
+  it('skips a replacement that cannot fit when nothing departed is left to release and stays available', async () => {
+    const state = require('../api/rbf-snapshot').rbfRestoreState;
+    state.beginRestore(); state.completeRestore('no-file');
+    const vins = (count: number): any[] => Array.from({ length: count }, (_, vout) => ({ sequence: 1, txid: id(100), vout }));
+    const first = cache(), live = tx(1), large = tx(3);
+    first.add([tx(0)], live); large.vin = vins(100000); first.add([tx(2)], large);
+    expect(state.diagnostic()).toMatchObject({ status: 'available', reason: null });
+    expect(first.has(id(3))).toBe(false); expect(first.getRbfTrees(false).map(tree => tree.tx.txid)).toEqual([id(1)]);
+    expect(await read(first, id(1))).toEqual(live);
+  });
   it('rejects oversized dynamic metadata before installing or detaching a changed body', async () => {
     const first = cache(), replacement = tx(1); first.add([tx(0)], replacement);
     const old = first.txs.get(id(1)), before = first.bodies.references([id(1)])[0];
@@ -116,6 +126,7 @@ describe('real compact cache and complete body persistence', () => {
     expect(first.txs.get(id(1))).toBe(old);
     expect(first.bodies.references([id(1)])[0]).toEqual(before);
     await expect(first.saveHistory(directory, 'signet')).rejects.toThrow('snapshot-oversize');
+    expect(require('../api/rbf-snapshot').rbfRestoreState.unavailable).toBe(false);
     expect(first.txs.get(id(1))).toBe(old);
     expect(first.bodies.references([id(1)])[0]).toEqual(before);
   });
