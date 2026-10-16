@@ -156,3 +156,16 @@ Bitcoin inscription reveals are admitted only when Ord's `/blockhash/:height`
 equals the base chain's hash before and after the read. Zcash responses carry
 a fixed shielded-visibility notice and count assets that moved into shielded
 components as untrackable, never as burned.
+
+Protocols beyond Ord, the Dogecoin authority and the Zcash block record are
+read through the indexer block events contract
+([BLOCK-EVENTS-V1.md](BLOCK-EVENTS-V1.md)). An authority that does not serve
+it leaves its protocols `not-block-readable`; one whose answer carries no
+block hash is shown but never proves absence.
+
+Live: the `block-assets` websocket channel carries the tip whose snapshot is
+being prepared and the recent blocks the chain replaced, and fills the
+envelope's `reorg` field. A page showing a replaced block reads its summary
+again. Inscription thumbnails are served only as small raster images through
+`/api/v1/universe/inscriptions/:id/preview` with a deny-all policy; SVG and
+HTML content is never previewed.

@@ -16,7 +16,7 @@ export interface UniverseLiveEnvelope {
   readonly network: ExplorerNetwork;
   readonly channel:
     'chain-status' | 'mempool-snapshot' | 'candidate-buckets'
-    | 'confirmed-protocol-activity';
+    | 'confirmed-protocol-activity' | 'block-assets';
   readonly snapshotId: string;
   readonly sequenceAtomic: string;
   readonly observedAt: string;
@@ -34,7 +34,14 @@ const CHANNELS = [
   'mempool-snapshot',
   'candidate-buckets',
   'confirmed-protocol-activity',
+  'block-assets',
 ] as const;
+/**
+ * Channels that publish only when something happens (a new block, a reorg).
+ * Their frames are delivered and resumed like any other, but their silence is
+ * not a health signal, so they never mark the stream unavailable or expired.
+ */
+const EVENT_CHANNELS: ReadonlySet<string> = new Set(['block-assets']);
 const DECIMAL = /^(0|[1-9][0-9]*)$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -167,6 +174,7 @@ export class UniverseWebsocketService {
         initialTimer = setTimeout(() => {
           if (!current()) {return;}
           for (const channel of CHANNELS) {
+            if (EVENT_CHANNELS.has(channel)) {continue;}
             if (!channelStates[channel]) {channelStates[channel] = { status: 'unavailable', reason: 'observation-timeout' };}
           }
           reportChannels();
@@ -204,7 +212,9 @@ export class UniverseWebsocketService {
             return;
           }
           if (isRecord(parsed) && parsed.type === 'resync-required' && parsed.chain === chain && parsed.network === network) {
-            if (CHANNELS.includes(parsed.channel as (typeof CHANNELS)[number])) {
+            if (EVENT_CHANNELS.has(String(parsed.channel))) {
+              cursors.delete(String(parsed.channel));
+            } else if (CHANNELS.includes(parsed.channel as (typeof CHANNELS)[number])) {
               channelStates[String(parsed.channel)] = { status: 'resync-required', reason: 'snapshot-replaced' };
               reportChannels();
               cursors.delete(String(parsed.channel));
@@ -220,7 +230,7 @@ export class UniverseWebsocketService {
           const previous = cursors.get(envelope.channel);
           if (previous && previous.snapshotId === envelope.snapshotId && BigInt(envelope.sequenceAtomic) <= BigInt(previous.afterSequenceAtomic)) {return;}
           if (previous && (previous.snapshotId !== envelope.snapshotId || BigInt(envelope.sequenceAtomic) > BigInt(previous.afterSequenceAtomic) + 1n)) {
-            channelStates[envelope.channel] = { status: 'resync-required', reason: 'sequence-gap' };
+            if (!EVENT_CHANNELS.has(envelope.channel)) {channelStates[envelope.channel] = { status: 'resync-required', reason: 'sequence-gap' };}
             const timer = expiryTimers.get(envelope.channel);
             if (timer) {clearTimeout(timer); expiryTimers.delete(envelope.channel);}
             reportChannels();
@@ -229,6 +239,11 @@ export class UniverseWebsocketService {
             return;
           }
           attempts = 0;
+          if (EVENT_CHANNELS.has(envelope.channel)) {
+            cursors.set(envelope.channel, { snapshotId: envelope.snapshotId, afterSequenceAtomic: envelope.sequenceAtomic });
+            observer.next(envelope);
+            return;
+          }
           const previousTimer = expiryTimers.get(envelope.channel);
           if (previousTimer) {clearTimeout(previousTimer); expiryTimers.delete(envelope.channel);}
           // Publication time proves transport activity, not the age of a retained source snapshot.

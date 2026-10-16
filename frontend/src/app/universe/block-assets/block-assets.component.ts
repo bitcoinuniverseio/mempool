@@ -5,14 +5,16 @@ import {
   Input,
   OnChanges,
   OnDestroy,
+  Optional,
   SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subscription, timer } from 'rxjs';
+import { Subscription, filter, timer } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
+import { UniverseWebsocketService } from '@app/universe/universe-websocket.service';
 import { UniverseSharedModule } from '@app/universe/universe-shared.module';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import {
@@ -105,6 +107,9 @@ export class BlockAssetsComponent implements OnChanges, OnDestroy {
   readonly filteredEmpty = $localize`:@@universe.block-assets.filtered-empty:No records match these filters.`;
 
   private summarySubscription: Subscription | null = null;
+  private liveSubscription: Subscription | null = null;
+  /** Inscriptions whose preview failed to load, so the slot is not retried. */
+  private readonly failedPreviews = new Set<string>();
   private eventsSubscription: Subscription | null = null;
   private polls = 0;
   private readonly badges = new Map<string, ExplorerProtocolDefinition>();
@@ -114,6 +119,7 @@ export class BlockAssetsComponent implements OnChanges, OnDestroy {
   constructor(
     private api: UniverseApiService,
     private cd: ChangeDetectorRef,
+    @Optional() private live?: UniverseWebsocketService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -129,6 +135,7 @@ export class BlockAssetsComponent implements OnChanges, OnDestroy {
     }
     this.state = { kind: 'loading' };
     this.loadSummary();
+    this.watchReorgs();
   }
 
   ngOnDestroy(): void {
@@ -229,7 +236,49 @@ export class BlockAssetsComponent implements OnChanges, OnDestroy {
     return row.protocolId;
   }
 
+  /**
+   * A reorg that replaces this block, or that installs it, changes what the
+   * page may claim, so the summary is read again; nothing else from the
+   * live channel touches a confirmed block's records.
+   */
+  private watchReorgs(): void {
+    this.liveSubscription?.unsubscribe();
+    this.liveSubscription = null;
+    if (!this.live) {return;}
+    const chain = this.chain;
+    this.liveSubscription = this.live.stream$(chain).pipe(
+      filter((envelope) => envelope.channel === 'block-assets'),
+    ).subscribe((envelope) => {
+      const data = envelope.data as { reorged?: unknown } | null;
+      const reorged = Array.isArray(data?.reorged) ? data.reorged : [];
+      const hash = this.summary?.block.hash ?? this.reference;
+      const touched = reorged.some((notice: { orphanedHash?: unknown; replacementHash?: unknown }) =>
+        notice?.orphanedHash === hash || notice?.replacementHash === hash);
+      const canonical = this.summary?.block.canonical;
+      if (touched && chain === this.chain) {
+        // A block already shown as replaced needs no second read.
+        if (canonical === false && reorged.every((notice: { orphanedHash?: unknown }) => notice?.orphanedHash === hash)) {return;}
+        this.refresh();
+      }
+    });
+  }
+
+  previewUrl(event: BlockAssetEvent): string | null {
+    const summary = this.summary;
+    const id = event.asset?.contentId ?? (event.asset?.assetKind === 'inscription' ? event.asset.assetId : undefined);
+    if (!summary || !id || this.failedPreviews.has(id)) {return null;}
+    if (event.protocolId !== 'ordinals' && event.protocolId !== 'doginals') {return null;}
+    return this.api.inscriptionPreviewUrl(this.chain, summary.network, id);
+  }
+
+  previewFailed(event: BlockAssetEvent): void {
+    const id = event.asset?.contentId ?? event.asset?.assetId;
+    if (id) {this.failedPreviews.add(id);}
+  }
+
   private stop(): void {
+    this.liveSubscription?.unsubscribe();
+    this.liveSubscription = null;
     this.summarySubscription?.unsubscribe();
     this.eventsSubscription?.unsubscribe();
     this.summarySubscription = null;
