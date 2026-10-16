@@ -1,3 +1,21 @@
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-FLOW] ANN-FE-FIXTURE-SAT | preparation 2026-10-16
+ * F-FE-07; C-FE-FLOW-RARITY. The fixture pairs SAT_NUMBER 1905130000000000
+ * with block 840000, offset 0, uncommon rarity and cycle 1. These fields
+ * contradict pinned Ord first-sat/rarity semantics recorded in the research
+ * source register; a fixture screenshot is not real-network evidence.
+ * 1. After WP-BE-CONTRACT pins the accepted Ord rules, correct this fixture's
+ * coherent block-840000 tuple together: first sat 1968750000000000, offset 0,
+ * rarity epic, cycle 0. Inspect every duplicated field in asset-fixtures and
+ * dependent fixture payloads rather than changing the display label alone.
+ * 2. Add a fixture-contract assertion using the pinned Ord vector, including
+ * block/offset/decimal/cycle/rarity consistency; keep real-network assertions
+ * separate. Run node --test scripts/universe/visual-qa/fixture-contract.test.mjs
+ * from repository root after implementation; NOT RUN in this preparation.
+ * 3. Re-render the affected sat/outpoint/flow visual matrix using existing
+ * design tokens. Rollback the whole coherent fixture tuple, never half of it.
+ * No active fixture value is changed by this preparation comment.
+ */
 // Fixtures for the Universe asset pages and the page that remembers them.
 //
 // The outpoint page, the three asset lookups, and the local-state page are
