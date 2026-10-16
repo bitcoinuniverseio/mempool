@@ -277,3 +277,50 @@ describe('BlockAssetsComponent template', () => {
     expect(element.textContent).toContain('2 assets moved into shielded components');
   });
 });
+
+describe('BlockAssetsComponent live and previews', () => {
+  it('reads the summary again when the live channel reports this block replaced', async () => {
+    const { Subject } = await import('rxjs');
+    const stream = new Subject<unknown>();
+    let reads = 0;
+    const api = {
+      getBlockAssetActivity$: () => { reads += 1; return of(summary()); },
+      getBlockAssetEvents$: () => of(page([])),
+    } as unknown as UniverseApiService;
+    const live = { stream$: () => stream } as never;
+    const component = new BlockAssetsComponent(api, { markForCheck: () => undefined } as never, live);
+    component.chain = 'bitcoin';
+    component.reference = HASH;
+    component.ngOnChanges(referenceChange);
+    expect(reads).toBe(1);
+    stream.next({ channel: 'chain-status', data: {} });
+    stream.next({ channel: 'block-assets', data: { reorged: [{ orphanedHash: 'c'.repeat(64), replacementHash: 'd'.repeat(64) }] } });
+    expect(reads).toBe(1);
+    stream.next({ channel: 'block-assets', data: { reorged: [{ orphanedHash: HASH, replacementHash: 'd'.repeat(64) }] } });
+    expect(reads).toBe(2);
+    component.ngOnDestroy();
+  });
+
+  it('offers an inscription preview only for inscription protocols, and gives up after a failure', () => {
+    const api = {
+      getBlockAssetActivity$: () => of(summary()),
+      getBlockAssetEvents$: () => of(page([])),
+      inscriptionPreviewUrl: (chain: string, network: string, id: string) => `/preview/${chain}/${network}/${id}`,
+    } as unknown as UniverseApiService;
+    const component = new BlockAssetsComponent(api, { markForCheck: () => undefined } as never);
+    component.chain = 'bitcoin';
+    component.reference = HASH;
+    component.ngOnChanges(referenceChange);
+    const id = `${TXID}i0`;
+    const inscription = {
+      ...EVENT,
+      protocolId: 'ordinals',
+      operation: 'inscribe',
+      asset: { protocolId: 'ordinals', assetId: id, contentId: id, assetKind: 'inscription' },
+    } as BlockAssetEvent;
+    expect(component.previewUrl(inscription)).toBe(`/preview/bitcoin/mainnet/${id}`);
+    expect(component.previewUrl(EVENT)).toBeNull();
+    component.previewFailed(inscription);
+    expect(component.previewUrl(inscription)).toBeNull();
+  });
+});

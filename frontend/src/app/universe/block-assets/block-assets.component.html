@@ -195,6 +195,8 @@
         <tbody>
           <tr *ngFor="let event of events; trackBy: trackByEvent" [class.position-row]="event.kind === 'output-position'">
             <td class="asset" [attr.title]="event.asset?.assetId">
+              <img *ngIf="previewUrl(event) as src" class="preview" [src]="src" alt="" width="32" height="32"
+                   loading="lazy" decoding="async" referrerpolicy="no-referrer" (error)="previewFailed(event)">
               <a *ngIf="assetLink(event) as link; else plainAsset" [routerLink]="link">{{ assetLabel(event.asset) }}</a>
               <ng-template #plainAsset>{{ assetLabel(event.asset) }}</ng-template>
             </td>

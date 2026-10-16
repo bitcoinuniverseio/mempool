@@ -506,6 +506,17 @@ export class UniverseApiService {
     );
   }
 
+  /**
+   * An inert thumbnail for an inscription, served by the overlay only as a
+   * small raster image. The network is the one the caller's response was
+   * verified for, so the thumbnail can never come from another network.
+   */
+  inscriptionPreviewUrl(chain: ExplorerChain, network: string, inscriptionId: string): string | null {
+    if ((chain !== 'bitcoin' && chain !== 'dogecoin') || !/^[0-9a-f]{64}i(0|[1-9][0-9]{0,9})$/.test(inscriptionId)) {return null;}
+    return this.apiBaseUrl + '/api/v1/universe/inscriptions/' + inscriptionId + '/preview?chain='
+      + chain + '&network=' + encodeURIComponent(network);
+  }
+
   /** One server-side filtered page of the same block snapshot. */
   getBlockAssetEvents$(chain: ExplorerChain, reference: string, query: BlockAssetEventQuery = {}): Observable<BlockAssetEventsPage> {
     const params = new URLSearchParams();

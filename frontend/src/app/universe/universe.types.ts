@@ -238,6 +238,8 @@ export interface ExplorerAssetRef {
   assetId: string;
   displayName?: string;
   ticker?: string;
+  /** The inscription or content the asset is carried by, when it has one. */
+  contentId?: string;
   assetKind: string;
   /**
    * The ruleset this asset's ledger is read under, for the protocols that

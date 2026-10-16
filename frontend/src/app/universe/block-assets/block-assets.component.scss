@@ -166,8 +166,19 @@ table {
 .activity {
   min-width: 62rem;
 
+  .preview {
+    width: 2rem;
+    height: 2rem;
+    object-fit: cover;
+    image-rendering: pixelated;
+    border-radius: var(--u-radius-sm);
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    background: var(--u-divider);
+  }
+
   .asset {
-    max-width: 14rem;
+    max-width: 16rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
