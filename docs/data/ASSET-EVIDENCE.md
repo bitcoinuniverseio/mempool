@@ -128,3 +128,31 @@ output holds more notable satoshis than the scan limit returns.
 Confirmed evidence reads follow the bracket procedure: read source checkpoint,
 fetch evidence, read source checkpoint again, require identical height and
 block hash, reject mixed-checkpoint results. See CHECKPOINTS-AND-REORGS.md.
+
+## Block asset activity
+
+`GET /api/v1/universe/blocks/:reference/assets?chain=&network=` returns one
+block's summary (`universe-block-asset-activity-v1`) and
+`.../assets/events` pages its records (`universe-block-asset-events-v1`),
+filtered and sorted server side with cursors bound to the block hash. Both
+read one snapshot built for that exact hash, so counts and rows never
+describe different blocks, and a replaced block reports `canonical: false`.
+
+Records are of two kinds and are never merged:
+
+- `action`: an operation the authority states happened (inscribe, etch,
+  mint, transfer, burn, ...). Only these feed the transfer, creation and burn
+  counts.
+- `output-position` (`present-at-output`): an asset the authority holds on
+  one of the block's outputs. It proves where the asset is, not how it got
+  there. On Bitcoin, Ord discards spent inventory, so a confirmed block's
+  inputs can never prove a transfer; its outputs are positions.
+
+Each registry protocol for the chain and network gets a coverage row:
+`read`, `partial`, `pending`, `unavailable`, `unconfigured`, or
+`not-block-readable`. The summary is `complete` only when every row is `read`
+with negative completeness; the page never says "no assets" otherwise.
+Bitcoin inscription reveals are admitted only when Ord's `/blockhash/:height`
+equals the base chain's hash before and after the read. Zcash responses carry
+a fixed shielded-visibility notice and count assets that moved into shielded
+components as untrackable, never as burned.

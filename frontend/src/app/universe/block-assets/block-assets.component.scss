@@ -1,0 +1,352 @@
+@use '../universe-tokens' as u;
+
+:host {
+  @include u.universe-protocol-tokens;
+  @include u.universe-state-tokens;
+
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.block-assets {
+  @include u.universe-surface;
+
+  padding: 1rem;
+}
+
+.block-assets-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+
+  h2 {
+    font-size: 1.15rem;
+    margin: 0;
+  }
+
+  .refresh {
+    margin-left: auto;
+  }
+}
+
+.status-chip {
+  @include u.universe-chip;
+
+  &.status-complete {
+    color: var(--universe-state-proven);
+    border-color: var(--universe-state-proven-border);
+    background: var(--universe-state-proven-surface);
+  }
+
+  &.status-partial {
+    color: var(--universe-state-partial);
+    border-color: var(--universe-state-partial-border);
+    background: var(--universe-state-partial-surface);
+  }
+
+  &.status-pending {
+    color: var(--universe-state-pending);
+    border-color: var(--universe-state-pending-border);
+    background: var(--universe-state-pending-surface);
+  }
+}
+
+.panel.unavailable {
+  border-left: 3px solid var(--universe-state-unavailable);
+  padding-left: 0.75rem;
+
+  p {
+    margin: 0;
+  }
+}
+
+.notices {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.notice {
+  border-left: 3px solid var(--universe-state-neutral-border);
+  background: var(--universe-state-neutral-surface);
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  max-width: 90ch;
+
+  &.notice-warning {
+    border-left-color: var(--universe-state-unavailable);
+    background: var(--universe-state-unavailable-surface);
+  }
+
+  &.notice-privacy {
+    border-left-color: var(--universe-state-pending);
+    background: var(--universe-state-pending-surface);
+  }
+}
+
+.progress-wrap {
+  margin-bottom: 0.75rem;
+
+  .progress-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--u-text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .progress {
+    height: 0.35rem;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+
+  .stat {
+    border: 1px solid var(--u-divider);
+    border-radius: var(--u-radius-sm);
+    padding: 0.5rem 0.65rem;
+  }
+
+  dt {
+    font-weight: normal;
+    font-size: 0.8rem;
+    color: var(--u-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 1.2rem;
+    font-family: var(--u-font-data);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+
+  caption {
+    caption-side: top;
+    color: var(--u-text-muted);
+    font-size: 0.85rem;
+    padding: 0 0 0.35rem;
+  }
+
+  th {
+    white-space: nowrap;
+    color: var(--u-text-muted);
+    font-weight: var(--u-weight-semibold);
+    border-bottom: 1px solid var(--u-divider);
+  }
+
+  td {
+    vertical-align: middle;
+    border-bottom: 1px solid var(--u-divider);
+  }
+
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.activity {
+  min-width: 62rem;
+
+  .asset {
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .quantity {
+    font-family: var(--u-font-data);
+    white-space: nowrap;
+  }
+
+  .identifier span,
+  .identifier a {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .position-row .operation {
+    color: var(--u-text-muted);
+  }
+}
+
+.identifier {
+  @include u.universe-identifier;
+}
+
+.muted,
+.address {
+  color: var(--u-text-muted);
+}
+
+.coverage,
+.evidence {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.coverage-read,
+.evidence-verified {
+  color: var(--universe-state-proven);
+}
+
+.coverage-partial,
+.evidence-partial {
+  color: var(--universe-state-partial);
+}
+
+.coverage-pending {
+  color: var(--universe-state-pending);
+}
+
+.coverage-unavailable {
+  color: var(--universe-state-unavailable);
+}
+
+.coverage-unconfigured,
+.coverage-not-block-readable {
+  color: var(--universe-state-neutral);
+}
+
+.limits {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+
+  summary {
+    cursor: pointer;
+    color: var(--u-text-muted);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0.4rem 0 0;
+    margin: 0;
+    columns: 16rem auto;
+  }
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    break-inside: avoid;
+    padding: 0.15rem 0;
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--u-text-muted);
+    min-width: 9rem;
+    flex: 1 1 9rem;
+
+    &.wide {
+      flex: 2 1 14rem;
+    }
+  }
+
+  select,
+  input {
+    @include u.universe-touch-box;
+
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.4rem;
+    color: inherit;
+    background: transparent;
+    border: 1px solid var(--u-border);
+    border-radius: var(--u-radius-sm);
+
+    &:focus-visible {
+      outline: 2px solid var(--universe-state-pending);
+      outline-offset: 1px;
+    }
+  }
+
+  option {
+    color: initial;
+  }
+
+  .field-error {
+    color: var(--universe-state-unavailable);
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 0.4rem;
+  }
+}
+
+.empty,
+.legend {
+  color: var(--u-text-muted);
+  font-size: 0.9rem;
+  max-width: 90ch;
+}
+
+.legend {
+  font-size: 0.8rem;
+  margin: 0.75rem 0 0;
+}
+
+.more {
+  text-align: center;
+  margin: 0.5rem 0;
+}
+
+.skeleton-line {
+  height: 1rem;
+  width: 60%;
+  border-radius: 0.2rem;
+  background: var(--u-divider);
+
+  &.short {
+    width: 35%;
+  }
+}
+
+.skeleton-tile {
+  height: 3.4rem;
+  border-radius: var(--u-radius-sm);
+  background: var(--u-divider);
+}
+
+@media (max-width: 575px) {
+  .block-assets {
+    padding: 0.75rem;
+  }
+
+  .filters label,
+  .filters label.wide {
+    flex-basis: 100%;
+  }
+}
