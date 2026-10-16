@@ -22,7 +22,6 @@ import {
   StatusResponse,
   TransactionBatchResponse,
   AssetLookupResult,
-  OrdBlockInscriptionsView,
   OrdInscriptionView,
   OrdRuneView,
   OrdSatView,
@@ -86,6 +85,9 @@ import {
   ZcashPoolFlow,
   ZcashPrivacySummary,
   ZcashValuePool,
+  BlockAssetActivitySummary,
+  BlockAssetEventQuery,
+  BlockAssetEventsPage,
 } from '@app/universe/universe.types';
 import {
   BumpPlan,
@@ -493,9 +495,29 @@ export class UniverseApiService {
   }
 
   /** Inscriptions revealed in one block. Paginated by the authority. */
-  getBlockInscriptions$(height: number | string, page = 0): Observable<AssetLookupResult<OrdBlockInscriptionsView>> {
-    return this.scopedRequest<AssetLookupResult<OrdBlockInscriptionsView>>(
-      this.apiBaseUrl + '/api/v1/universe/blocks/' + height + '/inscriptions?page=' + page
+  /**
+   * Every protocol fact the overlay can prove about one confirmed block, with
+   * per-protocol coverage. One aggregate request; the overlay fans out to the
+   * authorities, never the browser.
+   */
+  getBlockAssetActivity$(chain: ExplorerChain, reference: string): Observable<BlockAssetActivitySummary> {
+    return this.scopedRequest<BlockAssetActivitySummary>(
+      this.apiBaseUrl + '/api/v1/universe/blocks/' + encodeURIComponent(reference) + '/assets', undefined, chain,
+    );
+  }
+
+  /** One server-side filtered page of the same block snapshot. */
+  getBlockAssetEvents$(chain: ExplorerChain, reference: string, query: BlockAssetEventQuery = {}): Observable<BlockAssetEventsPage> {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== null && value !== '') {params.set(key, String(value));}
+    }
+    const search = params.toString();
+    return this.scopedRequest<BlockAssetEventsPage>(
+      this.apiBaseUrl + '/api/v1/universe/blocks/' + encodeURIComponent(reference) + '/assets/events'
+        + (search ? '?' + search : ''),
+      undefined,
+      chain,
     );
   }
 
