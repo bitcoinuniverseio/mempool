@@ -33,6 +33,36 @@ const VISIBLE_LIMIT = 24;
   styleUrls: ['./block-protocols.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-BLOCK] ANN-FE-BLOCK-COMPONENT | preparation 2026-10-16
+ * F-FE-01; C-FE-BLOCK-ALL, C-FE-BLOCK-PAGES, C-FE-BLOCK-REORG.
+ * Verified: this component requests only inscriptions revealed at height, shows
+ * 24 IDs, and has no continuation control or other asset protocol inventory.
+ * Prerequisites: WP-BE-CONTRACT, WP-BE-BLOCK, WP-FE-REG.
+ * 1. Reconcile existing local candidate commit
+ * 6c2f1db897cdbcc51da69f26b131111db698df87 on
+ * claude/block-asset-explorer-38d2b0 before editing. Its block-assets component,
+ * view and tests are candidate implementation, not accepted functionality.
+ * Root preserves the commit in the handoff; do not merge it blindly.
+ * 2. Replace this reveal-only integration with the owned block asset summary
+ * contract. Bind chain/network/block hash and height; verify all response
+ * identifiers and checkpoint/hash before displaying membership. Preserve the
+ * inscription reveal view as an action facet within the full block inventory.
+ * 3. Render grouped protocol/subprotocol assets with exact quantities and
+ * distinct transaction membership/action counts. Page assets and transactions
+ * using stable snapshot cursors. Never request enrichment for every transaction
+ * from the browser or present the first page as a complete block.
+ * 4. Add or adapt block-assets specs (PROPOSED NEW relative to this baseline)
+ * for more than 24 IDs, more than one page, transfers without reveals, mixed
+ * protocols, zero versus unavailable, reorg, stale hash and cancellation.
+ * Run frontend npm test -- src/app/universe/block-assets after wiring; NOT RUN,
+ * path is present only in the saved candidate until integrated.
+ * Acceptance: every matching block transaction and asset is reachable with exact
+ * scope; real supported test-network readback survives navigation/reload.
+ * Rollback the block consumer and endpoint together, retaining old reveal API
+ * compatibility until rollout completes. ANNOTATED does not mean implemented.
+ * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ */
 export class BlockProtocolsComponent implements OnChanges {
   @Input() height: number | null = null;
 

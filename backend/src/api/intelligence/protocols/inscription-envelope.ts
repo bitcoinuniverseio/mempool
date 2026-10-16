@@ -6,6 +6,20 @@ import { OP_0, OP_ENDIF, OP_IF, isPush, parseScript, ScriptInstruction } from '.
 
 const PROTOCOL_ID = Buffer.from('ord', 'utf8');
 
+/*
+ * IMPLEMENTATION-HANDOFF [WP-DECODE] | AN-DECODE-ORD-TAGS
+ * Coverage: C-DECODE-ORD-TAGS; defects: F-DECODE-ORD-TAGS. Preparation only.
+ * Verified gap at mempool aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7: this table assigns Properties=15 and Note=17; ord 0.29.0 (7e37a3bd3391044b39f5f11f20dfdb8b3764cd0e) assigns Note=15, Properties=17, PropertyEncoding=19. The parser also converts tag bytes into integers and shares that conversion with pointer values.
+ * Implementation after WP-BE-CONTRACT:
+ * 1. Match the pinned Ord raw byte-tag map. Do not recognize padded tag bytes as a known one-byte tag; preserve unknown even tags and their effect.
+ * 2. Reproduce repeated/chunked field assembly and all flags from the reference parser. Repeated metadata/properties can be assembled while still setting the duplicate-field flag; a flag does not alone establish final location.
+ * 3. Decode pointers with the reference unsigned little-endian rules, including empty zero, accepted zero padding, and overflow rejection. Keep pointer parsing separate from tag identity.
+ * 4. Cover pushnum/stutter and multiple envelopes against the pinned reference vectors. Preserve raw evidence and incomplete status when parsing stops.
+ * Related: script-parser.ts, protocols.test.ts, and protocol-registry.service.ts in this directory. Do not change state interpretation without network/height/ordered input context.
+ * Validation: from backend, npm test -- --runInBand src/api/intelligence/protocols/protocols.test.ts and npm run tsc, after backend dependencies and required Rust build prerequisites are installed. Add T-ORD-ENVELOPES fixtures from the pinned reference. All execution remains NOT TESTED in this preparation.
+ * Governing source IDs: SPEC-ORD, SPEC-ORD-POINTER; pinned URLs/revisions and assertions are in protocol-research.json and this repository's docs/ordinal-assets-implementation-handoff.md.
+ * Rollback: retain the prior decoder/versioned response contract; revert parser and dependent consumers together if differential vectors fail. These parser fixes need no ledger migration and must not rewrite authoritative holdings.
+ */
 export enum InscriptionTag {
   ContentType = 1,
   Pointer = 2,
@@ -45,6 +59,16 @@ function tagNumber(data: Buffer): bigint | null {
   return value;
 }
 
+/*
+ * IMPLEMENTATION-HANDOFF [WP-DECODE] | AN-DECODE-ORD-ID
+ * Coverage: C-DECODE-ORD-ID; defects: F-DECODE-ORD-ID. Preparation only.
+ * Verified arithmetic gap: the bitwise shift/or below coerces the inscription index to signed 32-bit. Values at or above 2147483648 can render as a negative index even though the reference serialized index is unsigned.
+ * 1. Replace the conversion with explicit unsigned arithmetic or BigInt while matching the pinned Ord 32-to-36-byte representation and byte order. Validate the reference's accepted length/padding cases; do not accept malformed IDs by normalizing them silently. Parent tags remain claims until the authority verifies that the parent was spent in the reveal transaction.
+ * 2. Add zero, 2147483647, 2147483648, 4294967295, short/long and trailing-zero vectors to protocols.test.ts. Assert exact decimal strings and stable parent/delegate identifiers.
+ * Dependencies: WP-BE-CONTRACT identity and provenance fields, plus AN-DECODE-ORD-TAGS. Run the targeted backend Jest command documented in T-ORD-ENVELOPES and npm run tsc. No runtime validation has occurred.
+ * Governing source IDs: SPEC-ORD, SPEC-ORD-PARENT; pinned URLs/revisions and assertions are in protocol-research.json and this repository's docs/ordinal-assets-implementation-handoff.md.
+ * Rollback: retain the prior decoder/versioned response contract; revert parser and dependent consumers together if differential vectors fail. These parser fixes need no ledger migration and must not rewrite authoritative holdings.
+ */
 function inscriptionIdFromBytes(data: Buffer): string | null {
   if (data.length < 32 || data.length > 36) { return null; }
   const txid = Buffer.from(data.subarray(0, 32)).reverse().toString('hex');
@@ -120,6 +144,18 @@ export function parseInscriptionEnvelopes(script: Buffer): InscriptionEnvelope[]
 }
 
 /** BRC-20 is JSON inside a text or JSON inscription with "p":"brc-20". */
+/*
+ * IMPLEMENTATION-HANDOFF [WP-DECODE] | AN-DECODE-BRC-GRAMMAR
+ * Coverage: C-DECODE-BRC-GRAMMAR; defects: F-DECODE-BRC-GRAMMAR. Preparation only.
+ * Verified gap: this function accepts arbitrary op strings, omits operation-specific required fields and deployment precision, drops self-mint data, and trims MIME whitespace. The caller then advertises every returned object as syntactically decoded. A p marker is insufficient.
+ * 1. Implement a versioned BRC grammar result that distinguishes marker recognition, syntactic validity, missing context and authority acceptance. Match the L1F MIME/string/UTF-8-byte rules and operation requirements. Keep quantities as decimal strings; BRC precision rejects excess fraction digits. Retain deployment decimals, self_mint and parent evidence for the active profile. Do not reuse this parser for SNS JSON5 or TAP, whose amount rule differs.
+ * 2. Use the owned BRC authority for deployment existence, minted capacity, account/reservation state, provenance and height-gated modules. Frozen original documentation alone does not define all deployed upgrades; attest the active OPI/ruleset revision first.
+ * Related: decodePayload in protocol-registry.service.ts, protocols.test.ts, index-brc20 authority, and WP-BE-CONTRACT. Add T-BRC-SYNTAX for wrong MIME whitespace, invalid UTF-8, numeric fields, unknown op, missing amount/max, byte-length tickers, excess precision and profile-gated fields. Preserve invalid marker evidence without manufacturing a balance.
+ * Validation: targeted backend Jest plus npm run tsc after required dependencies. Status NOT TESTED.
+ * 3. Keep the 4096-byte/resource guard bounded, but return an explicit size-limited observation. A local resource cutoff is not a BRC validity rule or evidence of protocol absence.
+ * Governing source IDs: SPEC-BRC-INDEX, SPEC-BRC-OPI, SPEC-BRC-SELF; pinned URLs/revisions and assertions are in protocol-research.json and this repository's docs/ordinal-assets-implementation-handoff.md.
+ * Rollback: retain the prior decoder/versioned response contract; revert parser and dependent consumers together if differential vectors fail. These parser fixes need no ledger migration and must not rewrite authoritative holdings.
+ */
 export function parseBrc20(envelope: InscriptionEnvelope): { op: string; tick: string; amt?: string; max?: string; lim?: string } | null {
   const type = envelope.contentType?.split(';')[0].trim().toLowerCase();
   if (!type || !(type === 'text/plain' || type === 'application/json')) { return null; }

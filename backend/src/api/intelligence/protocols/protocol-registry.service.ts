@@ -155,6 +155,17 @@ export class ProtocolRegistryService {
    * Decodes a scriptPubKey, a tapscript, or a detached OpenTimestamps proof
    * given as hex. Every returned field is derived from the bytes.
    */
+/*
+ * IMPLEMENTATION-HANDOFF [WP-DECODE] | AN-DECODE-ALL-OBSERVATIONS
+ * Coverage: C-DECODE-ALL-OBSERVATIONS; defects: F-DECODE-ALL-OBSERVATIONS. Preparation only.
+ * 1. The current loop already returns Ordinals plus BRC-20 for one envelope. Preserve that overlap and extend profile-specific observation adapters for the required inscription protocols: names, bitmap, tap, dmt, unat, dust20 and block20. Keep rare_sats as contextual sat data; a raw script cannot prove rarity or ownership. DMT/UNAT membership is authority-validated, not a renderer-text match.
+ * 2. Return every matching observation with the envelope identity, operation, parser/ruleset version, issues and explicit detection/acceptance level. Store protocol ancestry separately from inscription parentage. Invalid or unknown markers remain evidence and never become positive holdings.
+ * 3. Join validated assets in the transaction/block/address services under WP-BE-CONTRACT. Those services must also ask authorities about ordinary spends, coinbase effects and current state; expanding this loop alone cannot satisfy completeness.
+ * 4. Use a bounded reader for content-type/size and protocol-specific UTF-8/JSON rules. Preserve existing Runes, OpenTimestamps, other adapter behavior and decoder input limits. Do not turn unrelated OP_RETURN art or market-order protocols into inscription balances.
+ * 5. Add T-OVERLAP and each protocol grammar fixture, including one envelope with multiple valid classifications and independent NAT/UNAT assets. Run targeted backend Jest and npm run tsc. No implementation or execution in this preparation.
+ * Governing source IDs: SPEC-ORD, SPEC-SNS, SPEC-BITMAP, SPEC-BRC-INDEX, SPEC-TAP, SPEC-DMT-MINT, SPEC-DUST, SPEC-BLOCK20; pinned URLs/revisions and assertions are in protocol-research.json and this repository's docs/ordinal-assets-implementation-handoff.md.
+ * Rollback: retain the prior decoder/versioned response contract; revert parser and dependent consumers together if differential vectors fail. These parser fixes need no ledger migration and must not rewrite authoritative holdings.
+ */
   public decodePayload(rawHex: unknown): DecodedProtocolPayload[] {
     if (typeof rawHex !== 'string') {
       throw new ProtocolDecodeError('invalid_input', 'script_hex must be a string');
@@ -253,6 +264,17 @@ export class ProtocolRegistryService {
     };
   }
 
+/*
+ * IMPLEMENTATION-HANDOFF [WP-DECODE] | AN-DECODE-ORD-CLASSIFICATION
+ * Coverage: C-DECODE-ORD-CLASSIFICATION; defects: F-DECODE-ORD-CLASSIFICATION. Preparation only.
+ * Verified classification gap: flaws.length>0 below labels every parser flaw as unbound and invalid. The pinned Ord updater treats zero input value and unrecognized even fields as unbound; duplicate/incomplete/pushnum/stutter and other curse conditions also depend on the network Jubilee height. The script alone cannot decide final ownership or vindication.
+ * 1. Retain parser flags as observations, separate structural completeness from protocol acceptance, and represent unresolved location explicitly. Derive authoritative bound/unbound, cursed/vindicated, burned/lost and current/historical satpoint only from the owned Ord authority at a matching network checkpoint.
+ * 2. Do not infer a reveal transaction ID or current quantity from the per-script envelope index. The transaction traversal must assign the global inscription index across every input and envelope.
+ * Related: inscription-envelope.ts, protocols.test.ts, the transaction/block aggregation work, and WP-BE-CONTRACT. Add T-ORD-LOCATION and paired pre/post-Jubilee fixtures, plus unknown-even and zero-input cases. A corrected local decoder must still report authority-needed fields as unresolved.
+ * Validation: targeted backend Jest and npm run tsc; owned Signet/Regtest reference comparisons are separate required acceptance. NOT TESTED.
+ * Governing source IDs: SPEC-ORD, SPEC-ORD-NETWORK; pinned URLs/revisions and assertions are in protocol-research.json and this repository's docs/ordinal-assets-implementation-handoff.md.
+ * Rollback: retain the prior decoder/versioned response contract; revert parser and dependent consumers together if differential vectors fail. These parser fixes need no ledger migration and must not rewrite authoritative holdings.
+ */
   private describeInscription(envelope: InscriptionEnvelope): DecodedProtocolPayload {
     const issues: string[] = [];
     if (envelope.incomplete) { issues.push('envelope ends before OP_ENDIF'); }
