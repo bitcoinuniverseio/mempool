@@ -5,6 +5,7 @@ import { BlockComponent } from '@components/block/block.component';
 import { BlockTransactionsComponent } from '@components/block/block-transactions.component';
 import { SharedModule } from '@app/shared/shared.module';
 import { BlockAssetsComponent } from '@app/universe/block-assets/block-assets.component';
+import { AssetInventoryComponent } from '@app/universe/asset-inventory/asset-inventory.component';
 
 const routes: Routes = [
   {
@@ -32,6 +33,7 @@ export class BlockRoutingModule { }
     BlockRoutingModule,
     SharedModule,
     BlockAssetsComponent,
+    AssetInventoryComponent,
   ],
   declarations: [
     BlockComponent,

@@ -317,3 +317,47 @@ describe('AssetFlowComponent loading', () => {
     expect(getTransactionFlow$).not.toHaveBeenCalled();
   });
 });
+
+describe('AssetFlowComponent identity, quantities and refresh', () => {
+  it('marks a transfer only for the same protocol, ruleset and output', () => {
+    const subject = component();
+    const ordinal = position({ asset: { protocolId: 'ordinals', assetId: 'x', assetKind: 'inscription' } });
+    const other = position({ asset: { protocolId: 'brc20', assetId: 'x', assetKind: 'fungible' } });
+    const transfer = flow({
+      outputs: [ordinal, other],
+      actions: [{
+        eventId: 'e', protocolId: 'brc20', actionType: 'transfer',
+        asset: { protocolId: 'brc20', assetId: 'x', assetKind: 'fungible' }, evidence: evidence(),
+      }],
+    });
+    expect(subject.isTransferred(ordinal, transfer)).toBe(false);
+    expect(subject.isTransferred(other, transfer)).toBe(true);
+    expect(subject.trackPosition(0, ordinal)).not.toBe(subject.trackPosition(1, other));
+    const elsewhere = flow({ actions: [{ ...transfer.actions[0], outputOutpoints: ['f'.repeat(64) + ':3'] }] });
+    expect(subject.isTransferred(other, elsewhere)).toBe(false);
+  });
+
+  it('scales by stated decimals and labels unknown scale as smallest units', () => {
+    const subject = component();
+    expect(subject.quantityLabel('123456', { protocolId: 'runes', assetId: 'r', assetKind: 'fungible', decimals: 6 })).toBe('0.123456');
+    expect(subject.quantityLabel('123456', { protocolId: 'runes', assetId: 'r', assetKind: 'fungible' })).toBe('123,456 smallest units');
+    expect(subject.quantityLabel('340282366920938463463374607431768211455', { protocolId: 'runes', assetId: 'r', assetKind: 'fungible', decimals: 0 }))
+      .toBe('340,282,366,920,938,463,463,374,607,431,768,211,455');
+  });
+
+  it('does not claim empty outputs when the evidence is incomplete', () => {
+    const subject = component();
+    expect(subject.outputsNote(flow())).toBe('No supported assets on the outputs');
+    expect(subject.outputsNote(flow({ complete: false }))).toContain('not proof');
+  });
+
+  it('re-reads the flow when only the status revision changes', () => {
+    const getTransactionFlow$ = vi.fn(() => of(flow()));
+    const subject = component({ getTransactionFlow$ } as Partial<UniverseApiService>);
+    subject.txid = 'b'.repeat(64);
+    subject.ngOnChanges({ txid: { currentValue: subject.txid } } as never);
+    subject.statusRevision = 'a'.repeat(64);
+    subject.ngOnChanges({ statusRevision: { currentValue: subject.statusRevision } } as never);
+    expect(getTransactionFlow$).toHaveBeenCalledTimes(2);
+  });
+});

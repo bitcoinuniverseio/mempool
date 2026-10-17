@@ -60,9 +60,7 @@
 
       <div class="flow-column">
         <h3 i18n="universe.flow.outputs">Outputs</h3>
-        <p *ngIf="!state.flow.outputs.length" class="column-note" i18n="universe.flow.outputs-clean">
-          No supported assets on the outputs
-        </p>
+        <p *ngIf="!state.flow.outputs.length" class="column-note">{{ outputsNote(state.flow) }}</p>
         <ul class="position-list" *ngIf="state.flow.outputs.length">
           <ng-container
             *ngFor="let position of state.flow.outputs; trackBy: trackPosition"
@@ -94,7 +92,7 @@
           <span class="action-type">{{ actionLabel(action) }}</span>
           <span class="action-arrow" aria-hidden="true">&rarr;</span>
           <span class="asset-label">{{ assetLabel(action.asset) }}</span>
-          <span class="quantity" *ngIf="action.quantityAtomic">{{ groupDigits(action.quantityAtomic) }}</span>
+          <span class="quantity" *ngIf="action.quantityAtomic" [attr.title]="action.quantityAtomic">{{ quantityLabel(action.quantityAtomic, action.asset) }}</span>
         </li>
       </ul>
     </div>
@@ -119,7 +117,7 @@
       <span class="asset-label" [class.partial-evidence]="isPartialEvidence(position)">
         {{ assetLabel(position.asset) }}
       </span>
-      <span class="quantity" *ngIf="position.quantityAtomic">{{ groupDigits(position.quantityAtomic) }}</span>
+      <span class="quantity" *ngIf="position.quantityAtomic" [attr.title]="position.quantityAtomic">{{ quantityLabel(position.quantityAtomic, position.asset) }}</span>
       <span class="sats">{{ groupDigits(position.valueSatsAtomic) }} <span class="unit" i18n="shared.sats">sats</span></span>
       <span class="owner" *ngIf="position.ownerAddress" [title]="position.ownerAddress">
         {{ shortAddress(position.ownerAddress) }}
