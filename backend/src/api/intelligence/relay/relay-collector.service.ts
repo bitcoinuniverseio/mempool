@@ -72,7 +72,7 @@ export class RelayCollectorService {
         record.last_observed_utc=at;record.events.push(event);
         if(record.events.length>RELAY_LIMITS.eventsPerTransaction){record.events.shift();record.retention.events_pruned++;}
         record.observations=record.events.map(e=>e.payload);record.retention.expires_at_utc=new Date(now+RELAY_LIMITS.retentionMs).toISOString();
-        this.records.delete(txid);this.records.set(txid,record);this.prune(now);
+        this.records.delete(txid);this.records.set(txid,record);
         for(const subscriber of this.subscribers){try{subscriber(JSON.parse(JSON.stringify(event)));}catch{/* One disconnected reader cannot break polling. */}}
       }
     }
