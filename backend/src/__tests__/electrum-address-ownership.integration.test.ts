@@ -1,7 +1,7 @@
 import axios from 'axios';
 import BitcoindElectrsApi from '../api/bitcoin/electrum-api';
 import { addressBitcoinClient } from '../api/bitcoin/bitcoin-client';
-import { addressReadAdmission } from '../api/bitcoin/address-read-admission';
+import { ADDRESS_READ_ADMISSION_LIMIT, addressReadAdmission } from '../api/bitcoin/address-read-admission';
 import Client from '@mempool/electrum-client';
 
 jest.mock('axios', () => ({ __esModule: true, default: { create: jest.fn(() => ({ get: jest.fn() })) } }));
@@ -29,6 +29,10 @@ it('real adapter direct capability and route inheritance share two raw-owner lea
     : url.includes('/block-height/') ? hash(Number(url.split('/').pop())) : JSON.stringify({ address: decodeURIComponent(url.split('/').pop() ?? ''),
       chain_stats: { funded_txo_count: 1, funded_txo_sum: 100, spent_txo_count: 0, spent_txo_sum: 0, tx_count: 1 },
       mempool_stats: { funded_txo_count: 0, funded_txo_sum: 0, spent_txo_count: 0, spent_txo_sum: 0, tx_count: 0 } }) }));
+  // Hold every lease but two, so the two stranded raw owners exhaust admission.
+  let releaseHeld!: () => void;
+  const held = new Promise<void>(resolve => { releaseHeld = resolve; });
+  const holders = Array.from({ length: ADDRESS_READ_ADMISSION_LIMIT - 2 }, () => addressReadAdmission.run(() => held));
   const first = new AbortController(), second = new AbortController();
   const direct = api.$getAddress('old-direct-scope', first.signal).catch(error => error);
   const route = addressReadAdmission.run(() => api.$getAddress('old-route-scope', second.signal)).catch(error => error);
@@ -45,7 +49,7 @@ it('real adapter direct capability and route inheritance share two raw-owner lea
     raw[1].reject(Error('late old scope error')); await turn();
     await expect(api.$getAddress('another-fresh-scope')).resolves.toMatchObject({ address: 'another-fresh-scope' });
   } finally {
-    raw.forEach(owner => owner.resolve({ confirmed: 100, unconfirmed: 0 })); await turn();
+    raw.forEach(owner => owner.resolve({ confirmed: 100, unconfirmed: 0 })); releaseHeld(); await Promise.all(holders); await turn();
     delete process.env.UNIVERSE_SIGNET_CHALLENGE; jest.useRealTimers();
   }
 });
