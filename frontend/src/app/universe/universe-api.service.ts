@@ -494,7 +494,6 @@ export class UniverseApiService {
     );
   }
 
-  /** Inscriptions revealed in one block. Paginated by the authority. */
   /**
    * Every protocol fact the overlay can prove about one confirmed block, with
    * per-protocol coverage. One aggregate request; the overlay fans out to the

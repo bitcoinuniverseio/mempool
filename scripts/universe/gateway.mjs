@@ -146,6 +146,35 @@ const ESPLORA = process.env.UNIVERSE_GATEWAY_ESPLORA
  * SPA document, because the caller is an API consumer, not a browser.
  */
 const NETWORK_PREFIXES = ['signet', 'testnet4', 'testnet'];
+/**
+ * IMPLEMENTATION-HANDOFF [WP-OPS] | F-OPS-SIGNET | 2026-10-16
+ * C-OPS-SIGNET / C-OPS-NETWORK-ISOLATION. Preparation only.
+ * Observed public /signet/api/v1/backend-info returned 503 network-unconfigured
+ * at 21:57:58Z. This map correctly rejects an absent binding; do not change
+ * it into a mainnet fallback. Private runtime cause beyond that binding is
+ * unverified (pinned-key SSH returned 255, without diagnostics).
+ * 1. After WP-BE-CONTRACT/WP-BE-REG, reuse the existing owned Signet Core,
+ *    address index and protocol authorities. Qualify genesis/challenge,
+ *    checkpoint hash, source revision, isolated DB/cache and activation profile.
+ *    Configure UNIVERSE_GATEWAY_BACKEND_SIGNET and, only where required,
+ *    UNIVERSE_GATEWAY_ESPLORA_SIGNET in the isolated test deployment. Leave
+ *    production defaults and actively indexing/reorganizing processes intact.
+ * 2. Keep backend prefix routing here distinct from overlay ?chain=&network=
+ *    contracts in frontend/src/app/universe/universe-api.service.ts. New
+ *    protocol tx/block/address reads belong to the versioned overlay and
+ *    must validate context before selecting sources and cursor/cache keys.
+ * 3. Exercise wrong network, absent binding, reload, timeout and recovery;
+ *    assert structured API errors, never HTML or mainnet rows. Run node --test
+ *    scripts/universe/gateway.test.mjs scripts/universe/gateway-overlay-handoff.test.mjs.
+ *    Then qualify actual owned Signet browser -> gateway -> backend/overlay
+ *    -> authority -> checkpoint -> consumer paths; fixtures alone do not pass.
+ * 4. Preserve bounded concurrency and same-origin browser access; credentials
+ *    stay server side. Roll back only task-owned route/configuration changes
+ *    to their recorded values under the existing release lock. Keep pending
+ *    test data isolated, and never start a duplicate native indexer.
+ * Evidence: server handoff runtime-operational-probes.json; governing rule:
+ * user brief Signet acceptance and existing NETWORK_API_PATH isolation.
+ */
 const NETWORK_UPSTREAMS = new Map(NETWORK_PREFIXES.map((network) => {
   const key = network.toUpperCase();
   const backend = process.env[`UNIVERSE_GATEWAY_BACKEND_${key}`];
