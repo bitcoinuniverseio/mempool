@@ -10,26 +10,11 @@ export interface ProtocolCoverage {
 }
 
 /**
- * IMPLEMENTATION-HANDOFF [WP-FE-REG] ANN-FE-REG-CONTRACT | preparation 2026-10-16
- * F-FE-03; C-FE-REG-HIERARCHY, C-FE-REG-COVERAGE.
- * Prerequisites: WP-BE-CONTRACT, WP-BE-REG.
- * 1. Mirror the producer's explicit parent/child/facet relationships and
- * per-operation/network coverage in this registry contract. Preserve existing
- * protocol IDs, aliases, family, routes and existing non-ordinal capabilities.
- * Do not encode the new hierarchy by guessing from names or visual tokens.
- * 2. Update ExplorerAssetRef, transaction summary, address and block contracts
- * with agreed classification references and stable asset identity. Use a stable
- * namespace for incompatible ledgers and keep mutable ruleset/source revisions
- * in evidence; an ordinary upgrade must not create another asset. Keep
- * classification overlap distinct from ownership quantity, and make required
- * protocol/subprotocol coverage enumerable without deriving it from returned
- * nonempty rows. Follow the shared schema/version migration.
- * 3. Extend universe-protocol-contract.spec.ts and universe-api.service.spec.ts
- * for unknown additive protocols, invalid parent references, aliases, network
- * scope and separate subprotocol coverage. Run targeted frontend npm test after
- * producer integration; NOT RUN here. Acceptance: full required roster survives
- * registry/source failures and every asset resolves to explicit classifications.
- * Rollback schema-compatible registry and consumers together. Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ * Registry rows describe protocols and their read operations. Asset-level
+ * protocol/subprotocol classification and per-protocol coverage for one
+ * transaction, block or address come from universe-asset-inventory-v1
+ * (asset-inventory/asset-inventory.types.ts), whose groups, classifications
+ * and coverage roster are taken from the producer, never guessed from names.
  */
 export interface ExplorerProtocolDefinition {
   schemaVersion: string;

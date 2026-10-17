@@ -9,6 +9,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, forkJoin, map, of, shareReplay, throwError, defer, distinctUntilChanged, startWith, switchMap, take, timeout } from 'rxjs';
 import { TransactionAssetSummary, decodeTransactionAssetSummary } from './transaction-assets/transaction-assets.types';
+import { AssetInventory, InventoryScopeKind, decodeAssetInventory } from './asset-inventory/asset-inventory.types';
 import { StateService } from '@app/services/state.service';
 import { ProtocolPageKind, readProtocolFailure, readProtocolPage } from './universe-protocol-contract';
 import { chainNetwork, resolveChainNetwork } from './chain-network';
@@ -114,6 +115,18 @@ export const UNIVERSE_OUTPOINT_BATCH_LIMIT = 50;
 export const UNIVERSE_SUMMARY_DEADLINE_MS = 8_000;
 
 export const UNIVERSE_TRANSACTION_BATCH_LIMIT = 25;
+
+/**
+ * Client deadline for one inventory page, outside the producer's own 25 second
+ * request budget so a stalled page becomes a retryable timeout.
+ */
+export const UNIVERSE_INVENTORY_DEADLINE_MS = 35_000;
+
+const INVENTORY_ROUTES: Readonly<Record<InventoryScopeKind, string>> = {
+  transaction: 'transactions',
+  block: 'blocks',
+  address: 'addresses',
+};
 
 /** The chains the picker lists, each read from its own network. */
 const EXPLORER_CHAINS: readonly ExplorerChain[] = ['bitcoin', 'dogecoin', 'zcash'];
@@ -529,6 +542,46 @@ export class UniverseApiService {
       undefined,
       chain,
     );
+  }
+
+  /**
+   * One page of the public asset inventory (universe-asset-inventory-v1) for a
+   * transaction, block or address.
+   *
+   * Without `network` the read follows the selected network and a network
+   * switch cancels the request in flight. A caller walking cursor pages passes
+   * the network its first page was read under, so every later page is bound to
+   * that same network; a page requested after the selection moved fails with
+   * `asset-request-context-changed` instead of mixing networks.
+   *
+   * The answer is decoded against the requested kind, chain, network and key
+   * (see decodeAssetInventory), so a late or misrouted response is an error,
+   * never another scope's inventory.
+   */
+  getAssetInventory$(kind: InventoryScopeKind, key: string, options: {
+    cursor?: string | null;
+    chain?: string;
+    network?: ExplorerNetwork;
+  } = {}): Observable<AssetInventory> {
+    const chain = options.chain ?? 'bitcoin';
+    const cursor = options.cursor ?? null;
+    const read = (network: ExplorerNetwork): Observable<AssetInventory> => {
+      const url = this.apiBaseUrl + '/api/v1/universe/inventory/' + INVENTORY_ROUTES[kind] + '/'
+        + encodeURIComponent(key) + (cursor !== null ? '?cursor=' + encodeURIComponent(cursor) : '');
+      const address = url + (url.includes('?') ? '&' : '?') + 'chain=' + encodeURIComponent(chain) + '&network=' + network;
+      return this.httpClient.get<unknown>(address).pipe(
+        timeout(UNIVERSE_INVENTORY_DEADLINE_MS),
+        map((value) => decodeAssetInventory(value, { kind, chain, network, key }, cursor)),
+      );
+    };
+    if (options.network !== undefined) {
+      const network = options.network;
+      return defer(() => {
+        if (this.chainNetwork(chain) !== network) {throw new Error('asset-request-context-changed');}
+        return read(network);
+      });
+    }
+    return this.chainNetwork$(chain).pipe(switchMap(read));
   }
 
   /**
