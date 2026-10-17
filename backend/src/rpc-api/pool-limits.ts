@@ -13,7 +13,7 @@ export function rpcPoolLimits(config: RpcPoolConfiguration): { bulk: number; add
     return value;
   };
   return {
-    bulk: bound(config.MAX_SOCKETS, 8, 8, 'CORE_RPC.MAX_SOCKETS'),
+    bulk: bound(config.MAX_SOCKETS, 8, 32, 'CORE_RPC.MAX_SOCKETS'),
     address: bound(config.ADDRESS_MAX_SOCKETS, 4, 4, 'CORE_RPC.ADDRESS_MAX_SOCKETS'),
   };
 }
