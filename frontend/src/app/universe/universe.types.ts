@@ -1595,7 +1595,7 @@ export interface BlockAssetActivitySummary {
   schemaVersion: 'universe-block-asset-activity-v1';
   chain: string;
   network: string;
-  block: { heightAtomic: string; hash: string; canonical: boolean };
+  block: { heightAtomic: string; hash: string; onMainChain: boolean };
   generatedAt: string;
   completeness: BlockAssetCompleteness;
   progress: { processedTransactionsAtomic: string; totalTransactionsAtomic: string };

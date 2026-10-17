@@ -254,10 +254,10 @@ export class BlockAssetsComponent implements OnChanges, OnDestroy {
       const hash = this.summary?.block.hash ?? this.reference;
       const touched = reorged.some((notice: { orphanedHash?: unknown; replacementHash?: unknown }) =>
         notice?.orphanedHash === hash || notice?.replacementHash === hash);
-      const canonical = this.summary?.block.canonical;
+      const onMainChain = this.summary?.block.onMainChain;
       if (touched && chain === this.chain) {
         // A block already shown as replaced needs no second read.
-        if (canonical === false && reorged.every((notice: { orphanedHash?: unknown }) => notice?.orphanedHash === hash)) {return;}
+        if (onMainChain === false && reorged.every((notice: { orphanedHash?: unknown }) => notice?.orphanedHash === hash)) {return;}
         this.refresh();
       }
     });
