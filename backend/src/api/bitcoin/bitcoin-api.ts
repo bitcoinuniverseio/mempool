@@ -7,6 +7,25 @@ import mempool from '../mempool';
 import { TransactionExtended } from '../../mempool.interfaces';
 import transactionUtils from '../transaction-utils';
 import { Common } from '../common';
+import config from '../../config';
+import axios from 'axios';
+import http from 'http';
+import { OutspendHttpGet, OutspendSource, SourceOutput } from './outspend-source';
+
+/** The owned Esplora HTTP API, with the same timeout the Esplora client uses. */
+function esploraOutspendHttp(): OutspendHttpGet | null {
+  const socketPath = config.ESPLORA?.UNIX_SOCKET_PATH || undefined;
+  const origin = socketPath ? 'http://api' : (config.ESPLORA?.REST_API_URL || '').replace(/\/$/, '');
+  if (!origin) return null;
+  const client = axios.create({
+    timeout: config.ESPLORA.REQUEST_TIMEOUT || 10000,
+    maxContentLength: 16 * 1024 * 1024,
+    maxRedirects: 0,
+    proxy: false,
+    httpAgent: new http.Agent({ keepAlive: true, maxSockets: 4 }),
+  });
+  return (path: string) => client.get(origin + path, { socketPath, validateStatus: () => true });
+}
 
 class BitcoinApi implements AbstractBitcoinApi {
   private rawMempoolCache: IBitcoinApi.RawMempool | null = null;
@@ -15,9 +34,40 @@ class BitcoinApi implements AbstractBitcoinApi {
   // Fee entries that arrived in the same batch as the transaction being converted.
   private batchedMempoolEntries = new Map<string, IBitcoinApi.MempoolEntry>();
   protected bitcoindClient: any;
+  private outspendSource: OutspendSource | null = null;
 
   constructor(bitcoinClient: any) {
     this.bitcoindClient = bitcoinClient;
+  }
+
+  private spenderSource(): OutspendSource {
+    if (!this.outspendSource) {
+      this.outspendSource = new OutspendSource(
+        (method, params) => this.bitcoindClient.rpc.call(method, params),
+        esploraOutspendHttp(),
+      );
+    }
+    return this.outspendSource;
+  }
+
+  /** Spenders from an owned source, or null to keep the spent-flag-only reading. @asyncUnsafe */
+  private async $sourcedOutspends(txId: string): Promise<(IEsploraApi.Outspend | null)[] | null> {
+    if (!this.spenderSource().available()) return null;
+    let tx: IEsploraApi.Transaction;
+    try {
+      tx = await this.$getRawTransaction(txId, true, false);
+    } catch {
+      return null;
+    }
+    if (!Array.isArray(tx?.vout)) return null;
+    const outputs: SourceOutput[] = tx.vout.map((out: any) => ({
+      unspendable: out?.scriptPubKey?.type === 'nulldata',
+    }));
+    try {
+      return await this.spenderSource().$outspends(txId, outputs);
+    } catch {
+      return null;
+    }
   }
 
   static convertBlock(block: IBitcoinApi.Block): IEsploraApi.Block {
@@ -309,6 +359,18 @@ class BitcoinApi implements AbstractBitcoinApi {
 
   /** @asyncUnsafe */
   async $getOutspends(txId: string): Promise<IEsploraApi.Outspend[]> {
+    const sourced = await this.$sourcedOutspends(txId);
+    if (!sourced) return this.$getOutspendsFromUtxoSet(txId);
+    const outSpends: IEsploraApi.Outspend[] = [];
+    for (let i = 0; i < sourced.length; i++) {
+      // Not stated by the source: the UTXO set decides, without a spender.
+      outSpends.push(sourced[i] ?? { spent: (await this.bitcoindClient.getTxOut(txId, i)) === null });
+    }
+    return outSpends;
+  }
+
+  /** @asyncUnsafe */
+  private async $getOutspendsFromUtxoSet(txId: string): Promise<IEsploraApi.Outspend[]> {
     const outSpends: IEsploraApi.Outspend[] = [];
     const tx = await this.$getRawTransaction(txId, true, false);
     for (let i = 0; i < tx.vout.length; i++) {
@@ -343,9 +405,11 @@ class BitcoinApi implements AbstractBitcoinApi {
   /** @asyncUnsafe */
   async $getOutSpendsByOutpoint(outpoints: { txid: string, vout: number }[]): Promise<IEsploraApi.Outspend[]> {
     const outspends: IEsploraApi.Outspend[] = [];
+    const sourced = new Map<string, (IEsploraApi.Outspend | null)[] | null>();
     for (const outpoint of outpoints) {
-      const outspend = await this.$getOutspend(outpoint.txid, outpoint.vout);
-      outspends.push(outspend);
+      if (!sourced.has(outpoint.txid)) sourced.set(outpoint.txid, await this.$sourcedOutspends(outpoint.txid));
+      const stated = sourced.get(outpoint.txid)?.[outpoint.vout];
+      outspends.push(stated ?? await this.$getOutspend(outpoint.txid, outpoint.vout));
     }
     return outspends;
   }

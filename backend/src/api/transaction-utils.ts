@@ -6,6 +6,7 @@ import * as bitcoinjs from 'bitcoinjs-lib';
 import logger from '../logger';
 import config from '../config';
 import pLimit from '../utils/p-limit';
+import { rpcPoolLimits } from '../rpc-api/pool-limits';
 
 class TransactionUtils {
   constructor() { }
@@ -78,7 +79,8 @@ class TransactionUtils {
   /** @asyncUnsafe */
   public async $getMempoolTransactionsExtended(txids: string[], addPrevouts = false, lazyPrevouts = false, forceCore = false): Promise<MempoolTransactionExtended[]> {
     if (forceCore || config.MEMPOOL.BACKEND !== 'esplora') {
-      const limiter = pLimit(8); // Run 8 requests at a time
+      // One request per bulk socket: a remote node needs the wider pool to keep up with arrivals.
+      const limiter = pLimit(rpcPoolLimits(config.CORE_RPC).bulk);
       const results = await Promise.allSettled(txids.map(
         txid => limiter(() => this.$getMempoolTransactionExtended(txid, addPrevouts, lazyPrevouts, forceCore))
       ));

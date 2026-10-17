@@ -92,20 +92,13 @@
     <app-universe-transaction-assets *ngIf="txId" [txid]="txId" chain="bitcoin"
       [statusRevision]="tx?.status?.block_hash || tx?.status?.confirmed || null"></app-universe-transaction-assets>
 
-<!--
-IMPLEMENTATION-HANDOFF [WP-FE-FLOW] ANN-FE-TX-EMBED | preparation 2026-10-16
-F-FE-05; C-FE-FLOW-LIFECYCLE. The summary above receives statusRevision but
-this detailed flow only receives txid. Depends on WP-BE-TX and WP-FE-FLOW.
-1. Pass the same accepted chain/network/status revision to both consumers
-after their inputs are implemented; use block hash in the revision to detect
-same-height reorgs. Preserve BTC/CPFP/RBF and other inherited details.
-2. Add a parent integration assertion for confirmation, replacement, orphaning
-and route/network changes in asset-consumers.spec.ts. Run targeted frontend
-npm test and AOT after implementation; NOT RUN here.
-3. Verify real supported test-network summary and flow agree after refresh.
-Rollback both consumer inputs together. No executable changes in preparation.
--->
-    <app-universe-asset-flow *ngIf="txId" [txid]="txId"></app-universe-asset-flow>
+    <!-- Summary, inventory and detailed flow share one status revision (block hash,
+         confirmation, replacement) so a confirmation, RBF or reorg refreshes all three. -->
+    <app-universe-asset-inventory *ngIf="txId" scope="transaction" [key]="txId" chain="bitcoin"
+      [revision]="(tx?.status?.block_hash || tx?.status?.confirmed || 'unconfirmed') + (replaced ? ':replaced' : '')"></app-universe-asset-inventory>
+
+    <app-universe-asset-flow *ngIf="txId" [txid]="txId"
+      [statusRevision]="tx?.status?.block_hash || tx?.status?.confirmed || null"></app-universe-asset-flow>
 
     <!-- CPFP Details -->
     <app-cpfp-info *ngIf="showCpfpDetails" [cpfpInfo]="cpfpInfo" [tx]="tx"></app-cpfp-info>

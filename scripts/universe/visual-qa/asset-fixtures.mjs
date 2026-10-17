@@ -1,20 +1,9 @@
 /**
- * IMPLEMENTATION-HANDOFF [WP-FE-FLOW] ANN-FE-FIXTURE-SAT | preparation 2026-10-16
- * F-FE-07; C-FE-FLOW-RARITY. The fixture pairs SAT_NUMBER 1905130000000000
- * with block 840000, offset 0, uncommon rarity and cycle 1. These fields
- * contradict pinned Ord first-sat/rarity semantics recorded in the research
- * source register; a fixture screenshot is not real-network evidence.
- * 1. After WP-BE-CONTRACT pins the accepted Ord rules, correct this fixture's
- * coherent block-840000 tuple together: first sat 1968750000000000, offset 0,
- * rarity epic, cycle 0. Inspect every duplicated field in asset-fixtures and
- * dependent fixture payloads rather than changing the display label alone.
- * 2. Add a fixture-contract assertion using the pinned Ord vector, including
- * block/offset/decimal/cycle/rarity consistency; keep real-network assertions
- * separate. Run node --test scripts/universe/visual-qa/fixture-contract.test.mjs
- * from repository root after implementation; NOT RUN in this preparation.
- * 3. Re-render the affected sat/outpoint/flow visual matrix using existing
- * design tokens. Rollback the whole coherent fixture tuple, never half of it.
- * No active fixture value is changed by this preparation comment.
+ * The sat fixture is the first sat of block 840000 (the fourth halving), so
+ * every field below follows from Ord's rules for that sat: number
+ * 1968750000000000, epoch 4, cycle 0, offset 0, rarity epic (first sat of an
+ * epoch that is not also a cycle start). fixture-contract.test.mjs recomputes
+ * the tuple; change it only as a whole.
  */
 // Fixtures for the Universe asset pages and the page that remembers them.
 //
@@ -29,7 +18,7 @@ const INSCRIPTION_TXID =
   '8d2f6b0e4a8c2f6b0d4a8c2e6f0b4d8a2c6e0f4b8d2a6c0e4f8b2d6a0c4e8f2b';
 const INSCRIPTION_ID = `${INSCRIPTION_TXID}i0`;
 const RUNE_NAME = 'UNIVERSE';
-const SAT_NUMBER = '1905130000000000';
+const SAT_NUMBER = '1968750000000000';
 const OUTPOINT_TXID =
   '2c6e0f4b8d2a6c0e4f8b2d6a0c4e8f2b6d0a4c8e2f6b0d4a8c2e6f0b4d8a2c6e';
 const OWNER = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
@@ -96,7 +85,7 @@ export const assetFixtures = {
           assetKind: 'inscription',
         },
         notableSats: [
-          { satAtomic: SAT_NUMBER, rarity: 'uncommon', heightAtomic: '840000' },
+          { satAtomic: SAT_NUMBER, rarity: 'epic', heightAtomic: '840000' },
         ],
         notableSatsTruncated: false,
         ownerAddress: OWNER,
@@ -175,13 +164,13 @@ export const assetFixtures = {
     checkpoint: CHECKPOINT,
     value: {
       numberAtomic: SAT_NUMBER,
-      rarity: 'uncommon',
-      name: 'gjmbctuywsb',
+      rarity: 'epic',
+      name: 'xdmgbccjnt',
       decimal: '840000.0',
-      degree: '1.4.18',
-      percentile: '90.7301%',
+      degree: '0°0′1344″0‴',
+      percentile: '93.75000010312505%',
       blockAtomic: '840000',
-      cycleAtomic: '1',
+      cycleAtomic: '0',
       epochAtomic: '4',
       periodAtomic: '416',
       offsetAtomic: '0',

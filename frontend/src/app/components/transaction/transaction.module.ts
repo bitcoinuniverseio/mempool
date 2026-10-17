@@ -8,6 +8,7 @@ import { TxBowtieModule } from '@components/tx-bowtie-graph/tx-bowtie.module';
 import { TransactionExtrasModule } from '@components/transaction/transaction-extras.module';
 import { GraphsModule } from '@app/graphs/graphs.module';
 import { UniverseSharedModule } from '@app/universe/universe-shared.module';
+import { AssetInventoryComponent } from '@app/universe/asset-inventory/asset-inventory.component';
 import { TransactionRawComponent } from '@components/transaction/transaction-raw.component';
 import { CpfpInfoComponent } from '@components/transaction/cpfp-info.component';
 import { StateService } from '@app/services/state.service';
@@ -50,6 +51,7 @@ export class TransactionRoutingModule { }
     SharedModule,
     GraphsModule,
     UniverseSharedModule,
+    AssetInventoryComponent,
     TxBowtieModule,
     TransactionExtrasModule,
   ],

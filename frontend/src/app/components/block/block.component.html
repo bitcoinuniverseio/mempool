@@ -403,6 +403,7 @@
     @defer (on viewport) {
       @if (!block?.stale) {
       <app-universe-block-assets chain="bitcoin" [reference]="block?.id"></app-universe-block-assets>
+      <app-universe-asset-inventory scope="block" chain="bitcoin" [key]="block?.id"></app-universe-asset-inventory>
 
       <app-block-transactions [paginationMaxSize]="paginationMaxSize" [block$]="block$" [txCount]="block.tx_count" [timestamp]="block.timestamp" [blockHash]="blockHash" [previousBlockHash]="block.previousblockhash" (blockReward)="updateBlockReward($event)"></app-block-transactions>
       }

@@ -102,6 +102,8 @@ const BUCKETS: { label: string; min: number; max: number }[] = [
 ];
 
 export const TIME_MACHINE_LIMITS = { checkpoints: 288, events: 50_000, eventsPerTx: 64 } as const;
+/** Longest a recorded observation waits for the next history write. */
+const HISTORY_PERSIST_DELAY_MS = 5 * 60_000;
 
 type TransactionMetrics = Readonly<{ vsize: number; weight: number; fee: number }>;
 
@@ -191,7 +193,9 @@ export class TimeMachineService {
     if (!this.store || this.loadFailed) return;
     this.dirty = true;
     if (this.timer || this.writing) return;
-    this.timer = setTimeout(() => { this.timer = undefined; this.flushHistory(false).catch(() => undefined); }, 250);
+    // A flush re-encodes the whole retained history on the main thread (seconds at
+    // mainnet size), so observations coalesce into one write per interval.
+    this.timer = setTimeout(() => { this.timer = undefined; this.flushHistory(false).catch(() => undefined); }, HISTORY_PERSIST_DELAY_MS);
     this.timer.unref();
   }
 
