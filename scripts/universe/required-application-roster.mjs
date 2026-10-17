@@ -42,6 +42,43 @@ const lfBytes = (bytes) =>
  * semantic reconciliation or functional acceptance from source declarations.
  * A reviewed selected-context definition is not the full consumer/variant row.
  */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-VERIFY] | F-VERIFY-SCOPE | 2026-10-16
+ * C-VERIFY-ROSTER / C-VERIFY-SEMANTICS / C-VERIFY-RECOVERY. Source declarations
+ * and the existing 632 required rows / 1617 historical source candidates do
+ * not prove the newly requested complete ordinal asset read surfaces.
+ * 1. After WP-BE-CONTRACT/REG/TX/BLOCK/ADDR and WP-FE-* settle the contracts,
+ *    create a versioned successor to COVERAGE_PATH and ROSTER_PATH. Preserve
+ *    every existing ID, evidence reference, reviewed exclusion and per-key
+ *    mapping; add new rows rather than changing count literals to pass.
+ * 2. Preserve all 39 published identities on their actual chains and
+ *    regress every offered capability. For the 10 direct ordinal identities,
+ *    require complete tx/block/address asset reads even when no adapter exists.
+ *    Extend shared consumers for other existing authoritative assets without
+ *    inventing products or balances for message-only protocols. Add native
+ *    operations and
+ *    subtypes: SNS namespaces, Bitmap district/parcel, BRC20 legacy/current
+ *    rules, TAP/DMT/NAT and separate UNAT ownership. Message-only protocols
+ *    must retain activity without an invented transferable quantity.
+ * 3. Add separate rows for spent inputs, transfer without new inscription,
+ *    multiple assets per output, duplicate classification facets, exact large
+ *    quantities, >24 block items, >100/>500 address UTXOs, account balances,
+ *    page continuation, stable snapshots, reorg/replay, missing authorities,
+ *    network switches, confirmation/RBF, empty proof, mobile/keyboard and
+ *    retry/reconnect. Bind spec pin -> operation -> source -> test -> evidence.
+ * 4. Run node --test scripts/universe/required-application-roster.test.mjs
+ *    scripts/universe/reconciled-operations.test.mjs
+ *    scripts/universe/protocol-functional-projection.test.mjs. Extend the
+ *    actual Signet acceptance harness for the new rows; justify a named
+ *    Testnet only where a pinned protocol cannot support Signet. Fixtures,
+ *    HTTP 200, readiness and source review must not become functional PASS.
+ * 5. Keep PASS/FAIL/BLOCKED/NOT TESTED/NOT APPLICABLE exact, distinguish
+ *    preparation from implementation, and recalculate totals from IDs.
+ *    Rollback retains immutable prior evidence and successor mapping; never
+ *    rewrite historical PASS or remove required rows to obtain a release.
+ * This annotation supersedes no valid prior acceptance: reuse it only when
+ * its code/configuration/dependencies and complete read outcomes still match.
+ */
 export function buildRequiredApplicationRoster(
   historicalBytes,
   coverageBytes,
@@ -104,6 +141,29 @@ export function buildRequiredApplicationRoster(
     metadataSource + "mounted-signet-registry-protocols.json",
   ]);
   const currentSourceBindings = [];
+  /*
+   * IMPLEMENTATION-HANDOFF [WP-VERIFY] | F-VERIFY-PROOF | C-VERIFY-PROOF-DRIFT
+   * Verified at develop aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7: this assertion
+   * rejects the committed Clock snapshot (62d899921c13902b6d56fe9b8da3a8a645aa5b595a4db1621a96ff74f1c7ee3e)
+   * against the committed current source (82503623bd436e45b7fa33850fc2211869751a8f6b64f9b35df02b85c08a282e).
+   * Seven existing roster tests fail before any ordinal functionality is tested.
+   * 1. Compare clock-history-semantic-review.mjs CLOCK_HISTORY_PREFIX and the
+   *    current frontend/src/app/components/clock/clock.component.ts history.
+   *    Identify the legitimate intervening change and its dependent routes/tests.
+   * 2. After the relevant semantics are reviewed/tested, create a versioned
+   *    proof/roster successor and update owning generator bindings together.
+   *    Preserve immutable prior snapshots, historical failures and every row ID.
+   *    Do not delete this assertion, overwrite old proof, or merely accept the
+   *    current hash without establishing the semantics/evidence it represents.
+   * 3. Run node --test scripts/universe/required-application-roster.test.mjs
+   *    and the affected Clock tests in the pinned runner. Require both the
+   *    legitimate successor and deliberate source-drift rejection to pass.
+   *    Re-run candidate-bound acceptance and WP-RELEASE after evidence changes.
+   * Source: baseline-source-proof-mismatch.json and root-roster-retest.log in
+   * the handoff evidence. No application source was changed to obtain a pass.
+   * Rollback restores the prior generator bindings and preserves both evidence
+   * versions; it must remain fail-closed for an unmatched deployed revision.
+   */
   const frontendProof = (paths) =>
     proof(
       paths.map((path) => {

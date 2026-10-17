@@ -115,6 +115,34 @@ export interface SummaryLogo {
   verified: true;
 }
 
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-TX] ANN-FE-TX-CONTRACT | preparation 2026-10-16
+ * F-FE-03; C-FE-TX-DISCRIMINATE, C-FE-TX-EXACT. The current identity is
+ * chain/network/protocolId/assetId/ruleset and has no subprotocol relationship.
+ * Prerequisites: WP-BE-CONTRACT, WP-BE-REG, WP-BE-TX. Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ * 1. Add the producer-agreed hierarchy/classification fields to SummaryAsset,
+ * SummaryProtocolCoverage and their runtime decoders. Use the shared backend
+ * schema and registry revision; do not derive a subprotocol from ticker, MIME
+ * type, display text, or a ruleset label. Keep asset ownership identity separate
+ * from parent/child classification so one inscription can have several facets
+ * without minting extra asset quantities.
+ * 2. Update asset(), summaryAssetKey() and decodeTransactionAssetSummary()
+ * together with the producer. Use its stable ledger namespace to distinguish
+ * incompatible ledgers; mutable ruleset/source revisions belong in evidence
+ * and an ordinary ruleset upgrade must not create another asset identity. Validate required scope, unique identity and
+ * coverage per required protocol/subprotocol; require an explicit coverage
+ * denominator before complete or proven-empty. Preserve exact unsigned strings,
+ * unknown decimals, duplicate rejection and network/txid mismatch rejection.
+ * 3. Add decoder cases in transaction-assets.types.spec.ts for overlapping
+ * facets, two protocols sharing an asset ID, two incompatible ledger namespaces,
+ * a normal ruleset upgrade without duplicate holdings, malformed hierarchy,
+ * missing required coverage and values above Number.MAX_SAFE_INTEGER.
+ * Run npm test -- src/app/universe/transaction-assets/transaction-assets.types.spec.ts
+ * from frontend/ after implementation; command is identified but NOT RUN here.
+ * Acceptance: no classified asset is omitted or counted twice; exact units and
+ * scope survive decoding. Rollback producer/consumer schema versions together
+ * and preserve compatibility until the accepted consumer is deployed.
+ */
 export interface SummaryAsset {
   chain: string;
   network: string;
