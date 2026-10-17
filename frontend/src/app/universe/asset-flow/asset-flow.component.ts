@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, map, of, startWith } from 'rxjs';
+import { groupIntegerDigits, presentQuantity } from '@app/universe/asset-summary/asset-summary.presentation';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   ExplorerAssetAction,
@@ -27,6 +28,12 @@ export interface FlowViewState {
 })
 export class AssetFlowComponent implements OnChanges {
   @Input() txid: string;
+  /**
+   * The same status revision the summary receives (block hash, confirmation,
+   * replacement). A change re-reads the flow so the two panels never disagree
+   * about one transaction.
+   */
+  @Input() statusRevision: string | number | boolean | null = null;
 
   state$: Observable<FlowViewState>;
 
@@ -34,27 +41,13 @@ export class AssetFlowComponent implements OnChanges {
 
   constructor(private universeApiService: UniverseApiService) {}
 
-/**
- * IMPLEMENTATION-HANDOFF [WP-FE-FLOW] ANN-FE-FLOW-REFRESH | preparation 2026-10-16
- * F-FE-05; C-FE-FLOW-LIFECYCLE. Current flow reloads only when txid changes,
- * while the parent refreshes the summary on confirmation/block-hash changes.
- * Prerequisites: WP-BE-TX, WP-FE-TX.
- * 1. Add the same chain/network/status revision context used by the transaction
- * summary and wire it through transaction.component.html. Refresh on confirmed,
- * replaced and orphaned revisions as well as txid; cancel in-flight old reads.
- * 2. Decode flow identity and evidence against requested context before display.
- * Add explicit bounded retry/deadline states that do not turn failures into an
- * empty list. Keep one request per context or user retry, with cleanup on destroy.
- * 3. Test pending-to-confirmed, same-height reorg with changed block hash,
- * replacement, network switch and late responses in asset-flow.component.spec.ts.
- * Run npm test -- src/app/universe/asset-flow/asset-flow.component.spec.ts from
- * frontend/; NOT RUN here. Verify summary and flow agree after refresh/reconnect
- * against a real supported test-network producer. Revert consumer and API
- * contract as a pair on regression; never restore a stale complete claim.
- * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
- */
+  /**
+   * Re-read on a new txid or a new status revision (confirmation, replacement,
+   * reorg). Assigning a new stream lets the async pipe drop the old request, so
+   * a late answer for the previous state is never rendered.
+   */
   ngOnChanges(changes: SimpleChanges): void {
-    if (!changes.txid || !this.txid) {
+    if ((!changes.txid && !changes.statusRevision) || !this.txid) {
       return;
     }
     this.state$ = this.universeApiService.getTransactionFlow$(this.txid).pipe(
@@ -314,37 +307,21 @@ export class AssetFlowComponent implements OnChanges {
   }
 
   /** Assets present on both sides share an accent so the movement is readable. */
-/**
- * IMPLEMENTATION-HANDOFF [WP-FE-FLOW] ANN-FE-FLOW-IDENTITY | preparation 2026-10-16
- * F-FE-04, F-FE-06; C-FE-FLOW-IDENTITY, C-FE-FLOW-EXACT.
- * Verified: isTransferred compares assetId alone and trackPosition keys only
- * outpoint plus assetId; groupDigits renders quantityAtomic without divisibility.
- * Prerequisites: WP-BE-CONTRACT, WP-BE-TX, WP-FE-TX.
- * 1. Match transfer evidence using the agreed full asset identity, protocol,
- * stable ledger namespace, chain/network and action input/output membership.
- * Preserve mutable ruleset revisions as evidence, not extra asset identities. Never mark
- * another protocol's same-ID asset as transferred. Give trackPosition a stable
- * key that includes the same identity and the position occurrence identity.
- * 2. Build a view model with presentQuantity() for position and action amounts.
- * Label raw atomic values as smallest units when decimals are unknown; keep exact
- * expanded/copy values and no floating-point conversion.
- * 3. In asset-flow.component.html distinguish no output assets proven from
- * unresolved output evidence. Current empty-output text is unconditional when
- * inputs exist. An action-only response must still show its event and cannot
- * claim no protocol activity. Expose every protocol/subprotocol classification.
- * 4. Extend asset-flow.component.spec.ts for same-ID protocols and incompatible ledgers on the
- * same output, rejected actions, unknown output coverage, action-only responses,
- * large atomic values and nonzero decimals. Run the targeted frontend npm test;
- * NOT RUN here. Acceptance: identity, quantity and evidence agree with the
- * summary and authority. Rollback shared presenter/key consumers together.
- * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
- */
+  /**
+   * A transfer marks a position only when it names the same asset identity
+   * (protocol, ruleset and id) and, when the action lists outpoints, this very
+   * output. Another protocol's asset with the same id is never marked.
+   */
   isTransferred(position: ExplorerOutpointPosition, flow: ExplorerTransactionAssetFlow): boolean {
-    return (flow.actions ?? []).some(
-      (action) =>
-        action.actionType === 'transfer' &&
-        action.asset?.assetId === position.asset?.assetId,
-    );
+    const asset = position.asset;
+    if (!asset) {return false;}
+    return (flow.actions ?? []).some((action) => {
+      if (action.actionType !== 'transfer' || !action.asset) {return false;}
+      if (action.asset.protocolId !== asset.protocolId || action.asset.assetId !== asset.assetId
+        || (action.asset.ruleset ?? null) !== (asset.ruleset ?? null)) {return false;}
+      const outpoints = [...(action.inputOutpoints ?? []), ...(action.outputOutpoints ?? [])];
+      return outpoints.length === 0 || outpoints.includes(position.outpoint);
+    });
   }
 
   accentClass(position: ExplorerOutpointPosition, flow: ExplorerTransactionAssetFlow): string {
@@ -377,7 +354,32 @@ export class AssetFlowComponent implements OnChanges {
   }
 
   trackPosition(index: number, position: ExplorerOutpointPosition): string {
-    return position.outpoint + ':' + (position.asset?.assetId ?? index);
+    const asset = position.asset;
+    return asset
+      ? [position.outpoint, asset.protocolId, asset.ruleset ?? '', asset.assetId].join('|')
+      : position.outpoint + '|' + index;
+  }
+
+  /**
+   * An exact quantity scaled by the divisibility the authority stated, or the
+   * exact digits labelled as smallest units when it stated none.
+   */
+  quantityLabel(quantityAtomic: string | null | undefined, asset: ExplorerAssetRef | undefined): string {
+    if (quantityAtomic === null || quantityAtomic === undefined) {return '';}
+    const decimals = typeof asset?.decimals === 'number' ? asset.decimals : null;
+    const presented = presentQuantity(quantityAtomic, decimals);
+    if (presented.kind === 'unknown') {return String(quantityAtomic);}
+    if (presented.kind === 'raw') {
+      return $localize`:@@universe.flow.smallest-units:${groupIntegerDigits(presented.exact)}:quantity: smallest units`;
+    }
+    return groupIntegerDigits(presented.exact);
+  }
+
+  /** Outputs empty and proven empty are different statements. */
+  outputsNote(flow: ExplorerTransactionAssetFlow): string {
+    return flow.complete
+      ? $localize`:@@universe.flow.outputs-clean:No supported assets on the outputs`
+      : $localize`:@@universe.flow.outputs-unproven:No supported assets were found on the outputs, but the evidence is incomplete, so this is not proof there are none`;
   }
 
   trackAction(index: number, action: ExplorerAssetAction): string {

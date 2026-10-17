@@ -160,38 +160,11 @@ export interface AddressAssetsState {
  * executable behavior in this preparation.
  */
 /**
- * IMPLEMENTATION-HANDOFF [WP-FE-ADDR] ANN-FE-ADDR-COMPONENT | preparation 2026-10-16
- * F-FE-02; C-FE-ADDR-ALL, C-FE-ADDR-PAGES, C-FE-ADDR-ZERO.
- * Verified: this component reads only the first 100 UTXOs, refuses a source limit
- * at 500, and treats no unspent outputs as an empty protocol portfolio. It has
- * no address-ledger holding reader or continuation for remaining assets.
- * Prerequisites: WP-BE-CONTRACT, WP-BE-INDEX, WP-BE-ADDR, WP-FE-REG.
- * 1. Add explicit address, chain/network and source revision inputs. Connect
- * the owned address holdings summary after backend balance and ownership
- * readers are complete; use an address-ledger response for protocols whose
- * balances are not represented by current UTXO attachments. Keep the existing
- * UTXO panel as output evidence, never as proof of all protocol balances.
- * 2. Replace the 100-output ceiling as the portfolio source with server-side
- * aggregation and bounded cursor pages at one snapshot. Expose continuation,
- * progress and partial source coverage. Do not issue an unbounded browser UTXO
- * scan. An empty UTXO list alone must not prove all protocol balances empty.
- * 3. Validate address/network/checkpoint/snapshot context on every page. Clear
- * prior-address state immediately, cancel old requests, reject mixed snapshots,
- * and restart pagination after a reorg or explicit refresh. Preserve exact
- * strings, no same-symbol merging, conflict decimals and unknown quantities.
- * 4. Update address-assets.component.html and address.component.html together;
- * render protocol/subprotocol groups and per-asset held/available/locked values
- * only where the authority supplies those distinct meanings. Never sum unlike
- * asset quantities or account and UTXO representations of the same holding.
- * 5. Extend address-assets.component.spec.ts for 101 and over-500 UTXOs,
- * non-UTXO balances, overlapping facets, more than one page, empty proof,
- * partial/outage, reorg and network/route races. Run targeted frontend npm test
- * and AOT; NOT RUN here. Acceptance needs real supported test-network authority
- * readback, exact copy, refresh, keyboard and mobile use.
- * Rollback compatible producer/consumer versions; preserve indexed holdings.
- * The historical WP06 remains prior context. This package supersedes its old
- * PR/deployment assumptions and its bounded-output scope for the new request.
- * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ * Output evidence only. This panel reports what the address's unspent outputs
+ * carry, within its bounded batches, and never claims the address's complete
+ * protocol holdings: ledger balances, every output page and per-protocol
+ * coverage come from the asset inventory (app-universe-asset-inventory) shown
+ * above it on the address page.
  */
 export class AddressAssetsComponent implements OnChanges {
   @Input() utxos: Utxo[] | null = null;
@@ -417,28 +390,10 @@ function present(holding: ProtocolHolding): ProtocolHolding {
  * balance would be worse than none.
  */
 /**
- * IMPLEMENTATION-HANDOFF [WP-FE-ADDR] ANN-FE-ADDR-REDUCER | preparation 2026-10-16
- * F-FE-02, F-FE-03; C-FE-ADDR-EXACT, C-FE-ADDR-STATE.
- * Prerequisites: WP-BE-CONTRACT, WP-BE-ADDR.
- * 1. Preserve this BigInt reducer for UTXO evidence while moving the complete
- * portfolio to the address summary reader. Do not add address ledger balances
- * to this sum unless the shared contract proves they are distinct assets.
- * 2. Carry the producer-agreed protocol/subprotocol facets and stable identity
- * through holdingKey/addPosition/present. Use an explicit namespace for
- * incompatible ledgers; keep ordinary ruleset revisions as evidence so an
- * upgrade cannot duplicate an existing holding. Validate the requested address and
- * network at the API decoder; do not infer identity from missing checkpoint
- * fields or accept unrelated outpoints as current ownership.
- * 3. Require per-protocol/subprotocol coverage and a common complete checkpoint
- * for a complete portfolio. Keep quantity completeness separate from inventory
- * completeness. Duplicate evidence or conflicting decimals remains partial/
- * unknown and must never double a balance or silently pick a unit scale.
- * 4. Extend address-assets.component.spec.ts with duplicate/facet/account-UTXO
- * overlap cases and atomic values above the safe integer limit. Run targeted
- * frontend npm test after implementation; NOT RUN here. Assert exact display and
- * copy remain equal to accepted producer strings. Rollback incompatible schema
- * and reducer changes together; never replace unknown with zero.
- * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ * Only output positions are summed here. Ledger balances belong to the asset
+ * inventory, which shows overall, available and reserved separately, so they
+ * are never added to this sum and an account and a UTXO view of one holding
+ * cannot double it.
  */
 export function summarise(
   results: readonly OutpointEnrichment[]
