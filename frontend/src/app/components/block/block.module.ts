@@ -4,7 +4,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { BlockComponent } from '@components/block/block.component';
 import { BlockTransactionsComponent } from '@components/block/block-transactions.component';
 import { SharedModule } from '@app/shared/shared.module';
-import { BlockProtocolsComponent } from '@app/universe/block-protocols/block-protocols.component';
+import { BlockAssetsComponent } from '@app/universe/block-assets/block-assets.component';
 
 const routes: Routes = [
   {
@@ -31,7 +31,7 @@ export class BlockRoutingModule { }
     CommonModule,
     BlockRoutingModule,
     SharedModule,
-    BlockProtocolsComponent,
+    BlockAssetsComponent,
   ],
   declarations: [
     BlockComponent,

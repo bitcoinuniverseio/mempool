@@ -260,6 +260,8 @@ export interface ExplorerAssetRef {
   assetId: string;
   displayName?: string;
   ticker?: string;
+  /** The inscription or content the asset is carried by, when it has one. */
+  contentId?: string;
   assetKind: string;
   /**
    * The ruleset this asset's ledger is read under, for the protocols that
@@ -475,11 +477,6 @@ export interface OrdSatView {
   satpoint: string | null;
   address: string | null;
   inscriptions: string[];
-}
-
-export interface OrdBlockInscriptionsView {
-  ids: string[];
-  more: boolean;
 }
 
 // --- Multi-chain explorer ---
@@ -1560,3 +1557,96 @@ export interface WildkinStatusSummary {
   readonly latestCreatures: readonly WildkinCreature[];
 }
 
+
+/**
+ * Block asset activity (universe-block-asset-activity-v1), served by the
+ * overlay at /api/v1/universe/blocks/:reference/assets. Mirrors
+ * backend-apis src/universe-explorer/contracts/block-asset-activity.ts.
+ */
+export type BlockAssetOperationGroup = 'transfer' | 'creation' | 'burn' | 'position' | 'other';
+export type BlockAssetSort = 'tx' | 'protocol' | 'asset';
+export type BlockAssetCompleteness = 'complete' | 'partial' | 'pending';
+export type BlockProtocolCoverageState =
+  'read' | 'partial' | 'pending' | 'unavailable' | 'unconfigured' | 'not-block-readable';
+
+export interface BlockAssetEvent {
+  eventId: string;
+  /** An `output-position` proves where an asset is, never how it got there. */
+  kind: 'action' | 'output-position';
+  txid: string;
+  txIndex: number;
+  protocolId: string;
+  operation: string;
+  asset: ExplorerAssetRef | null;
+  quantityAtomic: string | null;
+  inputOutpoints: string[];
+  outputOutpoints: string[];
+  outputAddress: string | null;
+  inputAddress: string | null;
+  verification: 'verified' | 'partial';
+  evidence: ExplorerPositionEvidence;
+}
+
+export interface BlockProtocolCoverage {
+  protocolId: string;
+  displayName: string;
+  family: string;
+  releaseStatus: string;
+  state: BlockProtocolCoverageState;
+  reason: string | null;
+  authorityId: string | null;
+  negativeCompleteness: boolean;
+  transactionCountAtomic: string;
+  eventCountAtomic: string;
+  checkpoint: ExplorerEvidenceCheckpoint | null;
+}
+
+export interface BlockAssetCounts {
+  transactionsAtomic: string;
+  assetBearingTransactionsAtomic: string;
+  distinctAssetsAtomic: string;
+  transfersAtomic: string;
+  creationsAtomic: string;
+  burnsAtomic: string;
+  otherOperationsAtomic: string;
+  outputPositionsAtomic: string;
+  protocolsWithActivityAtomic: string;
+}
+
+export interface BlockAssetActivitySummary {
+  schemaVersion: 'universe-block-asset-activity-v1';
+  chain: string;
+  network: string;
+  block: { heightAtomic: string; hash: string; onMainChain: boolean };
+  generatedAt: string;
+  completeness: BlockAssetCompleteness;
+  progress: { processedTransactionsAtomic: string; totalTransactionsAtomic: string };
+  counts: BlockAssetCounts;
+  protocols: BlockProtocolCoverage[];
+  outOfCoverageOutputsAtomic: string;
+  unresolvedOutputsAtomic: string;
+  privacy: { notice: string; untrackableEventsAtomic: string } | null;
+  retryAfterSeconds: number | null;
+}
+
+export interface BlockAssetEventQuery {
+  group?: BlockAssetOperationGroup;
+  protocol?: string;
+  assetKind?: string;
+  txid?: string;
+  q?: string;
+  sort?: BlockAssetSort;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface BlockAssetEventsPage {
+  schemaVersion: 'universe-block-asset-events-v1';
+  chain: string;
+  network: string;
+  block: { heightAtomic: string; hash: string };
+  completeness: BlockAssetCompleteness;
+  totalAtomic: string;
+  items: BlockAssetEvent[];
+  nextCursor: string | null;
+}
