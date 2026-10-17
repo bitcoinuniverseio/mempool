@@ -73,6 +73,18 @@ describe('shared address source verification', () => {
     await expect(after).resolves.toEqual(checkpoint('hash-1'));
   });
 
+  it('does not fence a read with a verification from the millisecond the read ended', async () => {
+    const source = new SharedAddressSource(() => 1000);
+    const { verify, settle } = controlled();
+    const before = source.verify(10, verify);
+    settle[0]();
+    await before;
+    const after = source.verify(10, verify, 1000);
+    expect(verify).toHaveBeenCalledTimes(2);
+    settle[1]();
+    await expect(after).resolves.toEqual(checkpoint('hash-1'));
+  });
+
   it('gives every sharer the failure and verifies afresh next time', async () => {
     const source = new SharedAddressSource(() => 1000);
     const { verify, settle } = controlled();
