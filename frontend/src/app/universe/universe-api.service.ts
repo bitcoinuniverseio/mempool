@@ -22,7 +22,6 @@ import {
   StatusResponse,
   TransactionBatchResponse,
   AssetLookupResult,
-  OrdBlockInscriptionsView,
   OrdInscriptionView,
   OrdRuneView,
   OrdSatView,
@@ -86,6 +85,9 @@ import {
   ZcashPoolFlow,
   ZcashPrivacySummary,
   ZcashValuePool,
+  BlockAssetActivitySummary,
+  BlockAssetEventQuery,
+  BlockAssetEventsPage,
 } from '@app/universe/universe.types';
 import {
   BumpPlan,
@@ -415,24 +417,6 @@ export class UniverseApiService {
    * rendered as this one's inventory. A failure is never caught into an empty
    * asset list.
    */
-/**
- * IMPLEMENTATION-HANDOFF [WP-FE-TX] ANN-FE-TX-API | preparation 2026-10-16
- * F-FE-03; C-FE-TX-DISCRIMINATE. Prerequisites: WP-BE-CONTRACT, WP-BE-TX.
- * 1. Keep the owned /api/v1/universe/transactions/:txid/assets endpoint and its
- * 8-second consumer deadline. Decode the agreed hierarchy, quantity, coverage
- * and checkpoint schema against the exact requested chain/network/txid.
- * 2. If the agreed response is paginated, add cursor and snapshot arguments
- * without changing existing defaults; cancel old network/transaction requests,
- * reject a cursor from another scope, and keep a stable snapshot across pages.
- * Do not fan out one authority request per visible asset from the browser.
- * 3. Preserve errors as errors, optional presentation-registry independence and
- * existing source identity. Test malformed/mismatched payloads, timeout, 404,
- * 502/503/504, retry and network isolation in universe-api.service.spec.ts.
- * Run npm test -- src/app/universe/universe-api.service.spec.ts from frontend/;
- * NOT RUN here. Acceptance requires the real producer and authority readback.
- * Rollback with the matched producer schema; no third-party data fallback.
- * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
- */
   getTransactionAssets$(txid: string, chain = 'bitcoin'): Observable<TransactionAssetSummary> {
     return this.chainNetwork$(chain).pipe(
       switchMap((network) => this.requestForNetwork<unknown>(
@@ -467,26 +451,6 @@ export class UniverseApiService {
   }
 
   /** Assets attached to up to {@link UNIVERSE_OUTPOINT_BATCH_LIMIT} outpoints. */
-/**
- * IMPLEMENTATION-HANDOFF [WP-FE-ADDR] ANN-FE-ADDR-API | preparation 2026-10-16
- * F-FE-02; C-FE-ADDR-ALL, C-FE-ADDR-PAGES. This batch API is output evidence,
- * not a complete address portfolio; its verified request ceiling is 50.
- * Prerequisites: WP-BE-CONTRACT, WP-BE-ADDR.
- * 1. Keep this ceiling and existing output callers. Add the agreed owned
- * address holdings API client and strict response decoder as PROPOSED NEW
- * symbols, with address, chain/network, optional cursor and snapshot identity.
- * Do not increase a browser batch limit to simulate complete address indexing.
- * 2. Validate exact quantity strings, scope, hierarchy and per-protocol
- * coverage before rendering; distinguish unavailable/partial from proven-empty.
- * Use stable cursor pages and cancel old address/network attempts.
- * 3. Add universe-api.service.spec.ts cases for out-of-scope address/network,
- * duplicate page identities, cursor reset after reorg, malformed quantity and
- * authority errors. Run targeted frontend npm test; NOT RUN here.
- * Acceptance: every held asset can be reached and quantities match the owned
- * authority. Rollback additive route and consumer compatibly; no external
- * provider fallback and no source failure converted to an empty portfolio.
- * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
- */
   getOutpoints$(outpoints: string[]): Observable<OutpointBatchResponse> {
     if (outpoints.length > UNIVERSE_OUTPOINT_BATCH_LIMIT) {
       return throwError(() => new Error('universe-outpoints-batch-limit-exceeded'));
@@ -531,28 +495,40 @@ export class UniverseApiService {
   }
 
   /** Inscriptions revealed in one block. Paginated by the authority. */
-/**
- * IMPLEMENTATION-HANDOFF [WP-FE-BLOCK] ANN-FE-BLOCK-API | preparation 2026-10-16
- * F-FE-01; C-FE-BLOCK-ALL, C-FE-BLOCK-PAGES. This method exposes only the
- * inscription reveal endpoint; page is available but its current consumer uses 0.
- * Prerequisites: WP-BE-CONTRACT, WP-BE-BLOCK.
- * 1. Reuse/reconcile getBlockAssets$ and decoder work, if present, from saved
- * candidate 6c2f1db897cdbcc51da69f26b131111db698df87. Add the producer-agreed
- * owned block assets endpoint beside this legacy API; keep legacy callers valid.
- * 2. Require exact block hash plus chain/network, validate atomic quantities,
- * hierarchy, coverage, page metadata and snapshot identity, and expose bounded
- * pagination with cancellation. A changing height-to-hash mapping invalidates
- * old pages. Do not equate reveal count with total assets or transferred assets.
- * 3. Extend universe-api.service.spec.ts for schema mismatch, cursor scope,
- * cross-network and same-height reorg responses, partial coverage and errors.
- * Run targeted frontend npm test and AOT after integration; NOT RUN here.
- * Acceptance: full block scope is accessible without per-transaction browser
- * fanout. Rollback additive contract and consumer versions in coordinated order.
- * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
- */
-  getBlockInscriptions$(height: number | string, page = 0): Observable<AssetLookupResult<OrdBlockInscriptionsView>> {
-    return this.scopedRequest<AssetLookupResult<OrdBlockInscriptionsView>>(
-      this.apiBaseUrl + '/api/v1/universe/blocks/' + height + '/inscriptions?page=' + page
+  /**
+   * Every protocol fact the overlay can prove about one confirmed block, with
+   * per-protocol coverage. One aggregate request; the overlay fans out to the
+   * authorities, never the browser.
+   */
+  getBlockAssetActivity$(chain: ExplorerChain, reference: string): Observable<BlockAssetActivitySummary> {
+    return this.scopedRequest<BlockAssetActivitySummary>(
+      this.apiBaseUrl + '/api/v1/universe/blocks/' + encodeURIComponent(reference) + '/assets', undefined, chain,
+    );
+  }
+
+  /**
+   * An inert thumbnail for an inscription, served by the overlay only as a
+   * small raster image. The network is the one the caller's response was
+   * verified for, so the thumbnail can never come from another network.
+   */
+  inscriptionPreviewUrl(chain: ExplorerChain, network: string, inscriptionId: string): string | null {
+    if ((chain !== 'bitcoin' && chain !== 'dogecoin') || !/^[0-9a-f]{64}i(0|[1-9][0-9]{0,9})$/.test(inscriptionId)) {return null;}
+    return this.apiBaseUrl + '/api/v1/universe/inscriptions/' + inscriptionId + '/preview?chain='
+      + chain + '&network=' + encodeURIComponent(network);
+  }
+
+  /** One server-side filtered page of the same block snapshot. */
+  getBlockAssetEvents$(chain: ExplorerChain, reference: string, query: BlockAssetEventQuery = {}): Observable<BlockAssetEventsPage> {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== null && value !== '') {params.set(key, String(value));}
+    }
+    const search = params.toString();
+    return this.scopedRequest<BlockAssetEventsPage>(
+      this.apiBaseUrl + '/api/v1/universe/blocks/' + encodeURIComponent(reference) + '/assets/events'
+        + (search ? '?' + search : ''),
+      undefined,
+      chain,
     );
   }
 

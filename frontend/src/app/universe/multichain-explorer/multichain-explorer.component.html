@@ -452,6 +452,8 @@
       </nav>
     </section>
 
+    <app-universe-block-assets [chain]="chain" [reference]="blk.hash"></app-universe-block-assets>
+
     <section class="panel" *ngIf="blk.txids.length" aria-labelledby="block-txs-heading">
       <h2 id="block-txs-heading" i18n="universe.chain.block-txs-title">Transactions in this block</h2>
       <ul class="identifier-list">
