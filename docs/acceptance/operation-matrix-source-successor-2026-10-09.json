@@ -4032,9 +4032,9 @@
     },
     {
       "path": "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
-      "sha256": "0e5e945dcf541102be4b6b2c577ed3a242aa07280cce735c652aa41371121653",
+      "sha256": "1de0abc4b85dac9e2e367240b5d1ff5a835ca266ba3ab7a14a7526758602e448",
       "sha256Encoding": "utf8-lf",
-      "bytes": 15578
+      "bytes": 17758
     },
     {
       "path": "frontend/src/app/universe/provenance-graph/provenance-graph.component.ts",
@@ -4296,9 +4296,9 @@
     },
     {
       "path": "frontend/src/app/universe/universe-api.service.ts",
-      "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+      "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
       "sha256Encoding": "utf8-lf",
-      "bytes": 68963
+      "bytes": 68890
     },
     {
       "path": "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
@@ -20885,7 +20885,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
-          "sha256": "0e5e945dcf541102be4b6b2c577ed3a242aa07280cce735c652aa41371121653",
+          "sha256": "1de0abc4b85dac9e2e367240b5d1ff5a835ca266ba3ab7a14a7526758602e448",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -72340,7 +72340,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/protocol-directory/protocol-directory.component.ts",
-          "sha256": "0e5e945dcf541102be4b6b2c577ed3a242aa07280cce735c652aa41371121653",
+          "sha256": "1de0abc4b85dac9e2e367240b5d1ff5a835ca266ba3ab7a14a7526758602e448",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127875,7 +127875,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -127955,7 +127955,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128014,7 +128014,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128072,7 +128072,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128132,7 +128132,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128191,7 +128191,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128250,7 +128250,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128309,7 +128309,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128377,7 +128377,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128480,7 +128480,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128569,7 +128569,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128660,7 +128660,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128754,7 +128754,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128847,7 +128847,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128942,7 +128942,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129035,7 +129035,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129126,7 +129126,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129216,7 +129216,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129311,7 +129311,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129404,7 +129404,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129499,7 +129499,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130222,7 +130222,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130278,7 +130278,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130334,7 +130334,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130390,7 +130390,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130446,7 +130446,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130502,7 +130502,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130558,7 +130558,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130614,7 +130614,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130670,7 +130670,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130735,7 +130735,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130820,7 +130820,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130896,7 +130896,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130952,7 +130952,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -131017,7 +131017,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "4c43548ff5108a1d7152b8fceafbbb73a68bb1cfcfb637415e610e87c2899073",
+          "sha256": "d87d8cfdc8d6d29cbcdd42a747dc365b5ef590ab2dd938903393a2ac0d9a43df",
           "sha256Encoding": "utf8-lf"
         },
         {

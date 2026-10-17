@@ -350,6 +350,35 @@ export class TransactionAssetsComponent implements OnChanges, OnDestroy {
    * same asset id and two rulesets may read the same ledger; keying by assetId
    * alone would merge them into one row and silently drop a proven asset.
    */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-TX] ANN-FE-TX-VIEW | preparation 2026-10-16
+ * F-FE-03; C-FE-TX-DISCRIMINATE, C-FE-TX-STATE. Current buildModel maps a flat
+ * asset list; each row shows one protocol badge and no subprotocol hierarchy.
+ * Prerequisites: WP-BE-CONTRACT, WP-BE-TX, WP-FE-REG.
+ * 1. Build protocol and subprotocol groups from the validated registry and
+ * summary fields, keeping rows keyed by full ownership identity. Render every
+ * asset and reported action under its explicit classification; show parent
+ * membership as a facet, never as an extra fungible balance. Keep exact input,
+ * output and accepted-effect values separately; never sum different assets.
+ * 2. Make group counts, filters and pagination describe their scope. Preserve
+ * presentQuantity(), unknown quantities, partial states, optional-logo fallback,
+ * copy results and cancellable retry. Do not infer authoritative acceptance from
+ * confirmation alone, and do not relabel candidate-only as accepted.
+ * 3. Update transaction-assets.component.html and component specs together.
+ * Test an inscription carrying a BRC facet, multiple subprotocols, same-symbol
+ * assets, same IDs in two incompatible ledgers, a routine ruleset upgrade,
+ * unsupported/unavailable sources and registry
+ * failure while proven rows still render. Verify statusRevision refresh and
+ * network changes with old requests in flight.
+ * 4. Run frontend npm test -- src/app/universe/transaction-assets/transaction-assets.component.spec.ts
+ * and production AOT after implementation; NOT RUN in this preparation.
+ * Acceptance requires real supported Signet or justified Testnet readback,
+ * refresh, keyboard/mobile detail access, and exact copy. Rollback the matched
+ * consumer and contract; never conceal failed required groups.
+ * The historical WP06 comment is retained as prior context. This dated package
+ * supersedes its old PR/deployment assumptions for the present requested scope.
+ * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ */
   private buildModel(
     summary: TransactionAssetSummary,
     protocols: Map<string, ExplorerProtocolDefinition>,
