@@ -529,6 +529,43 @@ gate_private_listeners() {
 # command can move CURRENT or restart a service. The protocol contract gate
 # verifies the manifest revision, context-qualified rows, rooted evidence
 # paths, content hashes, and independent configuration proof where needed.
+# IMPLEMENTATION-HANDOFF [WP-RELEASE] | F-OPS-IDENTITY | 2026-10-16
+# C-RELEASE-IDENTITY / C-RELEASE-ACCEPTANCE / C-RELEASE-ROLLBACK. Preparation only.
+# Actual public frontend/backend/overlay revisions differ from the annotated
+# source pins; effective runtime overrides remain unverified. Different release
+# trains are valid, but each deployed artifact/configuration must be identified.
+# 1. After every WP-VERIFY required row passes, reconcile source pins and existing
+#    block candidates (mempool 6c2f1db897cdbcc51da69f26b131111db698df87;
+#    backend-apis 6399197716439c6c3d1ca7a14b6d946db2ef33f2) surgically.
+#    Review open PRs 148/157/176 and actual compiled/service overrides; preserve
+#    unique legitimate work. Do not infer deployment from a merge or old report.
+# 2. Retain this candidate-bound proof check and the under-lock recheck in
+#    cmd_cutover. Extend the carried manifest/evidence closure for the new
+#    protocol read contracts and all affected indexer revisions. Signet (or
+#    justified named Testnet) functional acceptance plus independently checked
+#    mainnet configuration satisfies the functional gate. Do not require
+#    mainnet test transactions or funds, or relabel network-specific evidence.
+# 3. Separate any live sample-address functional probe from operational release
+#    checks: run functional assertions against the accepted isolated network;
+#    production checks still verify exact artifact identity, owned source
+#    binding/readiness, mainnet rules/configuration, private listeners and
+#    enabled public routes. Never delete a check without retaining its invariant.
+# 4. Build once from accepted commits, qualify compatible migrations/backups,
+#    and release using the existing socket/atomic route handoff with observed
+#    uninterrupted responses. Reuse sole active indexers; do not restart an
+#    ongoing catch-up/reorg to make cutover convenient. Record frontend,
+#    backend, overlay, gateway, each source and every active override separately.
+# 5. Verify syntax with bash -n scripts/universe/release.sh and run node --test
+#    scripts/universe/release-gates.test.mjs
+#    scripts/universe/release-manifest.test.mjs
+#    scripts/universe/gateway-overlay-handoff.test.mjs in the qualified runner.
+#    Exercise rollback in isolation, then retain immutable prior artifacts and
+#    compatible schema/configuration. A failed rollout restores the prior
+#    route under the same lock, preserves data and records failure evidence.
+# Required outcome of IMPLEMENTATION, not this preparation: full functional
+# acceptance AND completed public Mainnet release with receipts/URLs/revisions.
+# Older WP02 correctly records the existing fail-closed gate; do not re-add it
+# as a duplicate system. Extend its evidence for this newly required scope.
 gate_qualified_acceptance() {
   local dir=$1
   local manifest="$dir/docs/protocols/PROTOCOL-COVERAGE.json"
