@@ -81,6 +81,17 @@ describe('real compact cache and complete body persistence', () => {
     expect(readRbfHistoryManifest(directory, 'signet')!.bodies.every(ref => ref.file)).toBe(true);
     expect(await read(first, id(1))).toEqual(replacement);
   });
+  it('reclaims superseded segments when the cache changes during a save and stays available', async () => {
+    const state = require('../api/rbf-snapshot').rbfRestoreState;
+    state.beginRestore(); state.completeRestore('no-file');
+    const first = cache(), replacement = tx(1); await first.configureBodyPersistence(directory); first.add([tx(0)], replacement);
+    await first.updateCache(); const superseded = first.bodies.references([id(1)])[0].file;
+    replacement.newAnnotation = { dynamic: true }; first.freezeLiveBody(replacement);
+    const save = first.saveHistory(directory, 'signet'); first.add([tx(2)], tx(3)); await save;
+    expect(fs.existsSync(join(directory, superseded))).toBe(false);
+    expect(state.diagnostic()).toMatchObject({ status: 'available', reason: null });
+    expect(await read(first, id(1))).toEqual(replacement); expect(await read(first, id(3))).toEqual(tx(3));
+  });
   it('releases the oldest departed history at the memory-only retention bound and stays available', async () => {
     const state = require('../api/rbf-snapshot').rbfRestoreState;
     state.beginRestore(); state.completeRestore('no-file');
