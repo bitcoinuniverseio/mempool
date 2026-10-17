@@ -20,7 +20,9 @@ type Verify = (indexedTip: number | null) => Promise<AddressSourceCheckpoint>;
  * to pay for two of them alone. Readers now join the verification in flight.
  * The fence around a read is unchanged: the checkpoint taken before it may be
  * at most SHARED_CHECKPOINT_FRESH_MS old, and the one taken after it must have
- * started after the read finished (`notBefore`).
+ * started after the read finished (`notBefore`). Times are milliseconds, so a
+ * verification that started in the same millisecond as `notBefore` may have
+ * started before the read ended, and it never fences that read.
  */
 export class SharedAddressSource {
   private readonly flights = new Map<number | null, Flight>();
@@ -34,7 +36,7 @@ export class SharedAddressSource {
         if (flight.pending || this.now() - flight.completedAt <= SHARED_CHECKPOINT_FRESH_MS) {
           return flight.promise;
         }
-      } else if (flight.startedAt >= notBefore) {
+      } else if (flight.startedAt > notBefore) {
         return flight.promise;
       } else if (flight.pending) {
         // That verification began before this read ended, so it cannot fence it.
@@ -74,6 +76,7 @@ export class ValidatedAddresses<T extends { isvalid?: boolean }> {
 
   constructor(private readonly limit = 20000) {}
 
+  /** @asyncUnsafe A validation failure is the caller's to handle. */
   async read(address: string, validate: (address: string) => Promise<T>): Promise<T> {
     const known = this.entries.get(address);
     if (known) {
