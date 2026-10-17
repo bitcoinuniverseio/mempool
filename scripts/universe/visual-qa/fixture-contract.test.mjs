@@ -94,3 +94,48 @@ test('state isolation: a fixture for one state cannot satisfy another state', ()
   // In error state, error status is returned or matched according to state
   assert.ok(res.action === 'fulfill' || res.action === 'fail');
 });
+
+test('rare sat fixture tuple agrees with Ord sat arithmetic', async () => {
+  const { assetFixtures, assetSampleIds } = await import('./asset-fixtures.mjs');
+  const HALVING = 210000n;
+  const DIFFCHANGE = 2016n;
+  const SUPPLY = 2099999997690000n;
+  const subsidy = (height) => (50n * 100000000n) >> (height / HALVING);
+  const firstSat = (height) => {
+    let sat = 0n;
+    for (let epoch = 0n; epoch < height / HALVING; epoch += 1n) {
+      sat += HALVING * ((50n * 100000000n) >> epoch);
+    }
+    return sat + (height % HALVING) * subsidy(height);
+  };
+  const lookup = assetFixtures[`/api/v1/universe/sats/${assetSampleIds.SAT_NUMBER}`].value;
+  const height = BigInt(lookup.blockAtomic);
+  const offset = BigInt(lookup.offsetAtomic);
+  const sat = BigInt(lookup.numberAtomic);
+  assert.equal(sat, firstSat(height) + offset);
+  assert.equal(lookup.epochAtomic, String(height / HALVING));
+  assert.equal(lookup.periodAtomic, String(height / DIFFCHANGE));
+  assert.equal(lookup.cycleAtomic, String(height / (HALVING * 6n)));
+  assert.equal(lookup.decimal, `${height}.${offset}`);
+  assert.equal(lookup.degree, `${height / (HALVING * 6n)}°${height % HALVING}′${height % DIFFCHANGE}″${offset}‴`);
+  let x = SUPPLY - sat;
+  let name = '';
+  while (x > 0n) { name = 'abcdefghijklmnopqrstuvwxyz'[Number((x - 1n) % 26n)] + name; x = (x - 1n) / 26n; }
+  assert.equal(lookup.name, name);
+  const rarity = offset !== 0n ? 'common'
+    : height === 0n ? 'mythic'
+      : height % (HALVING * 6n) === 0n ? 'legendary'
+        : height % HALVING === 0n ? 'epic'
+          : height % DIFFCHANGE === 0n ? 'rare' : 'uncommon';
+  assert.equal(lookup.rarity, rarity);
+  for (const fixture of Object.values(assetFixtures)) {
+    for (const position of fixture?.positions ?? []) {
+      for (const notable of position.notableSats ?? []) {
+        if (notable.satAtomic === lookup.numberAtomic) {
+          assert.equal(notable.rarity, rarity);
+          assert.equal(notable.heightAtomic, lookup.blockAtomic);
+        }
+      }
+    }
+  }
+});
