@@ -1,0 +1,255 @@
+<section class="block-assets" *ngIf="state.kind !== 'idle'" aria-labelledby="block-assets-title">
+  <header class="block-assets-header">
+    <h2 id="block-assets-title" i18n="universe.block-assets.title">Assets &amp; Protocol Activity</h2>
+    <span *ngIf="summary as s" class="status-chip" [ngClass]="'status-' + s.completeness" role="status">
+      <ng-container [ngSwitch]="s.completeness">
+        <ng-container *ngSwitchCase="'complete'" i18n="universe.block-assets.status.complete">Verified</ng-container>
+        <ng-container *ngSwitchCase="'partial'" i18n="universe.block-assets.status.partial">Partial</ng-container>
+        <ng-container *ngSwitchDefault i18n="universe.block-assets.status.pending">Indexing</ng-container>
+      </ng-container>
+    </span>
+    <button type="button" class="btn btn-outline-info btn-sm refresh" (click)="refresh()"
+            [disabled]="state.kind === 'loading'" i18n="universe.block-assets.refresh">Refresh</button>
+  </header>
+
+  <!-- Loading -->
+  <div *ngIf="state.kind === 'loading'" class="panel" aria-busy="true">
+    <div class="stats skeleton-stats">
+      <div class="skeleton-tile" *ngFor="let i of [1, 2, 3, 4, 5, 6]"></div>
+    </div>
+    <p class="skeleton-line"></p>
+    <p class="skeleton-line short"></p>
+  </div>
+
+  <!-- Failure -->
+  <div *ngIf="state.kind === 'error'" class="panel unavailable" role="alert">
+    <ng-container [ngSwitch]="$any(state).reason">
+      <p *ngSwitchCase="'not-found'" i18n="universe.block-assets.error.not-found">This block is not known to the asset overlay yet.</p>
+      <p *ngSwitchCase="'unconfigured'" i18n="universe.block-assets.error.unconfigured">This deployment has no block authority configured for this chain, so asset activity is not shown.</p>
+      <p *ngSwitchDefault i18n="universe.block-assets.error.unavailable">The asset overlay could not be reached, so this block's asset activity is unknown. It is not an empty result.</p>
+    </ng-container>
+  </div>
+
+  <ng-container *ngIf="summary as s">
+    <!-- Notices: coverage limits are stated before any number. -->
+    <ul class="notices" *ngIf="notices(s).length || s.privacy" aria-live="polite">
+      <li *ngIf="s.privacy" class="notice notice-privacy">{{ s.privacy.notice }}
+        <ng-container *ngIf="s.privacy.untrackableEventsAtomic !== '0'" i18n="universe.block-assets.privacy-count">
+          ({{ s.privacy.untrackableEventsAtomic }} assets moved into shielded components in this block.)
+        </ng-container>
+      </li>
+      <li *ngFor="let notice of notices(s)" class="notice" [ngClass]="'notice-' + notice.tone">{{ notice.text }}</li>
+    </ul>
+
+    <div *ngIf="s.completeness === 'pending'" class="progress-wrap">
+      <span class="progress-label" i18n="universe.block-assets.progress">
+        Reading transactions: {{ count(s.progress.processedTransactionsAtomic) }} of {{ count(s.progress.totalTransactionsAtomic) }}
+      </span>
+      <div class="progress" role="progressbar" [attr.aria-valuenow]="progressPercent(s)" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" [style.width.%]="progressPercent(s)"></div>
+      </div>
+    </div>
+
+    <!-- Summary statistics -->
+    <dl class="stats">
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.txs">Transactions</dt>
+        <dd>{{ count(s.counts.transactionsAtomic) }}</dd>
+      </div>
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.asset-txs">With protocol activity</dt>
+        <dd>{{ count(s.counts.assetBearingTransactionsAtomic) }}</dd>
+      </div>
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.assets">Distinct assets</dt>
+        <dd>{{ count(s.counts.distinctAssetsAtomic) }}</dd>
+      </div>
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.transfers">Verified transfers</dt>
+        <dd>{{ count(s.counts.transfersAtomic) }}</dd>
+      </div>
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.creations">Mints and creations</dt>
+        <dd>{{ count(s.counts.creationsAtomic) }}</dd>
+      </div>
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.burns">Burns</dt>
+        <dd>{{ count(s.counts.burnsAtomic) }}</dd>
+      </div>
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.positions">Assets on outputs</dt>
+        <dd>{{ count(s.counts.outputPositionsAtomic) }}</dd>
+      </div>
+      <div class="stat">
+        <dt i18n="universe.block-assets.stat.protocols">Protocols detected</dt>
+        <dd>{{ count(s.counts.protocolsWithActivityAtomic) }}</dd>
+      </div>
+    </dl>
+
+    <!-- Protocol breakdown -->
+    <div class="table-scroll" *ngIf="breakdown(s).length">
+      <table class="table table-borderless table-sm breakdown">
+        <caption i18n="universe.block-assets.breakdown.caption">Activity by protocol</caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.block-assets.col.protocol">Protocol</th>
+            <th scope="col" class="num" i18n="universe.block-assets.col.txs">Transactions</th>
+            <th scope="col" class="num" i18n="universe.block-assets.col.events">Records</th>
+            <th scope="col" i18n="universe.block-assets.col.coverage">Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of breakdown(s); trackBy: trackByProtocol">
+            <td>
+              <a [routerLink]="protocolLink(row.protocolId)">
+                <app-protocol-badge [protocol]="badgeFor(row.protocolId, s)"></app-protocol-badge>
+              </a>
+            </td>
+            <td class="num">{{ count(row.transactionCountAtomic) }}</td>
+            <td class="num">{{ count(row.eventCountAtomic) }}</td>
+            <td><span class="coverage" [ngClass]="'coverage-' + row.state">{{ coverageLabel(row.state) }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details class="limits" *ngIf="limits(s).length">
+      <summary i18n="universe.block-assets.limits.summary">Protocols this block could not be checked for ({{ limits(s).length }})</summary>
+      <ul>
+        <li *ngFor="let row of limits(s); trackBy: trackByProtocol">
+          <span class="limit-name">{{ row.displayName }}</span>
+          <span class="coverage" [ngClass]="'coverage-' + row.state">{{ coverageLabel(row.state) }}</span>
+        </li>
+      </ul>
+    </details>
+
+    <!-- Filters -->
+    <form class="filters" (ngSubmit)="applyFilters()" role="search" aria-label="Filter block asset activity"
+          i18n-aria-label="universe.block-assets.filters.label">
+      <label>
+        <span i18n="universe.block-assets.filter.activity">Activity</span>
+        <select name="group" [(ngModel)]="group" (ngModelChange)="applyFilters()">
+          <option *ngFor="let option of groups" [ngValue]="option.value">{{ option.label }}</option>
+        </select>
+      </label>
+      <label>
+        <span i18n="universe.block-assets.filter.protocol">Protocol</span>
+        <select name="protocol" [(ngModel)]="protocol" (ngModelChange)="applyFilters()">
+          <option value="" i18n="universe.block-assets.filter.any-protocol">Any protocol</option>
+          <option *ngFor="let row of filterProtocols(s)" [value]="row.protocolId">{{ row.displayName }}</option>
+        </select>
+      </label>
+      <label>
+        <span i18n="universe.block-assets.filter.type">Asset type</span>
+        <select name="assetKind" [(ngModel)]="assetKind" (ngModelChange)="applyFilters()">
+          <option value="" i18n="universe.block-assets.filter.any-type">Any type</option>
+          <option *ngFor="let kind of assetKinds" [value]="kind">{{ assetKindLabel(kind) }}</option>
+        </select>
+      </label>
+      <label>
+        <span i18n="universe.block-assets.filter.sort">Sort by</span>
+        <select name="sort" [(ngModel)]="sort" (ngModelChange)="applyFilters()">
+          <option value="tx" i18n="universe.block-assets.sort.tx">Transaction order</option>
+          <option value="protocol" i18n="universe.block-assets.sort.protocol">Protocol</option>
+          <option value="asset" i18n="universe.block-assets.sort.asset">Asset</option>
+        </select>
+      </label>
+      <label class="wide">
+        <span i18n="universe.block-assets.filter.query">Asset name, ticker or ID</span>
+        <input type="search" name="query" [(ngModel)]="query" maxlength="128" autocomplete="off">
+      </label>
+      <label class="wide">
+        <span i18n="universe.block-assets.filter.txid">Transaction ID</span>
+        <input type="search" name="txid" [(ngModel)]="txid" maxlength="64" autocomplete="off" spellcheck="false"
+               [attr.aria-invalid]="txidInvalid" aria-describedby="block-assets-txid-help">
+        <small id="block-assets-txid-help" *ngIf="txidInvalid" class="field-error"
+               i18n="universe.block-assets.filter.txid-invalid">A transaction ID is 64 hexadecimal characters.</small>
+      </label>
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm" i18n="universe.block-assets.filter.apply">Search</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="clearFilters()"
+                i18n="universe.block-assets.filter.clear">Clear</button>
+      </div>
+    </form>
+
+    <!-- Asset activity -->
+    <div class="table-scroll" *ngIf="events.length">
+      <table class="table table-borderless table-sm activity">
+        <caption i18n="universe.block-assets.activity.caption">
+          Showing {{ count('' + events.length) }} of {{ count(eventsTotal) }} records
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" i18n="universe.block-assets.col.asset">Asset</th>
+            <th scope="col" i18n="universe.block-assets.col.protocol">Protocol</th>
+            <th scope="col" i18n="universe.block-assets.col.type">Type</th>
+            <th scope="col" i18n="universe.block-assets.col.operation">Operation</th>
+            <th scope="col" class="num" i18n="universe.block-assets.col.quantity">Quantity</th>
+            <th scope="col" i18n="universe.block-assets.col.from">From</th>
+            <th scope="col" i18n="universe.block-assets.col.to">To</th>
+            <th scope="col" i18n="universe.block-assets.col.tx">Transaction</th>
+            <th scope="col" i18n="universe.block-assets.col.evidence">Evidence</th>
+            <th scope="col" i18n="universe.block-assets.col.details">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let event of events; trackBy: trackByEvent" [class.position-row]="event.kind === 'output-position'">
+            <td class="asset" [attr.title]="event.asset?.assetId">
+              <img *ngIf="previewUrl(event) as src" class="preview" [src]="src" alt="" width="32" height="32"
+                   loading="lazy" decoding="async" referrerpolicy="no-referrer" (error)="previewFailed(event)">
+              <a *ngIf="assetLink(event) as link; else plainAsset" [routerLink]="link">{{ assetLabel(event.asset) }}</a>
+              <ng-template #plainAsset>{{ assetLabel(event.asset) }}</ng-template>
+            </td>
+            <td><app-protocol-badge [protocol]="badgeFor(event.protocolId, s)"></app-protocol-badge></td>
+            <td>{{ assetKindLabel(event.asset?.assetKind) }}</td>
+            <td><span class="operation" [ngClass]="'op-' + event.operation">{{ operationLabel(event.operation) }}</span></td>
+            <td class="num quantity" [attr.title]="event.quantityAtomic">{{ quantityLabel(event) }}</td>
+            <td class="identifier">
+              <ng-container *ngIf="event.inputAddress; else inputOutpoints">{{ shorten(event.inputAddress, 6) }}</ng-container>
+              <ng-template #inputOutpoints>
+                <span *ngFor="let outpoint of event.inputOutpoints" [attr.title]="outpoint">{{ shorten(outpoint, 6) }}</span>
+                <span *ngIf="!event.inputOutpoints.length" class="muted" i18n="universe.block-assets.not-proven">Not proven</span>
+              </ng-template>
+            </td>
+            <td class="identifier">
+              <span *ngFor="let outpoint of event.outputOutpoints" [attr.title]="outpoint">{{ shorten(outpoint, 6) }}</span>
+              <span *ngIf="event.outputAddress" class="address" [attr.title]="event.outputAddress">{{ shorten(event.outputAddress, 6) }}</span>
+              <span *ngIf="!event.outputOutpoints.length && !event.outputAddress" class="muted"
+                    i18n="universe.block-assets.not-proven">Not proven</span>
+            </td>
+            <td class="identifier">
+              <a [routerLink]="txLink(event.txid)" [attr.title]="event.txid">{{ shorten(event.txid, 6) }}</a>
+            </td>
+            <td>
+              <span class="evidence" [ngClass]="'evidence-' + event.verification"
+                    [attr.title]="event.evidence.authorityId + (event.evidence.checkpoint ? ' @ ' + event.evidence.checkpoint.heightAtomic : '')">
+                {{ evidenceLabel(event) }}
+              </span>
+            </td>
+            <td>
+              <a [routerLink]="protocolLink(event.protocolId)" i18n="universe.block-assets.protocol-link">Protocol</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p *ngIf="eventsLoading" class="skeleton-line" aria-busy="true"></p>
+    <p *ngIf="eventsFailed" class="notice notice-warning" role="alert" i18n="universe.block-assets.events-failed">
+      The activity list could not be loaded. The summary above still stands.
+    </p>
+    <p *ngIf="!events.length && !eventsLoading && !eventsFailed && !txidInvalid && s.completeness !== 'pending'" class="empty">
+      {{ (group || protocol || assetKind || txid || query) ? filteredEmpty : emptyMessage(s) }}
+    </p>
+
+    <div class="more" *ngIf="nextCursor">
+      <button type="button" class="btn btn-outline-info btn-sm" (click)="loadMore()" [disabled]="eventsLoading"
+              i18n="universe.block-assets.load-more">Load more</button>
+    </div>
+
+    <p class="legend" i18n="universe.block-assets.legend">
+      "On output" means the authority holds this asset on one of this block's outputs. It shows where the asset is,
+      not how it got there, so it is never counted as a transfer or a mint.
+    </p>
+  </ng-container>
+</section>
