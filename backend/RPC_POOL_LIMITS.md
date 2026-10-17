@@ -1,11 +1,15 @@
 # Owned-node RPC pool limits
 
-`CORE_RPC.MAX_SOCKETS` bounds the existing bulk/node pool between 1 and 8.
+`CORE_RPC.MAX_SOCKETS` bounds the existing bulk/node pool between 1 and 32 (default 8).
 `CORE_RPC.ADDRESS_MAX_SOCKETS` bounds its separate interactive address pool between
 1 and 4. Omitted values preserve the existing defaults of 8 and 4. Explicit
 fractions, strings, null, zero and out-of-range values fail configuration loading.
 The endpoint, cookie authentication, keep-alive, cancellation and whole-operation
 deadlines are unchanged.
+
+Mempool transaction reads run one request per bulk socket. Raise `MAX_SOCKETS`
+only when the node is remote: at 112 ms round trip, 8 sockets fetched about 20
+transactions per second against 14 arriving, and the mempool never reached sync.
 
 For the isolated Signet fee qualification profile, set both limits to 1. One
 interactive connection remains available while the bulk connection is occupied;
