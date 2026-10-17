@@ -132,6 +132,12 @@ export function coverageNotices(summary: BlockAssetActivitySummary): BlockCovera
       text: $localize`:@@universe.block-assets.unreadable:${unreadable}:count: supported protocols cannot be read by block yet, so their activity in this block is not shown. This is a coverage limit, not an absence of assets.`,
     });
   }
+  if (summary.unresolvedOutputsAtomic !== '0') {
+    notices.push({
+      tone: 'warning',
+      text: $localize`:@@universe.block-assets.unresolved:${formatAtomicAmount(summary.unresolvedOutputsAtomic)}:count: outputs of this block could not be checked because an asset authority did not answer. Assets on them may be missing from this page.`,
+    });
+  }
   if (summary.outOfCoverageOutputsAtomic !== '0') {
     notices.push({
       tone: 'info',
