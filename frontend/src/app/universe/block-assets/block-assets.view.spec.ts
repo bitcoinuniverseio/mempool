@@ -28,7 +28,7 @@ const summary = (overrides: Partial<BlockAssetActivitySummary> = {}): BlockAsset
   schemaVersion: 'universe-block-asset-activity-v1',
   chain: 'bitcoin',
   network: 'mainnet',
-  block: { heightAtomic: '900000', hash: 'a'.repeat(64), canonical: true },
+  block: { heightAtomic: '900000', hash: 'a'.repeat(64), onMainChain: true },
   generatedAt: '2026-10-16T00:00:00.000Z',
   completeness: 'complete',
   progress: { processedTransactionsAtomic: '3', totalTransactionsAtomic: '3' },
@@ -73,7 +73,7 @@ describe('block asset view', () => {
   });
 
   it('warns first when the block left the main chain', () => {
-    const notices = coverageNotices(summary({ block: { heightAtomic: '1', hash: 'b'.repeat(64), canonical: false } }));
+    const notices = coverageNotices(summary({ block: { heightAtomic: '1', hash: 'b'.repeat(64), onMainChain: false } }));
     expect(notices[0]).toEqual(expect.objectContaining({ tone: 'warning' }));
   });
 

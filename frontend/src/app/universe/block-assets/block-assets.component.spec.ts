@@ -30,7 +30,7 @@ function summary(overrides: Partial<BlockAssetActivitySummary> = {}): BlockAsset
     schemaVersion: 'universe-block-asset-activity-v1',
     chain: 'bitcoin',
     network: 'mainnet',
-    block: { heightAtomic: '900000', hash: HASH, canonical: true },
+    block: { heightAtomic: '900000', hash: HASH, onMainChain: true },
     generatedAt: '2026-10-16T00:00:00.000Z',
     completeness: 'partial',
     progress: { processedTransactionsAtomic: '2', totalTransactionsAtomic: '2' },

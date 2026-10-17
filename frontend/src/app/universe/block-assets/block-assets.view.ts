@@ -55,7 +55,7 @@ export function coverageLabel(state: BlockProtocolCoverageState): string {
 }
 
 export function assetLabel(asset: ExplorerAssetRef | null): string {
-  if (!asset) {return '—';}
+  if (!asset) {return $localize`:@@universe.block-assets.no-asset:Unnamed`;}
   return asset.displayName || asset.ticker || shortenIdentifier(asset.assetId, 10);
 }
 
@@ -105,10 +105,10 @@ export interface BlockCoverageNotice {
  */
 export function coverageNotices(summary: BlockAssetActivitySummary): BlockCoverageNotice[] {
   const notices: BlockCoverageNotice[] = [];
-  if (!summary.block.canonical) {
+  if (!summary.block.onMainChain) {
     notices.push({
       tone: 'warning',
-      text: $localize`:@@universe.block-assets.noncanonical:This block is no longer on the main chain. Its asset activity is shown for reference only and is not current.`,
+      text: $localize`:@@universe.block-assets.off-main-chain:This block is no longer on the main chain. Its asset activity is shown for reference only and is not current.`,
     });
   }
   const failing = summary.protocols.filter((p) => p.state === 'unavailable').length;
