@@ -150,6 +150,20 @@
       </h2>
     </div>
 
+<!--
+IMPLEMENTATION-HANDOFF [WP-FE-ADDR] ANN-FE-ADDR-EMBED | preparation 2026-10-16
+F-FE-02; C-FE-ADDR-ALL, C-FE-ADDR-STATE. Depends on WP-BE-ADDR.
+1. Pass validated address, chain/network and refresh revision to the corrected
+holdings component after its inputs exist. Preserve UTXO source inputs for
+output evidence, but do not gate full protocol holdings on its 500-output cap.
+2. Keep native balance/history, independent reconstruction and navigation
+working. Clear old holdings on route change and re-fetch with the new scope.
+3. Extend address-context and asset consumer tests for direct URL, search,
+back/forward, reload, large-output address, network switch and source outage.
+Run targeted frontend npm test and AOT after implementation; NOT RUN here.
+Acceptance requires exact owned-authority quantities and accessible mobile/
+keyboard grouping. Rollback parent/child input contracts together.
+-->
     <app-universe-address-assets [utxos]="utxos" [sourceState]="utxoSourceState"></app-universe-address-assets>
     <div *ngIf="utxoSourceState === 'complete' && !reconstructionOffered && !address?.is_pubkey" class="my-3">
       <p>The native output read completed. You can independently reconstruct outputs with separate source anchors and closure checks.</p>

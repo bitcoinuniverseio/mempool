@@ -402,6 +402,20 @@
 
     @defer (on viewport) {
       @if (!block?.stale) {
+<!--
+IMPLEMENTATION-HANDOFF [WP-FE-BLOCK] ANN-FE-BLOCK-EMBED | preparation 2026-10-16
+F-FE-01; C-FE-BLOCK-ALL, C-FE-BLOCK-REORG. Depends on WP-BE-BLOCK.
+1. Reconcile saved candidate 6c2f1db897cdbcc51da69f26b131111db698df87 and
+wire its corrected complete block asset consumer here after contract tests.
+Pass selected block hash, height and chain/network, not height alone.
+2. Preserve deferred rendering, block transactions, fees and navigation.
+Show explicit stale/orphaned context when supported, never the replacement
+block's assets under an old block URL.
+3. Test direct block URL, dashboard click, back/forward, pagination and
+same-height replacement through parent/component specs plus real supported
+test-network readback. Targeted npm test and AOT are NOT RUN here.
+Rollback matched component/module/API wiring, keeping unrelated timeline work.
+-->
       <app-universe-block-protocols [height]="block?.height"></app-universe-block-protocols>
 
       <app-block-transactions [paginationMaxSize]="paginationMaxSize" [block$]="block$" [txCount]="block.tx_count" [timestamp]="block.timestamp" [blockHash]="blockHash" [previousBlockHash]="block.previousblockhash" (blockReward)="updateBlockReward($event)"></app-block-transactions>
