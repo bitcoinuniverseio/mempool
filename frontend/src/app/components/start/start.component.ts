@@ -123,7 +123,7 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
             scrollToHeight = this.chainTip - blockHeight;
           }
           if (newMark && !this.blockInViewport(scrollToHeight)) {
-            this.scrollToBlock(scrollToHeight);
+            this.scrollToBlock(scrollToHeight, this.getMarkOffset());
           }
         }
         if (!this.tipIsSet || (blockHeight < 0 && this.mempoolOffset == null)) {
@@ -213,9 +213,9 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
   applyPendingMarkArrow(): void {
     if (this.pendingMark != null && this.pendingMark <= this.chainTip) {
       if (this.pendingMark < 0) {
-        this.scrollToBlock(this.chainTip - this.pendingMark);
+        this.scrollToBlock(this.chainTip - this.pendingMark, this.getMarkOffset());
       } else {
-        this.scrollToBlock(this.pendingMark);
+        this.scrollToBlock(this.pendingMark, this.getMarkOffset());
       }
       this.pendingMark = null;
     }
@@ -379,6 +379,19 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.blockchainScrollLeftInit += this.pageWidth;
       }
     }
+  }
+
+  // Where a marked block lands, relative to the divider. Landing it exactly on
+  // the divider left the row wherever that fell, and at most widths the screen
+  // edges cut a card in half on both sides. This moves it by at most half a
+  // block so every card in view is whole, with the spare width split between
+  // the two edges. A card is drawn from 0.16 of its size into its slot.
+  getMarkOffset(): number {
+    const viewWidth = this.blockchainContainer?.nativeElement?.clientWidth || this.chainWidth;
+    const translation = (this.isMobile ? this.chainWidth * 0.95 : this.chainWidth * 0.5);
+    const firstSlot = (viewWidth % this.blockWidth) / 2 - 20;
+    const offset = (((firstSlot - translation) % this.blockWidth) + this.blockWidth) % this.blockWidth;
+    return offset > this.blockWidth / 2 ? offset - this.blockWidth : offset;
   }
 
   scrollToBlock(height, blockOffset = 0) {
