@@ -155,17 +155,9 @@ export class ProtocolRegistryService {
    * Decodes a scriptPubKey, a tapscript, or a detached OpenTimestamps proof
    * given as hex. Every returned field is derived from the bytes.
    */
-/*
- * IMPLEMENTATION-HANDOFF [WP-DECODE] | AN-DECODE-ALL-OBSERVATIONS
- * Coverage: C-DECODE-ALL-OBSERVATIONS; defects: F-DECODE-ALL-OBSERVATIONS. Preparation only.
- * 1. The current loop already returns Ordinals plus BRC-20 for one envelope. Preserve that overlap and extend profile-specific observation adapters for the required inscription protocols: names, bitmap, tap, dmt, unat, dust20 and block20. Keep rare_sats as contextual sat data; a raw script cannot prove rarity or ownership. DMT/UNAT membership is authority-validated, not a renderer-text match.
- * 2. Return every matching observation with the envelope identity, operation, parser/ruleset version, issues and explicit detection/acceptance level. Store protocol ancestry separately from inscription parentage. Invalid or unknown markers remain evidence and never become positive holdings.
- * 3. Join validated assets in the transaction/block/address services under WP-BE-CONTRACT. Those services must also ask authorities about ordinary spends, coinbase effects and current state; expanding this loop alone cannot satisfy completeness.
- * 4. Use a bounded reader for content-type/size and protocol-specific UTF-8/JSON rules. Preserve existing Runes, OpenTimestamps, other adapter behavior and decoder input limits. Do not turn unrelated OP_RETURN art or market-order protocols into inscription balances.
- * 5. Add T-OVERLAP and each protocol grammar fixture, including one envelope with multiple valid classifications and independent NAT/UNAT assets. Run targeted backend Jest and npm run tsc. No implementation or execution in this preparation.
- * Governing source IDs: SPEC-ORD, SPEC-SNS, SPEC-BITMAP, SPEC-BRC-INDEX, SPEC-TAP, SPEC-DMT-MINT, SPEC-DUST, SPEC-BLOCK20; pinned URLs/revisions and assertions are in protocol-research.json and this repository's docs/ordinal-assets-implementation-handoff.md.
- * Rollback: retain the prior decoder/versioned response contract; revert parser and dependent consumers together if differential vectors fail. These parser fixes need no ledger migration and must not rewrite authoritative holdings.
- */
+  // Every envelope in the script is returned in order, including ones ord would
+  // not index, and each BRC-20 marker beside its envelope. Markers and flags are
+  // observations; acceptance and holdings come from the protocol authorities.
   public decodePayload(rawHex: unknown): DecodedProtocolPayload[] {
     if (typeof rawHex !== 'string') {
       throw new ProtocolDecodeError('invalid_input', 'script_hex must be a string');
@@ -196,17 +188,29 @@ export class ProtocolRegistryService {
 
     for (const envelope of parseInscriptionEnvelopes(bytes)) {
       results.push(this.describeInscription(envelope));
-      const brc20 = envelope.incomplete ? null : parseBrc20(envelope);
-      if (brc20) {
+      const brc20 = envelope.ordRecognized ? parseBrc20(envelope) : null;
+      if (brc20?.status === 'marker') {
+        const { status: _status, ...marker } = brc20;
         results.push({
           protocol_id: 'brc20',
           protocol_name: 'BRC-20 Token Standard',
           operation_type: `brc20_${brc20.op}`,
-          parameters: { ...brc20, inscription_index: envelope.index },
-          confidence: CONFIDENCE.syntactic,
-          decoding_level: 'syntactic',
+          parameters: { ...marker, inscription_index: envelope.index, acceptance: 'not resolved: requires the BRC-20 authority' },
+          confidence: CONFIDENCE.marker,
+          decoding_level: 'marker',
           status: 'decoded',
-          issues: [],
+          issues: ['BRC-20 marker only: operation grammar, precision and acceptance are not checked here'],
+        });
+      } else if (brc20?.status === 'observation-truncated') {
+        results.push({
+          protocol_id: 'brc20',
+          protocol_name: 'BRC-20 Token Standard',
+          operation_type: 'brc20_observation_truncated',
+          parameters: { inscription_index: envelope.index, body_bytes: brc20.body_bytes, observation_limit_bytes: brc20.observation_limit_bytes },
+          confidence: CONFIDENCE.marker,
+          decoding_level: 'marker',
+          status: 'incomplete',
+          issues: [`body exceeds the ${brc20.observation_limit_bytes}-byte observation limit and was not examined; this says nothing about BRC-20 validity`],
         });
       }
     }
@@ -264,43 +268,58 @@ export class ProtocolRegistryService {
     };
   }
 
-/*
- * IMPLEMENTATION-HANDOFF [WP-DECODE] | AN-DECODE-ORD-CLASSIFICATION
- * Coverage: C-DECODE-ORD-CLASSIFICATION; defects: F-DECODE-ORD-CLASSIFICATION. Preparation only.
- * Verified classification gap: flaws.length>0 below labels every parser flaw as unbound and invalid. The pinned Ord updater treats zero input value and unrecognized even fields as unbound; duplicate/incomplete/pushnum/stutter and other curse conditions also depend on the network Jubilee height. The script alone cannot decide final ownership or vindication.
- * 1. Retain parser flags as observations, separate structural completeness from protocol acceptance, and represent unresolved location explicitly. Derive authoritative bound/unbound, cursed/vindicated, burned/lost and current/historical satpoint only from the owned Ord authority at a matching network checkpoint.
- * 2. Do not infer a reveal transaction ID or current quantity from the per-script envelope index. The transaction traversal must assign the global inscription index across every input and envelope.
- * Related: inscription-envelope.ts, protocols.test.ts, the transaction/block aggregation work, and WP-BE-CONTRACT. Add T-ORD-LOCATION and paired pre/post-Jubilee fixtures, plus unknown-even and zero-input cases. A corrected local decoder must still report authority-needed fields as unresolved.
- * Validation: targeted backend Jest and npm run tsc; owned Signet/Regtest reference comparisons are separate required acceptance. NOT TESTED.
- * Governing source IDs: SPEC-ORD, SPEC-ORD-NETWORK; pinned URLs/revisions and assertions are in protocol-research.json and this repository's docs/ordinal-assets-implementation-handoff.md.
- * Rollback: retain the prior decoder/versioned response contract; revert parser and dependent consumers together if differential vectors fail. These parser fixes need no ledger migration and must not rewrite authoritative holdings.
- */
+  // Envelope flags are reported as ord defines them. Whether the inscription is
+  // cursed, vindicated, unbound or where it sits needs the input values, the
+  // position in the transaction, the network and the height, so those fields
+  // stay unresolved here.
   private describeInscription(envelope: InscriptionEnvelope): DecodedProtocolPayload {
     const issues: string[] = [];
-    if (envelope.incomplete) { issues.push('envelope ends before OP_ENDIF'); }
-    for (const flaw of envelope.flaws) { issues.push(`envelope: ${flaw}`); }
-    const unbound = envelope.flaws.length > 0;
+    if (envelope.termination === 'end_of_script') { issues.push('envelope ends before OP_ENDIF'); }
+    if (envelope.termination === 'non_push_opcode') { issues.push('envelope contains a non-push opcode; ord does not index it'); }
+    if (envelope.incomplete && envelope.termination === 'endif') { issues.push('script contains a truncated push; ord does not index envelopes from it'); }
+    for (const flaw of envelope.flaws) { issues.push(`envelope flag: ${flaw}`); }
+    let operation = 'inscription_reveal';
+    let status: DecodedProtocolPayload['status'] = 'decoded';
+    if (envelope.incomplete) {
+      operation = 'inscription_envelope_incomplete';
+      status = 'incomplete';
+    } else if (!envelope.ordRecognized) {
+      operation = 'inscription_envelope_unrecognized';
+      status = 'invalid';
+    }
+    const unresolved = 'not resolved: requires the ordinals authority';
     return {
       protocol_id: 'ordinals',
       protocol_name: 'Ordinals and Inscriptions',
-      operation_type: envelope.incomplete ? 'inscription_envelope_incomplete' : (unbound ? 'inscription_unbound' : 'inscription_reveal'),
+      operation_type: operation,
       parameters: {
         envelope_index: envelope.index,
+        ord_recognized: envelope.ordRecognized,
         content_type: envelope.contentType,
         content_encoding: envelope.contentEncoding,
         metaprotocol: envelope.metaprotocol,
+        has_body: envelope.hasBody,
         body_size_bytes: envelope.incomplete ? null : envelope.bodyBytes,
         body_bytes_seen: envelope.bodyBytes,
         pointer: big(envelope.pointer),
         parents: envelope.parents,
         delegate: envelope.delegate,
+        rune_field: envelope.runeField,
+        note: envelope.note,
         metadata_bytes: envelope.metadataBytes,
-        // The inscription ID and sat assignment come from the ordinals index.
-        inscription_id: 'not resolved: requires the ordinals authority',
+        properties_bytes: envelope.propertiesBytes,
+        property_encoding: envelope.propertyEncoding,
+        flags: envelope.flaws,
+        unrecognized_fields: envelope.unrecognizedFields,
+        // The inscription ID, sat, location and curse state need transaction and chain context.
+        inscription_id: unresolved,
+        location: unresolved,
+        curse_status: `${unresolved} at a known network height`,
+        bound_status: `${unresolved} with the spent input values`,
       },
-      confidence: envelope.incomplete ? CONFIDENCE.marker : CONFIDENCE.syntactic,
-      decoding_level: envelope.incomplete ? 'marker' : 'syntactic',
-      status: envelope.incomplete ? 'incomplete' : (unbound ? 'invalid' : 'decoded'),
+      confidence: status === 'decoded' ? CONFIDENCE.syntactic : CONFIDENCE.marker,
+      decoding_level: status === 'decoded' ? 'syntactic' : 'marker',
+      status,
       issues,
     };
   }
