@@ -1,5 +1,6 @@
 import { ChainHealthService } from '../chain-health.service';
 import { ChainHealthDetailsComponent } from './chain-health-details.component';
+import { BlockAssetsComponent } from '@app/universe/block-assets/block-assets.component';
 import { UniverseSharedModule } from '@app/universe/universe-shared.module';
 import { CommonModule } from '@angular/common';
 import {
@@ -231,6 +232,7 @@ const PRESENTED_FIELDS: Partial<Record<ChainShape, readonly string[]>> = {
     RouterModule,
     ChainHealthDetailsComponent,
     UniverseSharedModule,
+    BlockAssetsComponent,
   ],
   templateUrl: './multichain-explorer.component.html',
   styleUrls: ['./multichain-explorer.component.scss'],
