@@ -87,10 +87,10 @@ export function classifyTransaction(tx: TransactionExtended): Partial<Record<Obs
     }
   }
   for (const script of witnessScripts(tx)) {
-    const envelopes = parseInscriptionEnvelopes(script).filter(envelope => !envelope.incomplete);
+    const envelopes = parseInscriptionEnvelopes(script).filter(envelope => envelope.ordRecognized);
     if (envelopes.length === 0) { continue; }
     found.ordinals = (found.ordinals ?? 0) + envelopes.length;
-    const brc20 = envelopes.filter(envelope => parseBrc20(envelope) !== null).length;
+    const brc20 = envelopes.filter(envelope => parseBrc20(envelope)?.status === 'marker').length;
     if (brc20 > 0) { found.brc20 = (found.brc20 ?? 0) + brc20; }
   }
   return found;

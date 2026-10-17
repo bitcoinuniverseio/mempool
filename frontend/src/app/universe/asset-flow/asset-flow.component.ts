@@ -34,6 +34,25 @@ export class AssetFlowComponent implements OnChanges {
 
   constructor(private universeApiService: UniverseApiService) {}
 
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-FLOW] ANN-FE-FLOW-REFRESH | preparation 2026-10-16
+ * F-FE-05; C-FE-FLOW-LIFECYCLE. Current flow reloads only when txid changes,
+ * while the parent refreshes the summary on confirmation/block-hash changes.
+ * Prerequisites: WP-BE-TX, WP-FE-TX.
+ * 1. Add the same chain/network/status revision context used by the transaction
+ * summary and wire it through transaction.component.html. Refresh on confirmed,
+ * replaced and orphaned revisions as well as txid; cancel in-flight old reads.
+ * 2. Decode flow identity and evidence against requested context before display.
+ * Add explicit bounded retry/deadline states that do not turn failures into an
+ * empty list. Keep one request per context or user retry, with cleanup on destroy.
+ * 3. Test pending-to-confirmed, same-height reorg with changed block hash,
+ * replacement, network switch and late responses in asset-flow.component.spec.ts.
+ * Run npm test -- src/app/universe/asset-flow/asset-flow.component.spec.ts from
+ * frontend/; NOT RUN here. Verify summary and flow agree after refresh/reconnect
+ * against a real supported test-network producer. Revert consumer and API
+ * contract as a pair on regression; never restore a stale complete claim.
+ * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ */
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes.txid || !this.txid) {
       return;
@@ -295,6 +314,31 @@ export class AssetFlowComponent implements OnChanges {
   }
 
   /** Assets present on both sides share an accent so the movement is readable. */
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-FLOW] ANN-FE-FLOW-IDENTITY | preparation 2026-10-16
+ * F-FE-04, F-FE-06; C-FE-FLOW-IDENTITY, C-FE-FLOW-EXACT.
+ * Verified: isTransferred compares assetId alone and trackPosition keys only
+ * outpoint plus assetId; groupDigits renders quantityAtomic without divisibility.
+ * Prerequisites: WP-BE-CONTRACT, WP-BE-TX, WP-FE-TX.
+ * 1. Match transfer evidence using the agreed full asset identity, protocol,
+ * stable ledger namespace, chain/network and action input/output membership.
+ * Preserve mutable ruleset revisions as evidence, not extra asset identities. Never mark
+ * another protocol's same-ID asset as transferred. Give trackPosition a stable
+ * key that includes the same identity and the position occurrence identity.
+ * 2. Build a view model with presentQuantity() for position and action amounts.
+ * Label raw atomic values as smallest units when decimals are unknown; keep exact
+ * expanded/copy values and no floating-point conversion.
+ * 3. In asset-flow.component.html distinguish no output assets proven from
+ * unresolved output evidence. Current empty-output text is unconditional when
+ * inputs exist. An action-only response must still show its event and cannot
+ * claim no protocol activity. Expose every protocol/subprotocol classification.
+ * 4. Extend asset-flow.component.spec.ts for same-ID protocols and incompatible ledgers on the
+ * same output, rejected actions, unknown output coverage, action-only responses,
+ * large atomic values and nonzero decimals. Run the targeted frontend npm test;
+ * NOT RUN here. Acceptance: identity, quantity and evidence agree with the
+ * summary and authority. Rollback shared presenter/key consumers together.
+ * Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ */
   isTransferred(position: ExplorerOutpointPosition, flow: ExplorerTransactionAssetFlow): boolean {
     return (flow.actions ?? []).some(
       (action) =>

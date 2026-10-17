@@ -177,6 +177,35 @@ export class ProtocolDirectoryComponent implements OnInit {
     return (family || 'OTHER').toUpperCase().replace(/[_-]+/g, ' ').trim();
   }
 
+/**
+ * IMPLEMENTATION-HANDOFF [WP-FE-REG] ANN-FE-REG-DIRECTORY | preparation 2026-10-16
+ * F-FE-03; C-FE-REG-HIERARCHY, C-FE-REG-DISCOVERY.
+ * Verified: current family grouping is flat and availability comes from the
+ * owned registry/source snapshots; labels cannot make missing readers served.
+ * Prerequisites: WP-BE-REG, WP-BE-INDEX, WP-FE-REG contract annotation.
+ * 1. Keep every required registry row visible and extend the display model to
+ * explicit protocol/subprotocol relationships supplied by the registry. Show
+ * operation readiness for transaction, block and address reads separately;
+ * do not promote historical release labels or source reachability into full
+ * functional coverage. Keep unknown and partial states clear.
+ * 2. Wire hierarchy links and filters through protocol-directory.component.html
+ * and protocol-detail.component.ts/html with the selected network preserved.
+ * Retain other-chain navigation and established family order/design tokens.
+ * Unknown additive subprotocol IDs remain inspectable without invented names.
+ * 3. Test all required protocol/subprotocol rows, unavailable registry versus
+ * unavailable sources, catching-up, no reader, exact capability counts, retry
+ * and network switching in directory/detail/availability specs.
+ * Run npm test -- src/app/universe/protocol-directory/protocol-directory.component.spec.ts
+ * src/app/universe/protocol-detail/protocol-detail.component.spec.ts
+ * src/app/universe/protocol-availability.spec.ts from frontend/; NOT RUN here.
+ * Acceptance: names, bitmap, UNAT and every reconciled required ordinal
+ * subprotocol are discoverable and backed by verified owned readers before a
+ * served label appears. Rollback rendering and registry compatibly, never hide
+ * required rows to improve coverage.
+ * Existing API-05 and FE-COVERAGE-01 comments remain historical context.
+ * This package supersedes their fixed 39/123 counts wherever the reconciled
+ * required protocol/operation roster adds rows. Source: user scope and supplied preparation brief; pinned source at aef1d00038b7c3b438ad6264e1d6b3f13ccf84e7; governing protocol semantics in reports/integrated-protocol-research.json.
+ */
   private groupByFamily(protocols: ExplorerProtocolDefinition[]): FamilyGroup[] {
     const groups = new Map<string, FamilyGroup>();
     for (const protocol of protocols) {
