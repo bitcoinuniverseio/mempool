@@ -72,6 +72,14 @@ describe('block asset view', () => {
     ]);
   });
 
+  it('says how many outputs could not be checked', () => {
+    const notices = coverageNotices(summary({ completeness: 'partial', unresolvedOutputsAtomic: '13449' }));
+    expect(notices).toContainEqual({
+      tone: 'warning',
+      text: '13,449 outputs of this block could not be checked because an asset authority did not answer. Assets on them may be missing from this page.',
+    });
+  });
+
   it('warns first when the block left the main chain', () => {
     const notices = coverageNotices(summary({ block: { heightAtomic: '1', hash: 'b'.repeat(64), onMainChain: false } }));
     expect(notices[0]).toEqual(expect.objectContaining({ tone: 'warning' }));
