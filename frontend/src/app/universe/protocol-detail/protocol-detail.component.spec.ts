@@ -3,6 +3,7 @@ import { qualifiedCoverageFixture, qualifiedMixedCoverageFixture } from '../prot
 import { describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { ProtocolDetailComponent } from './protocol-detail.component';
+import { ChainNetworkUnavailableError } from '../chain-network';
 import {
   ExplorerProtocolActivityPage,
   ExplorerProtocolDefinition,
@@ -371,6 +372,51 @@ describe('protocol detail independent chain binding', () => {
     expect(registry.mock.calls.some(call => call[0]?.chain === 'dogecoin')).toBe(true);
     expect(page.component.coverageLabel(ready.protocol, ready.registry, ready.network)).toBe('Functionality verified on Dogecoin Testnet (2026-10-09)');
     expect(ready.live).toBe(false);
+    page.component.ngOnDestroy();
+  });
+});
+
+describe('protocol detail chain eligibility', () => {
+  const doge = (): ExplorerProtocolDefinition => definition({ id: 'drc20', chain: 'dogecoin', family: 'OTHER', indexerAuthority: 'index-ordinals' });
+
+  it('serves an other-chain protocol that resolved under its own chain scope', () => {
+    const page = routed({ registry: () => of(registryOf(definition(), doge())) });
+    let ready: any; page.component.vm$.subscribe(value => { if (value.kind === 'ready') ready = value; });
+    page.params.next({ get: () => 'drc20' });
+    expect(ready.protocol.chain).toBe('dogecoin');
+    expect(ready.onThisChain).toBe(true);
+    // Served chain: the limitation follows the authority, not the chain name.
+    expect(page.component.limitation(ready)).toBeNull();
+    expect(ready.live).toBe(true);
+    page.component.ngOnDestroy();
+  });
+
+  it('lists, but does not serve, a chain this deployment has no valid network for', () => {
+    const registry = vi.fn((context?: { chain: string }) => context
+      ? throwError(() => new ChainNetworkUnavailableError('dogecoin', 'invalid'))
+      : of(registryOf(definition(), doge())));
+    const page = routed({ registry });
+    let ready: any; page.component.vm$.subscribe(value => { if (value.kind === 'ready') ready = value; });
+    page.params.next({ get: () => 'drc20' });
+    expect(ready.onThisChain).toBe(false);
+    expect(page.component.limitation(ready)).toContain('does not serve');
+    page.component.ngOnDestroy();
+  });
+
+  it('keeps any other scoped registry failure an error, not a served page', () => {
+    const registry = vi.fn((context?: { chain: string }) => context
+      ? throwError(() => new Error('503'))
+      : of(registryOf(definition(), doge())));
+    const page = routed({ registry });
+    page.params.next({ get: () => 'drc20' });
+    expect(page.states.at(-1)).toBe('error');
+    page.component.ngOnDestroy();
+  });
+
+  it('keeps Bitcoin protocols served', () => {
+    const page = routed({ registry: () => of(registryOf(definition())) });
+    let ready: any; page.component.vm$.subscribe(value => { if (value.kind === 'ready') ready = value; });
+    expect(ready.onThisChain).toBe(true);
     page.component.ngOnDestroy();
   });
 });
