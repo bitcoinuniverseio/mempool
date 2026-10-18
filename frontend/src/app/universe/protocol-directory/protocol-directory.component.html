@@ -14,6 +14,9 @@
       <p *ngIf="vm.sourcesByAuthority !== null; else statusUnknown" class="registry-summary" role="status" i18n="universe.protocols.live-count">
         {{ vm.liveCount }} of {{ vm.totalCount }} Bitcoin protocols can be read right now.
       </p>
+      <p *ngIf="vm.sourcesByAuthority !== null && vm.liveCount < vm.totalCount" class="registry-summary">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="onRetry()" i18n="universe.protocols.check-again">Check again</button>
+      </p>
       <ng-template #statusUnknown>
         <p class="registry-summary" role="status" i18n="universe.protocols.status-unknown">Current status is unavailable for {{ vm.totalCount }} Bitcoin protocols.</p>
       </ng-template>
@@ -50,6 +53,9 @@
               <span *ngIf="sourceDetail(source) as detail">{{ detail }}</span>
               <span class="checked-at" *ngIf="checkedAtSeconds(source) as checked">
                 <ng-container i18n="universe.protocols.checked">Checked</ng-container>&nbsp;<app-time kind="since" [time]="checked"></app-time>
+              </span>
+              <span class="checked-at" *ngIf="lastGoodSeconds(source) as lastGood">
+                <ng-container i18n="universe.protocols.last-good">Last good</ng-container>&nbsp;<app-time kind="since" [time]="lastGood"></app-time>
               </span>
             </p>
           </li>
