@@ -41,10 +41,10 @@ describe('shared functional protocol coverage', () => {
 
 describe('sealed functional acceptance display contract', () => {
   const now = Date.parse('2026-10-09T13:00:00.000Z');
-  it('retains the full 39/123 declaration and names the actual test network/date on Mainnet', () => {
+  it('retains the full 39/124 declaration and names the actual test network/date on Mainnet', () => {
     const response = qualifiedCoverageFixture();
     expect(response.protocols).toHaveLength(39);
-    expect(response.protocols.reduce((sum, row) => sum + (row.readOperationDescriptors?.length ?? 0), 0)).toBe(123);
+    expect(response.protocols.reduce((sum, row) => sum + (row.readOperationDescriptors?.length ?? 0), 0)).toBe(124);
     for (const row of response.protocols) {
       // Each independent chain scope may consume the same complete artifact.
       response.functionalAcceptanceBinding.chain = row.chain;
@@ -118,10 +118,10 @@ it('accepts qualified ISO offsets and structured configuration assertions withou
 
 describe('mixed-chain and multi-profile v2 acceptance', () => {
   const now = Date.parse('2026-10-09T13:00:00Z');
-  it('keeps every 39/123 identity and names exact per-chain tested contexts', () => {
+  it('keeps every 39/124 identity and names exact per-chain tested contexts', () => {
     const response = qualifiedMixedCoverageFixture();
     expect(response.protocols).toHaveLength(39);
-    expect(response.protocols.reduce((n, row) => n + row.readOperationDescriptors.length, 0)).toBe(123);
+    expect(response.protocols.reduce((n, row) => n + row.readOperationDescriptors.length, 0)).toBe(124);
     for (const row of response.protocols) {
       response.functionalAcceptanceBinding.chain = row.chain;
       const view = protocolCoverageView(row, response, 'mainnet', now);
@@ -189,12 +189,12 @@ it('names multiple qualified profiles even when their network labels coincide', 
 
 describe('v2 static application local/offline exception', () => {
   const now = Date.parse('2026-10-09T13:00:00Z');
-  it('accepts the full 39/123 metadata and 632 commitment with a local app context beside Mainnet deployments', () => {
+  it('accepts the full 39/124 metadata and 632 commitment with a local app context beside Mainnet deployments', () => {
     const response = qualifiedMixedCoverageFixture();
     const binding = response.functionalAcceptanceBinding;
     if (binding.schemaVersion !== 'universe-functional-acceptance-binding-v2') throw Error('Fixture version');
     expect(response.protocols).toHaveLength(39);
-    expect(response.protocols.reduce((n, protocol) => n + protocol.readOperationDescriptors.length, 0)).toBe(123);
+    expect(response.protocols.reduce((n, protocol) => n + protocol.readOperationDescriptors.length, 0)).toBe(124);
     expect(binding.requiredCoverageCount).toBe(632);
     expect(binding.contexts.find(context => context.id === 'local-offline').deploymentNetwork).toBe('offline');
     expect(binding.applicationContexts.some(assignment => assignment.contextIds.includes('local-offline'))).toBe(true);

@@ -376,7 +376,10 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
     };
     this.objectSubscription = this.api.getProtocolObjects$(protocolId, this.objectCursor, 25, this.protocolChain).pipe(take(1)).subscribe({
       next: (page) => page.state === 'served' ? this.pushObjectsPage(page) : failed(page.degradedReason ?? undefined),
-      error: () => failed(),
+      // 409: the Ordex journal changed after the first page, so its cursor no longer applies.
+      error: (error: unknown) => failed((error as { status?: unknown } | null)?.status === 409
+        ? $localize`:@@universe.detail.objects-stale-cursor:The collection changed since the first page was read. Retry objects to read it again from the start.`
+        : undefined),
     });
   }
 
@@ -414,6 +417,24 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
   namesObjectReference(row: ProtocolObjectRow, protocolId: string): string | null {
     return protocolId === 'names' && (row.record?.kind === 'name' || row.record?.kind === 'namespace') &&
       /^[0-9a-f]{64}i(0|[1-9][0-9]{0,9})$/.test(row.id ?? '') ? row.id : null;
+  }
+
+  /**
+   * One line of an Ordex journal order: its safety class, the protocol its
+   * importer advertised (never accepted membership), and when its stored
+   * validation was recorded. This read does not re-check it.
+   */
+  ordexOrderDetail(row: ProtocolObjectRow, protocolId: string): string | null {
+    if (protocolId !== 'ordex') {return null;}
+    const inspection = row.record.inspection as { safety?: unknown } | undefined;
+    const validation = row.record.storedValidation as { checkedAt?: unknown } | undefined;
+    const advertised = row.record.advertisedProtocolId;
+    const parts = [
+      typeof inspection?.safety === 'string' ? inspection.safety : null,
+      typeof advertised === 'string' && advertised ? $localize`:@@universe.detail.ordex-advertised:advertised as ${advertised}:protocol:` : null,
+      typeof validation?.checkedAt === 'string' ? $localize`:@@universe.detail.ordex-stored-check:stored check ${validation.checkedAt}:time:` : null,
+    ].filter((part): part is string => part !== null);
+    return parts.length ? parts.join(' · ') : null;
   }
 
   trackByObject(index: number, row: ProtocolObjectRow): string {

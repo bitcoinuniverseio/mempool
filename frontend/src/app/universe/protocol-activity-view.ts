@@ -145,6 +145,12 @@ export function objectsSummary(
   if (page.state !== 'served' && page.degradedReason?.startsWith('The legacy Marketplace objects GET is quarantined')) {
     return 'A verified read-only collection is not available on this network.';
   }
+  if (page.state === 'served' && page.ordexJournal) {
+    const total = page.ordexJournal.totalVisible;
+    return total === 1
+      ? `This deployment's Ordex journal answered: ${totalItems} of 1 imported order.`
+      : `This deployment's Ordex journal answered: ${totalItems} of ${total} imported orders.`;
+  }
   switch (page.state) {
     case 'served':
       return totalItems === 1
