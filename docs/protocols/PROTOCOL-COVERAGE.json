@@ -2,8 +2,8 @@
   "schemaVersion": "universe-explorer-protocol-manifest-v1",
   "registryVersion": "1.1.0",
   "sourceRepository": "bitcoinuniverseio/backend-apis",
-  "sourceSha": "1a1a2548a74e419bf7341dd7af1cd57ff98e34c7",
-  "generatedAt": "2026-10-04T01:34:54.431Z",
+  "sourceSha": "8c5577e705687782c188d5f63389352983a3f4f6",
+  "generatedAt": "2026-10-18T19:20:18.802Z",
   "primaryStrip": [
     "ORDINALS",
     "RUNES",
@@ -2052,7 +2052,8 @@
       "icon": "protocol-ordex",
       "visualToken": "protocol-ordex",
       "implementedReadOperations": [
-        "registry"
+        "registry",
+        "objects"
       ],
       "readOperationDescriptors": [
         {
@@ -2066,13 +2067,26 @@
             "checkpoint": "not-required"
           },
           "acceptance": "NOT TESTED"
+        },
+        {
+          "id": "objects",
+          "method": "GET",
+          "route": "/api/v1/universe/protocols/ordex/objects",
+          "authorityPath": "/api/ordex/orders",
+          "evidence": "source-contract",
+          "evidencePolicy": {
+            "version": 2,
+            "checkpoint": "required"
+          },
+          "acceptance": "NOT TESTED"
         }
       ],
       "authorizedReadOperations": [
-        "registry"
+        "registry",
+        "objects"
       ],
       "releaseStatus": "BLOCKED",
-      "indexerAuthority": "index-ordinals",
+      "indexerAuthority": "ordex-journal",
       "coverage": "unknown"
     },
     {
@@ -2727,12 +2741,12 @@
     }
   ],
   "acceptance": {
-    "declared": 123,
+    "declared": 124,
     "passed": 0,
     "failed": 0,
     "blocked": 0,
     "notApplicable": 0,
-    "notTested": 123,
+    "notTested": 124,
     "rejected": 0
   }
 }

@@ -7,11 +7,24 @@
       "fromAuthority": "index-op20",
       "toAuthority": "index-op20-op-names",
       "sourceRepository": "bitcoinuniverseio/backend-apis",
-      "registrySourceRevision": "1a1a2548a74e419bf7341dd7af1cd57ff98e34c7",
+      "registrySourceRevision": "8c5577e705687782c188d5f63389352983a3f4f6",
       "producerRepository": "bitcoinuniverseio/index-op20",
       "producerSourceRevision": "7c0305a38deb968460a668484b2febf57e099add",
       "producerPath": "/token-explorer/op-names",
       "reason": "Dedicated projection over the existing OP Names event journal replaces the incorrect OP20 feed identity; original authority and evidence remain historical.",
+      "functionalAcceptance": false
+    },
+    {
+      "protocol": "ordex",
+      "chain": "bitcoin",
+      "fromAuthority": "index-ordinals",
+      "toAuthority": "ordex-journal",
+      "sourceRepository": "bitcoinuniverseio/backend-apis",
+      "registrySourceRevision": "8c5577e705687782c188d5f63389352983a3f4f6",
+      "producerRepository": "bitcoinuniverseio/backend-apis",
+      "producerSourceRevision": "2eee22639c8ab5fa3ce1eb660094e99a9ce60361",
+      "producerPath": "/api/ordex/orders",
+      "reason": "Ordex objects are read from the backend's local order journal (src/ordex). index-ordinals inscription and listing data was never Ordex order evidence. The scope is imported orders only, with no current Core/Ord verification.",
       "functionalAcceptance": false
     }
   ]

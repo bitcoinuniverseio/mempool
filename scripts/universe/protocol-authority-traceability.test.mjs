@@ -26,7 +26,7 @@ test("authority traceability retains every manifest protocol and operation witho
   const document = buildTraceability();
   assert.equal(validateTraceability(document, manifestBytes), true);
   assert.equal(document.protocols.length, 39);
-  assert.equal(document.summary.operationCount, 123);
+  assert.equal(document.summary.operationCount, 124);
   assert.equal(document.summary.qualifiedProtocols, 0);
   assert(document.protocols.every((protocol) => protocol.status === "BLOCKED"));
   assert(

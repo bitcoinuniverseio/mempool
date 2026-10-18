@@ -420,3 +420,34 @@ describe('protocol detail chain eligibility', () => {
     page.component.ngOnDestroy();
   });
 });
+
+describe('Protocol detail Ordex journal objects', () => {
+  const component = (read: ReturnType<typeof vi.fn>) => new ProtocolDetailComponent({} as never,
+    { getProtocolObjects$: read } as never, { stop: vi.fn() } as never, {} as never, {} as never);
+
+  it('says a stale journal cursor needs a fresh read and keeps the first page', () => {
+    const first = { ...objects('ordex'), nextCursor: 'next' };
+    const read = vi.fn().mockReturnValueOnce(of(first)).mockReturnValueOnce(throwError(() => ({ status: 409 })));
+    const detail = component(read);
+    detail.loadObjects('ordex');
+    detail.loadMoreObjects('ordex');
+    expect(detail.objects$.value.rows).toHaveLength(1);
+    expect(detail.objects$.value.loadMoreError).toContain('changed since the first page');
+    detail.ngOnDestroy();
+  });
+
+  it('shows safety, the advertised protocol and the stored check for an order, and nothing for other protocols', () => {
+    const detail = component(vi.fn());
+    const row = {
+      id: 'ordex_abc', kind: 'LIVE', unnamedFields: 3,
+      record: {
+        id: 'ordex_abc', state: 'LIVE', advertisedProtocolId: 'bitmap',
+        inspection: { safety: 'PUBLIC_RACEABLE' }, storedValidation: { checkedAt: '2026-10-01T00:00:00.000Z' },
+      },
+    };
+    expect(detail.ordexOrderDetail(row, 'ordex'))
+      .toBe('PUBLIC_RACEABLE · advertised as bitmap · stored check 2026-10-01T00:00:00.000Z');
+    expect(detail.ordexOrderDetail(row, 'names')).toBeNull();
+    expect(detail.ordexOrderDetail({ ...row, record: {} }, 'ordex')).toBeNull();
+  });
+});

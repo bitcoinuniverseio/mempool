@@ -221,6 +221,10 @@ describe.each<Kind>(['activity', 'objects'])('%s document contract', (kind) => {
     const calls: string[] = [];
     const body = page(kind, protocol.id);
     if (kind === 'activity') { (body.source as Record<string, unknown>).chain = protocol.chain; }
+    if (kind === 'objects' && protocol.id === 'ordex') {
+      body.ordexJournal = { scope: 'local-order-journal', network: 'mainnet', generation: 'a'.repeat(64), totalVisible: 0,
+        filter: 'visible-non-withdrawn', sort: 'created-desc-id-asc', currentVerification: { performed: false, reason: 'not performed' } };
+    }
     const api = new UniverseApiService({ get: (url: string) => { calls.push(url); return of(body); } } as never,
       { isBrowser: true, network: '' } as never);
     const values: unknown[] = [];
@@ -256,5 +260,41 @@ describe('activity source and pagination fields', () => {
     const values: unknown[] = [];
     api.getProtocolActivity$(protocolId).subscribe((value) => values.push(value));
     expect(values).toEqual([body]);
+  });
+});
+
+describe('ordex local journal objects page', () => {
+  const journal = {
+    scope: 'local-order-journal', network: 'mainnet', generation: 'a'.repeat(64), totalVisible: 1,
+    filter: 'visible-non-withdrawn', sort: 'created-desc-id-asc',
+    currentVerification: { performed: false, reason: 'This read does not query Bitcoin Core or Ord.' },
+  };
+  const ordexPage = (override: Record<string, unknown> = {}) => ({
+    ...page('objects', 'ordex'), authorityId: 'ordex-journal', objectsPath: '/api/ordex/orders',
+    items: [{ id: 'ordex_abc', state: 'LIVE' }], ordexJournal: journal, ...override,
+  });
+  const read = (body: unknown) => {
+    const api = new UniverseApiService({ get: () => of(body) } as never, { isBrowser: true, network: '' } as never);
+    const values: unknown[] = [];
+    const errors: unknown[] = [];
+    api.getProtocolObjects$('ordex').subscribe({ next: (value) => values.push(value), error: (error) => errors.push(error) });
+    return { values, errors };
+  };
+
+  it('accepts a served page that names its local scope and unverified state', () => {
+    const body = ordexPage();
+    expect(read(body)).toEqual({ values: [body], errors: [] });
+  });
+
+  it.each([
+    { ordexJournal: undefined },
+    { ordexJournal: { ...journal, scope: 'chain-wide' } },
+    { ordexJournal: { ...journal, generation: 'not-a-digest' } },
+    { ordexJournal: { ...journal, currentVerification: { performed: true, reason: 'checked' } } },
+    { checkpoint: { heightAtomic: '1', blockHash: 'b'.repeat(64), observedAt } },
+  ])('rejects an ordex page that overstates its scope or verification %j', (override) => {
+    const result = read(ordexPage(override));
+    expect(result.values).toEqual([]);
+    expect(result.errors).toHaveLength(1);
   });
 });
