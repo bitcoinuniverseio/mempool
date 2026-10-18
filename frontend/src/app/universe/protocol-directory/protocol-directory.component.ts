@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, combineLatest, map, of, startWith, switchMap, timeout } from 'rxjs';
+import { Component, ChangeDetectionStrategy, Inject, OnInit, Optional, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { BehaviorSubject, Observable, catchError, combineLatest, exhaustMap, interval, map, of, startWith, switchMap, take, timeout } from 'rxjs';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import {
   ExplorerNetwork,
@@ -45,6 +46,13 @@ export interface DirectoryViewModel {
 /** How long the page waits for the registry before saying it could not load. */
 const REQUEST_TIMEOUT_MS = 20_000;
 
+/**
+ * How often an open page re-reads the authority snapshot. The overlay probes
+ * each authority every 15 to 60 seconds, so a minute keeps the page current
+ * without polling faster than the evidence can change.
+ */
+export const SOURCE_REFRESH_MS = 60_000;
+
 // display order of protocol families; unknown families sort after the known
 // ones and before OTHER
 const FAMILY_ORDER = ['ORDINALS', 'RUNES', 'ALKANES', 'STAMPS', 'ATOMICALS', 'OP DATA', 'OTHER'];
@@ -64,6 +72,7 @@ export class ProtocolDirectoryComponent implements OnInit {
   constructor(
     private universeApiService: UniverseApiService,
     private seoService: SeoService,
+    @Optional() @Inject(PLATFORM_ID) private platformId?: object,
   ) { }
 
   ngOnInit(): void {
@@ -115,10 +124,7 @@ export class ProtocolDirectoryComponent implements OnInit {
       // with nothing subscribed to clear it. The budget turns that into the
       // error state below, which says so and offers a retry.
       this.universeApiService.getProtocols$().pipe(timeout({ first: REQUEST_TIMEOUT_MS })),
-      this.universeApiService.getSources$().pipe(
-        timeout({ first: REQUEST_TIMEOUT_MS }),
-        catchError(() => of(null)),
-      ),
+      this.sourceSnapshots(),
     ]).pipe(
       map(([response, sources]: [ProtocolsResponse, SourcesResponse | null]): DirectoryViewModel => {
         const bitcoinProtocols = (response.protocols || []).filter(p => p.chain === 'bitcoin');
@@ -140,6 +146,28 @@ export class ProtocolDirectoryComponent implements OnInit {
       catchError(() => of(this.errorModel(network))),
       startWith<DirectoryViewModel>({ loading: true, error: false, network }),
     );
+  }
+
+  /**
+   * The authority snapshot, read once and then again every SOURCE_REFRESH_MS
+   * while the page is open in a browser. An open tab used to keep its first
+   * snapshot forever: a source that failed or recovered after load stayed as
+   * it was until a manual reload. One read at a time (exhaustMap), each with
+   * the request budget, and the whole stream is cancelled by the next attempt,
+   * a network switch or leaving the page. A failed read is null, so the page
+   * says the status is unknown rather than repeating an old answer as current.
+   * Server rendering reads once, so the render can settle.
+   */
+  private sourceSnapshots(): Observable<SourcesResponse | null> {
+    const read = (): Observable<SourcesResponse | null> => this.universeApiService.getSources$().pipe(
+      take(1),
+      timeout({ first: REQUEST_TIMEOUT_MS }),
+      catchError(() => of(null)),
+    );
+    if (!this.platformId || !isPlatformBrowser(this.platformId)) {
+      return read();
+    }
+    return interval(SOURCE_REFRESH_MS).pipe(startWith(-1), exhaustMap(read));
   }
 
   private errorModel(network: ExplorerNetwork): DirectoryViewModel {
@@ -357,6 +385,10 @@ export class ProtocolDirectoryComponent implements OnInit {
     const lag = source.lagBlocks;
     if (lag && lag !== '0') {
       parts.push($localize`:@@universe.protocols.detail-lag:${lag}:lag: blocks behind the chain tip`);
+    } else if (lag === null && source.checkpoint) {
+      // A null lag is unknown, never zero: the overlay could not compare the
+      // checkpoint with the chain tip.
+      parts.push($localize`:@@universe.protocols.detail-lag-unknown:Distance to the chain tip unknown`);
     }
     if (source.consecutiveFailures) {
       parts.push($localize`:@@universe.protocols.detail-failures:${source.consecutiveFailures}:failures: checks failed in a row`);
@@ -371,8 +403,24 @@ export class ProtocolDirectoryComponent implements OnInit {
     return Number.isFinite(at) ? Math.floor(at / 1000) : null;
   }
 
-  /** Re-reads the registry and the authority snapshot, cancelling any attempt in flight. */
+  /**
+   * When this authority last answered ready with a usable checkpoint, as epoch
+   * seconds, or null. Shown apart from the check time: a source checked a
+   * moment ago may not have been good for hours.
+   */
+  lastGoodSeconds(source: SourceEntry | null): number | null {
+    if (!source?.lastSuccessAt || source.lastSuccessAt === source.checkedAt) return null;
+    const at = Date.parse(source.lastSuccessAt);
+    return Number.isFinite(at) ? Math.floor(at / 1000) : null;
+  }
+
+  /**
+   * Re-reads the registry and the authority snapshot, cancelling any attempt
+   * in flight. The memoized registry is dropped first, so the retry reaches
+   * the overlay instead of replaying the copy it is retrying.
+   */
   onRetry(): void {
+    this.universeApiService.invalidateProtocols('bitcoin');
     this.retry$.next(this.retry$.value + 1);
   }
 

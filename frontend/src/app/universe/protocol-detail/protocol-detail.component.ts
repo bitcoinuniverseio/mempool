@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, map, of, shareReplay, startWith, switchMap, take, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, map, of, shareReplay, startWith, switchMap, take, tap, throwError } from 'rxjs';
+import { ChainNetworkUnavailableError } from '@app/universe/chain-network';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { UniverseLocalService } from '@app/universe/universe-local.service';
@@ -78,7 +79,19 @@ export type ProtocolResolution =
   | { readonly kind: 'loading' }
   | { readonly kind: 'registry-error' }
   | { readonly kind: 'missing' }
-  | { readonly kind: 'found'; readonly protocol: ExplorerProtocolDefinition; readonly registry?: ProtocolsResponse; readonly network?: string };
+  | {
+    readonly kind: 'found';
+    readonly protocol: ExplorerProtocolDefinition;
+    readonly registry?: ProtocolsResponse;
+    readonly network?: string;
+    /**
+     * Whether this explorer serves the protocol's chain under a valid network
+     * scope. Derived from the scope the protocol resolved under, never from
+     * a chain literal: Fractal, Dogecoin and Zcash rows resolve through their
+     * own chain-scoped registry read.
+     */
+    readonly served: boolean;
+  };
 
 /**
  * One protocol, explained and evidenced.
@@ -137,15 +150,22 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
             const protocol = findProtocol(registry.protocols || [], id);
             if (!protocol) {return of({ kind: 'missing' });}
             if (protocol.chain === 'bitcoin') {
-              return of({ kind: 'found', protocol, registry, network: this.api.network });
+              return of<ProtocolResolution>({ kind: 'found', protocol, registry, network: this.api.network, served: true });
             }
             // Resolve the roster first, then qualify only this chain's configured scope.
-            return this.api.getProtocols$({ chain: protocol.chain }).pipe(map(scoped => {
-              const selected = findProtocol(scoped.protocols || [], id);
-              return selected && selected.chain === protocol.chain
-                ? { kind: 'found', protocol: selected, registry: scoped, network: this.api.chainNetwork(protocol.chain) } as ProtocolResolution
-                : { kind: 'missing' } as ProtocolResolution;
-            }));
+            return this.api.getProtocols$({ chain: protocol.chain }).pipe(
+              map(scoped => {
+                const selected = findProtocol(scoped.protocols || [], id);
+                return selected && selected.chain === protocol.chain
+                  ? { kind: 'found', protocol: selected, registry: scoped, network: this.api.chainNetwork(protocol.chain), served: true } as ProtocolResolution
+                  : { kind: 'missing' } as ProtocolResolution;
+              }),
+              // A chain this deployment has no valid network for is listed, not
+              // served: keep the roster row and say so instead of a registry error.
+              catchError((error) => error instanceof ChainNetworkUnavailableError
+                ? of<ProtocolResolution>({ kind: 'found', protocol, registry, served: false })
+                : throwError(() => error)),
+            );
           }),
           catchError(() => of<ProtocolResolution>({ kind: 'registry-error' })),
           startWith<ProtocolResolution>({ kind: 'loading' }),
@@ -214,7 +234,7 @@ export class ProtocolDetailComponent implements OnInit, OnDestroy {
               sourcesByAuthority,
               availability,
               live: availability === 'available',
-              onThisChain: protocol.chain === 'bitcoin',
+              onThisChain: resolution.served,
               pulse,
               events: pulse.recent.filter((event) => event.protocolIds.includes(protocol.id)),
               pinned: preferences.pinnedProtocols.includes(protocol.id),

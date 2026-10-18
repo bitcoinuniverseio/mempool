@@ -1,7 +1,7 @@
 import { qualifiedCoverageFixture } from '../protocol-coverage.fixture';
 import { describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, NEVER, Observable, Subject, filter, firstValueFrom, of, throwError } from 'rxjs';
-import { ProtocolDirectoryComponent, type DirectoryViewModel } from '@app/universe/protocol-directory/protocol-directory.component';
+import { ProtocolDirectoryComponent, SOURCE_REFRESH_MS, type DirectoryViewModel } from '@app/universe/protocol-directory/protocol-directory.component';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { SeoService } from '@app/services/seo.service';
 import {
@@ -57,6 +57,7 @@ function apiOn(
     selectedNetwork$: () => of(network),
     getProtocols$,
     getSources$,
+    invalidateProtocols: () => undefined,
   } as unknown as UniverseApiService;
 }
 
@@ -403,6 +404,7 @@ describe('ProtocolDirectoryComponent retry', () => {
         ? throwError(() => new Error('mainnet registry outage'))
         : of(registry([protocol({ networks: ['signet'] })])),
       getSources$: () => of(sources),
+      invalidateProtocols: () => undefined,
     } as unknown as UniverseApiService;
     const subject = new ProtocolDirectoryComponent(api, seo);
     subject.ngOnInit();
@@ -438,6 +440,120 @@ describe('ProtocolDirectoryComponent network copy', () => {
   });
 });
 
+describe('ProtocolDirectoryComponent source refresh', () => {
+  const down: SourcesResponse = { generatedAt: 't0', sources: [source({ ready: false, status: 'unreachable', checkpoint: null })] };
+  const up: SourcesResponse = { generatedAt: 't1', sources: [source()] };
+  const readable = registry([protocol({ releaseStatus: 'VERIFIED READ ONLY' })]);
+
+  /**
+   * The audit kept one tab open for ten minutes: 187 failed checks stayed on
+   * screen as "Checked 10 minutes ago" until a reload. The page now asks again
+   * on its own, so a recovery (or a new failure) shows without reloading.
+   */
+  it('re-reads the authority snapshot in a browser and shows a recovery without reload', async () => {
+    vi.useFakeTimers();
+    try {
+      const getSources$ = vi.fn().mockReturnValueOnce(of(down)).mockReturnValue(of(up));
+      const subject = new ProtocolDirectoryComponent(apiOn('mainnet', () => of(readable), getSources$), seo, 'browser');
+      subject.ngOnInit();
+      const seen: DirectoryViewModel[] = [];
+      const subscription = subject.vm$.subscribe((vm) => seen.push(vm));
+      expect(seen.at(-1)?.liveCount).toBe(0);
+      await vi.advanceTimersByTimeAsync(SOURCE_REFRESH_MS);
+      expect(getSources$).toHaveBeenCalledTimes(2);
+      expect(seen.at(-1)?.liveCount).toBe(1);
+      // A refresh is not a reload: the page never goes back to its skeleton.
+      expect(seen.filter((vm) => vm.loading)).toHaveLength(1);
+      subscription.unsubscribe();
+      await vi.advanceTimersByTimeAsync(SOURCE_REFRESH_MS * 3);
+      // Leaving the page stops the reads.
+      expect(getSources$).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('turns a failed refresh into unknown status, not the previous answer', async () => {
+    vi.useFakeTimers();
+    try {
+      const getSources$ = vi.fn().mockReturnValueOnce(of(up)).mockReturnValue(throwError(() => new Error('503')));
+      const subject = new ProtocolDirectoryComponent(apiOn('mainnet', () => of(readable), getSources$), seo, 'browser');
+      subject.ngOnInit();
+      const seen: DirectoryViewModel[] = [];
+      const subscription = subject.vm$.subscribe((vm) => seen.push(vm));
+      expect(seen.at(-1)?.liveCount).toBe(1);
+      await vi.advanceTimersByTimeAsync(SOURCE_REFRESH_MS);
+      expect(seen.at(-1)?.sourcesByAuthority).toBeNull();
+      expect(seen.at(-1)?.liveCount).toBe(0);
+      expect(seen.at(-1)?.error).toBe(false);
+      subscription.unsubscribe();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('never overlaps reads: a slow snapshot is not asked for again while it is pending', async () => {
+    vi.useFakeTimers();
+    try {
+      const pending = new Subject<SourcesResponse>();
+      const getSources$ = vi.fn().mockReturnValue(pending);
+      const subject = new ProtocolDirectoryComponent(apiOn('mainnet', () => of(readable), getSources$), seo, 'browser');
+      subject.ngOnInit();
+      const subscription = subject.vm$.subscribe();
+      await vi.advanceTimersByTimeAsync(SOURCE_REFRESH_MS - 1);
+      expect(getSources$).toHaveBeenCalledTimes(1);
+      subscription.unsubscribe();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stops reading the old network when the network switches', async () => {
+    vi.useFakeTimers();
+    try {
+      const network = new BehaviorSubject<string>('mainnet');
+      const asked: string[] = [];
+      const api = {
+        network: 'mainnet',
+        selectedNetwork$: () => network,
+        getProtocols$: () => of(readable),
+        getSources$: () => { asked.push(network.value); return of(up); },
+        invalidateProtocols: () => undefined,
+      } as unknown as UniverseApiService;
+      const subject = new ProtocolDirectoryComponent(api, seo, 'browser');
+      subject.ngOnInit();
+      const subscription = subject.vm$.subscribe();
+      network.next('signet');
+      asked.length = 0;
+      await vi.advanceTimersByTimeAsync(SOURCE_REFRESH_MS);
+      expect(asked).toEqual(['signet']);
+      subscription.unsubscribe();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reads once when rendered on the server, so the render can settle', () => {
+    const getSources$ = vi.fn().mockReturnValue(of(up));
+    const subject = new ProtocolDirectoryComponent(apiOn('mainnet', () => of(readable), getSources$), seo, 'server');
+    subject.ngOnInit();
+    let completed = false;
+    subject.vm$.subscribe({ complete: () => { completed = true; } });
+    expect(getSources$).toHaveBeenCalledTimes(1);
+    expect(completed).toBe(false); // the network stream outlives one render, as before
+  });
+
+  it('drops the memoized registry before a retry, so the retry reaches the overlay', () => {
+    const api = apiOn('mainnet', () => of(readable), () => of(up));
+    const invalidate = vi.fn();
+    (api as unknown as { invalidateProtocols: unknown }).invalidateProtocols = invalidate;
+    const subject = new ProtocolDirectoryComponent(api, seo);
+    subject.ngOnInit();
+    subject.onRetry();
+    expect(invalidate).toHaveBeenCalledWith('bitcoin');
+  });
+});
+
 describe('ProtocolDirectoryComponent authority evidence', () => {
   const subject = component(registry([]));
 
@@ -460,6 +576,18 @@ describe('ProtocolDirectoryComponent authority evidence', () => {
 
   it('does not report a lag of zero as though it were news', () => {
     expect(subject.sourceDetail(source({ lagBlocks: '0' }))).not.toContain('behind');
+  });
+
+  it('calls a null lag unknown, never zero', () => {
+    expect(subject.sourceDetail(source({ lagBlocks: null }))).toContain('unknown');
+    expect(subject.sourceDetail(source({ lagBlocks: undefined }))).not.toContain('unknown');
+  });
+
+  it('shows the last good time apart from the check time', () => {
+    expect(subject.lastGoodSeconds(source({ checkedAt: '2026-08-28T10:05:00.000Z', lastSuccessAt: '2026-08-28T10:00:00.000Z' })))
+      .toBe(1787911200);
+    expect(subject.lastGoodSeconds(source({ checkedAt: 'x', lastSuccessAt: 'x' }))).toBeNull();
+    expect(subject.lastGoodSeconds(source({ lastSuccessAt: null }))).toBeNull();
   });
 
   it('surfaces a flapping authority through its failure count', () => {
