@@ -83,12 +83,12 @@ describe('asset inventory template', () => {
     }));
     const text = element.textContent ?? '';
     expect(text).toContain('Asset inventory');
-    expect(text).toContain('2 distinct assets found so far, not complete');
+    expect(text).toContain('2 assets found so far');
     expect(element.querySelectorAll('section.protocol-section').length).toBe(2);
     expect(text).toContain('BRC-20');
     expect(text).toContain('1,000 ordi');
-    expect(text).toContain('Applied events');
-    expect(text).toContain('Observations (not applied, never counted)');
+    expect(text).toContain('Activity');
+    expect(text).toContain('Seen but not applied');
     expect(text).toContain('Block effect');
     expect(text).toContain('2.5 ordi');
     expect(text).toContain('Unknown, not proven empty');
@@ -106,8 +106,8 @@ describe('asset inventory template', () => {
     }));
     const amounts = [...element.querySelectorAll('dl.amounts div')]
       .map((row) => [...row.children].map((cell) => cell.textContent?.trim()).join(' '));
-    expect(amounts).toEqual(['Overall 5 ordi', 'Available 4 ordi', 'Reserved (part of overall) 1 ordi']);
-    expect(element.textContent).toContain('Read 0 of 0 outputs');
-    expect(element.textContent).toContain('1 distinct assets, complete');
+    expect(amounts).toEqual(['Overall 5 ordi', 'Available 4 ordi', 'Reserved 1 ordi']);
+    expect(element.textContent).not.toContain('Read 0 of 0');
+    expect(element.textContent).toContain('1 asset found');
   });
 });

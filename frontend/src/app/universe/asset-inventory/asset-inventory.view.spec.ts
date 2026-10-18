@@ -66,10 +66,14 @@ describe('inventory presenter model', () => {
     expect(brc20?.assetCount).toBe(2);
     const ordinalsRow = model.sections[0].subgroups[0].assets[0];
     const brc20Row = brc20?.subgroups[0].assets.find((row) => row.key === ordinalsRow.key);
+    // One inscription moving needs no In/Out count; it is a full card under its
+    // own protocol and a one-line reference under the protocol that classifies it.
     for (const row of [ordinalsRow, brc20Row]) {
-      expect(row?.totals?.input?.exact).toBe('1');
-      expect(row?.totals?.output?.exact).toBe('1');
+      expect(row?.totals).toBeNull();
     }
+    expect(ordinalsRow.compact).toBe(false);
+    expect(brc20Row?.compact).toBe(true);
+    expect(brc20?.countLabel).toBe('2 assets, 3 events');
     expect(brc20Row?.facets).toHaveLength(1);
     expect(ordinalsRow.facets).toHaveLength(0);
     expect(quantityText(brc20Row!.facets[0].amount, brc20Row!.facets[0].unit)).toBe('1,000 ordi');
@@ -95,7 +99,7 @@ describe('inventory presenter model', () => {
     expect(group.accepted.map((row) => row.statusLabel)).toEqual(['Applied', 'Applied']);
     expect(group.observations).toHaveLength(1);
     expect(group.observations[0].statusLabel).toBe('Observation, not applied');
-    expect(group.observations[0].reason).toBe('insufficient-balance');
+    expect(group.observations[0].reason).toBe('Insufficient balance.');
     expect(group.accepted.find((row) => row.blockEffect)?.txid).toBeNull();
   });
 
