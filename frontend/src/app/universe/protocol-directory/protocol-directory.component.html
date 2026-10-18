@@ -13,7 +13,9 @@
     <ng-container *ngIf="!vm.error">
       <p *ngIf="vm.sourcesByAuthority !== null; else statusUnknown" class="registry-summary" role="status" i18n="universe.protocols.live-count">
         {{ vm.liveCount }} of {{ vm.totalCount }} Bitcoin protocols can be read right now.
-        <button *ngIf="vm.liveCount < vm.totalCount" type="button" class="btn btn-sm btn-outline-primary ml-2" (click)="onRetry()" i18n="universe.protocols.check-again">Check again</button>
+      </p>
+      <p *ngIf="vm.sourcesByAuthority !== null && vm.liveCount < vm.totalCount" class="registry-summary">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="onRetry()" i18n="universe.protocols.check-again">Check again</button>
       </p>
       <ng-template #statusUnknown>
         <p class="registry-summary" role="status" i18n="universe.protocols.status-unknown">Current status is unavailable for {{ vm.totalCount }} Bitcoin protocols.</p>
