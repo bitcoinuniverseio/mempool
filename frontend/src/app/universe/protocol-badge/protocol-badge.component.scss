@@ -58,3 +58,20 @@
     --universe-badge-color: var(--universe-protocol-op-data);
   }
 }
+
+.universe-badge.has-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.universe-badge-logo {
+  width: 1.45em;
+  height: 1.45em;
+  border-radius: 0.2rem;
+  object-fit: contain;
+  flex-shrink: 0;
+
+  &.tile-dark { background-color: #1d1d27; }
+  &.tile-light { background-color: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08); }
+}

@@ -1,5 +1,7 @@
 <span
   class="universe-badge"
   [ngClass]="tokenClass"
+  [class.has-logo]="!!logo"
   [attr.title]="protocol?.displayName"
->{{ protocol?.shortName }}</span>
+><img *ngIf="logo as l" class="universe-badge-logo" [ngClass]="'tile-' + l.tile" [src]="l.src"
+     alt="" aria-hidden="true" width="16" height="16" loading="lazy" decoding="async">{{ protocol?.shortName }}</span>

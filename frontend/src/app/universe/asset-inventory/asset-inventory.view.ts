@@ -109,6 +109,13 @@ export interface AssetRow {
   readonly placements: readonly PlacementRow[];
   readonly totals: SideTotals | null;
   readonly balance: BalanceRow | null;
+  /** The kind label only when the title does not already say it. */
+  readonly showKind: boolean;
+  /**
+   * Shown in full only under its own protocol; under any other protocol that
+   * classifies it, it is a one-line reference to that card.
+   */
+  readonly compact: boolean;
 }
 
 export interface EventRow {
@@ -147,6 +154,8 @@ export interface ProtocolSection {
   /** Distinct assets across this protocol's subgroups. */
   readonly assetCount: number;
   readonly eventCount: number;
+  /** "1 asset, 3 events", without zero parts. */
+  readonly countLabel: string;
 }
 
 export interface InventoryViewModel {
@@ -159,6 +168,8 @@ export interface InventoryViewModel {
   readonly checkpoints: readonly InventoryCheckpoint[];
   readonly retryable: boolean;
   readonly headline: string;
+  /** One line for the coverage table's summary: everything proven, or how many could not. */
+  readonly coverageSummary: string;
   readonly loadedItems: number | null;
   readonly totalItems: number | null;
 }
@@ -213,6 +224,21 @@ const REASON_LABELS: Readonly<Record<string, string>> = {
   'not-supported': 'The source does not support this read.',
   malformed: 'The source answered out of contract.',
 };
+
+const EVENT_REASON_LABELS: Readonly<Record<string, string>> = {
+  'fee-output-unsupported-output-or-split-unit': 'Lost to the fee, an unsupported output or a split unit.',
+  fee: 'Spent as fee.',
+  'unsupported-output': 'Sent to an output that cannot hold it.',
+  'split-unit': 'A unit was split across outputs.',
+};
+
+/** Event reasons from the protocol sources, in plain words; unknown ones are spelled out. */
+export function eventReasonLabel(reason: string): string {
+  const known = EVENT_REASON_LABELS[reason];
+  if (known) {return known;}
+  const words = reason.replace(/[-_]+/g, ' ').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) + '.' : reason;
+}
 
 export function coverageReasonLabel(reason: string): string {
   return REASON_LABELS[reason] ?? reason;
@@ -355,7 +381,7 @@ function eventRow(event: InventoryEvent, assets: ReadonlyMap<string, InventoryAs
     amount: event.amountAtomic !== null ? presentQuantity(event.amountAtomic, asset?.decimals ?? null) : null,
     unit: asset?.unit ?? '',
     txid: event.txid,
-    reason: event.reason,
+    reason: event.reason ? eventReasonLabel(event.reason) : null,
     from: event.fromAddress ?? event.fromOutpoint,
     to: event.toAddress ?? event.toOutpoint,
     sourceId: event.sourceId,
@@ -386,6 +412,33 @@ function coverageRow(entry: InventoryCoverage, found: number, names: ReadonlyMap
   };
 }
 
+/** Assets that are one item: a count of them moving in and out adds nothing. */
+const SINGLE_ITEM_KINDS: ReadonlySet<string> = new Set(['inscription', 'sat', 'name', 'namespace', 'district', 'parcel']);
+
+function countLabel(assets: number, events: number): string {
+  const parts: string[] = [];
+  if (assets > 0) {
+    parts.push(assets === 1
+      ? $localize`:@@universe.inventory.count.asset:1 asset`
+      : $localize`:@@universe.inventory.count.assets:${assets}:count: assets`);
+  }
+  if (events > 0) {
+    parts.push(events === 1
+      ? $localize`:@@universe.inventory.count.event:1 event`
+      : $localize`:@@universe.inventory.count.events:${events}:count: events`);
+  }
+  return parts.join(', ');
+}
+
+function coverageSummary(rows: readonly CoverageRow[]): string {
+  const total = rows.length;
+  const proven = rows.filter((row) => row.state === 'complete').length;
+  if (proven === total) {
+    return $localize`:@@universe.inventory.coverage.all:All ${total}:count: protocols checked`;
+  }
+  return $localize`:@@universe.inventory.coverage.some:${proven}:proven: of ${total}:total: protocols checked`;
+}
+
 function domId(value: string): string {
   return 'inv-' + value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
@@ -403,19 +456,23 @@ export function buildInventoryView(
   }
   const balances = new Map(inventory.balances.map((balance) => [balance.assetKey, balance]));
 
-  const rows = new Map<string, Omit<AssetRow, 'facets'>>();
-  const rowFor = (asset: InventoryAsset): Omit<AssetRow, 'facets'> => {
+  const rows = new Map<string, Omit<AssetRow, 'facets' | 'compact'>>();
+  const rowFor = (asset: InventoryAsset): Omit<AssetRow, 'facets' | 'compact'> => {
     let row = rows.get(asset.key);
     if (row) {return row;}
     const placements = placementsByAsset.get(asset.key) ?? [];
     const balance = balances.get(asset.key);
+    const title = assetTitle(asset);
+    const subtitle = asset.displayName || asset.ticker || asset.inscription || asset.sat ? shortenAssetId(asset.nativeId, 8) : '';
+    const kindText = kindLabel(asset.kind);
     row = {
       key: asset.key,
-      title: assetTitle(asset),
-      subtitle: asset.displayName || asset.ticker || asset.inscription || asset.sat ? shortenAssetId(asset.nativeId, 8) : '',
+      title,
+      subtitle: subtitle === title ? '' : subtitle,
       nativeId: asset.nativeId,
       kind: asset.kind,
-      kindLabel: kindLabel(asset.kind),
+      kindLabel: kindText,
+      showKind: !title.toLowerCase().startsWith(kindText.toLowerCase()),
       unit: asset.unit,
       decimals: asset.decimals,
       link: assetLink(asset),
@@ -432,7 +489,10 @@ export function buildInventoryView(
         amount: presentQuantity(placement.amountAtomic, asset.decimals),
         offsetAtomic: placement.offsetAtomic,
       })),
-      totals: inventory.scope.kind === 'transaction' && placements.length ? sideTotals(placements, asset.decimals) : null,
+      // One inscription, name or sat moving in and out says nothing a count adds;
+      // where it sits shows the move.
+      totals: inventory.scope.kind === 'transaction' && placements.length && !SINGLE_ITEM_KINDS.has(asset.kind)
+        ? sideTotals(placements, asset.decimals) : null,
       balance: balance ? balanceRow(balance, asset.decimals) : null,
     };
     rows.set(asset.key, row);
@@ -450,6 +510,12 @@ export function buildInventoryView(
   inventory.events.forEach((event) => note(event.protocolId));
 
   const coverageByProtocol = new Map(inventory.coverage.map((entry) => [entry.protocolId, entry]));
+  const listedByOwnProtocol = new Set<string>();
+  for (const group of inventory.groups) {
+    for (const key of group.assetKeys) {
+      if (assets.get(key)?.protocolId === group.protocolId) {listedByOwnProtocol.add(key);}
+    }
+  }
   const sections: ProtocolSection[] = [];
   const foundByProtocol = new Map<string, number>();
   for (const protocolId of order) {
@@ -481,6 +547,7 @@ export function buildInventoryView(
           ...base,
           facets: base.classifications.filter((facet) => facet.protocolId === protocolId
             && facet.subprotocolId === subprotocolId),
+          compact: asset.protocolId !== protocolId && listedByOwnProtocol.has(key),
         });
       }
       const subEvents = events.filter((event) => event.subprotocolId === subprotocolId).map((event) => eventRow(event, assets));
@@ -505,6 +572,7 @@ export function buildInventoryView(
       subgroups,
       assetCount: keys.size,
       eventCount: events.length,
+      countLabel: countLabel(keys.size, events.length),
     });
   }
 
@@ -516,9 +584,13 @@ export function buildInventoryView(
       ? $localize`:@@universe.inventory.headline.none:No protocol assets. Every expected protocol proved it.`
       : $localize`:@@universe.inventory.headline.none-unproven:No protocol assets found so far. Some protocols could not prove absence.`;
   } else {
-    headline = inventory.complete
-      ? $localize`:@@universe.inventory.headline.complete:${distinctAssets}:count: distinct assets, complete`
-      : $localize`:@@universe.inventory.headline.partial:${distinctAssets}:count: distinct assets found so far, not complete`;
+    headline = distinctAssets === 1
+      ? (inventory.complete
+        ? $localize`:@@universe.inventory.headline.one:1 asset found`
+        : $localize`:@@universe.inventory.headline.one-partial:1 asset found so far`)
+      : (inventory.complete
+        ? $localize`:@@universe.inventory.headline.complete:${distinctAssets}:count: assets found`
+        : $localize`:@@universe.inventory.headline.partial:${distinctAssets}:count: assets found so far`);
   }
   return {
     kind: inventory.scope.kind,
@@ -529,6 +601,7 @@ export function buildInventoryView(
     checkpoints: inventory.checkpoints,
     retryable: coverage.some((row) => row.retryable),
     headline,
+    coverageSummary: coverageSummary(coverage),
     loadedItems: inventory.page ? inventory.page.toIndex : null,
     totalItems: inventory.page ? inventory.page.totalItems : null,
   };

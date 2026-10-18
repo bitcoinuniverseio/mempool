@@ -33,7 +33,8 @@
     <p class="headline" role="status">{{ m.headline }}</p>
 
     <!-- Paging: bounded automatic walk, stoppable, then continued on request -->
-    <div class="paging" *ngIf="m.totalItems !== null && (scope === 'block' || scope === 'address')">
+    <div class="paging" *ngIf="m.totalItems !== null && (scope === 'block' || scope === 'address')
+                               && (state.hasMore || state.loadingMore || (m.loadedItems ?? 0) < m.totalItems)">
       <span class="paging-label" i18n="universe.inventory.paging">Read {{ count(m.loadedItems) }} of {{ count(m.totalItems) }} {{ itemsLabel() }}</span>
       <button *ngIf="state.loadingMore" type="button" class="btn btn-outline-secondary btn-sm" (click)="stop.emit()"
               i18n="universe.inventory.stop">Stop loading</button>
@@ -52,7 +53,7 @@
     <section *ngFor="let section of m.sections; trackBy: trackSection" class="protocol-section" [attr.aria-labelledby]="section.id">
       <h3 class="protocol-title" [id]="section.id">
         <app-protocol-badge [protocol]="badgeFor(section)"></app-protocol-badge>
-        <span class="protocol-count" i18n="universe.inventory.section-count">{{ section.assetCount }} assets, {{ section.eventCount }} events</span>
+        <span class="protocol-count">{{ section.countLabel }}</span>
         <span *ngIf="section.coverage as c" class="coverage" [ngClass]="'coverage-' + c.state">{{ c.stateLabel }}</span>
       </h3>
 
@@ -60,17 +61,17 @@
         <h4 *ngIf="group.subprotocolId" class="subgroup-title" [id]="group.id">{{ group.label }}</h4>
 
         <ul class="asset-list" *ngIf="group.assets.length">
-          <li *ngFor="let row of rowsFor(group); trackBy: trackAsset" class="asset-row">
+          <li *ngFor="let row of rowsFor(group); trackBy: trackAsset" class="asset-row" [class.asset-row-compact]="row.compact">
             <div class="asset-main">
               <a *ngIf="link(row.link) as route; else plainTitle" [routerLink]="route" class="asset-title">{{ row.title }}</a>
               <ng-template #plainTitle><span class="asset-title">{{ row.title }}</span></ng-template>
-              <span class="asset-kind">{{ row.kindLabel }}</span>
-              <span *ngIf="row.subtitle" class="asset-id" [attr.title]="row.nativeId">{{ row.subtitle }}</span>
+              <span *ngIf="row.showKind && !row.compact" class="asset-kind">{{ row.kindLabel }}</span>
+              <span *ngIf="row.subtitle && !row.compact" class="asset-id" [attr.title]="row.nativeId">{{ row.subtitle }}</span>
               <span *ngIf="row.sat" class="rarity-chip" [ngClass]="'rarity-' + row.sat.rarity">{{ row.sat.rarity }}</span>
             </div>
 
-            <ul class="facets" *ngIf="row.classifications.length" aria-label="Classifications" i18n-aria-label="universe.inventory.classifications">
-              <li *ngFor="let facet of row.classifications; trackBy: trackId" class="facet" [class.facet-here]="row.facets.includes(facet)">
+            <ul class="facets" *ngIf="(row.compact ? row.facets : row.classifications).length" aria-label="Classifications" i18n-aria-label="universe.inventory.classifications">
+              <li *ngFor="let facet of (row.compact ? row.facets : row.classifications); trackBy: trackId" class="facet" [class.facet-here]="row.facets.includes(facet)">
                 <span class="facet-protocol">{{ facet.protocolName }}<ng-container *ngIf="facet.subprotocolId"> / {{ facet.subprotocolId }}</ng-container></span>
                 <span *ngIf="facet.label" class="facet-label">{{ facet.label }}</span>
                 <span *ngIf="facet.relation" class="facet-relation">{{ facet.relation }}</span>
@@ -79,21 +80,21 @@
             </ul>
 
             <!-- Transaction: exact totals per side, never summed across assets -->
-            <dl class="amounts" *ngIf="row.totals as t">
+            <dl class="amounts" *ngIf="!row.compact && row.totals as t">
               <div *ngIf="t.input"><dt i18n="universe.inventory.inputs">In</dt><dd class="quantity" [attr.title]="t.input.exact">{{ quantityText(t.input, row.unit) }}</dd></div>
               <div *ngIf="t.output"><dt i18n="universe.inventory.outputs">Out</dt><dd class="quantity" [attr.title]="t.output.exact">{{ quantityText(t.output, row.unit) }}</dd></div>
               <div *ngIf="t.fee"><dt i18n="universe.inventory.fee">To fee</dt><dd class="quantity" [attr.title]="t.fee.exact">{{ quantityText(t.fee, row.unit) }}</dd></div>
             </dl>
 
             <!-- Address ledger: overall, available and reserved are separate facts -->
-            <dl class="amounts" *ngIf="row.balance as b">
+            <dl class="amounts" *ngIf="!row.compact && row.balance as b">
               <div><dt i18n="universe.inventory.overall">Overall</dt><dd class="quantity" [attr.title]="b.overall.exact">{{ quantityText(b.overall, row.unit) }}</dd></div>
               <div *ngIf="b.available"><dt i18n="universe.inventory.available">Available</dt><dd class="quantity" [attr.title]="b.available.exact">{{ quantityText(b.available, row.unit) }}</dd></div>
-              <div *ngIf="b.reserved"><dt i18n="universe.inventory.reserved">Reserved (part of overall)</dt><dd class="quantity" [attr.title]="b.reserved.exact">{{ quantityText(b.reserved, row.unit) }}</dd></div>
+              <div *ngIf="b.reserved"><dt i18n="universe.inventory.reserved">Reserved</dt><dd class="quantity" [attr.title]="b.reserved.exact">{{ quantityText(b.reserved, row.unit) }}</dd></div>
             </dl>
 
-            <details class="placements" *ngIf="row.placements.length">
-              <summary i18n="universe.inventory.placements">Where it sits ({{ row.placements.length }})</summary>
+            <details class="placements" *ngIf="!row.compact && row.placements.length">
+              <summary i18n="universe.inventory.placements">Where it is ({{ row.placements.length }})</summary>
               <ul>
                 <li *ngFor="let placement of row.placements; trackBy: trackId">
                   <span class="side" [ngClass]="'side-' + placement.side">{{ placement.sideLabel }}</span>
@@ -114,54 +115,59 @@
       </div>
     </section>
 
-    <!-- Coverage: what each expected protocol could prove for this scope -->
-    <div class="table-scroll">
-      <table class="table table-borderless table-sm coverage-table">
-        <caption i18n="universe.inventory.coverage.caption">Coverage by protocol</caption>
-        <thead>
-          <tr>
-            <th scope="col" i18n="universe.inventory.col.protocol">Protocol</th>
-            <th scope="col" i18n="universe.inventory.col.coverage">Coverage</th>
-            <th scope="col" i18n="universe.inventory.col.finding">Finding</th>
-            <th scope="col" i18n="universe.inventory.col.source">Source</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of m.coverage; trackBy: trackCoverage">
-            <th scope="row">{{ row.name }}</th>
-            <td><span class="coverage" [ngClass]="'coverage-' + row.state">{{ row.stateLabel }}</span>
-              <span *ngFor="let reason of row.reasons" class="reason">{{ reason }}</span></td>
-            <td>{{ row.findingLabel }}</td>
-            <td class="identifier">
-              <ng-container *ngIf="row.sourceId">{{ row.sourceId }}</ng-container>
-              <span *ngIf="row.checkpoint as cp" [attr.title]="cp.blockHash" i18n="universe.inventory.at-block"> at block {{ cp.heightAtomic }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- Coverage: what each protocol could prove for this item. Open when something is not proven. -->
+    <details class="coverage-details" [open]="!m.complete">
+      <summary class="coverage-summary">
+        <span class="coverage-summary-text">{{ m.coverageSummary }}</span>
+      </summary>
+      <div class="table-scroll">
+        <table class="table table-borderless table-sm coverage-table">
+          <caption class="sr-only" i18n="universe.inventory.coverage.caption">Coverage by protocol</caption>
+          <thead>
+            <tr>
+              <th scope="col" i18n="universe.inventory.col.protocol">Protocol</th>
+              <th scope="col" i18n="universe.inventory.col.coverage">Coverage</th>
+              <th scope="col" i18n="universe.inventory.col.finding">Found</th>
+              <th scope="col" i18n="universe.inventory.col.checked-to">Checked to</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of m.coverage; trackBy: trackCoverage">
+              <th scope="row">{{ row.name }}</th>
+              <td><span class="coverage" [ngClass]="'coverage-' + row.state">{{ row.stateLabel }}</span>
+                <span *ngFor="let reason of row.reasons" class="reason">{{ reason }}</span></td>
+              <td>{{ row.findingLabel }}</td>
+              <td class="checked-to" [attr.title]="row.sourceId">
+                <span *ngIf="row.checkpoint as cp; else noCheckpoint" [attr.title]="cp.blockHash" i18n="universe.inventory.block-height">Block {{ cp.heightAtomic }}</span>
+                <ng-template #noCheckpoint><span class="muted">-</span></ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <details class="checkpoints" *ngIf="m.checkpoints.length">
-      <summary i18n="universe.inventory.checkpoints">Source checkpoints ({{ m.checkpoints.length }})</summary>
-      <ul>
-        <li *ngFor="let cp of m.checkpoints">
-          <span class="source">{{ cp.sourceId }}</span>
-          <span i18n="universe.inventory.checkpoint-height">block {{ cp.heightAtomic }}</span>
-          <span class="identifier" [attr.title]="cp.blockHash">{{ shorten(cp.blockHash, 8) }}</span>
-          <span *ngIf="cp.generation !== null" i18n="universe.inventory.generation">generation {{ cp.generation }}</span>
-        </li>
-      </ul>
+      <details class="checkpoints" *ngIf="m.checkpoints.length">
+        <summary i18n="universe.inventory.checkpoints">Verification details</summary>
+        <ul>
+          <li *ngFor="let cp of m.checkpoints">
+            <span class="source">{{ cp.sourceId }}</span>
+            <span i18n="universe.inventory.checkpoint-height">block {{ cp.heightAtomic }}</span>
+            <span class="identifier" [attr.title]="cp.blockHash">{{ shorten(cp.blockHash, 8) }}</span>
+            <span *ngIf="cp.generation !== null" i18n="universe.inventory.generation">generation {{ cp.generation }}</span>
+          </li>
+        </ul>
+      </details>
     </details>
   </ng-container>
 </section>
 
 <ng-template #eventList let-group="group" let-rows="rows" let-kind="kind">
   <div *ngIf="rows.length" class="events" [ngClass]="'events-' + kind">
-    <h5 *ngIf="kind === 'accepted'" i18n="universe.inventory.events.applied">Applied events</h5>
-    <h5 *ngIf="kind === 'observations'" i18n="universe.inventory.events.observations">Observations (not applied, never counted)</h5>
+    <h5 *ngIf="kind === 'accepted'" i18n="universe.inventory.events.applied">Activity</h5>
+    <h5 *ngIf="kind === 'observations'" i18n="universe.inventory.events.observations">Seen but not applied</h5>
     <ul>
       <li *ngFor="let event of eventsFor(group, rows, kind); trackBy: trackEvent" class="event-row">
-        <span class="event-status" [class.observation]="!event.accepted">{{ event.statusLabel }}</span>
+        <span *ngIf="!event.accepted" class="event-status observation">{{ event.statusLabel }}</span>
         <span class="operation">{{ event.operationLabel }}</span>
         <span *ngIf="event.blockEffect" class="block-effect" i18n="universe.inventory.block-effect">Block effect</span>
         <span class="asset-title">{{ event.assetTitle }}</span>

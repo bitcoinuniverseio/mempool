@@ -223,3 +223,28 @@
   .asset-inventory { padding: 0.75rem; }
   .inventory-header .refresh { margin-left: 0; }
 }
+
+// A reference to an asset shown in full under its own protocol.
+.asset-row-compact {
+  border-style: dashed;
+  padding: 0.3rem 0.65rem;
+
+  .facets { display: inline; margin: 0; }
+}
+
+.coverage-details {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--u-divider);
+  padding-top: 0.5rem;
+
+  > summary {
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    color: var(--u-text-muted);
+  }
+}
+
+.checked-to { white-space: nowrap; }
+.muted { color: var(--u-text-muted); }
