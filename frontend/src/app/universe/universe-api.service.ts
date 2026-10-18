@@ -375,6 +375,18 @@ export class UniverseApiService {
     }));
   }
 
+  /**
+   * Drops the memoized registry for one chain (every network of it), so the
+   * next getProtocols$ asks the overlay again. A Retry must reach the network:
+   * the registry carries capability and acceptance state, and an indefinitely
+   * replayed copy kept a degraded or recovered overlay invisible.
+   */
+  invalidateProtocols(chain = 'bitcoin'): void {
+    for (const key of Array.from(this.protocolsCache.keys())) {
+      if ((JSON.parse(key) as [string, string])[0] === chain) {this.protocolsCache.delete(key);}
+    }
+  }
+
   private protocolFailure(error: unknown, kind: ProtocolPageKind, protocolId: string,
     network: ExplorerNetwork, chain: string): Observable<ExplorerProtocolActivityPage | ExplorerProtocolObjectsPage> {
     const page = readProtocolFailure(kind, error, protocolId);
