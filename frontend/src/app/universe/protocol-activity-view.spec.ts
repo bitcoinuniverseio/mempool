@@ -111,6 +111,21 @@ describe('readObjectRows', () => {
     expect(objectsSummary(objects, 0)).toBe('A verified read-only collection is not available on this network.');
     expect(objects.degradedReason).toContain('custody transitions');
   });
+  it('describes an Ordex page as the local journal, never as the whole collection', () => {
+    const objects: ExplorerProtocolObjectsPage = {
+      schemaVersion: 'universe-protocol-objects-v1', protocolId: 'ordex', state: 'served',
+      authorityId: 'ordex-journal', objectsPath: '/api/ordex/orders', items: [], nextCursor: null, checkpoint: null,
+      ordexJournal: {
+        scope: 'local-order-journal', network: 'mainnet', generation: 'a'.repeat(64), totalVisible: 40,
+        filter: 'visible-non-withdrawn', sort: 'created-desc-id-asc',
+        currentVerification: { performed: false, reason: 'not performed' },
+      },
+      degradedReason: null, observedAt: '2026-10-18T00:00:00.000Z',
+    };
+    expect(objectsSummary(objects, 25)).toBe("This deployment's Ordex journal answered: 25 of 40 imported orders.");
+    expect(objectsSummary({ ...objects, ordexJournal: { ...objects.ordexJournal!, totalVisible: 0 } }, 0))
+      .toBe("This deployment's Ordex journal answered: 0 of 0 imported orders.");
+  });
   it('reads the identity and status keys the object collections publish', () => {
     const rows = readObjectRows([
       { id: 'asset-1', status: 'alive', owner: 'bc1qexample', supply: '1000' },

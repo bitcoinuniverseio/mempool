@@ -130,6 +130,9 @@
             </ng-container>
             <ng-container *ngSwitchCase="'loaded'">
               <p class="activity-summary">{{ objectsSummaryLabel(objects) }}</p>
+              <p class="limitation" *ngIf="objects.page.ordexJournal" i18n="universe.detail.ordex-journal-scope">
+                These are orders imported into this deployment's Ordex journal, not every Ordex order on Bitcoin. Each shows the check stored when it was imported or last revalidated; this page does not re-check orders against Bitcoin Core or Ord.
+              </p>
 
               <ul class="authority-event-list" *ngIf="objects.rows.length; else objectsEmpty">
                 <li *ngFor="let row of objects.rows; trackBy: trackByObject">
@@ -137,6 +140,7 @@
                      [routerLink]="['/inscription' | relativeUrl, reference]" [queryParams]="{protocol:'names'}">{{ shorten(reference, 18) }}</a>
                   <ng-template #plainObjectIdentity><span class="identifier">{{ row.id ? shorten(row.id, 18) : '' }}</span></ng-template>
                   <span class="kind" *ngIf="objectKindLabel(row, vm.protocol.id) as kind">{{ kind }}</span>
+                  <span class="kind" *ngIf="ordexOrderDetail(row, vm.protocol.id) as detail">{{ detail }}</span>
                 </li>
               </ul>
               <ng-template #objectsEmpty></ng-template>

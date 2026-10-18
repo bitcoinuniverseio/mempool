@@ -952,6 +952,20 @@ export interface ExplorerProtocolObjectsPage {
   authorityId: string | null;
   objectsPath: string | null;
   items: Array<Record<string, unknown>>;
+  /**
+   * Ordex only: the backend's local order journal this page came from. It
+   * covers imported orders in this deployment, not all Ordex activity, and
+   * each item's storedValidation was not re-checked against Core or Ord.
+   */
+  ordexJournal?: {
+    scope: 'local-order-journal';
+    network: string;
+    generation: string;
+    totalVisible: number;
+    filter: string;
+    sort: string;
+    currentVerification: { performed: false; reason: string };
+  };
   nextCursor: string | null;
   checkpoint: {
     heightAtomic: string;

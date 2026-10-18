@@ -4,7 +4,7 @@
   "historicalArtifact": "docs/acceptance/explorer-health-handoff-2026-09-06.json",
   "historicalSha256": "98ed8c95130a94dd30d8d998f4f3a4f84c2b6bfe4aefa084817783600f4805b7",
   "historicalOperationCount": 119,
-  "currentOperationCount": 123,
+  "currentOperationCount": 124,
   "removed": [],
   "catalogueUpdates": [
     {
@@ -17,6 +17,14 @@
         "chain-detail",
         "holders",
         "events"
+      ]
+    },
+    {
+      "id": "PRO-31",
+      "protocol": "ordex",
+      "declaredOperations": [
+        "registry",
+        "objects"
       ]
     }
   ],
@@ -63,6 +71,16 @@
       "evidence": "source-contract",
       "acceptance": "NOT TESTED",
       "pagination": "offset"
+    },
+    {
+      "key": "ordex/objects",
+      "protocol": "ordex",
+      "id": "objects",
+      "method": "GET",
+      "route": "/api/v1/universe/protocols/ordex/objects",
+      "authorityPath": "/api/ordex/orders",
+      "evidence": "source-contract",
+      "acceptance": "NOT TESTED"
     }
   ],
   "summaryVariants": [

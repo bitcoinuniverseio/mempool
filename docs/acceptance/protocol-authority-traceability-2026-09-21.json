@@ -640,16 +640,17 @@
       },
       {
         "protocol": "ordex",
-        "authority": "index-ordinals",
+        "authority": "backend-apis",
         "operations": [
-          "PROTO/ordex/registry"
+          "PROTO/ordex/registry",
+          "PROTO/ordex/objects"
         ],
-        "owningRepositoryRevision": "2184d55f9b80024b1bbc41d8740e20eaba2c7a7f",
+        "owningRepositoryRevision": "2eee22639c8ab5fa3ce1eb660094e99a9ce60361",
         "owningDocumentationCandidates": [
-          "README.md",
-          "ops/powervps/ord-api-proxy/README.md",
-          "src/protocol-position-settlement.ts",
-          "test/protocol-position-settlement.test.ts"
+          "docs/frontier-lab/products/ordex-protocol/API.md",
+          "src/ordex/ordex-journal.ts",
+          "src/ordex/ordex-snapshot.ts",
+          "src/ordex/ordex.types.ts"
         ],
         "status": "BLOCKED",
         "remainingRequirement": "Identify normative parser/read-contract revision and actual authority build/network support for these exact operations; then bind executable acceptance tests and results.",
@@ -1375,8 +1376,8 @@
     "schemaVersion": "universe-explorer-protocol-manifest-v1",
     "registryVersion": "1.1.0",
     "sourceRepository": "bitcoinuniverseio/backend-apis",
-    "sourceSha": "1a1a2548a74e419bf7341dd7af1cd57ff98e34c7",
-    "sha256": "1630aeb583cdc839830577a35d9d5f134c51cbb33ecd41d3c25f0e0de9d75afe",
+    "sourceSha": "8c5577e705687782c188d5f63389352983a3f4f6",
+    "sha256": "0cbf284ad0a1c278c4139d3513c5c133960cc6e1f956accfe267e96e77790673",
     "protocols": [
       {
         "id": "ordinals",
@@ -2383,6 +2384,14 @@
             "authorityPath": null,
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
+          },
+          {
+            "id": "objects",
+            "method": "GET",
+            "route": "/api/v1/universe/protocols/ordex/objects",
+            "authorityPath": "/api/ordex/orders",
+            "evidence": "source-contract",
+            "acceptance": "NOT TESTED"
           }
         ]
       },
@@ -2718,7 +2727,7 @@
   },
   "summary": {
     "protocolCount": 39,
-    "operationCount": 123,
+    "operationCount": 124,
     "authorityCount": 27,
     "protocolsWithSourceReferences": 3,
     "qualifiedProtocols": 0,
@@ -5931,24 +5940,24 @@
         "mainnet"
       ],
       "authority": {
-        "id": "index-ordinals",
-        "owningRepositoryRevision": "2184d55f9b80024b1bbc41d8740e20eaba2c7a7f",
+        "id": "backend-apis",
+        "owningRepositoryRevision": "2eee22639c8ab5fa3ce1eb660094e99a9ce60361",
         "checkout": {
-          "repository": "index-ordinals",
-          "revision": "2184d55f9b80024b1bbc41d8740e20eaba2c7a7f",
-          "branch": "develop",
+          "repository": "backend-apis",
+          "revision": "43845884ebeccbf8c0dce5ef4d0a26b1c82eb59f",
+          "branch": "main",
           "concurrentDirty": false,
-          "candidateFileCount": 5,
-          "candidateFilesSha256": "4e6bb9b673da613e7957eb12dce39540c68f849808bac352c6ae8038fe8400d8"
+          "candidateFileCount": 807,
+          "candidateFilesSha256": "c8e8286156c05803631d2e8f3b85a663c7aa5be9dbd3e1cf2fc1eaeb295331fc"
         },
         "sourceRegisterMatches": [],
         "sourceRegisterMatchStatus": "REFERENCE-MISSING"
       },
       "governingDocumentationCandidates": [
-        "README.md",
-        "ops/powervps/ord-api-proxy/README.md",
-        "src/protocol-position-settlement.ts",
-        "test/protocol-position-settlement.test.ts"
+        "docs/frontier-lab/products/ordex-protocol/API.md",
+        "src/ordex/ordex-journal.ts",
+        "src/ordex/ordex-snapshot.ts",
+        "src/ordex/ordex.types.ts"
       ],
       "operations": [
         {
@@ -5958,6 +5967,28 @@
             "method": "GET",
             "route": "/api/v1/universe/protocols",
             "authorityPath": null,
+            "evidence": "source-contract",
+            "acceptance": "NOT TESTED"
+          },
+          "status": "BLOCKED",
+          "acceptance": "NOT TESTED",
+          "authorityContract": "UNVERIFIED",
+          "requiredEvidence": [
+            "Normative or reference source at a pinned revision",
+            "Exact deployed authority build and supported network",
+            "Executable reader assertions with authoritative readback",
+            "Consumer result, checkpoint and recovery assertions where applicable"
+          ],
+          "remainingRequirement": "Identify normative parser/read-contract revision and actual authority build/network support for these exact operations; then bind executable acceptance tests and results.",
+          "nextAction": "Read the listed owning documentation and protocol reader paths at the saved SHA, compare actual deployed build when approved runtime access works, and test the declared authority paths from the operation matrix."
+        },
+        {
+          "id": "PROTO/ordex/objects",
+          "contract": {
+            "id": "objects",
+            "method": "GET",
+            "route": "/api/v1/universe/protocols/ordex/objects",
+            "authorityPath": "/api/ordex/orders",
             "evidence": "source-contract",
             "acceptance": "NOT TESTED"
           },

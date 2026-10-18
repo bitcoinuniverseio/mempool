@@ -337,7 +337,7 @@ export function validateTraceability(document, currentManifestBytes) {
   );
   assert.equal(document.currentManifest.sha256, sha256(currentManifestBytes));
   assert.equal(document.summary.protocolCount, 39);
-  assert.equal(document.summary.operationCount, 123);
+  assert.equal(document.summary.operationCount, 124);
   assert.equal(document.summary.qualifiedProtocols, 0);
   assert.equal(document.summary.blockedProtocols, 39);
   assert.equal(document.protocols.length, 39);
@@ -348,7 +348,7 @@ export function validateTraceability(document, currentManifestBytes) {
   const operationIds = document.protocols.flatMap((protocol) =>
     protocol.operations.map((operation) => `${protocol.id}/${operation.id}`),
   );
-  assert.equal(operationIds.length, 123);
+  assert.equal(operationIds.length, 124);
   assert.equal(new Set(operationIds).size, operationIds.length);
   for (const protocol of document.protocols) {
     assert.equal(protocol.status, "BLOCKED");
