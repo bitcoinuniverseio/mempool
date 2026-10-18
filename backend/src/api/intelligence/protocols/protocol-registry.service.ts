@@ -1,5 +1,8 @@
 import { decodeRunestone, Runestone } from './runestone';
-import { InscriptionEnvelope, parseBrc20, parseInscriptionEnvelopes } from './inscription-envelope';
+import {
+  Brc20Observation, formatInscriptionId, InscriptionEnvelope, observeBrc20, observedCurseConditions, ORD_REFERENCE,
+  parseInscriptionEnvelopes, parseTransactionEnvelopes,
+} from './inscription-envelope';
 import { hexToBuffer, isPush, OP_RETURN, parseScript } from './script-parser';
 import { ProtocolActivityObserver, ProtocolActivityMetrics } from './protocol-activity';
 import { OTS_MAGIC } from '../opentimestamps/ots-timestamp';
@@ -155,9 +158,12 @@ export class ProtocolRegistryService {
    * Decodes a scriptPubKey, a tapscript, or a detached OpenTimestamps proof
    * given as hex. Every returned field is derived from the bytes.
    */
-  // Every envelope in the script is returned in order, including ones ord would
-  // not index, and each BRC-20 marker beside its envelope. Markers and flags are
-  // observations; acceptance and holdings come from the protocol authorities.
+/*
+ * Every observation is returned: one Ordinals result per envelope (complete or not) plus a BRC-20 result
+ * whenever the body carries the marker, so one inscription keeps all its classifications. Rules follow
+ * ord 0.29.0 (7e37a3bd) and OPI 7933f5d0; nothing is promoted to a holding or accepted operation. Other
+ * inscription protocols (names, bitmap, tap, dmt, unat, dust20, block20) need their own authorities.
+ */
   public decodePayload(rawHex: unknown): DecodedProtocolPayload[] {
     if (typeof rawHex !== 'string') {
       throw new ProtocolDecodeError('invalid_input', 'script_hex must be a string');
@@ -187,32 +193,7 @@ export class ProtocolRegistryService {
     }
 
     for (const envelope of parseInscriptionEnvelopes(bytes)) {
-      results.push(this.describeInscription(envelope));
-      const brc20 = envelope.ordRecognized ? parseBrc20(envelope) : null;
-      if (brc20?.status === 'marker') {
-        const { status: _status, ...marker } = brc20;
-        results.push({
-          protocol_id: 'brc20',
-          protocol_name: 'BRC-20 Token Standard',
-          operation_type: `brc20_${brc20.op}`,
-          parameters: { ...marker, inscription_index: envelope.index, acceptance: 'not resolved: requires the BRC-20 authority' },
-          confidence: CONFIDENCE.marker,
-          decoding_level: 'marker',
-          status: 'decoded',
-          issues: ['BRC-20 marker only: operation grammar, precision and acceptance are not checked here'],
-        });
-      } else if (brc20?.status === 'observation-truncated') {
-        results.push({
-          protocol_id: 'brc20',
-          protocol_name: 'BRC-20 Token Standard',
-          operation_type: 'brc20_observation_truncated',
-          parameters: { inscription_index: envelope.index, body_bytes: brc20.body_bytes, observation_limit_bytes: brc20.observation_limit_bytes },
-          confidence: CONFIDENCE.marker,
-          decoding_level: 'marker',
-          status: 'incomplete',
-          issues: [`body exceeds the ${brc20.observation_limit_bytes}-byte observation limit and was not examined; this says nothing about BRC-20 validity`],
-        });
-      }
+      results.push(...this.describeEnvelope(envelope, null));
     }
 
     if (results.length === 0) {
@@ -221,6 +202,71 @@ export class ProtocolRegistryService {
     }
 
     return results;
+  }
+
+  /**
+   * Decodes the inscription envelopes of a whole transaction from its input
+   * witnesses (hex stack items, one array per input, in input order), so each
+   * ord-recognized envelope gets its transaction-wide index and candidate ID.
+   */
+  public decodeTransactionInscriptions(txid: unknown, witnesses: unknown): DecodedProtocolPayload[] {
+    if (typeof txid !== 'string' || !/^[0-9a-fA-F]{64}$/.test(txid)) {
+      throw new ProtocolDecodeError('invalid_input', 'txid must be 64 hexadecimal characters');
+    }
+    if (!Array.isArray(witnesses) || witnesses.some(witness => !Array.isArray(witness))) {
+      throw new ProtocolDecodeError('invalid_input', 'witnesses must be an array of hex stack arrays, one per input');
+    }
+    let total = 0;
+    const stacks = (witnesses as unknown[][]).map(witness => witness.map(item => {
+      const buffer = typeof item === 'string' ? (item === '' ? Buffer.alloc(0) : hexToBuffer(item)) : null;
+      if (!buffer) {
+        throw new ProtocolDecodeError('invalid_hex', 'witness items must be even-length hexadecimal');
+      }
+      total += buffer.length * 2;
+      if (total > MAX_DECODE_HEX_CHARS) {
+        throw new ProtocolDecodeError('too_large', `witnesses exceed ${MAX_DECODE_HEX_CHARS} hex characters`);
+      }
+      return buffer;
+    }));
+    const results: DecodedProtocolPayload[] = [];
+    for (const envelope of parseTransactionEnvelopes(stacks)) {
+      results.push(...this.describeEnvelope(envelope, txid.toLowerCase()));
+    }
+    return results;
+  }
+
+  private describeEnvelope(envelope: InscriptionEnvelope, txid: string | null): DecodedProtocolPayload[] {
+    const brc20 = envelope.ordRecognized ? observeBrc20(envelope) : null;
+    const results = [this.describeInscription(envelope, txid, brc20)];
+    if (brc20) { results.push(this.describeBrc20(envelope, brc20)); }
+    return results;
+  }
+
+  private describeBrc20(envelope: InscriptionEnvelope, brc20: Brc20Observation): DecodedProtocolPayload {
+    const known = brc20.op === 'deploy' || brc20.op === 'mint' || brc20.op === 'transfer';
+    let operation = 'brc20_not_inspected';
+    if (brc20.syntax === 'valid') { operation = `brc20_${brc20.op}`; }
+    else if (brc20.syntax === 'invalid') { operation = known ? `brc20_${brc20.op}_invalid` : 'brc20_marker_invalid'; }
+    const parameters: Record<string, unknown> = {
+      ...brc20,
+      inscription_index: envelope.index,
+      input_index: envelope.input,
+      transaction_inscription_index: envelope.inscriptionIndex,
+      balance_effect: 'none: an observation is not an accepted operation',
+    };
+    for (const key of ['amt', 'max', 'lim', 'dec', 'self_mint'] as const) {
+      if (brc20[key] === null) { delete parameters[key]; }
+    }
+    return {
+      protocol_id: 'brc20',
+      protocol_name: 'BRC-20 Token Standard',
+      operation_type: operation,
+      parameters,
+      confidence: brc20.syntax === 'valid' ? CONFIDENCE.syntactic : (brc20.syntax === 'invalid' ? CONFIDENCE.marker : 0),
+      decoding_level: brc20.syntax === 'valid' ? 'syntactic' : 'marker',
+      status: brc20.syntax === 'valid' ? 'decoded' : (brc20.syntax === 'invalid' ? 'invalid' : 'incomplete'),
+      issues: brc20.issues,
+    };
   }
 
   private describeRunestone(runestone: Runestone): DecodedProtocolPayload {
@@ -268,58 +314,77 @@ export class ProtocolRegistryService {
     };
   }
 
-  // Envelope flags are reported as ord defines them. Whether the inscription is
-  // cursed, vindicated, unbound or where it sits needs the input values, the
-  // position in the transaction, the network and the height, so those fields
-  // stay unresolved here.
-  private describeInscription(envelope: InscriptionEnvelope): DecodedProtocolPayload {
+/*
+ * Parser flags are observations, not verdicts: in ord 0.29.0 (7e37a3bd) inscription_updater.rs the curse
+ * outcome depends on the Jubilee height and reinscription state, and unbound also on a zero-value input.
+ * A recognized envelope is therefore decoded with its curse conditions and every classification it
+ * carries, while location, curse state, binding and parent provenance stay authority-required.
+ */
+  private describeInscription(envelope: InscriptionEnvelope, txid: string | null, brc20: Brc20Observation | null): DecodedProtocolPayload {
     const issues: string[] = [];
-    if (envelope.termination === 'end_of_script') { issues.push('envelope ends before OP_ENDIF'); }
-    if (envelope.termination === 'non_push_opcode') { issues.push('envelope contains a non-push opcode; ord does not index it'); }
-    if (envelope.incomplete && envelope.termination === 'endif') { issues.push('script contains a truncated push; ord does not index envelopes from it'); }
-    for (const flaw of envelope.flaws) { issues.push(`envelope flag: ${flaw}`); }
-    let operation = 'inscription_reveal';
-    let status: DecodedProtocolPayload['status'] = 'decoded';
-    if (envelope.incomplete) {
-      operation = 'inscription_envelope_incomplete';
-      status = 'incomplete';
-    } else if (!envelope.ordRecognized) {
-      operation = 'inscription_envelope_unrecognized';
-      status = 'invalid';
+    if (envelope.incomplete) { issues.push(`envelope not recognized by ord: ${envelope.incompleteReason}`); }
+    for (const flaw of envelope.flaws) { issues.push(`envelope: ${flaw}`); }
+    const classifications: string[] = [];
+    if (envelope.ordRecognized) {
+      classifications.push('ordinals:inscription');
+      if (envelope.parentValues.length > 0) { classifications.push('ordinals:child_claim'); }
+      if (envelope.delegateHex !== null) { classifications.push('ordinals:delegate_claim'); }
+      if (envelope.runeField) { classifications.push('ordinals:rune_commitment'); }
+      if (envelope.metaprotocol !== null) { classifications.push(`metaprotocol:${envelope.metaprotocol}`); }
+      if (brc20) { classifications.push(brc20.syntax === 'valid' ? `brc20:${brc20.op}` : `brc20:marker_${brc20.syntax}`); }
     }
-    const unresolved = 'not resolved: requires the ordinals authority';
+    // txid plus the transaction-wide envelope index gives the candidate ID; whether ord indexed it is the authority's call.
+    const inscriptionId = txid !== null && envelope.inscriptionIndex !== null
+      ? formatInscriptionId(txid, envelope.inscriptionIndex)
+      : 'not resolved: requires the ordinals authority';
     return {
       protocol_id: 'ordinals',
       protocol_name: 'Ordinals and Inscriptions',
-      operation_type: operation,
+      operation_type: envelope.incomplete ? 'inscription_envelope_incomplete' : 'inscription_reveal',
       parameters: {
+        reference: ORD_REFERENCE,
         envelope_index: envelope.index,
+        input_index: envelope.input,
+        envelope_offset: envelope.offset,
+        transaction_inscription_index: envelope.inscriptionIndex,
         ord_recognized: envelope.ordRecognized,
         content_type: envelope.contentType,
+        content_type_hex: envelope.contentTypeHex,
         content_encoding: envelope.contentEncoding,
         metaprotocol: envelope.metaprotocol,
-        has_body: envelope.hasBody,
+        body_present: envelope.hasBody,
         body_size_bytes: envelope.incomplete ? null : envelope.bodyBytes,
         body_bytes_seen: envelope.bodyBytes,
         pointer: big(envelope.pointer),
+        pointer_hex: envelope.pointerHex,
         parents: envelope.parents,
+        parent_values_hex: envelope.parentValues,
         delegate: envelope.delegate,
-        rune_field: envelope.runeField,
-        note: envelope.note,
+        delegate_hex: envelope.delegateHex,
+        rune_hex: envelope.runeHex,
         metadata_bytes: envelope.metadataBytes,
-        properties_bytes: envelope.propertiesBytes,
-        property_encoding: envelope.propertyEncoding,
-        flags: envelope.flaws,
-        unrecognized_fields: envelope.unrecognizedFields,
-        // The inscription ID, sat, location and curse state need transaction and chain context.
-        inscription_id: unresolved,
-        location: unresolved,
-        curse_status: `${unresolved} at a known network height`,
-        bound_status: `${unresolved} with the spent input values`,
+        properties_hex: envelope.properties ? envelope.properties.toString('hex') : null,
+        property_encoding_hex: envelope.propertyEncoding,
+        unknown_fields: envelope.unknownFields,
+        repeated_fields: envelope.repeatedFields,
+        flags: envelope.flags,
+        curse_conditions: observedCurseConditions(envelope),
+        classifications,
+        inscription_id: inscriptionId,
+        authority_required: {
+          indexed: 'authority-required',
+          location: 'authority-required',
+          curse_state: 'authority-required: depends on the network Jubilee height and reinscription state',
+          binding: envelope.flags.unrecognized_even_field
+            ? 'unbound per ord: unrecognized even field'
+            : 'authority-required: also unbound when the input value is zero',
+          parent_provenance: envelope.parentValues.length > 0 ? 'authority-required: the parent must be spent in the reveal' : null,
+          input_position: envelope.input === null ? 'authority-required: a bare script has no input index' : null,
+        },
       },
-      confidence: status === 'decoded' ? CONFIDENCE.syntactic : CONFIDENCE.marker,
-      decoding_level: status === 'decoded' ? 'syntactic' : 'marker',
-      status,
+      confidence: envelope.incomplete ? CONFIDENCE.marker : CONFIDENCE.syntactic,
+      decoding_level: envelope.incomplete ? 'marker' : 'syntactic',
+      status: envelope.incomplete ? 'incomplete' : 'decoded',
       issues,
     };
   }

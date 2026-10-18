@@ -9,7 +9,7 @@
 // window they cover; nothing is extrapolated to a day the backend did not see.
 import { BlockExtended, TransactionExtended } from '../../../mempool.interfaces';
 import { decodeRunestone } from './runestone';
-import { parseBrc20, parseInscriptionEnvelopes } from './inscription-envelope';
+import { observeBrc20, parseTransactionEnvelopes } from './inscription-envelope';
 
 export const OBSERVED_PROTOCOLS = ['runes', 'ordinals', 'brc20', 'op_return'] as const;
 export type ObservedProtocol = typeof OBSERVED_PROTOCOLS[number];
@@ -59,19 +59,13 @@ function emptyTally(): ProtocolTally {
   return { transactions: 0, weight: 0, fees: 0, operations: 0 };
 }
 
-function witnessScripts(tx: TransactionExtended): Buffer[] {
-  const scripts: Buffer[] = [];
-  for (const vin of tx.vin ?? []) {
-    const witness = vin.witness;
-    if (!witness || witness.length < 2) { continue; }
-    const hasAnnex = witness[witness.length - 1].startsWith('50');
-    if (witness.length <= (hasAnnex ? 2 : 1)) { continue; }
-    const script = witness[witness.length - (hasAnnex ? 3 : 2)];
-    if (script && /^[0-9a-f]*$/i.test(script) && script.length % 2 === 0) {
-      scripts.push(Buffer.from(script, 'hex'));
-    }
-  }
-  return scripts;
+/** Input witness stacks in input order; an input with an unusable item contributes an empty stack. */
+function witnessStacks(tx: TransactionExtended): Buffer[][] {
+  return (tx.vin ?? []).map(vin => {
+    const witness = vin.witness ?? [];
+    if (!witness.every(item => /^[0-9a-f]*$/i.test(item) && item.length % 2 === 0)) { return []; }
+    return witness.map(item => Buffer.from(item, 'hex'));
+  });
 }
 
 /** Which protocols a single transaction carries, and how many operations of each. */
@@ -86,11 +80,14 @@ export function classifyTransaction(tx: TransactionExtended): Partial<Record<Obs
       found.runes = (found.runes ?? 0) + Math.max(operations, 1);
     }
   }
-  for (const script of witnessScripts(tx)) {
-    const envelopes = parseInscriptionEnvelopes(script).filter(envelope => envelope.ordRecognized);
-    if (envelopes.length === 0) { continue; }
+  // Envelopes ord would index, across every input; BRC-20 counts inspected marker observations, not accepted operations.
+  const envelopes = parseTransactionEnvelopes(witnessStacks(tx)).filter(envelope => envelope.ordRecognized);
+  if (envelopes.length > 0) {
     found.ordinals = (found.ordinals ?? 0) + envelopes.length;
-    const brc20 = envelopes.filter(envelope => parseBrc20(envelope)?.status === 'marker').length;
+    const brc20 = envelopes.filter(envelope => {
+      const observation = observeBrc20(envelope);
+      return observation !== null && observation.inspection === 'inspected';
+    }).length;
     if (brc20 > 0) { found.brc20 = (found.brc20 ?? 0) + brc20; }
   }
   return found;

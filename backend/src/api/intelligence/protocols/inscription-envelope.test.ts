@@ -3,8 +3,8 @@
 // inscription_id.rs. Each case names the ord test it reproduces. Scripts are
 // built the way rust-bitcoin's Builder::push_slice builds them.
 import {
-  BRC20_OBSERVATION_LIMIT_BYTES, decodePointer, InscriptionEnvelope, InscriptionTag, inscriptionIdFromBytes,
-  parseBrc20, parseInscriptionEnvelopes, parseTransactionEnvelopes,
+  BRC20_INSPECTION_LIMIT_BYTES, decodePointer, InscriptionEnvelope, InscriptionTag, inscriptionIdFromValue,
+  observeBrc20, parseBrc20, parseInscriptionEnvelopes, parseTransactionEnvelopes,
 } from './inscription-envelope';
 import { protocolRegistryService } from './protocol-registry.service';
 
@@ -50,7 +50,7 @@ const view = (e: InscriptionEnvelope) => ({
   body: e.hasBody ? e.body.toString('hex') : null,
   pointer: e.pointer,
   metadataBytes: e.metadataBytes,
-  propertiesBytes: e.propertiesBytes,
+  propertiesBytes: e.properties?.length ?? 0,
   flags: e.flaws,
 });
 
@@ -59,6 +59,15 @@ const plain = (contentType: string | null, body: string | null, extra: Partial<R
 });
 
 const hex = (s: string): string => Buffer.from(s, 'utf8').toString('hex');
+
+/** Fields ord leaves untaken, one entry per value, with ord's even/odd rule on the first tag byte. */
+const unknown = (e: InscriptionEnvelope) => e.unknownFields.flatMap(f =>
+  f.values.map(value => ({ tag: f.tag, value, even: parseInt(f.tag.slice(0, 2), 16) % 2 === 0 })));
+
+const note = (e: InscriptionEnvelope): string | null => {
+  const field = e.unknownFields.find(f => f.tag === '0f');
+  return field ? Buffer.from(field.values[0], 'hex').toString('utf8') : null;
+};
 
 describe('tag identity follows ord tag.rs', () => {
   it('assigns each tag its ord 0.29.0 byte', () => {
@@ -70,16 +79,16 @@ describe('tag identity follows ord tag.rs', () => {
 
   it('tag 15 is the note and tag 17 is properties', () => {
     const [e] = ord(envelope('ord', [15], 'a note', [17], [1, 2, 3]));
-    expect(e.note).toBe('a note');
-    expect(e.propertiesBytes).toBe(3);
-    expect(e.unrecognizedFields).toEqual([]);
+    expect(note(e)).toBe('a note');
+    expect(e.properties?.length).toBe(3);
+    expect(unknown(e).filter(f => f.tag !== '0f')).toEqual([]);
   });
 
   it('a padded tag is not the one-byte tag it pads', () => {
     const [e] = ord(envelope('ord', [2, 0], [1]));
     expect(e.pointer).toBeNull();
     expect(e.flaws).toEqual(['unrecognized_even_field']);
-    expect(e.unrecognizedFields).toEqual([{ tag: '0200', value: '01', even: true }]);
+    expect(unknown(e)).toEqual([{ tag: '0200', value: '01', even: true }]);
   });
 });
 
@@ -88,11 +97,11 @@ describe('ord envelope.rs vectors', () => {
     ['empty', []],
     ['ignore_key_path_spends', [envelope('ord')]],
   ])('%s: a key-path witness has no tapscript', (_name, witness) => {
-    expect(parseTransactionEnvelopes([witness.map(b => b.toString('hex'))])).toEqual([]);
+    expect(parseTransactionEnvelopes([witness])).toEqual([]);
   });
 
   it('ignore_key_path_spends_with_annex', () => {
-    expect(parseTransactionEnvelopes([[envelope('ord').toString('hex'), '50']])).toEqual([]);
+    expect(parseTransactionEnvelopes([[envelope('ord'), Buffer.from([0x50])]])).toEqual([]);
   });
 
   it('parse_from_tapscript', () => {
@@ -103,7 +112,7 @@ describe('ord envelope.rs vectors', () => {
     const s = Buffer.concat([envelope('ord'), Buffer.from([0x01])]);
     expect(ord(s)).toEqual([]);
     const [seen] = parseInscriptionEnvelopes(s);
-    expect(seen).toMatchObject({ ordRecognized: false, incomplete: true, termination: 'endif' });
+    expect(seen).toMatchObject({ ordRecognized: false, incompleteReason: expect.stringMatching(/ord discards every envelope/) });
   });
 
   it('no_inscription', () => {
@@ -127,7 +136,7 @@ describe('ord envelope.rs vectors', () => {
   it('with_unknown_tag: an odd unknown tag is ignored but kept as an observation', () => {
     const [e] = ord(envelope('ord', [1], 'text/plain;charset=utf-8', [255], 'bar', [], 'ord'));
     expect(view(e)).toEqual(plain('text/plain;charset=utf-8', hex('ord')));
-    expect(e.unrecognizedFields).toEqual([{ tag: 'ff', value: hex('bar'), even: false }]);
+    expect(unknown(e)).toEqual([{ tag: 'ff', value: hex('bar'), even: false }]);
   });
 
   it('no_body', () => {
@@ -181,7 +190,7 @@ describe('ord envelope.rs vectors', () => {
   it('no_endif: ord returns nothing, the observation is incomplete', () => {
     const s = script(OP_FALSE, OP_IF, 'ord');
     expect(ord(s)).toEqual([]);
-    expect(parseInscriptionEnvelopes(s)[0]).toMatchObject({ incomplete: true, termination: 'end_of_script', ordRecognized: false });
+    expect(parseInscriptionEnvelopes(s)[0]).toMatchObject({ incomplete: true, incompleteReason: 'script ends before OP_ENDIF', ordRecognized: false });
   });
 
   it.each<[string, Buffer]>([
@@ -195,14 +204,14 @@ describe('ord envelope.rs vectors', () => {
   it('a non-push opcode inside the envelope makes ord drop it', () => {
     const s = script(OP_FALSE, OP_IF, 'ord', [1], 'text/plain', OP_CHECKSIG, OP_ENDIF);
     expect(ord(s)).toEqual([]);
-    expect(parseInscriptionEnvelopes(s)[0]).toMatchObject({ termination: 'non_push_opcode', ordRecognized: false, incomplete: false });
+    expect(parseInscriptionEnvelopes(s)[0]).toMatchObject({ incompleteReason: expect.stringMatching(/non-push opcode 0xac/), ordRecognized: false });
   });
 
   it('extract_from_second_input and chunked_data_is_parsable', () => {
     // Inscription::append_reveal_script splits the body into 520-byte pushes.
     const reveal = script(OP_FALSE, OP_IF, 'ord', [1], 'foo', [], Buffer.alloc(520, 1), Buffer.alloc(520, 1), OP_ENDIF);
-    const [e] = parseTransactionEnvelopes([[], [reveal.toString('hex'), '']]);
-    expect(e).toMatchObject({ input: 1, index: 0, transactionIndex: 0, contentType: 'foo', bodyBytes: 1040, flaws: [] });
+    const [e] = parseTransactionEnvelopes([[], [reveal, Buffer.alloc(0)]]);
+    expect(e).toMatchObject({ input: 1, index: 0, inscriptionIndex: 0, contentType: 'foo', bodyBytes: 1040, flaws: [] });
     expect(e.body.equals(Buffer.alloc(1040, 1))).toBe(true);
   });
 
@@ -227,13 +236,13 @@ describe('ord envelope.rs vectors', () => {
   });
 
   it('pointer_field_is_recognized', () => {
-    expect(ord(envelope('ord', [2], [1])).map(view)).toEqual([plain(null, null, { pointer: 1n })]);
+    expect(ord(envelope('ord', [2], [1])).map(view)).toEqual([plain(null, null, { pointer: 1n, flags: ['pointer'] })]);
   });
 
   it('duplicate_pointer_field_makes_inscription_unbound: the second value is left as an even field', () => {
     const [e] = ord(envelope('ord', [2], [1], [2], [0]));
-    expect(view(e)).toEqual(plain(null, null, { pointer: 1n, flags: ['duplicate_field', 'unrecognized_even_field'] }));
-    expect(e.unrecognizedFields).toEqual([{ tag: '02', value: '00', even: true }]);
+    expect(view(e)).toEqual(plain(null, null, { pointer: 1n, flags: ['duplicate_field', 'unrecognized_even_field', 'pointer'] }));
+    expect(unknown(e)).toEqual([{ tag: '02', value: '00', even: true }]);
   });
 
   it('tag_66_makes_inscriptions_unbound', () => {
@@ -247,7 +256,7 @@ describe('ord envelope.rs vectors', () => {
   it('metadata_is_parsed_correctly', () => {
     const [e] = ord(envelope('ord', [5], []));
     expect(view(e)).toEqual(plain(null, null));
-    expect(e.fields).toEqual([{ tag: '05', value: '' }]);
+    expect(e.metadata).toEqual(Buffer.alloc(0));
   });
 
   it('metadata_is_parsed_correctly_from_chunks', () => {
@@ -324,7 +333,7 @@ describe('ord inscription_id.rs and parent/delegate vectors', () => {
     ['index 4294967295', Buffer.concat([ff, Buffer.from([0xff, 0xff, 0xff, 0xff])]), `${ffTxid}i4294967295`],
     ['index 0 in the fixed 4-byte form', Buffer.concat([ff, Buffer.from([0, 0, 0, 0])]), `${ffTxid}i0`],
   ])('%s', (_name, value, expected) => {
-    expect(inscriptionIdFromBytes(value)).toBe(expected);
+    expect(inscriptionIdFromValue(value)).toBe(expected);
   });
 
   it('a delegate tag decodes to the same ID form', () => {
@@ -335,11 +344,12 @@ describe('ord inscription_id.rs and parent/delegate vectors', () => {
 
 describe('transaction traversal', () => {
   it('assigns ord indexes across every input and envelope, skipping ones ord drops', () => {
-    const two = Buffer.concat([envelope('ord', [], 'a'), envelope('ord', [], 'b')]).toString('hex');
-    const broken = script(OP_FALSE, OP_IF, 'ord').toString('hex');
-    const one = envelope('ord', [], 'c').toString('hex');
-    const result = parseTransactionEnvelopes([[two, 'c0'], [broken, 'c0'], undefined, [one, 'c0', '50aa']]);
-    expect(result.map(e => [e.input, e.index, e.transactionIndex, e.body.toString()])).toEqual([
+    const two = Buffer.concat([envelope('ord', [], 'a'), envelope('ord', [], 'b')]);
+    const broken = script(OP_FALSE, OP_IF, 'ord');
+    const one = envelope('ord', [], 'c');
+    const h = (x: string): Buffer => Buffer.from(x, 'hex');
+    const result = parseTransactionEnvelopes([[two, h('c0')], [broken, h('c0')], [], [one, h('c0'), h('50aa')]]);
+    expect(result.map(e => [e.input, e.index, e.inscriptionIndex, e.body.toString()])).toEqual([
       [0, 0, 0, 'a'], [0, 1, 1, 'b'], [1, 0, null, ''], [3, 0, 2, 'c'],
     ]);
   });
@@ -355,11 +365,14 @@ describe('classification keeps flags as observations', () => {
     const [result] = protocolRegistryService.decodePayload(s.toString('hex'));
     expect(result.operation_type).toBe('inscription_reveal');
     expect(result.status).toBe('decoded');
-    expect(result.parameters.flags).toEqual(flags);
-    expect(result.parameters.bound_status).toMatch(/not resolved/);
-    expect(result.parameters.curse_status).toMatch(/not resolved/);
-    expect(result.parameters.location).toMatch(/not resolved/);
-    expect(result.issues).toEqual(flags.map(flag => `envelope flag: ${flag}`));
+    const set = result.parameters.flags as Record<string, boolean>;
+    expect(Object.keys(set).filter(flag => set[flag])).toEqual(flags);
+    const authority = result.parameters.authority_required as Record<string, string>;
+    // Only an unrecognized even field settles binding from the bytes, exactly as ord does.
+    expect(authority.binding).toMatch(flags.includes('unrecognized_even_field') ? /unbound per ord/ : /authority-required/);
+    expect(authority.curse_state).toMatch(/authority-required/);
+    expect(authority.location).toMatch(/authority-required/);
+    expect(result.issues).toEqual(flags.map(flag => `envelope: ${flag}`));
   });
 
   it('every envelope in the script is returned in order', () => {
@@ -368,7 +381,7 @@ describe('classification keeps flags as observations', () => {
     expect(results.map(r => [r.parameters.envelope_index, r.operation_type, r.status])).toEqual([
       [0, 'inscription_reveal', 'decoded'],
       [1, 'inscription_reveal', 'decoded'],
-      [2, 'inscription_envelope_unrecognized', 'invalid'],
+      [2, 'inscription_envelope_incomplete', 'incomplete'],
     ]);
   });
 });
@@ -384,28 +397,28 @@ describe('BRC-20 marker observation limit', () => {
   const marker = '{"p":"brc-20","op":"transfer","tick":"ordi","amt":"1"}';
 
   it('a body within the limit yields a marker', () => {
-    expect(parseBrc20(brcEnvelope(marker))).toEqual({ status: 'marker', op: 'transfer', tick: 'ordi', amt: '1' });
+    expect(parseBrc20(brcEnvelope(marker))).toMatchObject({ op: 'transfer', tick: 'ordi', amt: '1' });
   });
 
   it('a body over the limit yields an explicit truncated observation, not silence', () => {
-    const big = marker.slice(0, -1) + ',"pad":"' + 'x'.repeat(BRC20_OBSERVATION_LIMIT_BYTES) + '"}';
-    expect(parseBrc20(brcEnvelope(big))).toEqual({
-      status: 'observation-truncated', body_bytes: Buffer.byteLength(big), observation_limit_bytes: BRC20_OBSERVATION_LIMIT_BYTES,
+    const big = marker.slice(0, -1) + ',"pad":"' + 'x'.repeat(BRC20_INSPECTION_LIMIT_BYTES) + '"}';
+    expect(observeBrc20(brcEnvelope(big))).toMatchObject({
+      inspection: 'not-inspected', body_bytes: Buffer.byteLength(big), inspection_limit_bytes: BRC20_INSPECTION_LIMIT_BYTES,
     });
     const s = envelope('ord', [1], 'text/plain', [], ...chunks(Buffer.from(big)));
     const results = protocolRegistryService.decodePayload(s.toString('hex'));
     expect(results.map(r => [r.protocol_id, r.operation_type, r.status])).toEqual([
       ['ordinals', 'inscription_reveal', 'decoded'],
-      ['brc20', 'brc20_observation_truncated', 'incomplete'],
+      ['brc20', 'brc20_not_inspected', 'incomplete'],
     ]);
-    expect(results[1].issues[0]).toMatch(/says nothing about BRC-20 validity/);
+    expect(results[1].issues[0]).toMatch(/BRC-20 content not inspected/);
   });
 
-  it('a marker is reported at marker level with acceptance unresolved, never as a balance', () => {
+  it('a valid marker is syntactic with acceptance left to the authority, never a balance', () => {
     const results = protocolRegistryService.decodePayload(envelope('ord', [1], 'text/plain', [], marker).toString('hex'));
     expect(results[1]).toMatchObject({
-      protocol_id: 'brc20', operation_type: 'brc20_transfer', decoding_level: 'marker',
-      parameters: { op: 'transfer', tick: 'ordi', amt: '1', acceptance: expect.stringMatching(/not resolved/) },
+      protocol_id: 'brc20', operation_type: 'brc20_transfer', decoding_level: 'syntactic',
+      parameters: { op: 'transfer', tick: 'ordi', amt: '1', acceptance: 'authority-required' },
     });
     expect(results[1].parameters).not.toHaveProperty('balance');
   });
