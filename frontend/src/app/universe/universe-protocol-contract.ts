@@ -57,6 +57,16 @@ function checkpoint(value: unknown): boolean {
  *    any mixed-protocol cache on rollout/rollback; never restore the alias to
  *    make tests green. Existing runtime behavior is unchanged in this stage.
  */
+/** The Ordex objects page must say it is the local journal and was not re-verified. */
+function ordexJournal(value: unknown): boolean {
+  return record(value) && value.scope === 'local-order-journal' && text(value.network)
+    && typeof value.generation === 'string' && /^[0-9a-f]{64}$/.test(value.generation)
+    && Number.isSafeInteger(value.totalVisible) && (value.totalVisible as number) >= 0
+    && text(value.filter) && text(value.sort)
+    && record(value.currentVerification) && value.currentVerification.performed === false
+    && text(value.currentVerification.reason);
+}
+
 function validPage(kind: ProtocolPageKind, value: unknown, protocolId: string): value is ProtocolPage {
   if (!record(value) || value.schemaVersion !== `universe-protocol-${kind}-v1` || value.protocolId !== protocolId
     || !['served', 'unconfigured', 'unavailable', 'unsupported'].includes(value.state as string)
@@ -79,6 +89,8 @@ function validPage(kind: ProtocolPageKind, value: unknown, protocolId: string): 
         || !['protocol', 'chain', 'network', 'coverage', 'cursor', 'asOf'].every((key) => nullableText(source[key]))
         || (protocolId === 'op_names' && source.protocol !== 'op_names')) {return false;}
     }
+    if (kind === 'objects' && protocolId === 'ordex'
+      && (!ordexJournal(value.ordexJournal) || value.checkpoint !== null)) {return false;}
     return true;
   }
 

@@ -772,8 +772,10 @@ export function validateMatrix(matrix) {
     assert.deepEqual(bindingIds.sort(), [...matrix.healthHandoff.protocolOperationIds].sort(), 'Lost handoff operation binding');
     for (const row of bindings) assert.equal(row.handoffBinding.ledgerId, row.id, 'Handoff binding changed the original ledger ID');
     for (const row of bindings.filter(row => row.authorityTransition)) {
-      assert.equal(row.authorityTransition.fromAuthority, row.handoffBinding.historicalAuthority,
-        'Authority transition lost historical authority');
+      // An operation first declared after its protocol's transition has only ever had the new authority.
+      if (row.handoffBinding.historicalAuthority !== row.authorityTransition.toAuthority)
+        assert.equal(row.authorityTransition.fromAuthority, row.handoffBinding.historicalAuthority,
+          'Authority transition lost historical authority');
       assert.equal(row.authorityTransition.toAuthority, row.authority,
         'Authority transition changed current authority');
       assert.equal(row.authorityTransition.functionalAcceptance, false,
