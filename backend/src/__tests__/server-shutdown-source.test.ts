@@ -4,7 +4,7 @@ import * as vm from 'vm';
 import * as ts from 'typescript';
 import { RbfBodyStore } from '../api/rbf-body-store';
 import { TaskDrain } from '../api/task-drain';
-import { gracefulShutdown } from '../api/graceful-shutdown';
+import { gracefulShutdown, ShutdownProgress } from '../api/graceful-shutdown';
 import * as http from 'http';
 import { once } from 'events';
 import WebSocket from 'ws';
@@ -12,6 +12,7 @@ import WebSocket from 'ws';
 /** Execute the actual entrypoint class without booting its production singleton. */
 function sourceServer(mining: Promise<void>, database: Promise<void>) {
   const events: string[] = [];
+  const errors: string[] = [];
   let shutdown: Promise<void> | undefined;
   const noop = () => undefined;
   const done = async () => undefined;
@@ -19,7 +20,7 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
     './config': { default: { MEMPOOL: { SPAWN_CLUSTER_PROCS: 0 }, LIGHTNING: { ENABLED: false }, REDIS: { ENABLED: false } } },
     './api/task-drain': { TaskDrain },
     './api/common': { Common: { isLiquid: () => false } },
-    './api/graceful-shutdown': { gracefulShutdown: (steps: Parameters<typeof gracefulShutdown>[0]) => { shutdown = gracefulShutdown(steps); return shutdown; } },
+    './api/graceful-shutdown': { ShutdownProgress, gracefulShutdown: (...args: Parameters<typeof gracefulShutdown>) => { shutdown = gracefulShutdown(...args); return shutdown; } },
     './database': { default: { drain: () => database, close: async () => { events.push('database-closed'); } } },
     './indexer': { default: { stop: () => { events.push('indexer-stopped'); }, drain: () => mining } },
     './api/statistics/statistics': { default: { stop: noop, drain: done } },
@@ -41,7 +42,7 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
     './api/rbf-cache': { default: { destroy: noop, closeBodies: done } },
     './api/memory-cache': { default: { destroy: noop } },
     './api/bitcoin/bitcoin-api-factory': { default: { closeTransport: () => { events.push('transport-closed'); } } },
-    './logger': { default: { debug: noop, notice: noop, err: noop } },
+    './logger': { default: { debug: noop, notice: noop, err: (message: string) => { errors.push(message); } } },
   };
   const source = readFileSync(resolve(__dirname, '../index.ts'), 'utf8');
   const bootstrap = '((): Server => new Server())();';
@@ -61,7 +62,11 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
   server.work = new TaskDrain();
   server.timers = new Set();
   server.mainLoopWatchdog = { end: noop };
-  return { server, events, processState, modules, shutdown: () => shutdown };
+  return { server, events, errors, processState, modules, shutdown: () => shutdown };
+}
+
+function sandboxDeadline(server: any): number {
+  return Object.getPrototypeOf(server).constructor.SHUTDOWN_DEADLINE_MS;
 }
 
 /** Load the actual maintenance constructors without connecting native clients. */
@@ -86,16 +91,18 @@ describe('actual native signal shutdown source', () => {
     caches[2].set('fixture', 'retained', 'value', 60);
     expect(jest.getTimerCount()).toBe(3);
     server.forceExit('SIGTERM');
-    for (let i = 0; i < 32; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toEqual(['indexer-stopped']);
-    expect(jest.getTimerCount()).toBe(4);
+    expect(jest.getTimerCount()).toBe(5);
     completeDriver();
-    for (let i = 0; i < 32; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(processState.exitCode).toBe(0);
-    expect(jest.getTimerCount()).toBe(0);
+    // Only the unref'd shutdown deadline remains; it cannot keep the process alive.
+    expect(jest.getTimerCount()).toBe(1);
     expect(caches[2].get('fixture', 'retained')).toBe('value');
     for (const cache of caches) cache.destroy();
-    expect(jest.getTimerCount()).toBe(0);
+    expect(jest.getTimerCount()).toBe(1);
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 
@@ -109,19 +116,20 @@ describe('actual native signal shutdown source', () => {
     server.forceExit('SIGTERM');
     server.forceExit('SIGTERM');
     jest.advanceTimersByTime(6000);
-    for (let i = 0; i < 12; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toEqual(['indexer-stopped']);
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBeUndefined();
     completeMining();
-    for (let i = 0; i < 12; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toEqual(['indexer-stopped']);
     completeDriver();
-    for (let i = 0; i < 32; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toEqual(['indexer-stopped', 'history-flushed', 'database-closed', 'transport-closed']);
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBe(0);
-    expect(jest.getTimerCount()).toBe(0);
+    expect(jest.getTimerCount()).toBe(1);
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 
@@ -130,11 +138,11 @@ describe('actual native signal shutdown source', () => {
     const { server, events, processState, modules } = sourceServer(Promise.resolve(), Promise.resolve());
     (modules['./config'] as any).default.LIGHTNING.ENABLED = true;
     server.forceExit('SIGTERM');
-    for (let i = 0; i < 32; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toEqual(['indexer-stopped']);
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBe(1);
-    expect(jest.getTimerCount()).toBe(1);
+    expect(jest.getTimerCount()).toBe(2);
     jest.clearAllTimers();
     jest.useRealTimers();
   });
@@ -144,12 +152,58 @@ describe('actual native signal shutdown source', () => {
     const { server, events, processState, modules } = sourceServer(Promise.resolve(), Promise.resolve());
     (modules['./database'] as any).default.close = async () => { throw new Error('pool close failed'); };
     server.forceExit('SIGTERM');
-    for (let i = 0; i < 32; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toEqual(['indexer-stopped', 'history-flushed']);
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBe(1);
-    expect(jest.getTimerCount()).toBe(1);
+    expect(jest.getTimerCount()).toBe(2);
     jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('exits at the deadline and names the stuck owner when a drain never settles', /** @asyncUnsafe Jest owns the test. */ async () => {
+    jest.useFakeTimers();
+    const never = new Promise<void>(() => undefined);
+    const { server, events, errors, processState, modules } = sourceServer(Promise.resolve(), Promise.resolve());
+    const saveCache = jest.fn(async () => undefined);
+    (modules['./api/disk-cache'] as any).default.$saveCacheToDisk = saveCache;
+    (modules['./api/statistics/statistics'] as any).default.drain = () => never;
+    server.forceExit('SIGTERM');
+    jest.advanceTimersByTime(sandboxDeadline(server) - 1);
+    for (let i = 0; i < 128; i++) await Promise.resolve();
+    expect(processState.exit).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(1);
+    expect(processState.exit).toHaveBeenCalledWith(1);
+    expect(errors).toEqual(['Graceful shutdown did not exit within 120 s; stuck in drainProducers (waiting on: statistics). Exiting.']);
+    // Exiting at the deadline never ran a partial save or released resources after the stuck drain.
+    expect(saveCache).not.toHaveBeenCalled();
+    expect(events).not.toContain('database-closed');
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('exits at the deadline when a failed drain holds the process', /** @asyncUnsafe Jest owns the test. */ async () => {
+    jest.useFakeTimers();
+    const { server, errors, processState, modules } = sourceServer(Promise.resolve(), Promise.resolve());
+    (modules['./database'] as any).default.close = async () => { throw new Error('pool close failed'); };
+    server.forceExit('SIGTERM');
+    for (let i = 0; i < 128; i++) await Promise.resolve();
+    expect(errors).toEqual([expect.stringContaining('Graceful shutdown held in releaseResources until the deadline:')]);
+    jest.advanceTimersByTime(sandboxDeadline(server));
+    expect(processState.exit).toHaveBeenCalledWith(1);
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('exits with the drained status when leftover handles outlive a complete shutdown', /** @asyncUnsafe Jest owns the test. */ async () => {
+    jest.useFakeTimers();
+    const { server, errors, processState } = sourceServer(Promise.resolve(), Promise.resolve());
+    server.forceExit('SIGTERM');
+    for (let i = 0; i < 128; i++) await Promise.resolve();
+    expect(processState.exitCode).toBe(0);
+    jest.advanceTimersByTime(sandboxDeadline(server));
+    expect(processState.exit).toHaveBeenCalledWith(0);
+    expect(errors).toEqual(['Graceful shutdown did not exit within 120 s; writers drained but open handles remain. Exiting.']);
     jest.useRealTimers();
   });
 
@@ -177,7 +231,7 @@ describe('actual native signal shutdown source', () => {
     server.wss = nativeWs;
     server.forceExit('SIGTERM');
     await Promise.all([response, wsClosed, httpClosed]);
-    for (let i = 0; i < 32; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toContain('database-closed');
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBe(0);
@@ -195,7 +249,7 @@ describe('actual native signal shutdown source', () => {
     const startupWork = server.work.track(server.startServer());
     server.forceExit('SIGTERM');
     jest.advanceTimersByTime(6000);
-    for (let i = 0; i < 12; i++) await Promise.resolve();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
     expect(events).toEqual(['indexer-stopped']);
     expect(acquireOwner).not.toHaveBeenCalled();
     expect(processState.exitCode).toBeUndefined();
@@ -208,7 +262,8 @@ describe('actual native signal shutdown source', () => {
     expect(server.timers.size).toBe(0);
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBe(0);
-    expect(jest.getTimerCount()).toBe(0);
+    expect(jest.getTimerCount()).toBe(1);
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 });
