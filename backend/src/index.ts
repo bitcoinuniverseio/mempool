@@ -745,6 +745,8 @@ class Server {
   private shuttingDown = false;
   /** Bound on the whole signal shutdown. The unit sets SendSIGKILL=no, so this is the only exit guarantee. */
   static readonly SHUTDOWN_DEADLINE_MS = 120_000;
+  /** In-flight HTTP responses get this long before their sockets are destroyed. */
+  static readonly HTTP_DRAIN_GRACE_MS = 10_000;
 
   forceExit(exitEvent, code?: number): void {
     if (this.shuttingDown) return;
@@ -794,9 +796,16 @@ class Server {
             for (const client of server.clients) client.close(1001, 'Backend shutdown');
           }
         }
+        // server.close() waits for every open response, and Server-Sent Event
+        // streams never end on their own. Destroying the sockets only stops
+        // delivery; handlers keep running and their writes drain below.
         for (const server of [this.server, this.serverUnixSocket]) {
           if (server?.listening) httpDrain.push(new Promise<void>((resolve, reject) => {
-            server.close(error => error ? reject(error) : resolve());
+            const forceClose = setTimeout(() => {
+              logger.warn(`HTTP connections still open after ${Server.HTTP_DRAIN_GRACE_MS / 1000} s of shutdown; closing them.`);
+              server.closeAllConnections();
+            }, Server.HTTP_DRAIN_GRACE_MS);
+            server.close(error => { clearTimeout(forceClose); return error ? reject(error) : resolve(); });
           }));
         }
       },

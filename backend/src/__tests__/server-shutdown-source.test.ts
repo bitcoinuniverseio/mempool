@@ -42,7 +42,7 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
     './api/rbf-cache': { default: { destroy: noop, closeBodies: done } },
     './api/memory-cache': { default: { destroy: noop } },
     './api/bitcoin/bitcoin-api-factory': { default: { closeTransport: () => { events.push('transport-closed'); } } },
-    './logger': { default: { debug: noop, notice: noop, err: (message: string) => { errors.push(message); } } },
+    './logger': { default: { debug: noop, notice: noop, warn: (message: string) => { events.push('warn: ' + message); }, err: (message: string) => { errors.push(message); } } },
   };
   const source = readFileSync(resolve(__dirname, '../index.ts'), 'utf8');
   const bootstrap = '((): Server => new Server())();';
@@ -232,6 +232,32 @@ describe('actual native signal shutdown source', () => {
     server.forceExit('SIGTERM');
     await Promise.all([response, wsClosed, httpClosed]);
     for (let i = 0; i < 128; i++) await Promise.resolve();
+    expect(events).toContain('database-closed');
+    expect(processState.exit).not.toHaveBeenCalled();
+    expect(processState.exitCode).toBe(0);
+  });
+
+  it('closes a never-ending event stream after the HTTP grace instead of holding shutdown', /** @asyncUnsafe Jest owns the test. */ async () => {
+    const nativeHttp = http.createServer((_request, response) => {
+      response.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      response.write(': keepalive\n\n');
+    });
+    await new Promise<void>(resolve => nativeHttp.listen(0, '127.0.0.1', resolve));
+    const port = (nativeHttp.address() as { port: number }).port;
+    const streamClosed = new Promise<void>((resolve, reject) => {
+      http.get(`http://127.0.0.1:${port}`, result => {
+        result.resume();
+        result.on('close', resolve);
+      }).on('error', reject);
+    });
+    await once(nativeHttp, 'request');
+    const { server, events, processState, shutdown } = sourceServer(Promise.resolve(), Promise.resolve());
+    Object.getPrototypeOf(server).constructor.HTTP_DRAIN_GRACE_MS = 50;
+    server.server = nativeHttp;
+    server.forceExit('SIGTERM');
+    await streamClosed;
+    await shutdown();
+    expect(events).toContain('warn: HTTP connections still open after 0.05 s of shutdown; closing them.');
     expect(events).toContain('database-closed');
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBe(0);
