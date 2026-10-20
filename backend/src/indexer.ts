@@ -13,6 +13,7 @@ import AccelerationRepository from './repositories/AccelerationRepository';
 import BlocksAuditsRepository from './repositories/BlocksAuditsRepository';
 import BlocksRepository from './repositories/BlocksRepository';
 import { TaskDrain } from './api/task-drain';
+import { IndexingStopped, requestIndexingStop, throwIfIndexingStopped } from './api/indexing-stop';
 
 export interface CoreIndex {
   name: string;
@@ -56,9 +57,13 @@ class Indexer {
   private stopping = false;
   private readonly work = new TaskDrain();
 
-  /** Stop future admission without interrupting a mining/backfill operation. */
+  /**
+   * Stop future admission, and end a running mining/backfill operation at its
+   * next item; every indexing step resumes from what is missing next run.
+   */
   public stop(): void {
     this.stopping = true;
+    requestIndexingStop();
     this.runIndexer = false;
     if (this.reindexTimeout) clearTimeout(this.reindexTimeout);
     this.reindexTimeout = undefined;
@@ -301,24 +306,34 @@ class Indexer {
       }
 
       void this.runSingleTask('blocksPrices');
-      await blocks.$indexCoinbaseAddresses();
-      await mining.$indexDifficultyAdjustments();
-      await mining.$generateNetworkHashrateHistory();
-      await mining.$generatePoolHashrateHistory();
-      await blocks.$generateBlocksSummariesDatabase();
-      await blocks.$generateCPFPDatabase();
-      await blocks.$generateAuditStats();
-      await blocks.$indexBlocksFirstSeen();
-      await auditReplicator.$sync();
-      await statisticsReplicator.$sync();
-      await AccelerationRepository.$indexPastAccelerations();
-      await BlocksAuditsRepository.$migrateAuditsV0toV1();
-      await BlocksRepository.$migrateBlocks();
+      const steps: (() => Promise<unknown>)[] = [
+        () => blocks.$indexCoinbaseAddresses(),
+        () => mining.$indexDifficultyAdjustments(),
+        () => mining.$generateNetworkHashrateHistory(),
+        () => mining.$generatePoolHashrateHistory(),
+        () => blocks.$generateBlocksSummariesDatabase(),
+        () => blocks.$generateCPFPDatabase(),
+        () => blocks.$generateAuditStats(),
+        () => blocks.$indexBlocksFirstSeen(),
+        () => auditReplicator.$sync(),
+        () => statisticsReplicator.$sync(),
+        () => AccelerationRepository.$indexPastAccelerations(),
+        () => BlocksAuditsRepository.$migrateAuditsV0toV1(),
+        () => BlocksRepository.$migrateBlocks(),
+      ];
+      for (const step of steps) {
+        throwIfIndexingStopped();
+        await step();
+      }
       // do not wait for classify blocks to finish
-      if (!this.stopping) this.work.track(blocks.$classifyBlocks()).catch(error => logger.err(`Block classification failed: ${error}`));
+      if (!this.stopping) this.work.track(blocks.$classifyBlocks()).catch(error => { if (!(error instanceof IndexingStopped)) logger.err(`Block classification failed: ${error}`); });
       runSuccessful = true;
     } catch (e) {
       nextRunDelay = retryDelay;
+      if (e instanceof IndexingStopped) {
+        logger.info(e.message);
+        return;
+      }
       logger.err(`Indexer failed, trying again in 10 seconds. Reason: ` + (e instanceof Error ? e.message : e));
     } finally {
       this.indexerRunning = false;

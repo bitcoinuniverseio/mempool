@@ -14,6 +14,7 @@ import PricesRepository from '../../repositories/PricesRepository';
 import bitcoinApi from '../bitcoin/bitcoin-api-factory';
 import { IEsploraApi } from '../bitcoin/esplora-api.interface';
 import database from '../../database';
+import { IndexingStopped, throwIfIndexingStopped } from '../indexing-stop';
 
 interface DifficultyBlock {
   timestamp: number,
@@ -272,6 +273,7 @@ class Mining {
       loadingIndicators.setProgress('weekly-hashrate-indexing', 0);
 
       while (toTimestamp > genesisTimestamp && toTimestamp > oldestConsecutiveBlockTimestamp) {
+        throwIfIndexingStopped();
         const fromTimestamp = toTimestamp - 604800000;
 
         // Skip already indexed weeks
@@ -340,6 +342,7 @@ class Mining {
       loadingIndicators.setProgress('weekly-hashrate-indexing', 100);
     } catch (e) {
       loadingIndicators.setProgress('weekly-hashrate-indexing', 100);
+      if (e instanceof IndexingStopped) throw e;
       logger.err(`Weekly mining pools hashrates indexing failed. Trying again in 10 seconds. Reason: ${(e instanceof Error ? e.message : e)}`, logger.tags.mining);
       throw e;
     }
@@ -387,6 +390,7 @@ class Mining {
       loadingIndicators.setProgress('daily-hashrate-indexing', 0);
 
       while (toTimestamp > genesisTimestamp && toTimestamp > oldestConsecutiveBlockTimestamp) {
+        throwIfIndexingStopped();
         const fromTimestamp = toTimestamp - 86400000;
 
         // Skip already indexed days
@@ -455,6 +459,7 @@ class Mining {
       loadingIndicators.setProgress('daily-hashrate-indexing', 100);
     } catch (e) {
       loadingIndicators.setProgress('daily-hashrate-indexing', 100);
+      if (e instanceof IndexingStopped) throw e;
       logger.err(`Daily network hashrate indexing failed. Trying again later. Reason: ${(e instanceof Error ? e.message : e)}`, logger.tags.mining);
       throw e;
     }
@@ -639,6 +644,7 @@ class Mining {
         currentBlockHeight, currentBlockHeight - 10000);
 
       for (const block of indexedBlocks) {
+        throwIfIndexingStopped();
         const txoutset = await bitcoinClient.getTxoutSetinfo('none', block.height);
         await BlocksRepository.$updateCoinStatsIndexData(block.hash, txoutset.txouts,
           Math.round(txoutset.block_info.prevout_spent * 100000000));
