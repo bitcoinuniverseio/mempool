@@ -93,6 +93,7 @@ import { blockspaceService } from './api/intelligence/blockspace/blockspace.serv
 import { timeMachineService } from './api/intelligence/time-machine/time-machine.service';
 import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
 import { gracefulShutdown, ShutdownProgress } from './api/graceful-shutdown';
+import { startShutdownBackstop } from './api/shutdown-backstop';
 import { TaskDrain } from './api/task-drain';
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
 import { eventBus } from './api/intelligence/events/intelligence-event-bus';
@@ -745,6 +746,8 @@ class Server {
   private shuttingDown = false;
   /** Bound on the whole signal shutdown. The unit sets SendSIGKILL=no, so this is the only exit guarantee. */
   static readonly SHUTDOWN_DEADLINE_MS = 120_000;
+  /** The off-thread backstop fires this long after the deadline, for a main thread blocked in a syscall. */
+  static readonly SHUTDOWN_BACKSTOP_GRACE_MS = 30_000;
   /** In-flight HTTP responses get this long before their sockets are destroyed. */
   static readonly HTTP_DRAIN_GRACE_MS = 10_000;
 
@@ -763,7 +766,7 @@ class Server {
     // await leaves the previous complete snapshot; a hung owner otherwise
     // needs a manual kill -9, which loses the same work without the diagnosis.
     this.shutdownHold = setInterval(() => undefined, 60_000);
-    const progress = new ShutdownProgress();
+    const progress = new ShutdownProgress(startShutdownBackstop(Server.SHUTDOWN_DEADLINE_MS + Server.SHUTDOWN_BACKSTOP_GRACE_MS));
     // Unref'd: after a complete drain it fires only if a leftover handle keeps the process alive.
     setTimeout(() => {
       const complete = progress.phase === 'complete';
@@ -771,6 +774,22 @@ class Server {
       process.exit(complete ? (process.exitCode ?? 0) : (code || 1));
     }, Server.SHUTDOWN_DEADLINE_MS).unref();
     const track = <T>(owner: string, work: Promise<T>): Promise<T> => progress.track(owner, work);
+    // A database refusal (a connection lost or a commit unconfirmed at any
+    // point in this process's life) cannot be repaired by holding. The disk
+    // cache does not depend on it, and runtime saves already ignore it, so
+    // shutdown still saves and releases, then reports the refusal as status 1.
+    let databaseRefusal: string | undefined;
+    /** @asyncSafe A refusal is recorded instead of rejecting. */
+    const drainDatabase = async (): Promise<void> => {
+      try {
+        await track('database', DB.drain());
+      } catch (error) {
+        if (databaseRefusal === undefined) {
+          databaseRefusal = error instanceof Error ? error.message : String(error);
+          logger.err(`${databaseRefusal}; saving the disk cache and releasing resources anyway, exit status will be 1.`);
+        }
+      }
+    };
     const httpDrain: Promise<void>[] = [];
     gracefulShutdown({
       stopAdmission: () => {
@@ -822,14 +841,14 @@ class Server {
           throw new Error('Graceful drain is unavailable for enabled Lightning, Redis, clustered workers, or Liquid parser callbacks.');
         }
       },
-      drainDatabase: () => track('database', DB.drain()),
+      drainDatabase,
       flushHistory: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
         await Promise.all([track('time machine history', timeMachineService.closeHistory()), track('event bus', eventBus.drain()), track('fractal runtime', closeFractalRuntime())]);
         await track('disk cache save', diskCache.$saveCacheToDisk(true));
         await track('disk cache', diskCache.drain());
       },
       releaseResources: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
-        await track('database', DB.drain());
+        await drainDatabase();
         await track('database pool close', DB.close());
         await track('selection worker', mempoolBlocks.closeSelectionWorker());
         await track('RBF body store', rbfCache.closeBodies());
@@ -838,7 +857,7 @@ class Server {
         rbfCache.destroy();
         memoryCache.destroy();
         if (this.shutdownHold) clearInterval(this.shutdownHold);
-        process.exitCode = code ?? 0;
+        process.exitCode = databaseRefusal === undefined ? (code ?? 0) : 1;
         logger.notice('Native writers drained; waiting for remaining transport handles to close.');
       },
     }, progress).catch((error: unknown) => {

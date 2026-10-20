@@ -8,13 +8,26 @@ export interface GracefulShutdownSteps {
 
 /** Records the current phase and the owners whose completion is still pending. */
 export class ShutdownProgress {
-  phase = 'stopAdmission';
+  private current = 'stopAdmission';
   private readonly pending = new Set<string>();
+
+  /** onChange receives describe() after every change, e.g. for an off-thread watchdog. */
+  constructor(private readonly onChange: (description: string) => void = () => undefined) {}
+
+  get phase(): string { return this.current; }
+  set phase(next: string) {
+    this.current = next;
+    this.onChange(this.describe());
+  }
 
   /** @asyncSafe Returns the same settlement; only bookkeeping is added. */
   track<T>(owner: string, work: Promise<T>): Promise<T> {
     this.pending.add(owner);
-    return work.finally(() => { this.pending.delete(owner); });
+    this.onChange(this.describe());
+    return work.finally(() => {
+      this.pending.delete(owner);
+      this.onChange(this.describe());
+    });
   }
 
   describe(): string {

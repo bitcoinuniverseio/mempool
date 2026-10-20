@@ -13,6 +13,7 @@ import WebSocket from 'ws';
 function sourceServer(mining: Promise<void>, database: Promise<void>) {
   const events: string[] = [];
   const errors: string[] = [];
+  const backstop = { delayMs: 0, steps: [] as string[] };
   let shutdown: Promise<void> | undefined;
   const noop = () => undefined;
   const done = async () => undefined;
@@ -20,6 +21,7 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
     './config': { default: { MEMPOOL: { SPAWN_CLUSTER_PROCS: 0 }, LIGHTNING: { ENABLED: false }, REDIS: { ENABLED: false } } },
     './api/task-drain': { TaskDrain },
     './api/common': { Common: { isLiquid: () => false } },
+    './api/shutdown-backstop': { startShutdownBackstop: (delayMs: number) => { backstop.delayMs = delayMs; return (step: string) => { backstop.steps.push(step); }; } },
     './api/graceful-shutdown': { ShutdownProgress, gracefulShutdown: (...args: Parameters<typeof gracefulShutdown>) => { shutdown = gracefulShutdown(...args); return shutdown; } },
     './database': { default: { drain: () => database, close: async () => { events.push('database-closed'); } } },
     './indexer': { default: { stop: () => { events.push('indexer-stopped'); }, drain: () => mining } },
@@ -62,7 +64,7 @@ function sourceServer(mining: Promise<void>, database: Promise<void>) {
   server.work = new TaskDrain();
   server.timers = new Set();
   server.mainLoopWatchdog = { end: noop };
-  return { server, events, errors, processState, modules, shutdown: () => shutdown };
+  return { server, events, errors, backstop, processState, modules, shutdown: () => shutdown };
 }
 
 function sandboxDeadline(server: any): number {
@@ -235,6 +237,43 @@ describe('actual native signal shutdown source', () => {
     expect(events).toContain('database-closed');
     expect(processState.exit).not.toHaveBeenCalled();
     expect(processState.exitCode).toBe(0);
+  });
+
+  it('still saves the cache and releases resources after a database completion refusal, then reports status 1', /** @asyncUnsafe Jest owns the test. */ async () => {
+    jest.useFakeTimers();
+    const { server, events, errors, processState, modules } = sourceServer(Promise.resolve(), Promise.resolve());
+    const refusal = 'Database shutdown completion refused: driver-completion-lost';
+    (modules['./database'] as any).default.drain = async () => { throw new Error(refusal); };
+    const saveCache = jest.fn(async () => undefined);
+    (modules['./api/disk-cache'] as any).default.$saveCacheToDisk = saveCache;
+    server.forceExit('SIGTERM');
+    for (let i = 0; i < 128; i++) await Promise.resolve();
+    expect(saveCache).toHaveBeenCalledWith(true);
+    expect(events).toEqual(['indexer-stopped', 'history-flushed', 'database-closed', 'transport-closed']);
+    expect(errors).toEqual([expect.stringContaining('driver-completion-lost; saving the disk cache and releasing resources anyway')]);
+    expect(processState.exitCode).toBe(1);
+    // The diagnostic hold is released; only the unref'd deadline remains.
+    expect(jest.getTimerCount()).toBe(1);
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('arms the off-thread backstop after the deadline and reports every step to it', /** @asyncUnsafe Jest owns the test. */ async () => {
+    jest.useFakeTimers();
+    let completeMining!: () => void;
+    const mining = new Promise<void>(resolve => { completeMining = resolve; });
+    const { server, backstop } = sourceServer(mining, Promise.resolve());
+    server.forceExit('SIGTERM');
+    for (let i = 0; i < 128; i++) await Promise.resolve();
+    const constructor = Object.getPrototypeOf(server).constructor;
+    expect(backstop.delayMs).toBe(constructor.SHUTDOWN_DEADLINE_MS + constructor.SHUTDOWN_BACKSTOP_GRACE_MS);
+    expect(backstop.steps[backstop.steps.length - 1]).toBe('drainProducers (waiting on: indexer)');
+    completeMining();
+    for (let i = 0; i < 128; i++) await Promise.resolve();
+    expect(backstop.steps).toContain('flushHistory (waiting on: disk cache save)');
+    expect(backstop.steps[backstop.steps.length - 1]).toBe('complete');
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   it('closes a never-ending event stream after the HTTP grace instead of holding shutdown', /** @asyncUnsafe Jest owns the test. */ async () => {
