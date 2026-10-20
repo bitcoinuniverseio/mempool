@@ -7,13 +7,13 @@ import { Worker } from 'worker_threads';
  * the process the way an operator's kill -9 would.
  */
 export const BACKSTOP_SOURCE = [
-  "const { parentPort, workerData } = require('worker_threads');",
-  "const { writeSync } = require('fs');",
-  "let last = 'not reported';",
-  "parentPort.on('message', (description) => { last = String(description); });",
+  'const { parentPort, workerData } = require(\'worker_threads\');',
+  'const { writeSync } = require(\'fs\');',
+  'let last = \'not reported\';',
+  'parentPort.on(\'message\', (description) => { last = String(description); });',
   'setTimeout(() => {',
-  "  writeSync(2, 'Shutdown backstop: the main thread did not exit within ' + workerData.delayMs / 1000 + ' s; last reported step: ' + last + '. Killing the process.' + String.fromCharCode(10));",
-  "  process.kill(workerData.pid, 'SIGKILL');",
+  '  writeSync(2, \'Shutdown backstop: the main thread did not exit within \' + workerData.delayMs / 1000 + \' s; last reported step: \' + last + \'. Killing the process.\' + String.fromCharCode(10));',
+  '  process.kill(workerData.pid, \'SIGKILL\');',
   '}, workerData.delayMs);',
 ].join('\n');
 

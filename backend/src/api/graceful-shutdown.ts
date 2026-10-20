@@ -12,7 +12,7 @@ export class ShutdownProgress {
   private readonly pending = new Set<string>();
 
   /** onChange receives describe() after every change, e.g. for an off-thread watchdog. */
-  constructor(private readonly onChange: (description: string) => void = () => undefined) {}
+  constructor(private readonly onChange: (description: string) => void = (): void => undefined) {}
 
   get phase(): string { return this.current; }
   set phase(next: string) {

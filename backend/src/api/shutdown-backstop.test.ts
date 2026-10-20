@@ -4,10 +4,10 @@ import { BACKSTOP_SOURCE } from './shutdown-backstop';
 /** Runs the actual backstop source in a child whose main thread then behaves as given. */
 function child(mainThread: string): { status: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string; elapsedMs: number } {
   const script = [
-    "const { Worker } = require('worker_threads');",
-    "const worker = new Worker(process.env.BACKSTOP_SOURCE, { eval: true, workerData: { pid: process.pid, delayMs: 300 } });",
+    'const { Worker } = require(\'worker_threads\');',
+    'const worker = new Worker(process.env.BACKSTOP_SOURCE, { eval: true, workerData: { pid: process.pid, delayMs: 300 } });',
     'worker.unref();',
-    "worker.postMessage('flushHistory (waiting on: disk cache save)');",
+    'worker.postMessage(\'flushHistory (waiting on: disk cache save)\');',
     mainThread,
   ].join('\n');
   const started = Date.now();
@@ -17,7 +17,7 @@ function child(mainThread: string): { status: number | null; signal: NodeJS.Sign
 
 describe('off-thread shutdown backstop', () => {
   it('kills a process whose main thread is blocked in a synchronous call and names the last step', () => {
-    const result = child("const end = Date.now() + 15000; while (Date.now() < end) {} process.stdout.write('survived');");
+    const result = child('const end = Date.now() + 15000; while (Date.now() < end) {} process.stdout.write(\'survived\');');
     expect(result.stdout).toBe('');
     expect(result.signal === 'SIGKILL' || (result.status !== null && result.status !== 0)).toBe(true);
     expect(result.stderr).toContain('Shutdown backstop: the main thread did not exit within 0.3 s; last reported step: flushHistory (waiting on: disk cache save). Killing the process.');
@@ -25,7 +25,7 @@ describe('off-thread shutdown backstop', () => {
   });
 
   it('never holds or kills a process that exits on its own', () => {
-    const result = child("process.stdout.write('exited cleanly');");
+    const result = child('process.stdout.write(\'exited cleanly\');');
     expect(result.status).toBe(0);
     expect(result.signal).toBeNull();
     expect(result.stdout).toBe('exited cleanly');
