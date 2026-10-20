@@ -651,6 +651,7 @@ export class BootstrapService {
   public stopWorker(): void {
     this.workerStopping = true;
     this.executor?.stop();
+    this.verifier.stop();
   }
 
   /** @asyncUnsafe Shutdown retains ownership if a worker cannot finish. */

@@ -43,7 +43,7 @@ function operatorCore(handler: (method: string, params: unknown[]) => Promise<an
   return { calls, call: (method, params) => { calls.push({ method, params }); return handler(method, params); } };
 }
 
-function build(options: { core?: ReturnType<typeof switchableCore>; store?: MemoryBootstrapStore | null; env?: Parameters<typeof testEnvironment>[0]; handler?: (method: string, params: unknown[]) => Promise<any> } = {}): {
+function build(options: { core?: ReturnType<typeof switchableCore>; store?: MemoryBootstrapStore | null; env?: Parameters<typeof testEnvironment>[0]; handler?: (method: string, params: unknown[]) => Promise<any>; bytes?: ReturnType<typeof byteSource> } = {}): {
   service: BootstrapService; store: MemoryBootstrapStore; core: ReturnType<typeof switchableCore>; operator: ReturnType<typeof operatorCore>; env: ReturnType<typeof testEnvironment>;
 } {
   const core = options.core ?? switchableCore();
@@ -51,7 +51,7 @@ function build(options: { core?: ReturnType<typeof switchableCore>; store?: Memo
   const env = testEnvironment(options.env);
   const operator = operatorCore(options.handler ?? (async () => { throw new Error('no handler'); }));
   const service = new BootstrapService({
-    nodes: core.reader, core: { network: 'regtest', call: (m, p) => core.current.call(m, p) }, env, store, bytes: byteSource(FIXTURE_BYTES), network: 'regtest',
+    nodes: core.reader, core: { network: 'regtest', call: (m, p) => core.current.call(m, p) }, env, store, bytes: options.bytes ?? byteSource(FIXTURE_BYTES), network: 'regtest',
     statfs: statfsPlenty, catalogue: () => catalogue, operatorCore: operator, workerOwner: 'worker-a',
   });
   return { service, store, core, operator, env };
@@ -282,5 +282,78 @@ describe('Bootstrap operator jobs', () => {
     built.service.stopWorker();
     await executor(built).runOnce();
     expect(await built.service.getJob(job.job_id)).toMatchObject({ state: 'failed', reason: 'core-rpc-error' });
+  });
+
+  it('stops waiting on an issued dumptxoutset at shutdown, and the next worker reconciles it without re-issuing', async () => {
+    const core = switchableCore();
+    core.swap(fakeCore({ calls: core.calls }));
+    const built = build({ core, env: { jobTimeoutMs: 6 * 3600 * 1000 }, handler: () => new Promise(() => undefined) });
+    const job = await built.service.createOperatorJob({ job_type: 'generate_snapshot', idempotency_key: key('stop-rpc') }, auth);
+    built.service.stopWorker();
+    const worker = executor(built);
+    const running = worker.runOnce();
+    for (let i = 0; i < 200 && built.operator.calls.length === 0; i++) await Promise.resolve();
+    expect(built.operator.calls).toHaveLength(1);
+    worker.stop();
+    await running;
+    await worker.drain();
+    const stopped = await built.service.getJob(job.job_id) as NodeBootstrapJob;
+    expect(stopped).toMatchObject({ state: 'running', rpc: { method: 'dumptxoutset' } });
+    expect(stopped.rpc?.finished_at).toBeUndefined();
+    expect(stopped.checkpoints.map((c) => c.stage)).toEqual(['queued', 'claimed', 'rpc-issued', 'worker-stopped']);
+
+    Object.assign(built.store.jobs.get(job.job_id) as NodeBootstrapJob, { lease: { owner: 'worker-a', expires_at: new Date(Date.now() - 1000).toISOString() } });
+    await executor(built, { owner: 'worker-b', clock: () => Date.now() }).runOnce();
+    expect(await built.service.getJob(job.job_id)).toMatchObject({ state: 'needs-review', reason: 'rpc-outcome-unknown-after-restart' });
+    expect(built.operator.calls).toHaveLength(1);
+  });
+
+  it('issues no RPC when shutdown begins during the pre-RPC checks, so the job simply runs later', async () => {
+    const core = switchableCore();
+    core.swap(fakeCore({ calls: core.calls }));
+    const built = build({ core, handler: async () => { throw new Error('must not be called'); } });
+    const job = await built.service.createOperatorJob({ job_type: 'generate_snapshot', idempotency_key: key('stop-pre') }, auth);
+    built.service.stopWorker();
+    let measured!: () => void;
+    const statfs = (): Promise<{ bsize: number; bavail: number; blocks: number }> => new Promise(resolve => { measured = () => resolve({ bsize: 4096, bavail: 1 << 20, blocks: 1 << 21 }); });
+    const worker = executor(built, { statfs });
+    const running = worker.runOnce();
+    for (let i = 0; i < 200 && !measured; i++) await Promise.resolve();
+    expect(measured).toBeDefined();
+    worker.stop();
+    measured();
+    await running;
+    expect(built.operator.calls).toHaveLength(0);
+    expect(await built.service.getJob(job.job_id)).toMatchObject({ state: 'running', rpc: null, attempts: 1 });
+  });
+
+  it('marks a load needs-review when shutdown interrupts the wait for the snapshot chainstate', async () => {
+    const built = build({ handler: async () => ({ coins_loaded: 107, tip_hash: FIXTURE.baseHash, base_height: FIXTURE.height }) });
+    await verifyFixture(built.service);
+    const job = await built.service.createOperatorJob({ job_type: 'load_snapshot', snapshot_id: 'regtest-105', idempotency_key: key('stop-observe'), confirm: 'load_snapshot' }, auth);
+    built.service.stopWorker();
+    let sleeping = false;
+    const worker = executor(built, { sleep: () => { sleeping = true; return new Promise(() => undefined); } });
+    const running = worker.runOnce();
+    for (let i = 0; i < 400 && !sleeping; i++) await Promise.resolve();
+    expect(sleeping).toBe(true);
+    worker.stop();
+    await running;
+    await worker.drain();
+    expect(await built.service.getJob(job.job_id)).toMatchObject({ state: 'needs-review', reason: 'worker-stopped' });
+    expect(built.operator.calls).toHaveLength(1);
+  });
+
+  it('ends a verification stream at shutdown and records it unavailable instead of leaving it pending', async () => {
+    const built = build({ bytes: byteSource(FIXTURE_BYTES, { stall: true }) });
+    const record = await built.service.verifySnapshot({ snapshot_id: 'regtest-105' });
+    for (let i = 0; i < 50; i++) await new Promise(resolve => setTimeout(resolve, 5));
+    expect((await built.service.getVerification(record.verification_id))?.state).toBe('verifying');
+    built.service.stopWorker();
+    await built.service.drainWorker();
+    const stored = await built.service.getVerification(record.verification_id);
+    expect(stored).toMatchObject({ state: 'unavailable', reason: 'backend-stopping' });
+    // A restarted backend can request the same snapshot again.
+    expect(await built.store.activeVerification('regtest-105', 'regtest')).toBeNull();
   });
 });
