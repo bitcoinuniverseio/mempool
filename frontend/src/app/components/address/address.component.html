@@ -334,16 +334,7 @@
             <button type="button" class="btn btn-outline-info address-retry" (click)="retryAddress()" [disabled]="isLoadingAddress" i18n="shared.retry">Retry</button>
           </div>
         }
-        <br>
-        <!--
-          The technical detail, and only the technical detail. The sentence
-          above is the explanation; this line exists so a reader can quote
-          something useful when reporting a problem.
-        -->
-        <details class="small text-muted mt-2">
-          <summary i18n="shared.details">Details</summary>
-          <span>{{ error | httpErrorMsg }}</span>
-        </details>
+        <!-- Upstream error text stays in logs; the sentence above is all a reader needs. -->
       </div>
   </ng-template>
 
