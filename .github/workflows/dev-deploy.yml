@@ -9,6 +9,10 @@ name: Dev deploy
 on:
   push:
     branches: [develop]
+    # Only frontend inputs change the dev site; skip redundant rebuilds.
+    paths:
+      - "frontend/**"
+      - ".github/workflows/dev-deploy.yml"
   workflow_dispatch:
 
 permissions:

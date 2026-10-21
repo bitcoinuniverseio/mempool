@@ -330,6 +330,12 @@ balances from a chain state that no longer exists.
 | capability `degraded` at the chain tip | the index is current but an address or UTXO query did not return a usable document; the journal names the query |
 | address pages fail while blocks and transactions work | the gateway is sending `/api/` to the explorer backend rather than the index; check `UNIVERSE_GATEWAY_ESPLORA` |
 | the diskguard stopped the index | the volume went below its floor; free space before starting it again |
+| address pages fail with `upstream-unavailable` within about 2 s while Fulcrum answers at the tip | Fulcrum returned a balance with an inconsistent (empty) history, which the backend refuses; follow `docs/operations/runbooks/ADDRESS-READ-PATH-20261021.md` |
+
+Every address route (`/api/address/:address`, `/txs`, `/utxo`) answers within
+20 s. A read that has not finished by then is aborted and answered as
+`504 address-query-timeout`. The page gives up at 25 s on its own, so it
+never waits longer than that, and it never shows the server's error text.
 
 ## Configuration
 
@@ -362,6 +368,24 @@ the production asset list in `frontend/angular.json`, not through the upstream
 `check-build-assets.mjs` fails the build when anything the built index
 references is missing from the output, because both of those went missing once
 without anything noticing.
+
+## Dev deploy
+
+Every push to `develop` publishes the frontend to
+`https://dev.explorer.bitcoinuniverse.io` through
+`.github/workflows/dev-deploy.yml`, on the self-hosted `runners-4` fleet.
+
+- Build: `npm ci && npm run build:universe` in `frontend`, Node 24.19.0, npm 11.17.0.
+- Publish: the build is piped to the `universe-dev` SSH forced command on the
+  production web host (`deploy explorer <sha>`), which writes only under
+  `/opt/universe-dev/explorer` and switches a `current` symlink atomically.
+- Verify: the job fails unless `/universe-dev-release.txt` reports the commit.
+- The dev site reads the production explorer API through a read-only `/api/`
+  gate (GET, HEAD and OPTIONS only, cookies and credentials stripped).
+- It never deploys production. Production stays on the release procedure below.
+
+Rollback: re-run the workflow on an earlier `develop` commit, or point
+`/opt/universe-dev/explorer/current` at one of the three retained releases.
 
 ## Release procedure
 
