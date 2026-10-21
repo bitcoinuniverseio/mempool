@@ -30,6 +30,7 @@ import chainTips from '../chain-tips';
 import { readUnsignedInteger, sourceNotFound } from './route-input';
 import { initUtxoReconstructionRoutes } from './utxo-reconstruction.routes';
 import { initChainSourceIdentityRoutes } from './chain-source-identity.routes';
+import { withAddressDeadline } from './address-read-deadline';
 
 const TXID_REGEX = /^[a-f0-9]{64}$/i;
 const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
@@ -725,7 +726,8 @@ class BitcoinRoutes {
 
     const request = addressRequestSignal(req, res);
     try {
-      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getAddress(req.params.address, request.signal));
+      const addressData = await addressReadAdmission.run(() =>
+        withAddressDeadline(signal => bitcoinApi.$getAddress(req.params.address, signal), request.signal));
       res.json(addressData);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -750,7 +752,8 @@ class BitcoinRoutes {
       if (req.query.after_txid && typeof req.query.after_txid === 'string') {
         lastTxId = req.query.after_txid;
       }
-      const transactions = await addressReadAdmission.run(() => bitcoinApi.$getAddressTransactions(req.params.address, lastTxId, request.signal));
+      const transactions = await addressReadAdmission.run(() =>
+        withAddressDeadline(signal => bitcoinApi.$getAddressTransactions(req.params.address, lastTxId, signal), request.signal));
       res.json(transactions);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
@@ -769,11 +772,16 @@ class BitcoinRoutes {
       return;
     }
 
+    const request = addressRequestSignal(req, res);
     try {
-      const addressData = await addressReadAdmission.run(() => bitcoinApi.$getAddressUtxos(req.params.address));
+      // The UTXO read takes no signal; the deadline still bounds the response.
+      const addressData = await addressReadAdmission.run(() =>
+        withAddressDeadline(() => bitcoinApi.$getAddressUtxos(req.params.address), request.signal));
       res.json(addressData);
     } catch (e) {
       sendAddressError(req, res, classifyAddressError(e));
+    } finally {
+      request.release();
     }
   }
 
