@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { StateService } from '@app/services/state.service';
-import { Observable, of } from 'rxjs';
-import { startWith, switchMap, map, catchError } from 'rxjs/operators';
+import { EMPTY, Observable, merge, of } from 'rxjs';
+import { startWith, switchMap, map, catchError, timeout } from 'rxjs/operators';
+import { READ_DEADLINE_MS, classifyLoadFailure, isRetryableFailure, loadFailureMessage } from '@app/shared/load-state';
 @Injectable({ providedIn: 'root' })
 export class DataStudioApiService {
   constructor(
@@ -21,8 +22,9 @@ export class DataStudioApiService {
   private selectedNetwork(): string {
     return this.state.network || this.state.env.ROOT_NETWORK || 'mainnet';
   }
-  watchCatalog$(): Observable<any> {
-    return this.state.networkChanged$.pipe(
+  /** `retry$` re-reads the catalogue for the current network. */
+  watchCatalog$(retry$: Observable<unknown> = EMPTY): Observable<any> {
+    return merge(this.state.networkChanged$, retry$).pipe(
       startWith(null),
       switchMap(() => {
         const network = this.selectedNetwork();
@@ -35,9 +37,11 @@ export class DataStudioApiService {
             }
             return { ...value, kind: 'ready' };
           }),
-          catchError(() =>
-            of({ kind: 'error', message: 'Owned Data Studio evidence is unavailable for this backend.' })
-          ),
+          timeout({ first: READ_DEADLINE_MS }),
+          catchError((error) => {
+            const reason = classifyLoadFailure(error);
+            return of({ kind: 'error', message: loadFailureMessage(reason), retryable: isRetryableFailure(reason) });
+          }),
           startWith({ kind: 'loading' })
         );
       })
@@ -51,7 +55,7 @@ export class DataStudioApiService {
         throw Error('Owned query response does not match the requested network, dataset and snapshot.');
       }
       return value;
-    }));
+    }), timeout({ first: READ_DEADLINE_MS }));
   }
   exportUrl(id: string, dataset: string, format: string) {
     return (

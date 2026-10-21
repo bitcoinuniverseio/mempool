@@ -11,7 +11,11 @@
   </nav>
   <ng-container *ngIf="vm$ | async as vm"
     ><section class="panel" role="status" *ngIf="vm.kind === 'loading'">Loading datasets…</section>
-    <section class="panel" role="alert" *ngIf="vm.kind === 'error'">{{ vm.message }}</section>
+    <section class="panel" *ngIf="vm.kind === 'error'">
+      <h2>Temporarily unavailable</h2>
+      <p role="alert">{{ vm.message }}</p>
+      <button *ngIf="vm.retryable" type="button" class="btn-secondary" (click)="retryCatalog()">Retry</button>
+    </section>
     <ng-container *ngIf="vm.kind === 'ready'"
       ><section class="panel">
         <h2>Data source</h2>

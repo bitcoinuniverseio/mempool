@@ -17,10 +17,8 @@
     </div>
 
     <div *ngIf="vm.kind === 'unavailable'" class="panel">
-      <h2>Observer Unavailable</h2>
-      <p>The owned node observation behind these reads could not be obtained. No fleet, timeline or template is shown in its place.</p>
+      <h2>Temporarily unavailable</h2>
       <p role="alert">{{ vm.message }}</p>
-      <p class="mono" *ngIf="vm.stage">Reason code: {{ vm.stage }}</p>
       <button type="button" class="btn-secondary" (click)="retry()">Retry</button>
     </div>
 
@@ -28,7 +26,6 @@
       <h2>Network Observatory Error</h2>
       <p>Could not fetch node propagation or block-template data.</p>
       <p role="alert">{{ vm.message }}</p>
-      <p class="mono" *ngIf="vm.stage">Reason code: {{ vm.stage }}</p>
       <button type="button" class="btn-secondary" (click)="retry()">Retry</button>
     </div>
 

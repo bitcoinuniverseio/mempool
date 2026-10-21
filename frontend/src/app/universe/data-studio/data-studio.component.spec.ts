@@ -86,8 +86,14 @@ describe('actual Data Studio UI', () => {
     expect(last(c).queryResult).toBeUndefined();
     response = new Subject();
     c.runQuery();
-    response.error({ error: { error: 'Snapshot expired' } });
+    response.error({ status: 410, error: { error: 'Snapshot expired' } });
     expect(last(c).queryError).toBe('Snapshot expired');
+    response = new Subject();
+    c.runQuery();
+    // Dependency failures never show server wording.
+    response.error({ status: 503, error: { error: 'Owned snapshot collection timed out.' } });
+    expect(last(c).queryError).not.toContain('Owned');
+    expect(last(c).queryError).toBeTruthy();
     c.ngOnDestroy();
   });
   it('streams only received events, caps display history and disconnects on backend changes', () => {
