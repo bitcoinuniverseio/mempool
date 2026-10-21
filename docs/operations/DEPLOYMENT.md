@@ -383,6 +383,14 @@ Every push to `develop` publishes the frontend to
 - The dev site reads the production explorer API through a read-only `/api/`
   gate (GET, HEAD and OPTIONS only, cookies and credentials stripped).
 - It never deploys production. Production stays on the release procedure below.
+- Known gap (owner approval, web host config): the dev vhost proxies `/api/`
+  without a WebSocket upgrade, so the live socket `/api/v1/ws` does not connect
+  on dev and pages fall back to their polled reads. To enable it, add before
+  the existing `/api/` proxy in
+  `/etc/apache2/conf.d/userdata/ssl/2_4/bitcoinuniverse/dev.explorer.bitcoinuniverse.io/95-universe-dev-explorer.conf`:
+  `ProxyPass "/api/v1/ws" "wss://explorer.bitcoinuniverse.io/api/v1/ws" upgrade=websocket`,
+  then `apachectl configtest` and a graceful reload. Rollback: remove the line
+  and reload.
 
 Rollback: re-run the workflow on an earlier `develop` commit, or point
 `/opt/universe-dev/explorer/current` at one of the three retained releases.
