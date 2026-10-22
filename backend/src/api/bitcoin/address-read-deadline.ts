@@ -39,7 +39,15 @@ export function withAddressDeadline<T>(
       reject(addressDeadlineError());
     }, deadlineMs);
   });
-  return Promise.race([read(controller.signal), deadline]).finally(() => {
+  let operation: Promise<T>;
+  try {
+    operation = read(controller.signal);
+  } catch (error) {
+    clearTimeout(timer);
+    caller.removeEventListener('abort', forward);
+    return Promise.reject(error);
+  }
+  return Promise.race([operation, deadline]).finally(() => {
     clearTimeout(timer);
     caller.removeEventListener('abort', forward);
   });

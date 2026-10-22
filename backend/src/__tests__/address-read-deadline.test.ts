@@ -14,6 +14,13 @@ describe('address request deadline', () => {
     expect(ADDRESS_REQUEST_DEADLINE_MS).toBeLessThanOrEqual(20_000);
   });
 
+  it('cleans up the deadline after a synchronous adapter failure', async () => {
+    jest.useFakeTimers();
+    const caller = new AbortController();
+    await expect(withAddressDeadline(() => { throw new Error('unsupported'); }, caller.signal)).rejects.toThrow('unsupported');
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
   it('returns a read that finishes in time', async () => {
     const caller = new AbortController();
     await expect(withAddressDeadline(async () => ({ address: 'bc1q' }), caller.signal, 50)).resolves.toEqual({ address: 'bc1q' });
