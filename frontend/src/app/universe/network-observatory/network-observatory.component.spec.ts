@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { NetworkObservatoryComponent } from './network-observatory.component';
+import { loadFailureMessage } from '@app/shared/load-state';
 
 const unavailable = () => throwError(() => new HttpErrorResponse({ status: 503 }));
 const ownedNodeDown = () => throwError(() => new HttpErrorResponse({ status: 503, error: { stage: 'owned-node-unavailable', error: 'Owned Core peer/network observation is unavailable, stale or on the wrong network.' } }));
@@ -56,7 +57,9 @@ describe('Network observatory on an absent source', () => {
     view.vm$.subscribe((value) => seen.push(value));
     expect(seen.at(-1).kind).toBe('unavailable');
     expect(seen.at(-1).stage).toBe('owned-node-unavailable');
-    expect(seen.at(-1).message).toContain('Owned Core');
+    // The neutral message, never the server's internal wording.
+    expect(seen.at(-1).message).not.toContain('Owned Core');
+    expect(seen.at(-1).message).toBe(loadFailureMessage('unavailable'));
     view.retry();
     expect(seen.at(-1).kind).toBe('ready');
     expect(seen.at(-1).propagation.state).toBe('no-observations');
@@ -178,4 +181,11 @@ describe('Network template measured and estimated weight', () => {
     }
   });
 
+});
+
+it.each(['disabled', 'not-implemented'])('shows declared observer lifecycle %s separately from an outage', lifecycle => {
+  const read = () => throwError(() => new HttpErrorResponse({ status: 503, error: { lifecycle, error: 'private host' } }));
+  const vm = observe({ getObserverNodes$: read, getPropagationObservation$: read, getBlockTemplateComparison$: read });
+  expect(vm.kind).toBe(lifecycle);
+  expect(vm.message).not.toContain('private host');
 });

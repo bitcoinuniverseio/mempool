@@ -1922,9 +1922,9 @@
     },
     {
       "path": "backend/src/api/bitcoin/bitcoin.routes.ts",
-      "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+      "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
       "sha256Encoding": "utf8-lf",
-      "bytes": 53134
+      "bytes": 53515
     },
     {
       "path": "backend/src/api/bitcoin/electrum-api.ts",
@@ -2228,9 +2228,9 @@
     },
     {
       "path": "backend/src/api/l2-observatory/l2-observatory.routes.ts",
-      "sha256": "3e5eb0fba0f89e2a26ffdbbb152ef3c6343008c84ca5d9793c10f13fb7016a91",
+      "sha256": "c96af1530e64d4c14e06559345950ea73e6e3c262678c7e76ea06d0183221923",
       "sha256Encoding": "utf8-lf",
-      "bytes": 2356
+      "bytes": 2408
     },
     {
       "path": "backend/src/api/liquid-observatory/liquid-observatory.routes.ts",
@@ -2624,9 +2624,9 @@
     },
     {
       "path": "frontend/src/app/components/status-view/status-view.component.ts",
-      "sha256": "c646da0280a7a866f705d4844b59f978dc979130ed626fb24d327cb4044fab21",
+      "sha256": "55871e98940b29c6fdd52afe1f921cd86de4397deb815debbbbaf8f729970fb3",
       "sha256Encoding": "utf8-lf",
-      "bytes": 452
+      "bytes": 1847
     },
     {
       "path": "frontend/src/app/components/stratum/stratum-list/stratum-list.component.ts",
@@ -3158,9 +3158,9 @@
     },
     {
       "path": "frontend/src/app/universe/data-studio/data-studio.component.ts",
-      "sha256": "2ab78d75bb98a970618af19336ba89852f1c26ec6b23500696dd4e79a50e7e25",
+      "sha256": "9b82e8f3045fe92f5b049b1f108e3362113110629aa4d31010183e38167476ae",
       "sha256Encoding": "utf8-lf",
-      "bytes": 4568
+      "bytes": 5186
     },
     {
       "path": "frontend/src/app/universe/dlc/dlc-event-detail.component.ts",
@@ -3380,9 +3380,9 @@
     },
     {
       "path": "frontend/src/app/universe/l2-observatory/l2-observatory.component.ts",
-      "sha256": "7e1841e6e7ab6465c6d9e32eb86e7071ba739f508097a7017f4c47f1a1828e78",
+      "sha256": "d0939a7bc9269a55fe5d2ed1b7dd055aeef351f6a4c79bb5aed5f760db506f41",
       "sha256Encoding": "utf8-lf",
-      "bytes": 3838
+      "bytes": 4579
     },
     {
       "path": "frontend/src/app/universe/labs/privacy/privacy-lab.component.ts",
@@ -3632,9 +3632,9 @@
     },
     {
       "path": "frontend/src/app/universe/network-observatory/network-observatory.component.ts",
-      "sha256": "a6fcf6178ea29cc5aaa37c42d0c934ab22be7a9c9492edbd4d6f3c8a491aa3cc",
+      "sha256": "f113daaaacc26df00d56a473f0ebb9a61686e35f322009fd4979a383ae2a78c9",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5509
+      "bytes": 5914
     },
     {
       "path": "frontend/src/app/universe/node-console/node-overview.component.ts",
@@ -4046,9 +4046,9 @@
     },
     {
       "path": "frontend/src/app/universe/pulse/pulse.component.ts",
-      "sha256": "2e41fd6b8aca677e8301d78f54e87a4228e85f512d4465619e4b34bd8386cf69",
+      "sha256": "22f6593940b177a1f0c4b3be25ae36f49dc7fad6e9b9f6dc9041c553bcdaf375",
       "sha256Encoding": "utf8-lf",
-      "bytes": 5522
+      "bytes": 5571
     },
     {
       "path": "frontend/src/app/universe/pwa/offline-page.component.ts",
@@ -4298,9 +4298,9 @@
     },
     {
       "path": "frontend/src/app/universe/universe-api.service.ts",
-      "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+      "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
       "sha256Encoding": "utf8-lf",
-      "bytes": 71824
+      "bytes": 72045
     },
     {
       "path": "frontend/src/app/universe/utxo-set/utxo-set.component.ts",
@@ -6973,7 +6973,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/data-studio/data-studio.component.ts",
-          "sha256": "2ab78d75bb98a970618af19336ba89852f1c26ec6b23500696dd4e79a50e7e25",
+          "sha256": "9b82e8f3045fe92f5b049b1f108e3362113110629aa4d31010183e38167476ae",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -7091,7 +7091,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/network-observatory/network-observatory.component.ts",
-          "sha256": "a6fcf6178ea29cc5aaa37c42d0c934ab22be7a9c9492edbd4d6f3c8a491aa3cc",
+          "sha256": "f113daaaacc26df00d56a473f0ebb9a61686e35f322009fd4979a383ae2a78c9",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -7523,7 +7523,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/l2-observatory/l2-observatory.component.ts",
-          "sha256": "7e1841e6e7ab6465c6d9e32eb86e7071ba739f508097a7017f4c47f1a1828e78",
+          "sha256": "d0939a7bc9269a55fe5d2ed1b7dd055aeef351f6a4c79bb5aed5f760db506f41",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -15457,7 +15457,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/universe/pulse/pulse.component.ts",
-          "sha256": "2e41fd6b8aca677e8301d78f54e87a4228e85f512d4465619e4b34bd8386cf69",
+          "sha256": "22f6593940b177a1f0c4b3be25ae36f49dc7fad6e9b9f6dc9041c553bcdaf375",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -20549,7 +20549,7 @@
         "status": "NOT TESTED",
         "currentSource": {
           "artifact": "frontend/src/app/components/status-view/status-view.component.ts",
-          "sha256": "c646da0280a7a866f705d4844b59f978dc979130ed626fb24d327cb4044fab21",
+          "sha256": "55871e98940b29c6fdd52afe1f921cd86de4397deb815debbbbaf8f729970fb3",
           "sha256Encoding": "utf8-lf"
         }
       },
@@ -52288,7 +52288,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/data-studio/data-studio.component.ts",
-          "sha256": "2ab78d75bb98a970618af19336ba89852f1c26ec6b23500696dd4e79a50e7e25",
+          "sha256": "9b82e8f3045fe92f5b049b1f108e3362113110629aa4d31010183e38167476ae",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -52417,7 +52417,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/data-studio/data-studio.component.ts",
-          "sha256": "2ab78d75bb98a970618af19336ba89852f1c26ec6b23500696dd4e79a50e7e25",
+          "sha256": "9b82e8f3045fe92f5b049b1f108e3362113110629aa4d31010183e38167476ae",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -95994,7 +95994,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96056,7 +96056,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96118,7 +96118,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96180,7 +96180,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96242,7 +96242,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96304,7 +96304,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96366,7 +96366,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96428,7 +96428,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96490,7 +96490,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96552,7 +96552,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96614,7 +96614,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96676,7 +96676,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96738,7 +96738,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96800,7 +96800,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96862,7 +96862,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96924,7 +96924,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -96986,7 +96986,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97048,7 +97048,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97110,7 +97110,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97172,7 +97172,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97234,7 +97234,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97296,7 +97296,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97358,7 +97358,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97420,7 +97420,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97482,7 +97482,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97544,7 +97544,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97606,7 +97606,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97668,7 +97668,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97730,7 +97730,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97792,7 +97792,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97854,7 +97854,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97916,7 +97916,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -97978,7 +97978,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98040,7 +98040,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98107,7 +98107,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98174,7 +98174,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98236,7 +98236,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98303,7 +98303,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98370,7 +98370,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98437,7 +98437,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98499,7 +98499,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98566,7 +98566,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98633,7 +98633,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98700,7 +98700,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98767,7 +98767,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98834,7 +98834,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98901,7 +98901,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -98968,7 +98968,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99035,7 +99035,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99102,7 +99102,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99169,7 +99169,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99236,7 +99236,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99303,7 +99303,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99370,7 +99370,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99437,7 +99437,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99504,7 +99504,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99580,7 +99580,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -99667,7 +99667,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99734,7 +99734,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -99801,7 +99801,7 @@
         },
         {
           "artifact": "backend/src/api/bitcoin/bitcoin.routes.ts",
-          "sha256": "b0e9a01d32462fc9eabf20d1138774ee53114823017ff77aa263c153d96c11ee",
+          "sha256": "46b16e237d31e352528dd6a757ff22c985293b05c7566dd6393c49b4d9779951",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105714,7 +105714,7 @@
         },
         {
           "artifact": "backend/src/api/l2-observatory/l2-observatory.routes.ts",
-          "sha256": "3e5eb0fba0f89e2a26ffdbbb152ef3c6343008c84ca5d9793c10f13fb7016a91",
+          "sha256": "c96af1530e64d4c14e06559345950ea73e6e3c262678c7e76ea06d0183221923",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105776,7 +105776,7 @@
         },
         {
           "artifact": "backend/src/api/l2-observatory/l2-observatory.routes.ts",
-          "sha256": "3e5eb0fba0f89e2a26ffdbbb152ef3c6343008c84ca5d9793c10f13fb7016a91",
+          "sha256": "c96af1530e64d4c14e06559345950ea73e6e3c262678c7e76ea06d0183221923",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105838,7 +105838,7 @@
         },
         {
           "artifact": "backend/src/api/l2-observatory/l2-observatory.routes.ts",
-          "sha256": "3e5eb0fba0f89e2a26ffdbbb152ef3c6343008c84ca5d9793c10f13fb7016a91",
+          "sha256": "c96af1530e64d4c14e06559345950ea73e6e3c262678c7e76ea06d0183221923",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -105900,7 +105900,7 @@
         },
         {
           "artifact": "backend/src/api/l2-observatory/l2-observatory.routes.ts",
-          "sha256": "3e5eb0fba0f89e2a26ffdbbb152ef3c6343008c84ca5d9793c10f13fb7016a91",
+          "sha256": "c96af1530e64d4c14e06559345950ea73e6e3c262678c7e76ea06d0183221923",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -127896,7 +127896,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -127976,7 +127976,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128035,7 +128035,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128093,7 +128093,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128153,7 +128153,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128212,7 +128212,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128271,7 +128271,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128330,7 +128330,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -128398,7 +128398,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128501,7 +128501,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128590,7 +128590,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128681,7 +128681,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128775,7 +128775,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128868,7 +128868,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -128963,7 +128963,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129056,7 +129056,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129147,7 +129147,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129237,7 +129237,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129332,7 +129332,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129425,7 +129425,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -129520,7 +129520,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130247,7 +130247,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130303,7 +130303,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130359,7 +130359,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130415,7 +130415,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130471,7 +130471,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130527,7 +130527,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130583,7 +130583,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130639,7 +130639,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130695,7 +130695,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130760,7 +130760,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130845,7 +130845,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {
@@ -130921,7 +130921,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -130977,7 +130977,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         }
       ],
@@ -131042,7 +131042,7 @@
         },
         {
           "artifact": "frontend/src/app/universe/universe-api.service.ts",
-          "sha256": "b54ea8bb0b0c85b8c0b2e716c83aab63680769508b00f03ca8e23ea93519e62e",
+          "sha256": "06a0a86272252a7fd3f8fa9eee6169bfb5b4a651661c4a052f1eb60c282c1872",
           "sha256Encoding": "utf8-lf"
         },
         {

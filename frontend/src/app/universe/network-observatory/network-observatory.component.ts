@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, Subscription, catchError, combineLatest, map, merge, of, startWith, switchMap } from 'rxjs';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { BehaviorSubject, Observable, Subject, Subscription, catchError, combineLatest, map, merge, of, startWith, switchMap, timeout } from 'rxjs';
+import { READ_DEADLINE_MS, classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { StateService } from '@app/services/state.service';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
@@ -21,12 +21,12 @@ import {
  * other failure, including a route this deployment does not serve.
  */
 interface NetworkViewModel {
-  readonly kind: 'loading' | 'ready' | 'unavailable' | 'error';
+  readonly kind: 'loading' | 'ready' | 'unavailable' | 'error' | 'not-implemented' | 'disabled';
   readonly nodes?: ObserverNode[];
   readonly propagation?: PropagationObservation;
   readonly templates?: BlockTemplateComparison;
   readonly message?: string;
-  /** The backend's typed reason, for example owned-node-unavailable. */
+  /** The backend's typed reason, for example owned-node-unavailable. Not rendered. */
   readonly stage?: string;
 }
 
@@ -74,6 +74,8 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
           }
           return { kind: 'ready', nodes: nodesData.nodes, propagation, templates };
         }),
+        // A hung observer ends in a bounded unavailable state, not a spinner.
+        timeout({ first: READ_DEADLINE_MS }),
         catchError((error) => of(this.failure(error))),
         startWith<NetworkViewModel>({ kind: 'loading' }),
       )),
@@ -94,8 +96,11 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
 
   private failure(error: any): NetworkViewModel {
     const reason = classifyLoadFailure(error);
+    if (reason === 'disabled' || reason === 'not-implemented') return { kind: reason, message: loadFailureMessage(reason) };
     const stage = typeof error?.error?.stage === 'string' ? error.error.stage : undefined;
-    const message = typeof error?.error?.error === 'string' ? error.error.error : error instanceof Error && !(error as any).status ? error.message : loadFailureMessage(reason);
+    // Server error text stays internal; only this page's own checks speak.
+    const local = error instanceof Error && !(error as any).status && (error as any).name !== 'TimeoutError';
+    const message = local ? error.message : loadFailureMessage(reason);
     return { kind: reason === 'unavailable' || reason === 'timeout' || reason === 'network' ? 'unavailable' : 'error', message, stage };
   }
 

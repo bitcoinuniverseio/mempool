@@ -81,3 +81,44 @@ describe('L2 observatory on an absent source', () => {
     expect(observed.challenges).toBeUndefined();
   });
 });
+
+describe('L2 observatory lifecycle and deadline', () => {
+  const notBuilt = () => throwError(() => new HttpErrorResponse({ status: 503, error: { stage: 'unavailable-bridge-watcher', lifecycle: 'not-implemented', error: 'internal detail' } }));
+
+  it('shows a feature that is not built as not available yet, without Retry', () => {
+    const api = { getL2Systems$: notBuilt, getL2Challenges$: notBuilt } as unknown as UniverseApiService;
+    const view = new L2ObservatoryComponent(api, { setTitle: vi.fn() } as unknown as SeoService);
+    view.ngOnInit();
+    let observed: any;
+    view.vm$.subscribe((value) => { observed = value; }).unsubscribe();
+    expect(observed.kind).toBe('not-implemented');
+    expect(observed.retryable).toBeUndefined();
+    expect(observed.message).not.toContain('internal detail');
+    view.ngOnDestroy();
+  });
+
+  it('offers Retry for an outage and re-reads on Retry', () => {
+    const api = { getL2Systems$: vi.fn(unavailable), getL2Challenges$: vi.fn(unavailable) };
+    const view = new L2ObservatoryComponent(api as unknown as UniverseApiService, { setTitle: vi.fn() } as unknown as SeoService);
+    view.ngOnInit();
+    let observed: any;
+    const read = view.vm$.subscribe((value) => { observed = value; });
+    expect(observed).toMatchObject({ kind: 'error', retryable: true });
+    view.retry();
+    expect(api.getL2Systems$).toHaveBeenCalledTimes(2);
+    read.unsubscribe(); view.ngOnDestroy();
+  });
+
+  it('ends a hung read in a bounded unavailable state', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = pendingSource();
+      expect(fixture.observed().kind).toBe('loading');
+      vi.advanceTimersByTime(20_000);
+      expect(fixture.observed()).toMatchObject({ kind: 'error', retryable: true });
+      fixture.view.ngOnDestroy(); fixture.read.unsubscribe();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

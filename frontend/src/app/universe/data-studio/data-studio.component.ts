@@ -2,10 +2,21 @@ import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, Inject } from '@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
 import { DataStudioApiService } from './data-studio-api.service';
+
+/**
+ * A rejected query (400) or an expired snapshot (410) carries a sentence about
+ * the user's own request. Every other failure gets the neutral reason; server
+ * and dependency error text stays internal.
+ */
+export function queryFailureMessage(error: any): string {
+  if ((error?.status === 400 || error?.status === 410) && typeof error?.error?.error === 'string') return error.error.error;
+  return loadFailureMessage(classifyLoadFailure(error));
+}
 @Component({
   selector: 'app-data-studio',
   templateUrl: './data-studio.component.html',
@@ -27,6 +38,7 @@ export class DataStudioComponent implements OnInit, OnDestroy {
   private read?: Subscription;
   private query?: Subscription;
   private generation = 0;
+  private readonly retry$ = new Subject<void>();
   private state = new BehaviorSubject<any>({ kind: 'loading' });
   readonly vm$: Observable<any> = this.state.asObservable();
   constructor(
@@ -36,7 +48,7 @@ export class DataStudioComponent implements OnInit, OnDestroy {
     seo.setTitle('Universe Data Studio');
   }
   ngOnInit() {
-    this.read = this.api.watchCatalog$().subscribe((catalog) => {
+    this.read = this.api.watchCatalog$(this.retry$).subscribe((catalog) => {
       this.invalidateQuery();
       if (catalog.kind === 'ready') {
         const selected = catalog.datasets.find((d) => d.id === this.selectedDatasetId) ?? catalog.datasets[0];
@@ -105,10 +117,13 @@ export class DataStudioComponent implements OnInit, OnDestroy {
           ...this.state.value,
           executing: false,
           queryResult: undefined,
-          queryError: e?.error?.error ?? 'Owned query evidence is unavailable.',
+          queryError: queryFailureMessage(e),
         });
       },
     });
+  }
+  retryCatalog() {
+    this.retry$.next();
   }
   nextPage() {
     const next = this.state.value.queryResult?.nextOffset;

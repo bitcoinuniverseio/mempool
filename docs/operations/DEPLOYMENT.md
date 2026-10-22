@@ -330,6 +330,12 @@ balances from a chain state that no longer exists.
 | capability `degraded` at the chain tip | the index is current but an address or UTXO query did not return a usable document; the journal names the query |
 | address pages fail while blocks and transactions work | the gateway is sending `/api/` to the explorer backend rather than the index; check `UNIVERSE_GATEWAY_ESPLORA` |
 | the diskguard stopped the index | the volume went below its floor; free space before starting it again |
+| address pages fail with `upstream-unavailable` within about 2 s while Fulcrum answers at the tip | Fulcrum returned a balance with an inconsistent (empty) history, which the backend refuses; follow `docs/operations/runbooks/ADDRESS-READ-PATH-20261021.md` |
+
+Every address route (`/api/address/:address`, `/txs`, `/utxo`) answers within
+20 s. A read that has not finished by then is aborted and answered as
+`504 address-query-timeout`. The page gives up at 25 s on its own, so it
+never waits longer than that, and it never shows the server's error text.
 
 ## Configuration
 
@@ -362,6 +368,32 @@ the production asset list in `frontend/angular.json`, not through the upstream
 `check-build-assets.mjs` fails the build when anything the built index
 references is missing from the output, because both of those went missing once
 without anything noticing.
+
+## Dev deploy
+
+Every push to `develop` publishes the frontend to
+`https://dev.explorer.bitcoinuniverse.io` through
+`.github/workflows/dev-deploy.yml`, on the self-hosted `runners-4` fleet.
+
+- Build: `npm ci && npm run build:universe` in `frontend`, Node 24.19.0, npm 11.17.0.
+- Publish: the build is piped to the `universe-dev` SSH forced command on the
+  production web host (`deploy explorer <sha>`), which writes only under
+  `/opt/universe-dev/explorer` and switches a `current` symlink atomically.
+- Verify: the job fails unless `/universe-dev-release.txt` reports the commit.
+- The dev site reads the production explorer API through a read-only `/api/`
+  gate (GET, HEAD and OPTIONS only, cookies and credentials stripped).
+- It never deploys production. Production stays on the release procedure below.
+- Known gap (owner approval, web host config): the dev vhost proxies `/api/`
+  without a WebSocket upgrade, so the live socket `/api/v1/ws` does not connect
+  on dev and pages fall back to their polled reads. To enable it, add before
+  the existing `/api/` proxy in
+  `/etc/apache2/conf.d/userdata/ssl/2_4/bitcoinuniverse/dev.explorer.bitcoinuniverse.io/95-universe-dev-explorer.conf`:
+  `ProxyPass "/api/v1/ws" "wss://explorer.bitcoinuniverse.io/api/v1/ws" upgrade=websocket`,
+  then `apachectl configtest` and a graceful reload. Rollback: remove the line
+  and reload.
+
+Rollback: re-run the workflow on an earlier `develop` commit, or point
+`/opt/universe-dev/explorer/current` at one of the three retained releases.
 
 ## Release procedure
 
@@ -810,3 +842,29 @@ or copy a published snapshot and validate it before use.
 UTXO checkpoints require a synced coinstatsindex on the already configured owned Core node. No full-set scan fallback is started by an HTTP read. For a complete small-chain projection, an operator can set UNIVERSE_UTXO_PROJECTION_PATH to a dedicated durable file. It reconstructs from genesis on demand, preserves exact outpoints and undo across restart, and reconciles independent MuHash/count/value at the same canonical block. Worker-specific writer isolation, capacity limits and rebuild requirements apply. This bounded implementation is not a mainnet-scale index.
 
 See [UTXO Intelligence operator details](../product/UTXO-INTELLIGENCE.md) before configuring it. Missing protocol indexes and Utreexo bridges remain independent unavailable evidence sources. No production settings were changed by the candidate audit.
+
+
+## Indexer read states (phase 2)
+
+The `/status` page consumes the additive `GET /api/v1/universe/indexer-health`
+v1 envelope, scoped to the selected network. It reads only cached health
+observations. An absent or incompatible endpoint produces a bounded unavailable
+panel and Retry; block streaming stays independent. Authority observations older
+than 60 seconds are unavailable. Zero is a valid known height; missing heights
+are unknown. Candidate or foreign-chain records never satisfy an authority row.
+
+Explicit `desiredState` metadata is additive in protocol declarations. Disabled,
+planned and retired declarations stay separate from operational failures.
+Network/L2/data panels also accept typed lifecycle errors. Home and pulse
+transaction batches have a six-second budget. Failures preserve dated samples,
+Retry reuses failed IDs, and declared dormant lifecycle states stop batch reads.
+
+The dev deploy workflow accepts only `refs/heads/develop`, including manual runs.
+Its exact dependency cache key includes OS, architecture, Node 24.19.0, npm
+11.17.0 and the frontend lockfile. A cache hit skips installation. Release
+verification has bounded connection and response deadlines. No production deploy
+is added.
+
+Rollback: revert the frontend release and the dev workflow independently. Keep
+bodyless media errors and neutral unavailable read states if reverting health
+metadata. No database, indexer, tunnel or writer changes are required.

@@ -9,6 +9,8 @@ export type ProtocolAvailability =
   | 'unconfigured'
   | 'not-implemented'
   | 'disabled'
+  | 'planned'
+  | 'retired'
   | 'unknown';
 
 /** Authority snapshot keyed by authority id; null when the snapshot could not be read. */
@@ -71,6 +73,7 @@ export function protocolAvailability(
   protocol: ExplorerProtocolDefinition,
   sources: SourcesByAuthority,
 ): ProtocolAvailability {
+  if (protocol.desiredState === 'disabled' || protocol.desiredState === 'planned' || protocol.desiredState === 'retired') return protocol.desiredState;
   const status = normalizeReleaseStatus(protocol);
   if (status === 'intentionally disabled') return 'disabled';
   // A blocked release says acceptance has not been established. It says
@@ -102,6 +105,8 @@ export function availabilityLabel(availability: ProtocolAvailability): string {
     case 'unreachable': return $localize`:@@universe.protocols.availability-unreachable:Unavailable`;
     case 'unconfigured': return $localize`:@@universe.protocols.availability-unconfigured:Not served here`;
     case 'not-implemented': return $localize`:@@universe.protocols.availability-not-implemented:Not yet available`;
+    case 'planned': return $localize`:@@universe.protocols.availability-planned:Not yet available`;
+    case 'retired': return $localize`:@@universe.protocols.availability-retired:No longer available`;
     case 'disabled': return $localize`:@@universe.protocols.availability-disabled:Disabled`;
     default: return $localize`:@@universe.protocols.availability-unknown:Status unknown`;
   }

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { BehaviorSubject, Observable, Subscription, catchError, combineLatest, distinctUntilChanged, map, of, startWith, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, catchError, combineLatest, distinctUntilChanged, map, of, startWith, switchMap, timeout } from 'rxjs';
 import { StateService } from '@app/services/state.service';
-import { classifyLoadFailure, loadFailureMessage } from '@app/shared/load-state';
+import { READ_DEADLINE_MS, classifyLoadFailure, isRetryableFailure, loadFailureMessage } from '@app/shared/load-state';
 import { SeoService } from '@app/services/seo.service';
 import { UniverseApiService } from '@app/universe/universe-api.service';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -14,8 +14,13 @@ import {
   L2Challenge,
 } from '@app/universe/universe.types';
 
+/**
+ * error: the read failed; retryable says whether Retry can help.
+ * not-implemented / disabled: a declared lifecycle, never shown as an outage.
+ */
 interface L2ViewModel {
-  readonly kind: 'loading' | 'ready' | 'error';
+  readonly kind: 'loading' | 'ready' | 'error' | 'not-implemented' | 'disabled';
+  readonly retryable?: boolean;
   readonly systems?: L2BridgeSystem[];
   readonly challenges?: L2Challenge[];
   readonly message?: string;
@@ -33,6 +38,7 @@ export class L2ObservatoryComponent implements OnInit, OnDestroy {
   private readonly state = new BehaviorSubject<L2ViewModel>({ kind: 'loading' });
   readonly vm$: Observable<L2ViewModel> = this.state.asObservable();
   private reads?: Subscription;
+  private readonly retry$ = new Subject<void>();
 
   constructor(
     private api: UniverseApiService,
@@ -45,7 +51,7 @@ export class L2ObservatoryComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const network = this.networkState?.networkChanged$.pipe(startWith(this.networkState.network), distinctUntilChanged()) ?? of(null);
-    this.reads = combineLatest([this.route?.paramMap ?? of(null), network]).pipe(
+    this.reads = combineLatest([this.route?.paramMap ?? of(null), network, this.retry$.pipe(startWith(undefined))]).pipe(
       switchMap(([params]) => {
         this.state.next({ kind: 'loading' });
         const systemId = params?.get('systemId');
@@ -60,10 +66,24 @@ export class L2ObservatoryComponent implements OnInit, OnDestroy {
             if (systemId && challengesData.challenges.some(challenge => !challenge || challenge.systemId !== systemId)) { throw new Error('The challenges do not match the selected bridge system.'); }
             return { kind: 'ready', systems: systemsData.systems, challenges: challengesData.challenges };
           }),
-          catchError(error => of<L2ViewModel>({ kind: 'error', message: loadFailureMessage(classifyLoadFailure(error)) })),
+          timeout({ first: READ_DEADLINE_MS }),
+          catchError(error => of<L2ViewModel>(this.failure(error))),
         );
       }),
     ).subscribe((vm) => this.state.next(vm));
+  }
+
+  retry(): void {
+    this.retry$.next();
+  }
+
+  private failure(error: unknown): L2ViewModel {
+    const reason = classifyLoadFailure(error);
+    const message = loadFailureMessage(reason);
+    if (reason === 'not-implemented' || reason === 'disabled') {
+      return { kind: reason, message };
+    }
+    return { kind: 'error', message, retryable: isRetryableFailure(reason) };
   }
 
   ngOnDestroy(): void {

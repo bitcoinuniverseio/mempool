@@ -10,7 +10,13 @@ import {
  * than as an answer.
  */
 export class L2ObservatoryEvidenceError extends Error {
-  constructor(public readonly code: string, message: string, public readonly status = 503) {
+  constructor(
+    public readonly code: string,
+    message: string,
+    public readonly status = 503,
+    /** Set when the read cannot work by design yet, as opposed to an outage. */
+    public readonly lifecycle?: 'not-implemented' | 'disabled',
+  ) {
     super(message);
   }
 }
@@ -59,22 +65,22 @@ export class L2ObservatoryService {
    */
   /** @asyncSafe */
   public async $getSystems(): Promise<L2BridgeSystem[]> {
-    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable);
+    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable, 503, 'not-implemented');
   }
 
   /** @asyncSafe */
   public async $getSystem(_id: string): Promise<L2BridgeSystem | null> {
-    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable);
+    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable, 503, 'not-implemented');
   }
 
   /** @asyncSafe */
   public async $getChallenges(_systemId?: string): Promise<L2Challenge[]> {
-    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable);
+    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable, 503, 'not-implemented');
   }
 
   /** @asyncSafe */
   public async $getReserveAudit(_systemId: string): Promise<L2ReserveAudit | null> {
-    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable);
+    throw new L2ObservatoryEvidenceError('unavailable-bridge-watcher', bridgeUnavailable, 503, 'not-implemented');
   }
 }
 

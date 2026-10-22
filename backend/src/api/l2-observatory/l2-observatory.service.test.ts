@@ -21,6 +21,11 @@ describe('L2ObservatoryService', () => {
     await expect(l2ObservatoryService.$getReserveAudit('citrea-clementine')).rejects.toThrow(unavailable('unavailable-bridge-watcher'));
   });
 
+  it('declares the missing watcher as not implemented, not as an outage', async () => {
+    await expect(l2ObservatoryService.$getSystems()).rejects.toMatchObject({ lifecycle: 'not-implemented' });
+    await expect(l2ObservatoryService.$getReserveAudit('citrea-clementine')).rejects.toMatchObject({ lifecycle: 'not-implemented' });
+  });
+
   it('never resolves an absent source as an empty directory', async () => {
     for (const read of [
       () => l2ObservatoryService.$getSystems(),
