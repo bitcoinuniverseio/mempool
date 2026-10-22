@@ -69,6 +69,8 @@ export class ProtocolStripComponent implements OnInit, OnDestroy {
     );
   }
 
+  retryActivity(): void { this.pulse.retry(); }
+
   ngOnDestroy(): void {
     this.pulse.stop();
   }

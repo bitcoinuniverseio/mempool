@@ -16,6 +16,10 @@
       <p role="alert">{{ vm.message }}</p>
       <button *ngIf="vm.retryable" type="button" class="btn-secondary" (click)="retryCatalog()">Retry</button>
     </section>
+    <section class="panel" role="status" *ngIf="vm.kind === 'disabled' || vm.kind === 'not-implemented'">
+      <h2>{{ vm.kind === 'disabled' ? 'Turned off' : 'Not available yet' }}</h2>
+      <p>{{ vm.message }}</p>
+    </section>
     <ng-container *ngIf="vm.kind === 'ready'"
       ><section class="panel">
         <h2>Data source</h2>

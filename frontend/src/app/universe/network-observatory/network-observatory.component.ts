@@ -21,7 +21,7 @@ import {
  * other failure, including a route this deployment does not serve.
  */
 interface NetworkViewModel {
-  readonly kind: 'loading' | 'ready' | 'unavailable' | 'error';
+  readonly kind: 'loading' | 'ready' | 'unavailable' | 'error' | 'not-implemented' | 'disabled';
   readonly nodes?: ObserverNode[];
   readonly propagation?: PropagationObservation;
   readonly templates?: BlockTemplateComparison;
@@ -96,6 +96,7 @@ export class NetworkObservatoryComponent implements OnInit, OnDestroy {
 
   private failure(error: any): NetworkViewModel {
     const reason = classifyLoadFailure(error);
+    if (reason === 'disabled' || reason === 'not-implemented') return { kind: reason, message: loadFailureMessage(reason) };
     const stage = typeof error?.error?.stage === 'string' ? error.error.stage : undefined;
     // Server error text stays internal; only this page's own checks speak.
     const local = error instanceof Error && !(error as any).status && (error as any).name !== 'TimeoutError';

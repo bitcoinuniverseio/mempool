@@ -842,3 +842,29 @@ or copy a published snapshot and validate it before use.
 UTXO checkpoints require a synced coinstatsindex on the already configured owned Core node. No full-set scan fallback is started by an HTTP read. For a complete small-chain projection, an operator can set UNIVERSE_UTXO_PROJECTION_PATH to a dedicated durable file. It reconstructs from genesis on demand, preserves exact outpoints and undo across restart, and reconciles independent MuHash/count/value at the same canonical block. Worker-specific writer isolation, capacity limits and rebuild requirements apply. This bounded implementation is not a mainnet-scale index.
 
 See [UTXO Intelligence operator details](../product/UTXO-INTELLIGENCE.md) before configuring it. Missing protocol indexes and Utreexo bridges remain independent unavailable evidence sources. No production settings were changed by the candidate audit.
+
+
+## Indexer read states (phase 2)
+
+The `/status` page consumes the additive `GET /api/v1/universe/indexer-health`
+v1 envelope, scoped to the selected network. It reads only cached health
+observations. An absent or incompatible endpoint produces a bounded unavailable
+panel and Retry; block streaming stays independent. Authority observations older
+than 60 seconds are unavailable. Zero is a valid known height; missing heights
+are unknown. Candidate or foreign-chain records never satisfy an authority row.
+
+Explicit `desiredState` metadata is additive in protocol declarations. Disabled,
+planned and retired declarations stay separate from operational failures.
+Network/L2/data panels also accept typed lifecycle errors. Home and pulse
+transaction batches have a six-second budget. Failures preserve dated samples,
+Retry reuses failed IDs, and declared dormant lifecycle states stop batch reads.
+
+The dev deploy workflow accepts only `refs/heads/develop`, including manual runs.
+Its exact dependency cache key includes OS, architecture, Node 24.19.0, npm
+11.17.0 and the frontend lockfile. A cache hit skips installation. Release
+verification has bounded connection and response deadlines. No production deploy
+is added.
+
+Rollback: revert the frontend release and the dev workflow independently. Keep
+bodyless media errors and neutral unavailable read states if reverting health
+metadata. No database, indexer, tunnel or writer changes are required.

@@ -22,6 +22,11 @@
       <button type="button" class="btn-secondary" (click)="retry()">Retry</button>
     </div>
 
+    <div *ngIf="vm.kind === 'disabled' || vm.kind === 'not-implemented'" class="panel" role="status">
+      <h2>{{ vm.kind === 'disabled' ? 'Turned off' : 'Not available yet' }}</h2>
+      <p>{{ vm.message }}</p>
+    </div>
+
     <div *ngIf="vm.kind === 'error'" class="panel">
       <h2>Network Observatory Error</h2>
       <p>Could not fetch node propagation or block-template data.</p>

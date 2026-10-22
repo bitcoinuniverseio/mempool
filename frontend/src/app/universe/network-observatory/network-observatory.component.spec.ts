@@ -182,3 +182,10 @@ describe('Network template measured and estimated weight', () => {
   });
 
 });
+
+it.each(['disabled', 'not-implemented'])('shows declared observer lifecycle %s separately from an outage', lifecycle => {
+  const read = () => throwError(() => new HttpErrorResponse({ status: 503, error: { lifecycle, error: 'private host' } }));
+  const vm = observe({ getObserverNodes$: read, getPropagationObservation$: read, getBlockTemplateComparison$: read });
+  expect(vm.kind).toBe(lifecycle);
+  expect(vm.message).not.toContain('private host');
+});

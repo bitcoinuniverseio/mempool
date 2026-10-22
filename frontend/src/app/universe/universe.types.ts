@@ -31,6 +31,7 @@ export interface ExplorerProtocolDefinition {
   authorizedReadOperations: string[];
   readOperationDescriptors?: ExplorerReadOperation[];
   releaseStatus: string;
+  desiredState?: 'enabled' | 'disabled' | 'planned' | 'retired';
   indexerAuthority?: string;
   coverage: ProtocolCoverage | string | null;
   functionalAcceptance?: ProtocolFunctionalAcceptance;
@@ -1591,6 +1592,7 @@ export interface BlockProtocolCoverage {
   displayName: string;
   family: string;
   releaseStatus: string;
+  desiredState?: 'enabled' | 'disabled' | 'planned' | 'retired';
   state: BlockProtocolCoverageState;
   reason: string | null;
   authorityId: string | null;

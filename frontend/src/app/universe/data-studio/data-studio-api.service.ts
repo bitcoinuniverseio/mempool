@@ -40,7 +40,7 @@ export class DataStudioApiService {
           timeout({ first: READ_DEADLINE_MS }),
           catchError((error) => {
             const reason = classifyLoadFailure(error);
-            return of({ kind: 'error', message: loadFailureMessage(reason), retryable: isRetryableFailure(reason) });
+            return of({ kind: reason === 'disabled' || reason === 'not-implemented' ? reason : 'error', message: loadFailureMessage(reason), retryable: isRetryableFailure(reason) });
           }),
           startWith({ kind: 'loading' })
         );

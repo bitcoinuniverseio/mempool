@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { provideZonelessChangeDetection, ɵresolveComponentResources } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -155,4 +155,15 @@ describe('actual Data Studio UI', () => {
     expect(html).not.toContain('Constrained SQL query grammar');
     expect(html).toContain('123 exact NDJSON bytes');
   });
+});
+
+it.each(['disabled', 'not-implemented'])('data catalog respects declared lifecycle %s without retry', lifecycle => {
+  const http: any = { get: vi.fn(() => throwError(() => ({ error: { lifecycle } }))) };
+  const api = new DataStudioApiService(http, state() as any);
+  let seen: any;
+  const sub = api.watchCatalog$().subscribe(value => seen = value);
+  expect(seen.kind).toBe(lifecycle);
+  expect(seen.retryable).toBe(false);
+  expect(http.get).toHaveBeenCalledTimes(1);
+  sub.unsubscribe();
 });
