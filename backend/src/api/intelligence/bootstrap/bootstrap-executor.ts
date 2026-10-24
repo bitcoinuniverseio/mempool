@@ -47,12 +47,17 @@ export class BootstrapJobExecutor {
   private busy = false;
   private stopping = false;
   private readonly work = new TaskDrain();
+  /** Rejects with ExecutorStopped on stop(), so a job stops waiting on Core. */
+  private readonly stopped: Promise<never>;
+  private signalStopped!: () => void;
   private readonly clock: () => number;
   private readonly sleep: (ms: number) => Promise<void>;
 
   constructor(private readonly deps: ExecutorDependencies) {
     this.clock = deps.clock ?? (() => Date.now());
     this.sleep = deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    this.stopped = new Promise<never>((_resolve, reject) => { this.signalStopped = () => reject(new ExecutorStopped()); });
+    this.stopped.catch(() => undefined);
   }
 
   public start(): void {
@@ -65,8 +70,14 @@ export class BootstrapJobExecutor {
     this.timer.unref();
   }
 
+  /**
+   * Stops claiming, and stops waiting on a Core RPC already issued: the job
+   * keeps its started RPC and lease, so the next worker reconciles it from the
+   * node after the lease lapses and never re-issues it.
+   */
   public stop(): void {
     this.stopping = true;
+    this.signalStopped();
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = undefined;
@@ -168,7 +179,9 @@ export class BootstrapJobExecutor {
         await this.load(job, observation, finish, checkpoint, write);
       }
     } catch (e) {
-      if (e instanceof BootstrapEvidenceError) {
+      if (e instanceof ExecutorStopped) {
+        logger.warn(`[bootstrap-executor] stopped during job ${job.job_id}; once its lease lapses the next worker reconciles an issued RPC from the node, or runs the job if none was issued.`);
+      } else if (e instanceof BootstrapEvidenceError) {
         await finish('failed', e.message, e.code);
       } else {
         await finish('failed', 'The executor failed: ' + (e instanceof Error ? e.message : String(e)), 'executor-error');
@@ -291,6 +304,10 @@ export class BootstrapJobExecutor {
     checkpoint: (stage: string, detail?: string) => void,
     write: () => Promise<void>
   ): Promise<any> {
+    if (this.stopping) {
+      // Not issued: the next worker reclaims the job and runs it from the start.
+      throw new ExecutorStopped();
+    }
     const rpc: NonNullable<NodeBootstrapJob['rpc']> = { method, started_at: this.iso() };
     job.rpc = rpc;
     checkpoint('rpc-issued', method);
@@ -301,11 +318,16 @@ export class BootstrapJobExecutor {
       timer.unref();
     });
     try {
-      const result = await Promise.race([this.deps.operatorCore.call(method, params), timeout]);
+      const result = await Promise.race([this.deps.operatorCore.call(method, params), timeout, this.stopped]);
       rpc.finished_at = this.iso();
       checkpoint('rpc-returned', method);
       return result;
     } catch (e) {
+      if (e instanceof ExecutorStopped) {
+        checkpoint('worker-stopped', `${method} may still be running in Core; the next worker reconciles it from the node and never re-issues it.`);
+        await write();
+        throw e;
+      }
       if (e instanceof ExecutorTimeout) {
         job.state = 'needs-review';
         job.message = `${method} did not return within ${this.deps.env.jobTimeoutMs} ms; Core may still be running it. Inspect the node before retrying.`;
@@ -363,7 +385,16 @@ export class BootstrapJobExecutor {
         }
         await write();
       }
-      await this.sleep(this.deps.env.jobPollMs);
+      try {
+        await Promise.race([this.sleep(this.deps.env.jobPollMs), this.stopped]);
+      } catch (e) {
+        if (!(e instanceof ExecutorStopped)) {
+          throw e;
+        }
+        // loadtxoutset already returned, so a restart must not reach load() again.
+        await finish('needs-review', 'The backend stopped while waiting for Core to show the loaded snapshot chainstate; inspect the node.', 'worker-stopped');
+        return;
+      }
     }
     await finish('needs-review', 'loadtxoutset returned but no snapshot chainstate was observed on the node afterwards.', 'chainstate-not-observed');
   }
@@ -407,3 +438,4 @@ export class BootstrapJobExecutor {
 }
 
 class ExecutorTimeout extends Error {}
+class ExecutorStopped extends Error {}

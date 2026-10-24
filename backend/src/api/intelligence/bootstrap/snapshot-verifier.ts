@@ -120,6 +120,9 @@ function summarise(record: NodeBootstrapVerification): void {
 }
 
 export class SnapshotVerifier {
+  private stopping = false;
+  private readonly streamStops = new Set<() => void>();
+
   constructor(
     private readonly env: BootstrapEnvironment,
     private readonly nodes: BootstrapNodeReader,
@@ -127,6 +130,16 @@ export class SnapshotVerifier {
     private readonly bytes: SnapshotByteSource = nodeByteSource,
     private readonly clock: () => string = () => new Date().toISOString()
   ) {}
+
+  /**
+   * Ends every byte stream now and refuses new ones. Each run then records
+   * itself unavailable (reason backend-stopping) through the ordinary abort
+   * path, so no record is left pending across a restart.
+   */
+  public stop(): void {
+    this.stopping = true;
+    for (const stopStream of this.streamStops) stopStream();
+  }
 
   /**
    * Runs every check independently and persists the outcome. The record is
@@ -289,6 +302,14 @@ export class SnapshotVerifier {
       abort = new StreamAbort('deadline-exceeded', `The verification deadline of ${this.env.verifyDeadlineMs} ms passed after ${bytesRead} bytes.`, bytesRead);
       stream.destroy?.(abort);
     }, this.env.verifyDeadlineMs);
+    const stopStream = (): void => {
+      abort = abort ?? new StreamAbort('backend-stopping', `The backend stopped after ${bytesRead} bytes; request the verification again.`, bytesRead);
+      stream.destroy?.(abort);
+    };
+    this.streamStops.add(stopStream);
+    if (this.stopping) {
+      stopStream();
+    }
     checkpoint('bytes', 'streaming from ' + kind);
     try {
       for await (const chunk of stream) {
@@ -321,6 +342,7 @@ export class SnapshotVerifier {
       throw e;
     } finally {
       clearTimeout(deadline);
+      this.streamStops.delete(stopStream);
     }
     let decoded: ReturnType<SnapshotStreamDecoder['finish']> | null = null;
     if (!formatError) {

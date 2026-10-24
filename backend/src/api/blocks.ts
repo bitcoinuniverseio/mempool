@@ -39,6 +39,7 @@ import { CanonicalChange, CanonicalRecoveryRequest } from './intelligence/observ
 import { btcToSats } from './intelligence/utxo/utxo-evidence';
 import { getBlockFirstSeenFromLogs, getOldestLogTimestampFromLogs, scanLogsForBlocksFirstSeen } from '../utils/file-read';
 import { TaskDrain } from './task-drain';
+import { IndexingStopped, throwIfIndexingStopped } from './indexing-stop';
 
 /**
  * More transactions than this missing from the mempool, and a Core-backed
@@ -631,6 +632,7 @@ class Blocks {
       const startedAt = Date.now() / 1000;
 
       for (const block of indexedBlocks) {
+        throwIfIndexingStopped();
         if (indexedBlockSummariesHashes[block.hash] === true) {
           continue;
         }
@@ -659,6 +661,7 @@ class Blocks {
         logger.debug(`Blocks summaries indexing completed: indexed ${newlyIndexed} blocks`, logger.tags.mining);
       }
     } catch (e) {
+      if (e instanceof IndexingStopped) throw e;
       logger.err(`Blocks summaries indexing failed. Trying again in 10 seconds. Reason: ${(e instanceof Error ? e.message : e)}`, logger.tags.mining);
       throw e;
     }
@@ -701,6 +704,7 @@ class Blocks {
       let timer = Date.now() / 1000;
       const startedAt = Date.now() / 1000;
       for (const height of unindexedBlockHeights) {
+        throwIfIndexingStopped();
         // Logging
         const hash = await bitcoinApi.$getBlockHash(height);
         const elapsedSeconds = (Date.now() / 1000) - timer;
@@ -721,6 +725,7 @@ class Blocks {
       }
       logger.notice(`CPFP indexing completed: indexed ${count} blocks`);
     } catch (e) {
+      if (e instanceof IndexingStopped) throw e;
       logger.err(`CPFP indexing failed. Trying again in 10 seconds. Reason: ${(e instanceof Error ? e.message : e)}`);
       throw e;
     }
@@ -741,6 +746,7 @@ class Blocks {
     let indexedTotal = 0;
     logger.debug(`Indexing ${blockIds.length} block audit details`);
     for (const hash of blockIds) {
+      throwIfIndexingStopped();
       const summary = await BlocksSummariesRepository.$getTemplate(hash);
       let totalFees = 0;
       let totalWeight = 0;
@@ -822,6 +828,7 @@ class Blocks {
     logger.debug(`Classifying blocks and templates from #${currentBlockHeight} to #${minHeight}`, logger.tags.goggles);
 
     for (let height = currentBlockHeight; height >= 0; height--) {
+      throwIfIndexingStopped();
       try {
         let txs: MempoolTransactionExtended[] | null = null;
         if (unclassifiedBlocks[height]) {
@@ -924,6 +931,7 @@ class Blocks {
       let timer = Date.now() / 1000;
       const startedAt = Date.now() / 1000;
       for (const { height, hash } of unindexedBlocks) {
+        throwIfIndexingStopped();
         // Logging
         const elapsedSeconds = (Date.now() / 1000) - timer;
         if (elapsedSeconds > 5) {
@@ -945,6 +953,7 @@ class Blocks {
       }
       logger.notice(`coinbase addresses indexing completed: indexed ${count} blocks`);
     } catch (e) {
+      if (e instanceof IndexingStopped) throw e;
       logger.err(`coinbase addresses indexing failed. Trying again in 10 seconds. Reason: ${(e instanceof Error ? e.message : e)}`);
       throw e;
     }
@@ -989,6 +998,7 @@ class Blocks {
         logger.info(`Indexing ${missingBlockHeights.length} blocks from #${currentBlockHeight} to #${endBlock}`, logger.tags.mining);
 
         for (const blockHeight of missingBlockHeights) {
+          throwIfIndexingStopped();
           if (blockHeight < lastBlockToIndex) {
             break;
           }
@@ -1022,6 +1032,10 @@ class Blocks {
       }
       loadingIndicators.setProgress('block-indexing', 100);
     } catch (e) {
+      if (e instanceof IndexingStopped) {
+        loadingIndicators.setProgress('block-indexing', 100);
+        throw e;
+      }
       logger.err('Block indexing failed. Trying again in 10 seconds. Reason: ' + (e instanceof Error ? e.message : e), logger.tags.mining);
       loadingIndicators.setProgress('block-indexing', 100);
       throw e;

@@ -92,7 +92,8 @@ import { watchlistMatcher } from './api/intelligence/watchlists/watchlist-matche
 import { blockspaceService } from './api/intelligence/blockspace/blockspace.service';
 import { timeMachineService } from './api/intelligence/time-machine/time-machine.service';
 import { relayCollectorService } from './api/intelligence/relay/relay-collector.service';
-import { gracefulShutdown } from './api/graceful-shutdown';
+import { gracefulShutdown, ShutdownProgress } from './api/graceful-shutdown';
+import { startShutdownBackstop } from './api/shutdown-backstop';
 import { TaskDrain } from './api/task-drain';
 import { templateCollectorService } from './api/intelligence/templates/template-collector.service';
 import { eventBus } from './api/intelligence/events/intelligence-event-bus';
@@ -743,6 +744,12 @@ class Server {
   }
 
   private shuttingDown = false;
+  /** Bound on the whole signal shutdown. The unit sets SendSIGKILL=no, so this is the only exit guarantee. */
+  static readonly SHUTDOWN_DEADLINE_MS = 120_000;
+  /** The off-thread backstop fires this long after the deadline, for a main thread blocked in a syscall. */
+  static readonly SHUTDOWN_BACKSTOP_GRACE_MS = 30_000;
+  /** In-flight HTTP responses get this long before their sockets are destroyed. */
+  static readonly HTTP_DRAIN_GRACE_MS = 10_000;
 
   forceExit(exitEvent, code?: number): void {
     if (this.shuttingDown) return;
@@ -753,9 +760,36 @@ class Server {
     if (exitEvent === 'uncaughtException' || exitEvent === 'unhandledRejection') {
       process.exit(code ?? 1);
     }
-    // Keep an incomplete or rejected drain alive for diagnosis. A timeout is
-    // never permission to exit while a writer may still own work.
+    // Keep an incomplete or rejected drain alive for diagnosis, but only until
+    // the deadline. Every snapshot is replaced by atomic rename (disk cache
+    // chunks synchronously, RBF history by manifest pointer), so exiting at an
+    // await leaves the previous complete snapshot; a hung owner otherwise
+    // needs a manual kill -9, which loses the same work without the diagnosis.
     this.shutdownHold = setInterval(() => undefined, 60_000);
+    const progress = new ShutdownProgress(startShutdownBackstop(Server.SHUTDOWN_DEADLINE_MS + Server.SHUTDOWN_BACKSTOP_GRACE_MS));
+    // Unref'd: after a complete drain it fires only if a leftover handle keeps the process alive.
+    setTimeout(() => {
+      const complete = progress.phase === 'complete';
+      logger.err(`Graceful shutdown did not exit within ${Server.SHUTDOWN_DEADLINE_MS / 1000} s; ${complete ? 'writers drained but open handles remain' : 'stuck in ' + progress.describe()}. Exiting.`);
+      process.exit(complete ? (process.exitCode ?? 0) : (code || 1));
+    }, Server.SHUTDOWN_DEADLINE_MS).unref();
+    const track = <T>(owner: string, work: Promise<T>): Promise<T> => progress.track(owner, work);
+    // A database refusal (a connection lost or a commit unconfirmed at any
+    // point in this process's life) cannot be repaired by holding. The disk
+    // cache does not depend on it, and runtime saves already ignore it, so
+    // shutdown still saves and releases, then reports the refusal as status 1.
+    let databaseRefusal: string | undefined;
+    /** @asyncSafe A refusal is recorded instead of rejecting. */
+    const drainDatabase = async (): Promise<void> => {
+      try {
+        await track('database', DB.drain());
+      } catch (error) {
+        if (databaseRefusal === undefined) {
+          databaseRefusal = error instanceof Error ? error.message : String(error);
+          logger.err(`${databaseRefusal}; saving the disk cache and releasing resources anyway, exit status will be 1.`);
+        }
+      }
+    };
     const httpDrain: Promise<void>[] = [];
     gracefulShutdown({
       stopAdmission: () => {
@@ -781,43 +815,53 @@ class Server {
             for (const client of server.clients) client.close(1001, 'Backend shutdown');
           }
         }
+        // server.close() waits for every open response, and Server-Sent Event
+        // streams never end on their own. Destroying the sockets only stops
+        // delivery; handlers keep running and their writes drain below.
         for (const server of [this.server, this.serverUnixSocket]) {
           if (server?.listening) httpDrain.push(new Promise<void>((resolve, reject) => {
-            server.close(error => error ? reject(error) : resolve());
+            const forceClose = setTimeout(() => {
+              logger.warn(`HTTP connections still open after ${Server.HTTP_DRAIN_GRACE_MS / 1000} s of shutdown; closing them.`);
+              server.closeAllConnections();
+            }, Server.HTTP_DRAIN_GRACE_MS);
+            server.close(error => { clearTimeout(forceClose); return error ? reject(error) : resolve(); });
           }));
         }
       },
       drainProducers: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
-        await this.work.drain();
-        await Promise.all(httpDrain);
-        await Promise.all([indexer.drain(), statistics.drain(), blocks.drain(), diskCache.drain(), templateCollectorService.drain(), drainPrivateRelayWorker(), developerIdentity.drainOutboxWorker(), bootstrapService.drainWorker()]);
+        await track('main loop and startup work', this.work.drain());
+        await track('HTTP and WebSocket servers', Promise.all(httpDrain));
+        await Promise.all([track('indexer', indexer.drain()), track('statistics', statistics.drain()), track('blocks', blocks.drain()),
+          track('disk cache', diskCache.drain()), track('template collector', templateCollectorService.drain()),
+          track('private relay worker', drainPrivateRelayWorker()), track('developer identity outbox', developerIdentity.drainOutboxWorker()),
+          track('bootstrap worker', bootstrapService.drainWorker())]);
         // These independent recurrent owners still require their own source
         // completion contracts. Refuse to release resources in those profiles.
         if (config.LIGHTNING.ENABLED || config.REDIS.ENABLED || config.MEMPOOL.SPAWN_CLUSTER_PROCS || Common.isLiquid()) {
           throw new Error('Graceful drain is unavailable for enabled Lightning, Redis, clustered workers, or Liquid parser callbacks.');
         }
       },
-      drainDatabase: () => DB.drain(),
+      drainDatabase,
       flushHistory: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
-        await Promise.all([timeMachineService.closeHistory(), eventBus.drain(), closeFractalRuntime()]);
-        await diskCache.$saveCacheToDisk(true);
-        await diskCache.drain();
+        await Promise.all([track('time machine history', timeMachineService.closeHistory()), track('event bus', eventBus.drain()), track('fractal runtime', closeFractalRuntime())]);
+        await track('disk cache save', diskCache.$saveCacheToDisk(true));
+        await track('disk cache', diskCache.drain());
       },
       releaseResources: /** @asyncUnsafe The shutdown owner catches and holds on failure. */ async () => {
-        await DB.drain();
-        await DB.close();
-        await mempoolBlocks.closeSelectionWorker();
-        await rbfCache.closeBodies();
+        await drainDatabase();
+        await track('database pool close', DB.close());
+        await track('selection worker', mempoolBlocks.closeSelectionWorker());
+        await track('RBF body store', rbfCache.closeBodies());
         bitcoinApi.closeTransport?.();
         memPool.destroy();
         rbfCache.destroy();
         memoryCache.destroy();
         if (this.shutdownHold) clearInterval(this.shutdownHold);
-        process.exitCode = code ?? 0;
+        process.exitCode = databaseRefusal === undefined ? (code ?? 0) : 1;
         logger.notice('Native writers drained; waiting for remaining transport handles to close.');
       },
-    }).catch((error: unknown) => {
-      logger.err('Graceful shutdown held: ' + (error instanceof Error ? error.message : String(error)));
+    }, progress).catch((error: unknown) => {
+      logger.err(`Graceful shutdown held in ${progress.describe()} until the deadline: ` + (error instanceof Error ? error.message : String(error)));
       process.exitCode = code ?? 1;
     });
   }
