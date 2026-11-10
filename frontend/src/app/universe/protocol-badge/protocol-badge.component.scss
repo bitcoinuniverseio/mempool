@@ -72,6 +72,6 @@
   object-fit: contain;
   flex-shrink: 0;
 
-  &.tile-dark { background-color: #1d1d27; }
-  &.tile-light { background-color: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08); }
+  &.tile-dark { background-color: var(--u-protocol-logo-tile-dark); }
+  &.tile-light { background-color: var(--u-protocol-logo-tile-light); border: 1px solid var(--u-protocol-logo-tile-border); }
 }
