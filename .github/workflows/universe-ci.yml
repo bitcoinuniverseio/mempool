@@ -37,7 +37,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -163,7 +163,7 @@ jobs:
       MEMPOOL_TEST_RUNTIME_CONFIG_FILE: ${{ github.workspace }}/backend/.mempool-config.integration.json
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -311,7 +311,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -547,7 +547,7 @@ jobs:
             chainStates: 'yes'
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -685,7 +685,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@ca7d5a2893fd27f41c26f6b62549ccad8b3c46cb
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
