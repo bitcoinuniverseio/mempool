@@ -21,7 +21,7 @@ jobs:
     name: Backend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@49c5ceb7e97bd33b567513b3135e0eb5525d89e5
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -104,7 +104,7 @@ jobs:
     runs-on: [self-hosted, Linux, X64, universe]
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@49c5ceb7e97bd33b567513b3135e0eb5525d89e5
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -217,7 +217,7 @@ jobs:
     name: Frontend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@49c5ceb7e97bd33b567513b3135e0eb5525d89e5
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -320,7 +320,7 @@ jobs:
     name: E2E tests for ${{ matrix.module }}
     steps:
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@49c5ceb7e97bd33b567513b3135e0eb5525d89e5
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -458,7 +458,7 @@ jobs:
 
     steps: 
       - name: Provide universe host tools
-        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@123fa3d72393763aaa7d6b4e2b30fbb02caa322d
+        uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@49c5ceb7e97bd33b567513b3135e0eb5525d89e5
       - name: Checkout
         uses: actions/checkout@v3
         with:
