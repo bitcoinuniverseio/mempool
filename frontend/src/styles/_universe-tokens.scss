@@ -38,6 +38,10 @@
 // ---------------------------------------------------------------------------
 
 @mixin universe-invariant-tokens {
+  // Fixed logo tiles keep light and dark artwork legible in every theme.
+  --u-protocol-logo-tile-dark: #1d1d27;
+  --u-protocol-logo-tile-light: #ffffff;
+  --u-protocol-logo-tile-border: rgba(0, 0, 0, 0.08);
   // Space. A 4px base keeps dense financial tables on a predictable rhythm.
   --u-space-1: 0.25rem;
   --u-space-2: 0.5rem;

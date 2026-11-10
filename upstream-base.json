@@ -44,7 +44,7 @@
     },
     {
       "path": ".github/workflows/universe-ci.yml, upstream-sync.yml, universe-production-smoke.yml, universe-release-artifact.yml",
-      "nature": "Added. Upstream workflows are unchanged."
+      "nature": "Added Universe workflows; the Docker workflow also checks relevant develop pull requests. Obsolete manual fleet diagnostics were removed after their scripts were deleted."
     },
     {
       "path": "Branding",

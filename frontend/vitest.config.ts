@@ -10,11 +10,6 @@ import { fileURLToPath } from 'node:url';
  * helpers the templates lean on, none of which need a DOM. Template correctness
  * is covered by the AOT production build, which fails on any template error.
  *
- * The two inherited Lightning specs are deliberately outside the include. They
- * are TestBed specs that need a browser environment and an Angular testing
- * module this configuration does not set up, and they cover a feature this
- * deployment does not enable.
- *
  * `src/app/components` is included for the shell: the adaptive behaviour that
  * could not be expressed in CSS lives there, and it is exactly the sort of
  * thing that is cheap to test directly and expensive to find in a browser.

@@ -98,7 +98,7 @@ synchronization procedure.
 | `frontend/src/app/components/transaction/` | The asset flow section is embedded on the transaction page. |
 | Branding | Mempool Holdings trademarks replaced across templates, SEO, and the web manifest. See `docs/legal/TRADEMARK-AUDIT.md`. |
 | `frontend/package.json`, `frontend/vitest.config.ts` | Unit test runner added. Upstream ships no working test target: `angular.json` has no `test` architect entry, so the upstream `ng test` script could never run. |
-| `.github/workflows/universe-ci.yml`, `upstream-sync.yml` | Added. Upstream workflows are unchanged. |
+| `.github/workflows/` | Universe CI, release, smoke and upstream sync workflows were added. The Docker workflow also checks relevant develop pull requests. Legacy master-only CI is retained for the upstream mirror. Two manual fleet diagnostics were removed because their scripts had been deleted. |
 | `scripts/universe/` | Added. Protocol coverage documentation generator and its CI check. |
 | `.nvmrc` | Pinned to the Universe toolchain version (24.19.0). |
 | `backend/src/index.ts`, `backend/src/config.ts` | `MEMPOOL.HTTP_HOST` added, defaulting to loopback. Upstream binds every interface. |
@@ -122,7 +122,6 @@ synchronization procedure.
 | Punctuation | Every em dash was removed repository wide, including from inherited READMEs, and `scripts/universe/check-text.mjs` keeps them out. Expect one-character conflicts in those files on sync. |
 | Branding edits across upstream components | The trademark work touches many upstream templates. `docs/legal/TRADEMARK-AUDIT.md` lists every one, and the branding gate fails the build if a sync reintroduces a mark. |
 
-The two upstream spec files under `frontend/src/app/lightning/` import from a
-path that does not exist in this tree and reference a missing `src/test.ts`.
-They are left untouched so they keep merging cleanly; the Universe unit suite
-does not include them.
+Two inherited Lightning component creation specs were removed: their component
+imports do not resolve, and the Universe unit configuration excluded them. They
+did not exercise the deployed product or provide regression coverage.
