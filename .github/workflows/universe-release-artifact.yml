@@ -44,7 +44,7 @@ permissions:
 jobs:
   artifact:
     name: Build and pack
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: [self-hosted, Linux, X64, universe]
     timeout-minutes: 90
     steps:
       - name: Provide universe host tools
