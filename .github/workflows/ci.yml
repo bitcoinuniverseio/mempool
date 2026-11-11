@@ -16,7 +16,7 @@ jobs:
         node: ["24.19.0"]
         flavor: ["dev", "prod"]
       fail-fast: false
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: [self-hosted, Linux, X64, universe]
 
     name: Backend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
@@ -101,7 +101,7 @@ jobs:
     strategy:
       matrix:
         node: ["24.19.0"]
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: [self-hosted, Linux, X64, universe]
     steps:
       - name: Provide universe host tools
         uses: bitcoinuniverseio/universe-ci-actions/universe-host-tools@49c5ceb7e97bd33b567513b3135e0eb5525d89e5
@@ -212,7 +212,7 @@ jobs:
         node: ["24.19.0"]
         flavor: ["dev", "prod"]
       fail-fast: false
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: [self-hosted, Linux, X64, universe]
 
     name: Frontend (${{ matrix.flavor }}) - node ${{ matrix.node }}
     steps:
@@ -309,7 +309,7 @@ jobs:
   
   e2e:
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: [self-hosted, Linux, X64, universe]
     needs: [frontend]
     strategy:
       fail-fast: false
@@ -453,7 +453,7 @@ jobs:
           CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
   validate_docker_json:
     if: "(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ops') && !contains(github.head_ref, 'ops/')) || github.event_name == 'push'"
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: [self-hosted, Linux, X64, universe]
     name: Validate generated backend Docker JSON
 
     steps: 

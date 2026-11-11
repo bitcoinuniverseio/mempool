@@ -4,7 +4,7 @@ on: [workflow_dispatch]
 
 jobs:
   print-backend-sha:
-    runs-on: [self-hosted, universe-runners-1]
+    runs-on: [self-hosted, Linux, X64, universe]
     name: Get block height
     steps:
       - name: Checkout
