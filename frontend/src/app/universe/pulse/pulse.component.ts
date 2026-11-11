@@ -83,6 +83,8 @@ export class PulseComponent implements OnInit, OnDestroy {
     );
   }
 
+  retryActivity(): void { this.pulse.retry(); }
+
   ngOnDestroy(): void {
     this.pulse.stop();
   }

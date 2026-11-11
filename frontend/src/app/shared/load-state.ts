@@ -22,7 +22,11 @@ export type LoadFailure =
   /** The answer did not have the shape this page can render. */
   | 'malformed'
   /** The request never reached the server. */
-  | 'network';
+  | 'network'
+  /** The feature is not built for this deployment yet: not an outage. */
+  | 'not-implemented'
+  /** The feature is intentionally turned off: not an outage. */
+  | 'disabled';
 
 export type LoadState<T> =
   | { readonly status: 'loading' }
@@ -43,7 +47,9 @@ export interface LoadOptions<T> {
   readonly retryDelayMs?: number;
 }
 
-const DEFAULT_TIMEOUT_MS = 20_000;
+/** Whole-read budget for a page panel; a hung dependency ends here. */
+export const READ_DEADLINE_MS = 20_000;
+const DEFAULT_TIMEOUT_MS = READ_DEADLINE_MS;
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_DELAY_MS = 500;
 const MAXIMUM_RETRY_DELAY_MS = 8_000;
@@ -54,6 +60,10 @@ function defaultIsEmpty(value: unknown): boolean {
 
 /** Classifies a thrown value into the failure kinds the templates render. */
 export function classifyLoadFailure(error: unknown): LoadFailure {
+  // A declared lifecycle wins over the transport status: a feature that is not
+  // built or is turned off is never reported as an outage.
+  const lifecycle = (error as { error?: { lifecycle?: unknown } } | null)?.error?.lifecycle;
+  if (lifecycle === 'not-implemented' || lifecycle === 'disabled') return lifecycle;
   if (error instanceof HttpErrorResponse) {
     if (error.status === 404) return 'missing';
     if (error.status === 0) return 'network';
@@ -168,6 +178,10 @@ export function loadFailureMessage(reason: LoadFailure): string {
       return $localize`:@@load.failure.timeout:This took too long to answer.`;
     case 'network':
       return $localize`:@@load.failure.network:The request could not reach the server.`;
+    case 'not-implemented':
+      return $localize`:@@load.failure.not-implemented:This feature is not available yet.`;
+    case 'disabled':
+      return $localize`:@@load.failure.disabled:This feature is turned off.`;
     default:
       return $localize`:@@load.failure.malformed:The answer could not be read.`;
   }

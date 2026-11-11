@@ -1,2 +1,18 @@
 <app-start [showLoadingIndicator]="true"></app-start>
+<section class="container py-3" aria-labelledby="indexer-status-heading" data-testid="indexer-status">
+  <h2 id="indexer-status-heading" i18n="@@indexer.status.title">Protocol data</h2>
+  <ng-container *ngIf="health$ | async as health">
+    <p *ngIf="health.loading" role="status" i18n="@@indexer.status.loading">Loading</p>
+    <div *ngIf="health.unavailable" role="status">
+      <p i18n="@@indexer.status.unavailable">Temporarily unavailable</p>
+      <button type="button" class="btn btn-secondary" (click)="retry$.next()" i18n="@@indexer.status.retry">Retry</button>
+    </div>
+    <p *ngIf="!health.loading && !health.unavailable && !health.rows.length" i18n="@@indexer.status.unknown">Status unknown</p>
+    <ul class="list-unstyled mb-0" *ngIf="health.rows.length">
+      <li *ngFor="let row of health.rows" class="d-flex flex-wrap justify-content-between border-bottom py-2">
+        <span>{{ row.protocol }}</span><span>{{ row.state }}<span *ngIf="row.height !== null"> / {{ row.height }}</span></span>
+      </li>
+    </ul>
+  </ng-container>
+</section>
 <app-footer></app-footer>

@@ -16,9 +16,15 @@
       <p>Reading BitVM bridge contracts and reserve states...</p>
     </div>
 
-    <div *ngIf="vm.kind === 'error'" class="panel">
-      <h2>Bridge Observatory Unavailable</h2>
+    <div *ngIf="vm.kind === 'error'" class="panel" data-state="unavailable">
+      <h2>Temporarily unavailable</h2>
       <p role="alert">{{ vm.message }}</p>
+      <button *ngIf="vm.retryable" type="button" class="btn-secondary" (click)="retry()">Retry</button>
+    </div>
+
+    <div *ngIf="vm.kind === 'not-implemented' || vm.kind === 'disabled'" class="panel" [attr.data-state]="vm.kind">
+      <h2>{{ vm.kind === 'disabled' ? 'Turned off' : 'Not available yet' }}</h2>
+      <p>{{ vm.message }}</p>
     </div>
 
     <ng-container *ngIf="vm.kind === 'ready'">

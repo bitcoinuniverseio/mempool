@@ -111,3 +111,10 @@ describe('Protocol availability is one rule for the directory and the detail pag
     expect(detailAvailability(protocol, sources)).toBe(expected);
   });
 });
+
+it('honors explicit lifecycle independently of runtime source health', () => {
+  for (const desiredState of ['disabled', 'planned', 'retired'] as const) {
+    expect(protocolAvailability(definition({ desiredState }), new Map([['index-ordinals', sourceEntry()]]))).toBe(desiredState);
+  }
+  expect(protocolAvailability(definition({ desiredState: 'enabled' }), new Map([['index-ordinals', unreachable]]))).toBe('unreachable');
+});

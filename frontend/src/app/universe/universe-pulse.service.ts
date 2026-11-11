@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subscription, firstValueFrom, timer } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, firstValueFrom, timer, timeout, Subject, takeUntil } from 'rxjs';
 import { StateService } from '@app/services/state.service';
 import { UniverseApiService, UNIVERSE_TRANSACTION_BATCH_LIMIT } from '@app/universe/universe-api.service';
 import {
@@ -34,8 +34,6 @@ const MAXIMUM_QUEUE = 400;
 const MAXIMUM_RECENT = 40;
 /** Ceiling on resolutions per page visit, so a long session cannot drift into unbounded work. */
 const SESSION_RESOLVE_CEILING = 4000;
-/** Transport failures in a row before the authority is reported as not answering. */
-const FAILURE_THRESHOLD = 3;
 
 export interface PulseEvent {
   readonly txid: string;
@@ -55,7 +53,7 @@ export interface PulseEvent {
  * - stale: the authority failed after a sample existed; the tally is that
  *   sample, frozen at `lastSampleAt`.
  */
-export type PulseObservation = 'unknown' | 'observed' | 'unavailable' | 'stale';
+export type PulseObservation = 'unknown' | 'observed' | 'unavailable' | 'stale' | 'disabled' | 'planned' | 'retired';
 
 export interface PulseState {
   /** Transactions the authority answered for since this page opened. */
@@ -92,7 +90,8 @@ export class UniversePulseService implements OnDestroy {
   private queue: string[] = [];
   private seen = new Set<string>();
   private inFlight = false;
-  private consecutiveFailures = 0;
+  private failedBatch: string[] = [];
+  private readonly cancelRead$ = new Subject<void>();
   private subscriptions = new Subscription();
   /** The arrivals feed for the sampled network; replaced on a network switch. */
   private arrivals?: Subscription;
@@ -161,13 +160,14 @@ export class UniversePulseService implements OnDestroy {
     this.consumers -= 1;
     if (this.consumers > 0) {return;}
     this.generation += 1;
+    this.cancelRead$.next();
     this.subscriptions.unsubscribe();
     this.subscriptions = new Subscription();
     this.arrivals = undefined;
     this.queue = [];
+    this.failedBatch = [];
     this.seen = new Set();
     this.inFlight = false;
-    this.consecutiveFailures = 0;
     this.tabHidden = false;
     this.sampledNetwork = undefined;
     this.stateSubject.next(EMPTY_STATE);
@@ -181,10 +181,11 @@ export class UniversePulseService implements OnDestroy {
   /** Discards any queued or in-flight work and starts a fresh, empty sample. */
   private beginSample(): void {
     this.generation += 1;
+    this.cancelRead$.next();
     this.queue = [];
+    this.failedBatch = [];
     this.seen = new Set();
     this.inFlight = false;
-    this.consecutiveFailures = 0;
     this.stateSubject.next({ ...EMPTY_STATE, startedAt: Date.now() });
 
     this.arrivals?.unsubscribe();
@@ -202,6 +203,7 @@ export class UniversePulseService implements OnDestroy {
   }
 
   private enqueue(txid: string | undefined): void {
+    if (['disabled', 'planned', 'retired'].includes(this.stateSubject.value.observation)) return;
     if (typeof txid !== 'string' || !/^[0-9a-f]{64}$/.test(txid)) {return;}
     if (this.seen.has(txid)) {return;}
     this.seen.add(txid);
@@ -214,7 +216,16 @@ export class UniversePulseService implements OnDestroy {
     }
   }
 
+  retry(): void {
+    for (const txid of this.failedBatch) {
+      if (!this.queue.includes(txid)) this.queue.push(txid);
+    }
+    this.queue = this.queue.slice(-MAXIMUM_QUEUE);
+    this.failedBatch = [];
+  }
+
   private async drain(): Promise<void> {
+    if (['disabled', 'planned', 'retired'].includes(this.stateSubject.value.observation)) return;
     if (!this.consumers || this.inFlight || !this.queue.length) {return;}
     if (this.tabHidden) {return;}
     const current = this.stateSubject.value;
@@ -229,12 +240,28 @@ export class UniversePulseService implements OnDestroy {
     const batch = this.queue.splice(0, UNIVERSE_TRANSACTION_BATCH_LIMIT);
     this.inFlight = true;
     try {
-      const response = await firstValueFrom(this.api.getTransactionFlows$(batch));
+      const response = await firstValueFrom(this.api.getTransactionFlows$(batch).pipe(takeUntil(this.cancelRead$), timeout({ first: 6000 })));
       if (generation !== this.generation) {return;}
-      this.apply(response?.results ?? []);
-    } catch {
+      if (!response || !Array.isArray(response.results)) throw new Error('Invalid batch response');
+      const returned = new Set(response.results.map(item => item?.txid));
+      if (returned.size !== response.results.length || response.results.some(item => !item || !batch.includes(item.txid))) throw new Error('Invalid batch scope');
+      this.failedBatch = [
+        ...batch.filter(txid => !returned.has(txid)),
+        ...response.results.filter(item => item.status === 'unavailable' || item.status === 'unconfigured' || item.flow?.complete === false).map(item => item.txid),
+      ];
+      this.apply(response.results);
+      if (!response.results.length && this.failedBatch.length) this.noteFailure();
+    } catch (error) {
       if (generation !== this.generation) {return;}
-      this.noteFailure(false);
+      const body = (error as { error?: { lifecycle?: string; desiredState?: string } })?.error;
+      const lifecycle = body?.desiredState || body?.lifecycle;
+      if (lifecycle === 'disabled' || lifecycle === 'planned' || lifecycle === 'retired' || lifecycle === 'not-implemented') {
+        this.queue = [];
+        this.stateSubject.next({ ...this.stateSubject.value, observation: lifecycle === 'not-implemented' ? 'planned' : lifecycle });
+      } else {
+        this.failedBatch = batch;
+        this.noteFailure();
+      }
     } finally {
       if (generation === this.generation) {
         this.inFlight = false;
@@ -250,15 +277,14 @@ export class UniversePulseService implements OnDestroy {
    * either way and leave the observation as it was.
    */
   private apply(results: readonly TransactionBatchItem[]): void {
-    const resolved = results.filter((item) => item.status === 'ok' && !!item.flow);
+    const resolved = results.filter((item) => item.status === 'ok' && !!item.flow && item.flow.complete !== false);
     if (!resolved.length) {
-      const refused = results.some((item) => item.status === 'unavailable' || item.status === 'unconfigured');
+      const refused = results.some((item) => item.status === 'unavailable' || item.status === 'unconfigured' || item.flow?.complete === false);
       if (refused) {
-        this.noteFailure(true);
+        this.noteFailure();
       }
       return;
     }
-    this.consecutiveFailures = 0;
 
     const previous = this.stateSubject.value;
     const protocolCounts = new Map(previous.protocolCounts);
@@ -298,13 +324,10 @@ export class UniversePulseService implements OnDestroy {
 
   /**
    * Records a failed batch. The authority refusing every item is reported at
-   * once; a transport failure only after several in a row, so one dropped
-   * request does not flap the label. Either way the tally is kept: it is the
+   * once, including a transport failure. The tally is kept: it is the
    * last sample, marked stale with its time, or nothing if there was none.
    */
-  private noteFailure(refusedByAuthority: boolean): void {
-    this.consecutiveFailures += 1;
-    if (!refusedByAuthority && this.consecutiveFailures < FAILURE_THRESHOLD) {return;}
+  private noteFailure(): void {
     const current = this.stateSubject.value;
     const observation: PulseObservation = current.lastSampleAt === null ? 'unavailable' : 'stale';
     if (current.observation === observation) {return;}

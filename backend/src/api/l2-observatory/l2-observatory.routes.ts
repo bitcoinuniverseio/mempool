@@ -6,7 +6,7 @@ import { L2ObservatoryEvidenceError, l2ObservatoryService } from './l2-observato
 /** An absent source is a 503 that names the source, never a 500 and never an empty list. */
 function fail(req: Request, res: Response, e: unknown): void {
   if (e instanceof L2ObservatoryEvidenceError) {
-    res.status(e.status).json({ stage: e.code, error: e.message });
+    res.status(e.status).json({ stage: e.code, error: e.message, ...(e.lifecycle ? { lifecycle: e.lifecycle } : {}) });
     return;
   }
   handleError(req, res, 500, e instanceof Error ? e.message : 'The request could not be served');

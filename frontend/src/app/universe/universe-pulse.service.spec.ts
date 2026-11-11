@@ -208,6 +208,42 @@ describe('UniversePulseService observation', () => {
    * been asked, and an empty queue never asked; the strip then claimed to be
    * reading arrivals while the public Signet page had no feed at all.
    */
+  it.each(['disabled', 'planned', 'retired'])('stops activity reads for declared lifecycle %s', async lifecycle => {
+    const h = harness(); h.service.start(); h.arrive(txid(1)); await h.tick();
+    h.requests[0].response.error({ error: { desiredState: lifecycle } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(h.state().observation).toBe(lifecycle);
+    h.arrive(txid(2)); await h.tick();
+    expect(h.requests).toHaveLength(1);
+    h.service.stop();
+  });
+  it('a hung read ends within six seconds and manual Retry reuses the failed IDs', async () => {
+    const h = harness(); h.service.start(); h.arrive(txid(1)); await h.tick();
+    await vi.advanceTimersByTimeAsync(6000);
+    expect(h.state().observation).toBe('unavailable');
+    expect(h.requests[0].response.observed).toBe(false);
+    h.service.retry(); await h.tick();
+    expect(h.requests[1].batch).toEqual([txid(1)]);
+    await h.answer(1, [ok(txid(1))]);
+    expect(h.state()).toMatchObject({ observation: 'observed', checked: 1 });
+    h.service.stop();
+  });
+  it('missing batch items are unavailable and Retry preserves their IDs', async () => {
+    const h = harness(); h.service.start(); h.arrive(txid(1)); await h.tick();
+    await h.answer(0, []);
+    expect(h.state()).toMatchObject({ observation: 'unavailable', checked: 0 });
+    h.service.retry(); await h.tick();
+    expect(h.requests[1].batch).toEqual([txid(1)]);
+    h.service.stop();
+    expect(h.requests[1].response.observed).toBe(false);
+  });
+  it('does not count an incomplete flow as an observed zero', async () => {
+    const h = harness(); h.service.start(); h.arrive(txid(1)); await h.tick();
+    await h.answer(0, [{ ...ok(txid(1)), flow: flow({ complete: false }) }]);
+    expect(h.state()).toMatchObject({ observation: 'unavailable', checked: 0 });
+    h.service.stop();
+  });
+
   it('starts unknown with nothing arrived and no stream connected', async () => {
     const h = harness();
     h.service.start();
@@ -301,7 +337,7 @@ describe('UniversePulseService observation', () => {
       h.arrive(txid(10 + round));
       await h.tick();
       await h.fail(round);
-      expect(h.state().observation).toBe(round < 3 ? 'observed' : 'stale');
+      expect(h.state().observation).toBe('stale');
     }
     h.service.stop();
   });

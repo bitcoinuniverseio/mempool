@@ -3,8 +3,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, firstValueFrom, of, throwError, timer } from 'rxjs';
 import { map, toArray } from 'rxjs/operators';
 import {
+  READ_DEADLINE_MS,
   classifyLoadFailure,
   isRetryableFailure,
+  loadFailureMessage,
   toLoadState,
   trackedLoadState,
   type LoadState,
@@ -186,5 +188,26 @@ describe('trackedLoadState', () => {
     subscription.unsubscribe();
     trigger.next('24h');
     expect(seen.length).toBe(2);
+  });
+});
+
+describe('declared lifecycle is not an outage', () => {
+  it('classifies a not-built or turned-off feature by its lifecycle, never as unavailable', () => {
+    const notBuilt = new HttpErrorResponse({ status: 503, error: { lifecycle: 'not-implemented', error: 'internal detail' } });
+    const off = new HttpErrorResponse({ status: 503, error: { lifecycle: 'disabled' } });
+    expect(classifyLoadFailure(notBuilt)).toBe('not-implemented');
+    expect(classifyLoadFailure(off)).toBe('disabled');
+    expect(classifyLoadFailure(new HttpErrorResponse({ status: 503 }))).toBe('unavailable');
+  });
+
+  it('does not retry a lifecycle state and gives it neutral copy', () => {
+    expect(isRetryableFailure('not-implemented')).toBe(false);
+    expect(isRetryableFailure('disabled')).toBe(false);
+    expect(loadFailureMessage('not-implemented')).not.toContain('internal');
+    expect(loadFailureMessage('disabled')).toBeTruthy();
+  });
+
+  it('bounds a panel read at 20 seconds', () => {
+    expect(READ_DEADLINE_MS).toBe(20_000);
   });
 });

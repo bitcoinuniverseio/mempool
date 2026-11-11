@@ -408,6 +408,11 @@ export class UniverseApiService {
     return this.scopedRequest<StatusResponse>(this.apiBaseUrl + '/api/v1/universe/status');
   }
 
+  /** Cached health metadata only; never gates block or transaction reads. */
+  getIndexerHealth$(): Observable<unknown> {
+    return this.scopedRequest<unknown>(this.apiBaseUrl + '/api/v1/universe/indexer-health');
+  }
+
   getSources$(chain = 'bitcoin'): Observable<SourcesResponse> {
     return this.scopedRequest<SourcesResponse>(this.apiBaseUrl + '/api/v1/universe/sources', undefined, chain);
   }

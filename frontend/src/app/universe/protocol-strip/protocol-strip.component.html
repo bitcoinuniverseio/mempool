@@ -22,7 +22,11 @@
     <p class="strip-note warning" *ngSwitchCase="'stale'" i18n="universe.strip.stale">
       The asset authority stopped answering. Counts are from the last sample at {{ vm.lastSampleAt | date: 'mediumTime' }} and are not current.
     </p>
+    <p class="strip-note" *ngSwitchCase="'disabled'">Activity is turned off.</p>
+    <p class="strip-note" *ngSwitchCase="'planned'">Activity is not available yet.</p>
+    <p class="strip-note" *ngSwitchCase="'retired'">Activity is no longer available.</p>
   </ng-container>
+  <button *ngIf="vm.observation === 'unavailable' || vm.observation === 'stale'" type="button" class="btn btn-secondary btn-sm" (click)="retryActivity()">Retry</button>
 
   <ul class="strip-list">
     <li *ngFor="let entry of vm.entries; trackBy: trackByEntry">

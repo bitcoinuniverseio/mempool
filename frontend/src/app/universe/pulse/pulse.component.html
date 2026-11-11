@@ -27,12 +27,16 @@
       The asset authority stopped answering. The tally below is frozen at the last
       transaction it confirmed at {{ vm.pulse.lastSampleAt | date: 'mediumTime' }}, and nothing new is being claimed.
     </p>
+    <p *ngIf="vm.pulse.observation === 'disabled'" role="status">Activity is turned off.</p>
+    <p *ngIf="vm.pulse.observation === 'planned'" role="status">Activity is not available yet.</p>
+    <p *ngIf="vm.pulse.observation === 'retired'" role="status">Activity is no longer available.</p>
+    <button *ngIf="vm.pulse.observation === 'unavailable' || vm.pulse.observation === 'stale'" type="button" class="btn btn-secondary" (click)="retryActivity()">Retry</button>
   </section>
 
   <section class="panel shares" aria-labelledby="pulse-shares-heading">
     <h2 id="pulse-shares-heading" i18n="universe.pulse.shares-title">Protocol mix</h2>
 
-    <p class="empty" *ngIf="!vm.shares.length && vm.pulse.checked === 0" i18n="universe.pulse.waiting">
+    <p class="empty" *ngIf="!vm.shares.length && vm.pulse.checked === 0 && vm.pulse.observation === 'unknown'" i18n="universe.pulse.waiting">
       Waiting for the first transactions to arrive.
     </p>
     <p class="empty" *ngIf="!vm.shares.length && vm.pulse.checked > 0" i18n="universe.pulse.none-yet">
@@ -56,7 +60,7 @@
   <section class="panel feed" aria-labelledby="pulse-feed-heading">
     <h2 id="pulse-feed-heading" i18n="universe.pulse.feed-title">Recent protocol transactions</h2>
 
-    <p class="empty" *ngIf="!vm.pulse.recent.length" i18n="universe.pulse.feed-empty">
+    <p class="empty" *ngIf="!vm.pulse.recent.length && (vm.pulse.observation === 'unknown' || vm.pulse.observation === 'observed')" i18n="universe.pulse.feed-empty">
       Nothing yet. Transactions appear here the moment the authority confirms what they carry.
     </p>
 
