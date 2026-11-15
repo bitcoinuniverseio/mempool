@@ -481,6 +481,8 @@ jobs:
       # three days by the repository in any case.
       - name: Keep the contrast report and the route screenshots
         if: failure()
+        # Report-only upload: keep the job green when the shared artifact storage quota is full.
+        continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: universe-visual-qa-broad
